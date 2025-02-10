@@ -1,0 +1,17 @@
+2024-12-31 23:01:01.050 [info] update#setState disabled
+2024-12-31 23:01:01.050 [info] update#ctor - updates are disabled as there is no update URL
+2024-12-31 23:02:18.665 [info] Extension host with pid 27083 exited with code: 0, signal: unknown.
+2024-12-31 23:03:04.568 [info] Extension host with pid 27572 exited with code: 0, signal: unknown.
+2024-12-31 23:03:04.581 [error] [UtilityProcess id: 1, type: fileWatcher, pid: 27562]: crashed with code 15 and reason 'killed'
+2024-12-31 23:03:04.796 [error] [uncaught exception in main]: Error: [UriError]: If a URI does not contain an authority component, then the path cannot begin with two slash characters ("//")
+2024-12-31 23:03:04.797 [error] Error: [UriError]: If a URI does not contain an authority component, then the path cannot begin with two slash characters ("//")
+    at k6 (file:///opt/code-translucent/resources/app/out/main.js:33:15494)
+    at new zu (file:///opt/code-translucent/resources/app/out/main.js:33:18559)
+    at Lr (file:///opt/code-translucent/resources/app/out/main.js:33:19997)
+    at Lr.with (file:///opt/code-translucent/resources/app/out/main.js:33:18993)
+    at Hu.uriToFileUri (file:///opt/code-translucent/resources/app/out/main.js:33:96842)
+    at $u.m (file:///opt/code-translucent/resources/app/out/main.js:111:2109)
+    at $u.j (file:///opt/code-translucent/resources/app/out/main.js:111:1679)
+    at Function.<anonymous> (file:///opt/code-translucent/resources/app/out/main.js:111:1222)
+2024-12-31 23:07:51.719 [info] Extension host with pid 27887 exited with code: 0, signal: unknown.
+2024-12-31 23:07:51.736 [error] [UtilityProcess id: 1, type: fileWatcher, pid: 27877]: crashed with code 15 and reason 'killed'

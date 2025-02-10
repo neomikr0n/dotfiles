@@ -1,0 +1,56 @@
+2024-12-31 22:57:23.886 [info] Getting Manifest... alexowl.transparent-color-theme
+2024-12-31 22:57:23.986 [info] Installing extension: alexowl.transparent-color-theme {"isMachineScoped":false,"installPreReleaseVersion":false,"pinned":true,"profileLocation":{"$mid":1,"external":"vscode-userdata:/home/n30/.vscode-oss/extensions/extensions.json","path":"/home/n30/.vscode-oss/extensions/extensions.json","scheme":"vscode-userdata"},"installOnlyNewlyAddedFromExtensionPack":true,"isApplicationScoped":false,"productVersion":{"version":"1.96.2","date":"2025-01-01T03:46:01.089Z"}}
+2024-12-31 22:57:24.345 [info] Getting Manifest... drcika.apc-extension
+2024-12-31 22:57:24.432 [info] Getting Manifest... brandonkirbyson.vscode-animations
+2024-12-31 22:57:24.497 [info] Installing extension: drcika.apc-extension {"isMachineScoped":false,"installPreReleaseVersion":false,"pinned":true,"profileLocation":{"$mid":1,"external":"vscode-userdata:/home/n30/.vscode-oss/extensions/extensions.json","path":"/home/n30/.vscode-oss/extensions/extensions.json","scheme":"vscode-userdata"},"installOnlyNewlyAddedFromExtensionPack":true,"isApplicationScoped":false,"productVersion":{"version":"1.96.2","date":"2025-01-01T03:46:01.089Z"},"context":{"dependecyOrPackExtensionInstall":true}}
+2024-12-31 22:57:24.497 [info] Installing extension: brandonkirbyson.vscode-animations {"isMachineScoped":false,"installPreReleaseVersion":false,"pinned":true,"profileLocation":{"$mid":1,"external":"vscode-userdata:/home/n30/.vscode-oss/extensions/extensions.json","path":"/home/n30/.vscode-oss/extensions/extensions.json","scheme":"vscode-userdata"},"installOnlyNewlyAddedFromExtensionPack":true,"isApplicationScoped":false,"productVersion":{"version":"1.96.2","date":"2025-01-01T03:46:01.089Z"},"context":{"dependecyOrPackExtensionInstall":true}}
+2024-12-31 22:57:25.226 [error] Could not load vsce-sign module Cannot find package '@vscode/vsce-sign' imported from /opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js
+2024-12-31 22:57:25.226 [info] Extension signature verification is not done: drcika.apc-extension
+2024-12-31 22:57:25.278 [info] Extracted extension to file:///home/n30/.vscode-oss/extensions/drcika.apc-extension-0.4.1: drcika.apc-extension
+2024-12-31 22:57:25.279 [info] Renamed to /home/n30/.vscode-oss/extensions/drcika.apc-extension-0.4.1
+2024-12-31 22:57:25.367 [error] [uncaught exception in sharedProcess]: Error: ENOENT: no such file or directory, stat '/home/n30/.vscode-oss/extensions/extensions.json.vsctmp': EntryNotFound (FileSystemError): Error: ENOENT: no such file or directory, stat '/home/n30/.vscode-oss/extensions/extensions.json.vsctmp'
+    at Gm.create (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:35:39624)
+    at xs (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:35:39731)
+    at Vr.ib (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:78:22778)
+    at Vr.stat (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:78:16010)
+    at async wh.stat (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:77:85488)
+    at async fh.Ab (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:77:67180)
+2024-12-31 22:57:25.693 [error] Could not load vsce-sign module Cannot find package '@vscode/vsce-sign' imported from /opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js
+2024-12-31 22:57:25.693 [info] Extension signature verification is not done: alexowl.transparent-color-theme
+2024-12-31 22:57:25.765 [info] Extracted extension to file:///home/n30/.vscode-oss/extensions/alexowl.transparent-color-theme-1.1.0: alexowl.transparent-color-theme
+2024-12-31 22:57:25.767 [info] Renamed to /home/n30/.vscode-oss/extensions/alexowl.transparent-color-theme-1.1.0
+2024-12-31 22:57:25.849 [error] [uncaught exception in sharedProcess]: Error: ENOENT: no such file or directory, stat '/home/n30/.vscode-oss/extensions/extensions.json.vsctmp': EntryNotFound (FileSystemError): Error: ENOENT: no such file or directory, stat '/home/n30/.vscode-oss/extensions/extensions.json.vsctmp'
+    at Gm.create (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:35:39624)
+    at xs (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:35:39731)
+    at Vr.ib (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:78:22778)
+    at Vr.stat (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:78:16010)
+    at async wh.stat (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:77:85488)
+    at async fh.Ab (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:77:67180)
+2024-12-31 22:57:28.183 [error] Could not load vsce-sign module Cannot find package '@vscode/vsce-sign' imported from /opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js
+2024-12-31 22:57:28.184 [info] Extension signature verification is not done: brandonkirbyson.vscode-animations
+2024-12-31 22:57:28.393 [info] Extracted extension to file:///home/n30/.vscode-oss/extensions/brandonkirbyson.vscode-animations-2.0.4: brandonkirbyson.vscode-animations
+2024-12-31 22:57:28.401 [info] Renamed to /home/n30/.vscode-oss/extensions/brandonkirbyson.vscode-animations-2.0.4
+2024-12-31 22:57:28.409 [info] Extension installed successfully: drcika.apc-extension vscode-userdata:/home/n30/.vscode-oss/extensions/extensions.json
+2024-12-31 22:57:28.409 [info] Extension installed successfully: alexowl.transparent-color-theme vscode-userdata:/home/n30/.vscode-oss/extensions/extensions.json
+2024-12-31 22:57:28.409 [info] Extension installed successfully: brandonkirbyson.vscode-animations vscode-userdata:/home/n30/.vscode-oss/extensions/extensions.json
+2024-12-31 22:57:28.486 [error] [uncaught exception in sharedProcess]: Error: ENOENT: no such file or directory, stat '/home/n30/.vscode-oss/extensions/extensions.json.vsctmp': EntryNotFound (FileSystemError): Error: ENOENT: no such file or directory, stat '/home/n30/.vscode-oss/extensions/extensions.json.vsctmp'
+    at Gm.create (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:35:39624)
+    at xs (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:35:39731)
+    at Vr.ib (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:78:22778)
+    at Vr.stat (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:78:16010)
+    at async wh.stat (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:77:85488)
+    at async fh.Ab (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:77:67180)
+2024-12-31 22:57:50.405 [info] Getting Manifest... amadeuswolf.apatheia-translucent
+2024-12-31 22:57:50.661 [info] Installing extension: amadeuswolf.apatheia-translucent {"isMachineScoped":false,"installPreReleaseVersion":false,"pinned":true,"profileLocation":{"$mid":1,"external":"vscode-userdata:/home/n30/.vscode-oss/extensions/extensions.json","path":"/home/n30/.vscode-oss/extensions/extensions.json","scheme":"vscode-userdata"},"installOnlyNewlyAddedFromExtensionPack":true,"isApplicationScoped":false,"productVersion":{"version":"1.96.2","date":"2025-01-01T03:46:01.089Z"}}
+2024-12-31 22:57:51.405 [error] Could not load vsce-sign module Cannot find package '@vscode/vsce-sign' imported from /opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js
+2024-12-31 22:57:51.406 [info] Extension signature verification is not done: amadeuswolf.apatheia-translucent
+2024-12-31 22:57:51.423 [info] Extracted extension to file:///home/n30/.vscode-oss/extensions/amadeuswolf.apatheia-translucent-0.0.3: amadeuswolf.apatheia-translucent
+2024-12-31 22:57:51.424 [info] Renamed to /home/n30/.vscode-oss/extensions/amadeuswolf.apatheia-translucent-0.0.3
+2024-12-31 22:57:51.443 [info] Extension installed successfully: amadeuswolf.apatheia-translucent vscode-userdata:/home/n30/.vscode-oss/extensions/extensions.json
+2024-12-31 22:57:51.508 [error] [uncaught exception in sharedProcess]: Error: ENOENT: no such file or directory, stat '/home/n30/.vscode-oss/extensions/extensions.json.vsctmp': EntryNotFound (FileSystemError): Error: ENOENT: no such file or directory, stat '/home/n30/.vscode-oss/extensions/extensions.json.vsctmp'
+    at Gm.create (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:35:39624)
+    at xs (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:35:39731)
+    at Vr.ib (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:78:22778)
+    at Vr.stat (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:78:16010)
+    at async wh.stat (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:77:85488)
+    at async fh.Ab (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:77:67180)

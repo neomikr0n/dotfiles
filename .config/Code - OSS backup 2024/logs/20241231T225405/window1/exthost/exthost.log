@@ -1,0 +1,45 @@
+2024-12-31 22:54:06.121 [info] Extension host with pid 20124 started
+2024-12-31 22:54:06.158 [info] ExtensionService#_doActivateExtension vscode.github-authentication, startup: false, activationEvent: 'onAuthenticationRequest:github'
+2024-12-31 22:54:06.300 [info] ExtensionService#_doActivateExtension vscode.git-base, startup: true, activationEvent: '*', root cause: vscode.git
+2024-12-31 22:54:06.302 [info] ExtensionService#_doActivateExtension vscode.git, startup: true, activationEvent: '*'
+2024-12-31 22:54:06.334 [info] ExtensionService#_doActivateExtension vscode.github, startup: true, activationEvent: '*'
+2024-12-31 22:54:06.367 [info] Eager extensions activated
+2024-12-31 22:54:06.372 [info] ExtensionService#_doActivateExtension vscode.debug-auto-launch, startup: false, activationEvent: 'onStartupFinished'
+2024-12-31 22:54:06.373 [info] ExtensionService#_doActivateExtension vscode.merge-conflict, startup: false, activationEvent: 'onStartupFinished'
+2024-12-31 22:54:16.098 [info] ExtensionService#_doActivateExtension vscode.emmet, startup: false, activationEvent: 'onLanguage'
+2024-12-31 22:57:28.520 [info] ExtensionService#_doActivateExtension drcika.apc-extension, startup: false, activationEvent: 'onStartupFinished'
+2024-12-31 22:57:28.523 [error] Activating extension drcika.apc-extension failed due to an error:
+2024-12-31 22:57:28.523 [error] TypeError: Cannot read properties of undefined (reading 'filename')
+	at Object.<anonymous> (/home/n30/.vscode-oss/extensions/drcika.apc-extension-0.4.1/dist/patch.js:17:52)
+	at Module._compile (node:internal/modules/cjs/loader:1484:14)
+	at Module._extensions..js (node:internal/modules/cjs/loader:1564:10)
+	at Module.load (node:internal/modules/cjs/loader:1295:32)
+	at Module._load (node:internal/modules/cjs/loader:1111:12)
+	at c._load (node:electron/js2c/node_init:2:16955)
+	at e._load (file:///opt/code-translucent/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:175:10896)
+	at t._load (file:///opt/code-translucent/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:167:22534)
+	at i._load (file:///opt/code-translucent/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:159:21138)
+	at Module.require (node:internal/modules/cjs/loader:1318:19)
+	at require (node:internal/modules/helpers:179:18)
+	at Object.<anonymous> (/home/n30/.vscode-oss/extensions/drcika.apc-extension-0.4.1/dist/extension.js:7:17)
+	at Module._compile (node:internal/modules/cjs/loader:1484:14)
+	at Module._extensions..js (node:internal/modules/cjs/loader:1564:10)
+	at Module.load (node:internal/modules/cjs/loader:1295:32)
+	at Module._load (node:internal/modules/cjs/loader:1111:12)
+	at c._load (node:electron/js2c/node_init:2:16955)
+	at e._load (file:///opt/code-translucent/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:175:10896)
+	at t._load (file:///opt/code-translucent/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:167:22534)
+	at i._load (file:///opt/code-translucent/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:159:21138)
+	at Module.require (node:internal/modules/cjs/loader:1318:19)
+	at require (node:internal/modules/helpers:179:18)
+	at zz.xb (file:///opt/code-translucent/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:167:23854)
+	at async Promise.all (index 0)
+2024-12-31 22:57:28.523 [info] ExtensionService#_doActivateExtension BrandonKirbyson.vscode-animations, startup: false, activationEvent: 'onStartupFinished'
+2024-12-31 22:57:28.551 [info] ExtensionService#_doActivateExtension vscode.configuration-editing, startup: false, activationEvent: 'onLanguage:jsonc'
+2024-12-31 22:57:28.557 [info] ExtensionService#_doActivateExtension vscode.json-language-features, startup: false, activationEvent: 'onLanguage:jsonc'
+2024-12-31 22:57:28.586 [info] ExtensionService#_doActivateExtension vscode.typescript-language-features, startup: false, activationEvent: 'onLanguage:jsonc'
+2024-12-31 22:57:29.650 [error] Error: command 'apc.extension.disable' not found
+    at O9e.n (vscode-file://vscode-app/opt/code-translucent/resources/app/out/vs/workbench/workbench.desktop.main.js:1315:1341)
+    at O9e.executeCommand (vscode-file://vscode-app/opt/code-translucent/resources/app/out/vs/workbench/workbench.desktop.main.js:1315:1273)
+2024-12-31 23:00:42.254 [info] Extension host terminating: renderer closed the MessagePort
+2024-12-31 23:00:42.262 [info] Extension host with pid 20124 exiting with code 0

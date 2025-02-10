@@ -1,0 +1,5 @@
+2024-12-31 22:54:05.258 [info] update#setState disabled
+2024-12-31 22:54:05.259 [info] update#ctor - updates are disabled as there is no update URL
+2024-12-31 22:54:06.015 [error] vscode-file: Refused to load resource /usr/lib/code/extensions/theme-seti/icons/seti.woff from vscode-file: protocol (original URL: vscode-file://vscode-app/usr/lib/code/extensions/theme-seti/icons/seti.woff)
+2024-12-31 23:00:42.264 [info] Extension host with pid 20124 exited with code: 0, signal: unknown.
+2024-12-31 23:00:42.283 [error] [UtilityProcess id: 1, type: fileWatcher, pid: 20093]: crashed with code 15 and reason 'killed'
