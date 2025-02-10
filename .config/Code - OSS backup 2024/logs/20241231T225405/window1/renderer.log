@@ -1,0 +1,9 @@
+2024-12-31 22:54:05.708 [warning] Via 'product.json#extensionEnabledApiProposals' extension 'ms-vscode.vscode-selfhost-test-provider' wants API proposal 'attributableCoverage' but that proposal DOES NOT EXIST. Likely, the proposal has been finalized (check 'vscode.d.ts') or was abandoned.
+2024-12-31 22:54:05.716 [warning] Via 'product.json#extensionEnabledApiProposals' extension 'ms-python.python' wants API proposal 'contribIssueReporter' but that proposal DOES NOT EXIST. Likely, the proposal has been finalized (check 'vscode.d.ts') or was abandoned.
+2024-12-31 22:54:05.716 [warning] Via 'product.json#extensionEnabledApiProposals' extension 'ms-python.debugpy' wants API proposal 'contribIssueReporter' but that proposal DOES NOT EXIST. Likely, the proposal has been finalized (check 'vscode.d.ts') or was abandoned.
+2024-12-31 22:54:05.876 [info] Started local extension host with pid 20124.
+2024-12-31 22:54:06.046 [info] Settings Sync: Account status changed from uninitialized to unavailable
+2024-12-31 22:54:08.609 [info] [perf] Render performance baseline is 11ms
+2024-12-31 22:57:29.653 [error] command 'apc.extension.disable' not found: Error: command 'apc.extension.disable' not found
+    at O9e.n (vscode-file://vscode-app/opt/code-translucent/resources/app/out/vs/workbench/workbench.desktop.main.js:1315:1341)
+    at O9e.executeCommand (vscode-file://vscode-app/opt/code-translucent/resources/app/out/vs/workbench/workbench.desktop.main.js:1315:1273)

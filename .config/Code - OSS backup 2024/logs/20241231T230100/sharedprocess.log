@@ -1,0 +1,14 @@
+2024-12-31 23:01:51.098 [info] Getting Manifest... richardluo.frosted-glass-theme
+2024-12-31 23:01:51.185 [info] Installing extension: richardluo.frosted-glass-theme {"isMachineScoped":false,"installPreReleaseVersion":false,"pinned":true,"profileLocation":{"$mid":1,"external":"vscode-userdata:/home/n30/.vscode-oss/extensions/extensions.json","path":"/home/n30/.vscode-oss/extensions/extensions.json","scheme":"vscode-userdata"},"installOnlyNewlyAddedFromExtensionPack":true,"isApplicationScoped":false,"productVersion":{"version":"1.96.2","date":"2025-01-01T03:46:01.089Z"}}
+2024-12-31 23:01:52.193 [error] Could not load vsce-sign module Cannot find package '@vscode/vsce-sign' imported from /opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js
+2024-12-31 23:01:52.194 [info] Extension signature verification is not done: richardluo.frosted-glass-theme
+2024-12-31 23:01:52.217 [info] Extracted extension to file:///home/n30/.vscode-oss/extensions/richardluo.frosted-glass-theme-0.8.15: richardluo.frosted-glass-theme
+2024-12-31 23:01:52.219 [info] Renamed to /home/n30/.vscode-oss/extensions/richardluo.frosted-glass-theme-0.8.15
+2024-12-31 23:01:52.224 [info] Extension installed successfully: richardluo.frosted-glass-theme vscode-userdata:/home/n30/.vscode-oss/extensions/extensions.json
+2024-12-31 23:01:52.300 [error] [uncaught exception in sharedProcess]: Error: ENOENT: no such file or directory, stat '/home/n30/.vscode-oss/extensions/extensions.json.vsctmp': EntryNotFound (FileSystemError): Error: ENOENT: no such file or directory, stat '/home/n30/.vscode-oss/extensions/extensions.json.vsctmp'
+    at Gm.create (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:35:39624)
+    at xs (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:35:39731)
+    at Vr.ib (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:78:22778)
+    at Vr.stat (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:78:16010)
+    at async wh.stat (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:77:85488)
+    at async fh.Ab (file:///opt/code-translucent/resources/app/out/vs/code/electron-utility/sharedProcess/sharedProcessMain.js:77:67180)
