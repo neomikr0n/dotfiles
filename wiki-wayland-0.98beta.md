@@ -5058,11 +5058,11 @@ linux unixporn pepethesadfrog hyprland rosepine
 
 example:
 
-`git config --global init.defaultBranch main`
-
-`git config --global user.email "shokytox@gmail.com"`
-
-`git config --global user.name "neomikr0n"`
+```
+git config --global init.defaultBranch main
+git config --global user.email "shokytox@gmail.com"
+git config --global user.name "neomikr0n"
+```
 
 ```
 cd ~/dotfiles/ && git init
@@ -5075,7 +5075,7 @@ git config --global credential.helper store
 
 THEN one line to rule them all:
 `
-cd ~/dotfiles/ && git commit -m 'lol' && git push origin main
+cd ~/dotfiles/ && git add . && git commit -m 'created README' && git push origin main
 `
 
 - [GitHub Error: Authentication Failed from the Command Line](https://ginnyfahs.medium.com/github-error-authentication-failed-from-command-line-3a545bfd0ca8)
