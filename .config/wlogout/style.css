@@ -1,22 +1,22 @@
 /*
-          _                         _    
-__      _| | ___   __ _  ___  _   _| |_  
-\ \ /\ / / |/ _ \ / _` |/ _ \| | | | __| 
- \ V  V /| | (_) | (_| | (_) | |_| | |_  
-  \_/\_/ |_|\___/ \__, |\___/ \__,_|\__| 
-                  |___/                  
- 
-by Stephan Raabe (2023) 
------------------------------------------------------ 
+          _                         _
+__      _| | ___   __ _  ___  _   _| |_
+\ \ /\ / / |/ _ \ / _` |/ _ \| | | | __|
+ \ V  V /| | (_) | (_| | (_) | |_| | |_
+  \_/\_/ |_|\___/ \__, |\___/ \__,_|\__|
+                  |___/
+
+by Stephan Raabe (2023)
+-----------------------------------------------------
 */
 
 /* -----------------------------------------------------
- * Import Pywal colors 
+ * Import Pywal colors
  * ----------------------------------------------------- */
 @import '../../.cache/wal/colors-wlogout.css';
 
 /* -----------------------------------------------------
- * General 
+ * General
  * ----------------------------------------------------- */
 
 * {
@@ -35,12 +35,13 @@ window {
 
 button {
 	background-repeat: no-repeat;
-    background-position: center;
-    background-size: 20%;
-    background-color: rgba(200, 220, 255, 0);
-    animation: gradient_f 20s ease-in infinite;
-    border-radius: 80px; /* Increased border radius for a more rounded look */
+    	background-position: center;
+    	background-size: 20%;
+    	background-color: rgba(200, 220, 255, 0);
+    	animation: gradient_f 20s ease-in infinite;
+    	border-radius: 80px; /* Increased border radius for a more rounded look */
 	border:0px;
+	transition: all 0.3s cubic-bezier(.55, 0.0, .28, 1.682), box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
 }
 
 button:focus {
@@ -49,14 +50,13 @@ button:focus {
 }
 
 button:hover {
-    background-color: @color11; 
+    background-color: @color11;
 	opacity: 0.8;
     color: #cdd6f4;
     background-size: 30%;
     margin: 30px;
-    border-radius: 80px; 
-    transition: all 0.3s cubic-bezier(.55, 0.0, .28, 1.682), box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
-    box-shadow: 0 0 50px @color7; 
+    border-radius: 80px;
+    box-shadow: 0 0 50px @color7;
 }
 
 /* Adjust the size of the icon or content inside the button */
@@ -64,10 +64,10 @@ button span {
     font-size: 1.2em; /* Increase the font size */
 }
 
-/* 
------------------------------------------------------ 
+/*
+-----------------------------------------------------
 Buttons
------------------------------------------------------ 
+-----------------------------------------------------
 */
 
 #lock {

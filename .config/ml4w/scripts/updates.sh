@@ -7,6 +7,16 @@
 #       |_|                              
 #  
 
+script_name=$(basename "$0")
+
+# Count the instances
+instance_count=$(ps aux | grep -F "$script_name" | grep -v grep | grep -v $$ | wc -l)
+
+if [ $instance_count -gt 1 ]; then
+    sleep $instance_count
+fi
+
+
 # ----------------------------------------------------- 
 # Define threshholds for color indicators
 # ----------------------------------------------------- 
@@ -27,10 +37,24 @@ case $install_platform in
 
         # flatpak remote-ls --updates
 
+        # -----------------------------------------------------------------------------
+        # Check for pacman or checkupdates-with-aur database lock and wait if necessary
+        # -----------------------------------------------------------------------------
+        check_lock_files() {
+            local pacman_lock="/var/lib/pacman/db.lck"
+            local checkup_lock="${TMPDIR:-/tmp}/checkup-db-${UID}/db.lck"
+
+            while [ -f "$pacman_lock" ] || [ -f "$checkup_lock" ]; do
+                sleep 1
+            done
+        }
+
+        check_lock_files
+
         updates=$(checkupdates-with-aur | wc -l)
     ;;
     fedora)
-        updates=$(dnf check-update -q|grep -c ^[a-z0-9])
+        updates=$(dnf check-update -q | grep -c ^[a-z0-9])
     ;;
     *)
         updates=0

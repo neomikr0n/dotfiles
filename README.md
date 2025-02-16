@@ -13,5 +13,6 @@ My **dotfiles** for [Garuda](https://garudalinux.org/) Linux.
 ---
 Based on [ML4W Dotfiles for Hyprland v2.9.8](https://github.com/mylinuxforwork/dotfiles)
 
-[work](https://user-images.githubusercontent.com/74038190/215283228-89a6af16-23b1-4144-ac9b-064dc973b3db.gif)
+
 ## Work in progress tho... 🚜👷🚧🏗️
+![work](https://user-images.githubusercontent.com/74038190/215283228-89a6af16-23b1-4144-ac9b-064dc973b3db.gif)

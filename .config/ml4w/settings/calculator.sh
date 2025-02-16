@@ -1,1 +1,1 @@
-kalk
+gnome-calculator

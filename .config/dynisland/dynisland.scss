@@ -3,23 +3,24 @@
     .visualizer {
         .bar {
             transition-property: min-height;
-            transition-duration: 60ms;
+            transition-duration: 20ms;
             transition-timing-function: linear;
-            border-radius: 990px;
+            border-radius: 0px;
             border-color: rgba(230, 6, 6, 0);
         }
     }
 
     .mode-compact {
         background-color: transparent;
-        font-size: large;
-        font-weight: 600;
-        color: rgba(255, 222, 58, 0.542);
+        // font-family: sans-serif;
+        font-size: medium;
+        font-weight: 800;
+        color: rgba(196, 143, 58, 0.814);
 
         .album-art {
             image {
-                border-radius: 9px;
-                border: solid rgba(53, 53, 53, 0.6) 1px;
+                border-radius: 19px;
+                border: solid         color: rgba(196, 143, 58, 0.814); 1px;
             }
         }
 

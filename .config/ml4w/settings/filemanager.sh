@@ -1,1 +1,1 @@
-dolphin
+nautilus --new-window
