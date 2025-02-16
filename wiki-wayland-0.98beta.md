@@ -1104,6 +1104,61 @@ exec-once=dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRE
 `
 
 ---
+> # **[dynisland](https://github.com/cr3eperall/dynisland)**
+```
+mkdir -p ~/.config/dynisland/{modules,layouts}
+dynisland default-config >> ~/.config/dynisland/dynisland.ron
+touch ~/.config/dynisland/dynisland.scss
+mkdir -p ~/.config/dynisland/scripts/ && cp ~/.config/cava/config ~/.config/dynisland/scripts/
+```
+### get the cava config:
+```
+mkdir -p ~/dotfiles/.config/dynisland/scripts/ && \
+cd ~/dotfiles/.config/dynisland/scripts/ && \
+curl https://raw.githubusercontent.com/cr3eperall/dynisland-modules/refs/heads/main/music-module/cava-config | >> ~/dotfiles/.config/dynisland/scripts/cava-config && \
+cd ~/
+```
+
+```
+[general]
+framerate = 20
+autosens = 1
+overshoot = 0
+bars = 6
+sleep_timer = 5
+[input]
+method = pulse
+source = auto
+[output]
+method = raw
+channels = mono
+data_format = ascii
+ascii_max_range = 32
+bar_delimiter = 44
+[color]
+[smoothing]
+noise_reduction = 0.5
+[eq]
+1 = 1
+2 = 0.8
+3 = 1.2
+4 = 1.4
+5 = 1.2
+6 = 0.9
+```
+
+### get the music config:
+```
+mkdir -p ~/.config/dynisland/modules/music-module/ && cd ~/.config/dynisland/modules/music-module/ && curl https://raw.githubusercontent.com/cr3eperall/dynisland-modules/refs/heads/main/music-module/default.scss | >> ~/.config/dynisland/modules/music-module/default.css && cd ~/
+```
+
+### See the [Wiki](https://github.com/cr3eperall/dynisland/wiki) for the main config options
+
+[](https://github.com/cr3eperall/dynisland?tab=readme-ov-file#see-the-wiki-for-the-main-config-options)
+
+### See [dynisland-modules](https://github.com/cr3eperall/dynisland-modules) for the module specific configs
+
+---
 > # **[waybar]()**
 ## Font size shenanigans:
 - https://github.com/Alexays/Waybar/issues/350
@@ -4237,7 +4292,7 @@ tenki | lolcat -a -d 1 -s 999 -t
 
 # [rices 🍚]()
 
-## 🍚 [ML4W mylinuxforwork ](https://github.com/mylinuxforwork/dotfiles/wiki) 🍚
+## 🍚🔥 [ML4W mylinuxforwork ](https://github.com/mylinuxforwork/dotfiles/wiki) 🍚🔥
 https://www.reddit.com/r/unixporn/comments/1ggqhmw/hyprland_updated_my_old_rice_with_hyprpanel/
 
 ### Install required applications
@@ -4248,7 +4303,9 @@ ml4w-hyprland-setup
 or...
 bash <(curl -s https://raw.githubusercontent.com/mylinuxforwork/dotfiles/main/setup-arch.sh)
 
-
+## 🍚 [AymanLyesri](https://github.com/mylinuxforwork/dotfiles/wiki) 🍚
+Dat waybar spotify + cava look tho! 😮
+[preview](https://github.com/AymanLyesri/hyprland-conf?tab=readme-ov-file)
 
 ## 🍚 [L Lawliet](https://github.com/l6174/hyprdots) 🍚
 https://www.reddit.com/r/unixporn/comments/1ggqhmw/hyprland_updated_my_old_rice_with_hyprpanel/
@@ -4846,72 +4903,6 @@ return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
 File "/usr/lib/python3.10/subprocess.py", line 526, in run
 raise CalledProcessError(retcode, process.args,
 subprocess.CalledProcessError: Command '['swaymsg', '-t', 'get_outputs']' returned non-zero exit status 1.
-```
->>> pip install cute-sway-recorder
->>>
->>
-
-```
-╭─n30@n30 in ~ as 🧙 took 306ms
-[🔴] × pip install cute-sway-recorder
-Defaulting to user installation because normal site-packages is not writeable
-Requirement already satisfied: cute-sway-recorder in ./.local/lib/python3.10/site-packages (0.1.10)
-Requirement already satisfied: PySide6<7.0.0,>=6.0.0 in ./.local/lib/python3.10/site-packages (from cute-sway-recorder) (6.4.3)
-Requirement already satisfied: PySide6-Essentials==6.4.3 in ./.local/lib/python3.10/site-packages (from PySide6<7.0.0,>=6.0.0->cute-sway-recorder) (6.4.3)
-Requirement already satisfied: PySide6-Addons==6.4.3 in ./.local/lib/python3.10/site-packages (from PySide6<7.0.0,>=6.0.0->cute-sway-recorder) (6.4.3)
-Requirement already satisfied: shiboken6==6.4.3 in ./.local/lib/python3.10/site-packages (from PySide6<7.0.0,>=6.0.0->cute-sway-recorder) (6.4.3)
-```
->>> **sudo** pip install cute-sway-recorder
->>>
->>
-
-```
-╭─n30@n30 in ~ as 🧙 took 459ms
-[🔍] × sudo pip install cute-sway-recorder
-Collecting cute-sway-recorder
-Downloading cute_sway_recorder-0.1.10-py3-none-any.whl (9.2 kB)
-Collecting PySide6<7.0.0,>=6.0.0
-Downloading PySide6-6.4.3-cp37-abi3-manylinux_2_28_x86_64.whl (6.7 kB)
-Collecting PySide6-Essentials==6.4.3
-Downloading PySide6_Essentials-6.4.3-cp37-abi3-manylinux_2_28_x86_64.whl (84.5 MB)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 84.5/84.5 MB 4.1 MB/s eta 0:00:00
-Collecting PySide6-Addons==6.4.3
-Downloading PySide6_Addons-6.4.3-cp37-abi3-manylinux_2_28_x86_64.whl (122.5 MB)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 122.5/122.5 MB 6.4 MB/s eta 0:00:00
-Collecting shiboken6==6.4.3
-Downloading shiboken6-6.4.3-cp37-abi3-manylinux_2_28_x86_64.whl (171 kB)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 171.6/171.6 kB 6.6 MB/s eta 0:00:00
-Installing collected packages: shiboken6, PySide6-Essentials, PySide6-Addons, PySide6, cute-sway-recorder
-Successfully installed PySide6-6.4.3 PySide6-Addons-6.4.3 PySide6-Essentials-6.4.3 cute-sway-recorder-0.1.10 shiboken6-6.4.3
-WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
-```
->>> `pip install cute-sway-recorder` (first attempt)
->>>
->>
-
-```
-╭─n30@n30 in ~ as 🧙 took 83ms
-[🔴] × pip install cute-sway-recorder
-Defaulting to user installation because normal site-packages is not writeable
-Collecting cute-sway-recorder
-Downloading cute_sway_recorder-0.1.10-py3-none-any.whl (9.2 kB)
-Collecting PySide6<7.0.0,>=6.0.0
-Downloading PySide6-6.4.3-cp37-abi3-manylinux_2_28_x86_64.whl (6.7 kB)
-Collecting PySide6-Essentials==6.4.3
-Downloading PySide6_Essentials-6.4.3-cp37-abi3-manylinux_2_28_x86_64.whl (84.5 MB)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 84.5/84.5 MB 2.9 MB/s eta 0:00:00
-Collecting PySide6-Addons==6.4.3
-Downloading PySide6_Addons-6.4.3-cp37-abi3-manylinux_2_28_x86_64.whl (122.5 MB)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 122.5/122.5 MB 6.3 MB/s eta 0:00:00
-Collecting shiboken6==6.4.3
-Downloading shiboken6-6.4.3-cp37-abi3-manylinux_2_28_x86_64.whl (171 kB)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 171.6/171.6 kB 8.1 MB/s eta 0:00:00
-Installing collected packages: shiboken6, PySide6-Essentials, PySide6-Addons, PySide6, cute-sway-recorder
-WARNING: The scripts pyside6-assistant, pyside6-deploy, pyside6-designer, pyside6-genpyi, pyside6-linguist, pyside6-lrelease, pyside6-lupdate, pyside6-metaobjectdump, pyside6-project, pyside6-qml, pyside6-qmlformat, pyside6-qmlimportscanner, pyside6-qmllint, pyside6-qmlls, pyside6-qmltyperegistrar, pyside6-qtpy2cpp, pyside6-rcc and pyside6-uic are installed in '/home/n30/.local/bin' which is not on PATH.
-Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
-WARNING: The script cute-sway-recorder is installed in '/home/n30/.local/bin' which is not on PATH.
-Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
-Successfully installed PySide6-6.4.3 PySide6-Addons-6.4.3 PySide6-Essentials-6.4.3 cute-sway-recorder-0.1.10 shiboken6-6.4.3
 ```
 > # **[green-recorder](https://github.com/dvershinin/green-recorder)**
 >

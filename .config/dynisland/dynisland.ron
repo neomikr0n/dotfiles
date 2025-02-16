@@ -1,0 +1,54 @@
+Config(
+    loaded_modules: [
+        "MusicModule",
+    ],
+    layout: "DynamicLayout",
+    general_style_config: (
+        minimal_height: 32,
+        minimal_width: 300,
+        blur_radius: .0,
+        enable_drag_stretch: true,
+    ),
+    layout_configs: {
+        "DynamicLayout": (
+            window_position: (
+                layer: (
+                    Layer: "Top",
+                ),
+                h_anchor: (
+                    Alignment: "start",
+                ),
+                v_anchor: (
+                    Alignment: "Start",
+                ),
+                margin_x: 290,
+                margin_y: 14,
+                exclusive_zone: -1,
+                monitor: "",
+                layer_shell: true,
+            ),
+            auto_minimize_timeout: 10,
+            max_activities: 3,
+            max_active: 1,
+            reorder_on_add: true,
+            reorder_on_reload: true,
+            windows: {},
+        ),
+
+    },
+    module_config: {
+        "MusicModule": (
+            preferred_player: "",
+            default_album_art_url: "",
+            scrolling_label_speed: 40.0,
+            cava_visualizer_script: "cava -p ~/.config/dynisland/scripts/cava-config | awk '{print substr($0, 1, length($0)-1); fflush()}'",
+            use_fallback_player: true,
+            windows: {
+                
+            },
+            max_width: 9999,
+            minimal_width: 9999,
+        )
+    },
+    debug: None,
+)
