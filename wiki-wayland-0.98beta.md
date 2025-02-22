@@ -1119,7 +1119,7 @@ curl https://raw.githubusercontent.com/cr3eperall/dynisland-modules/refs/heads/m
 cd ~/
 ```
 
-```
+```css
 [general]
 framerate = 20
 autosens = 1
@@ -1149,7 +1149,9 @@ noise_reduction = 0.5
 
 ### get the music config:
 ```
-mkdir -p ~/.config/dynisland/modules/music-module/ && cd ~/.config/dynisland/modules/music-module/ && curl https://raw.githubusercontent.com/cr3eperall/dynisland-modules/refs/heads/main/music-module/default.scss | >> ~/.config/dynisland/modules/music-module/default.css && cd ~/
+mkdir -p ~/.config/dynisland/modules/music-module/ && \
+cd ~/.config/dynisland/modules/music-module/ && \
+curl https://raw.githubusercontent.com/cr3eperall/dynisland-modules/refs/heads/main/music-module/default.scss | >> ~/.config/dynisland/modules/music-module/default.css && cd ~/
 ```
 
 ### See the [Wiki](https://github.com/cr3eperall/dynisland/wiki) for the main config options
@@ -3397,6 +3399,12 @@ cd ~/Downloads && chmod +x VirtualBox*.run && sudo ./VirtualBox*.run uninstall
   spicetify backup apply
   ``````    
 ### best themes tho
+
+- ### [DribbblishDynamic](https://github.com/JulienMaille/dribbblish-dynamic-theme) 
+
+curl -fsSL https://raw.githubusercontent.com/JulienMaille/dribbblish-dynamic-theme/master/install.sh | sh
+
+
 - [Bloom](https://github.com/nimsandu/spicetify-bloom)
 
 ```
