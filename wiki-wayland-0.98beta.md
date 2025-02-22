@@ -3434,6 +3434,55 @@ curl -fsSL https://raw.githubusercontent.com/Astromations/Hazy/main/install.sh |
     spicetify config custom_apps lyrics-plus && spicetify apply
   ```
 
+
+Window 59682f363c80 -> Chicago - 25 or 6 to 4 - Steven Wilson Remix; 2016:
+	mapped: 1
+	hidden: 0
+	at: 2279,51
+	size: 1159,1217
+	workspace: -99 (special:special)
+	floating: 0
+	pseudo: 0
+	monitor: 0
+	class: Spotify
+	title: Chicago - 25 or 6 to 4 - Steven Wilson Remix; 2016
+	initialClass: Spotify
+	initialTitle: Spotify
+	pid: 1577
+	xwayland: 1
+	pinned: 0
+	fullscreen: 0
+	fullscreenClient: 0
+	grouped: 0
+	tags: 
+	swallowing: 0
+	focusHistoryID: 1
+	inhibitingIdle: 0
+
+Window 59682f596cb0 -> 25 or 6 to 4 - Steven Wilson Remix; 2016 • Chicago:
+	mapped: 1
+	hidden: 0
+	at: 608,3
+	size: 757,56
+	workspace: -99 (special:special)
+	floating: 1
+	pseudo: 0
+	monitor: 0
+	class: Chromium-browser
+	title: 25 or 6 to 4 - Steven Wilson Remix; 2016 • Chicago
+	initialClass: Chromium-browser
+	initialTitle: 25 or 6 to 4 - Steven Wilson Remix; 2016 • Chicago
+	pid: 1577
+	xwayland: 1
+	pinned: 0
+	fullscreen: 0
+	fullscreenClient: 0
+	grouped: 0
+	tags: 
+	swallowing: 0
+	focusHistoryID: 3
+	inhibitingIdle: 0
+
 ## [Hyprland tweak/hack](https://wiki.hyprland.org/Useful-Utilities/App-Clients/#spotify)
 
 Spotify **does not follow window rules**. This is because the client sets its class after the window has opened, thus making it “immune” to windowrules. An alternative to Spotify’s GUI client is `spotify-tui` which can be launched in a terminal with a custom class. While limited in functionality, it is quite powerful and could be preferred over the GUI client. Another alternative is ncspot, a powerful cross-platform ncurses Spotify client written in Rust.
