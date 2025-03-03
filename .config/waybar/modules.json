@@ -227,7 +227,7 @@
 
   // Clock
   "clock": {
-    "format": "{:%H:%M %a}",
+        "format": "{:%H:%M - %a}",
     "on-click": "flatpak run com.ml4w.calendar",
     "timezone": "",
     "tooltip": false
@@ -405,4 +405,40 @@
     ],
     "scroll-step": 1
   }
+
+  	/*---------------Playerctl---------------*/
+	"custom/playerctl#backward": {
+		"format": "󰙣 ",
+		"on-click": "playerctl previous",
+		"on-scroll-down": "wpctl set-volume @DEFAULT_SINK@ 5%-",
+		"on-scroll-up": "wpctl set-volume @DEFAULT_SINK@ 5%+",
+		"tooltip": false
+	},
+	"custom/playerctl#foward": {
+		"format": "󰙡 ",
+		"on-click": "playerctl next",
+		"on-scroll-down": "wpctl set-volume @DEFAULT_SINK@ 5%-",
+		"on-scroll-up": "wpctl set-volume @DEFAULT_SINK@ 5%+",
+		"tooltip": false
+	},
+	"custom/playerctl#play": {
+		"exec": "playerctl -a metadata --format '{\"text\": \"{{artist}} - {{markup_escape(title)}}\", \"tooltip\": \"{{playerName}} : {{markup_escape(title)}}\", \"alt\": \"{{status}}\", \"class\": \"{{status}}\"}' -F",
+		"format": "{icon}",
+		"format-icons": {
+			"Paused": "<span> </span>",
+			"Playing": "<span>󰏥 </span>",
+			"Stopped": "<span> </span>"
+		},
+		"on-click": "playerctl play-pause",
+		"on-scroll-down": "wpctl set-volume @DEFAULT_SINK@ 5%-",
+		"on-scroll-up": "wpctl set-volume @DEFAULT_SINK@ 5%+",
+		"return-type": "json"
+	},
+	"custom/playerlabel": {
+		"exec": "playerctl -a metadata --format '{\"text\": \"{{artist}} - {{markup_escape(title)}}\", \"tooltip\": \"{{playerName}} : {{markup_escape(title)}}\", \"alt\": \"{{status}}\", \"class\": \"{{status}}\"}' -F",
+		"format": "<span>󰎈 {} 󰎈</span>",
+		"max-length": 60,
+		"on-click": "",
+		"return-type": "json"
+	},
 }

@@ -14,14 +14,13 @@ My **dotfiles** for [Garuda](https://garudalinux.org/) Linux.
 
 
 ---
+---
 ![special](https://github.com/neomikr0n/dotfiles/blob/b7006fffd2666158e46f18c82e0f7fb6ddbe02bb/share/images/ss_2025-02-22_13-00_08_garuda.jpeg)
 
 - **[btop](https://github.com/aristocratos/btop)**
 - [spicetify's dribbblish-dynamic-theme](https://github.com/JulienMaille/dribbblish-dynamic-theme)
 - easyeffects
 - dynisland
-
-
 
 ---
 Based on [ML4W Dotfiles for Hyprland v2.9.8](https://github.com/mylinuxforwork/dotfiles)

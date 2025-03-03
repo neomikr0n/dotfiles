@@ -6,29 +6,7 @@
 sudo pacman -S yay
 ```
 
-# ENDEAVOUROS
-```
-yay -S --needed cava-git kdeconnect steam timer-rs lolcat ktimer sox safeeyes
-rustup btop mangohud-git spotify-adblock-git easyeffects lsp-plugins calf mda.lv2 zam-plugins dolphin dolphin-megasync-bin corectrl-git whatsie
-```
-
-<!-- TODO: -->
-
-- 1-general must 2-easyeffects + effects
-- **wev** : xev for wayland, shows keyboard keys name, pointer info and more
-- **gammastep**: replacment for redshift (clight, wlsunset-git, or wl-gammarelay are alternatives)
-- **wl-gammarelay**: developed from gammastep, a fork of redshift. It allows using keybindings to dynamically change the color temperature and software brightness, is a daemon which listens to DBus requests.
-- **qpwgraph** - A PipeWire Graph Qt GUI Interface
-
-```
-yay -S ocs-url solaar megasync copyq ventoy whatsapp-nativefier qcopy hyprpicker wev wl-gammarelay hyprland-scratchpad-git \
-mangohud joystickwake-git corectrl goverlay-git winetricks-git \
-caffeine-ng sddm kate sysstat swaync \
-spotify-adblock spicetify-git sox calf lsp-plugins mda.lv2 zam-plugins-lv2 pavucontrol qpwgraph-qt5 \
-oreo-cursors-git bibata-rainbow-cursor-theme layan-cursor-theme-git ttf-jetbrains-mono-nerd \
-thunar libwebp tumbler \
-cli-visualizer cava glava foot kitty the_silver_searcher
-```
+# GARUDA
 
 # **[Crashes and Bugs](https://wiki.hyprland.org/Crashes-and-Bugs/)**
 
@@ -3434,54 +3412,6 @@ curl -fsSL https://raw.githubusercontent.com/Astromations/Hazy/main/install.sh |
     spicetify config custom_apps lyrics-plus && spicetify apply
   ```
 
-
-Window 59682f363c80 -> Chicago - 25 or 6 to 4 - Steven Wilson Remix; 2016:
-	mapped: 1
-	hidden: 0
-	at: 2279,51
-	size: 1159,1217
-	workspace: -99 (special:special)
-	floating: 0
-	pseudo: 0
-	monitor: 0
-	class: Spotify
-	title: Chicago - 25 or 6 to 4 - Steven Wilson Remix; 2016
-	initialClass: Spotify
-	initialTitle: Spotify
-	pid: 1577
-	xwayland: 1
-	pinned: 0
-	fullscreen: 0
-	fullscreenClient: 0
-	grouped: 0
-	tags: 
-	swallowing: 0
-	focusHistoryID: 1
-	inhibitingIdle: 0
-
-Window 59682f596cb0 -> 25 or 6 to 4 - Steven Wilson Remix; 2016 • Chicago:
-	mapped: 1
-	hidden: 0
-	at: 608,3
-	size: 757,56
-	workspace: -99 (special:special)
-	floating: 1
-	pseudo: 0
-	monitor: 0
-	class: Chromium-browser
-	title: 25 or 6 to 4 - Steven Wilson Remix; 2016 • Chicago
-	initialClass: Chromium-browser
-	initialTitle: 25 or 6 to 4 - Steven Wilson Remix; 2016 • Chicago
-	pid: 1577
-	xwayland: 1
-	pinned: 0
-	fullscreen: 0
-	fullscreenClient: 0
-	grouped: 0
-	tags: 
-	swallowing: 0
-	focusHistoryID: 3
-	inhibitingIdle: 0
 
 ## [Hyprland tweak/hack](https://wiki.hyprland.org/Useful-Utilities/App-Clients/#spotify)
 
