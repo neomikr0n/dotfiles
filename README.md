@@ -12,8 +12,6 @@ My **dotfiles** for [Garuda](https://garudalinux.org/) Linux.
 - mpvpaper
 - tenki+lolcat:
 
-
----
 ---
 ![special](https://github.com/neomikr0n/dotfiles/blob/b7006fffd2666158e46f18c82e0f7fb6ddbe02bb/share/images/ss_2025-02-22_13-00_08_garuda.jpeg)
 
@@ -24,9 +22,11 @@ My **dotfiles** for [Garuda](https://garudalinux.org/) Linux.
 
 
 🌟 Why Yellow? 
+
 The Matrix is about perception vs. reality, control, and awakening. Yellow has long symbolized knowledge, intellect, and awakening. Mixed with black makes it high contrast, wich suits really good for the UI. The combination it's vibrant, energetic, which helps making the interface feel more dynamic. Readability is a concern; because of that it needs to balance with darker backgrounds to avoid eye strain; also looks gorgeous when a blue light filter is applied. 
 
 🔥 Aesthetic Design
+
 Aesthetically yellow represent something new. Enlightenment, as yellow is associated also with warm and beauty, extasis is not far from it, as the gorgeous female in the center of the animated wallpaper show us, surrounded by matrix code. 
 
 
