@@ -1,1 +1,1 @@
-gnome-text-editor
+code

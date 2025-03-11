@@ -65,7 +65,7 @@
 
     // Modules Center
     "modules-center": [
-"hyprland/window",
+        "hyprland/window",
         "custom/empty"
     ],
 
@@ -76,7 +76,7 @@
 //"backlight",
         "bluetooth",
         "battery", 
-"network",
+        "network",
         "group/hardware",
         "group/tools",
         "custom/exit",
