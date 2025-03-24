@@ -4,30 +4,20 @@ My **dotfiles** for [Garuda](https://garudalinux.org/) Linux.
 ![gif](https://github.com/neomikr0n/dotfiles/blob/6c1871171389335dc5a64a04b7ff3c39be931801/share/video/Kooha-2025-02-10-21-15-32%20(freeconvert).gif)
 
 
-- waybar
-- kitty
-- tmatrix
-- hollywood
-- cava
-- mpvpaper
-- tenki+lolcat:
+waybar, kitty, tmatrix, hollywood, cava, mpvpaper, tenki+lolcat:
 
 ---
 ![special](https://github.com/neomikr0n/dotfiles/blob/b7006fffd2666158e46f18c82e0f7fb6ddbe02bb/share/images/ss_2025-02-22_13-00_08_garuda.jpeg)
 
-- **[btop](https://github.com/aristocratos/btop)**
-- [spicetify's dribbblish-dynamic-theme](https://github.com/JulienMaille/dribbblish-dynamic-theme)
-- easyeffects
-- dynisland
+- **[btop](https://github.com/aristocratos/btop)**, [spicetify's dribbblish-dynamic-theme](https://github.com/JulienMaille/dribbblish-dynamic-theme), easyeffects, dynisland
 
+🌟 Why Yellow?
 
-🌟 Why Yellow? 
+The Matrix revolves around questioning reality, and yellow serves as the perfect metaphor for this theme. Historically tied to enlightenment, intellect, and awakening, the hue embodies the tension between illusion and truth. When paired with black, it creates a high-contrast combination that’s exceptionally well-suited for UI design. Readability is a key consideration, which is why the palette balances bold yellow tones with darker backgrounds to minimize eye strain. This combination also adapts elegantly to blue light filters, enhancing its futuristic glow. Beyond practicality, the vibrancy of yellow injects energy into the interface, mirroring the film’s dynamic tension between human resilience and digital control.
 
-The Matrix is about perception vs. reality, control, and awakening. Yellow has long symbolized knowledge, intellect, and awakening. Mixed with black makes it high contrast, wich suits really good for the UI. The combination it's vibrant, energetic, which helps making the interface feel more dynamic. Readability is a concern; because of that it needs to balance with darker backgrounds to avoid eye strain; also looks gorgeous when a blue light filter is applied. 
+🔥 Aesthetic Vision
 
-🔥 Aesthetic Design
-
-Aesthetically yellow represent something new. Enlightenment, as yellow is associated also with warm and beauty, extasis is not far from it, as the gorgeous female in the center of the animated wallpaper show us, surrounded by matrix code. 
+Yellow symbolizes rebirth—a visual metaphor for breaking free from simulated boundaries. It evokes warmth and luminosity, qualities that align with the Matrix’s duality of cold machinery and human spirit. The animated wallpaper crystallizes this contrast: a serene yet powerful female figure stands at the center, bathed in golden light as Matrix code fractures around her. This juxtaposition of organic beauty and digital chaos reflects the narrative’s core—the pursuit of transcendence through rebellion. The aesthetic isn’t just striking; it’s a deliberate narrative device, merging cinematic symbolism with modern design principles.
 
 
 🙏 Credits  
