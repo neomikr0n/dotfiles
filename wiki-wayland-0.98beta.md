@@ -3786,17 +3786,16 @@ an Open Source GOG and Epic games launcher
 
 ##  1. add rumpowered repo and multilib
 
-- run all 6 lines at once:
-```
+- run all 3 lines at once:
+```sh
 echo '
 
 [rumpowered]
 Server = https://jc141x.github.io/rumpowered-packages/$arch ' | sudo tee -a /etc/pacman.conf
-
-sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
 ```
 - then do one by one:
-```
+```sh
+sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
 sudo pacman-key --recv-keys cc7a2968b28a04b3
 sudo pacman-key --lsign-key cc7a2968b28a04b3
 garuda-update
@@ -3810,24 +3809,32 @@ yay -R amdvlk
 ## 2. Add required core packages
 
 - These packages are all required for our releases to work, if you dont have them the games will not run.
-```
+```sh
 yay -S --needed rumpowered/dwarfs fuse-overlayfs wine-staging bubblewrap wine-mono lib32-alsa-lib lib32-alsa-plugins lib32-libpulse lib32-pipewire lib32-openal libgphoto2 libxcrypt-compat gst-plugins-base gst-plugins-good gst-plugins-ugly gst-plugins-bad gstreamer-vaapi gst-libav lib32-gst-plugins-base-libs lib32-gst-plugins-base lib32-gst-plugins-good sdl2_ttf sdl2_image 
 ```
+# new command, slick but incompletey
+# yay -S --needed dwarfs fuse-overlayfs bubblewrap wine-staging {lib32-,}{alsa-plugins,libpulse,pipewire,gst-plugins-{good,base,base-libs}} gst-plugins-bad gst-plugins-bad-libs gst-plugins-ugly
 
 ## 3. Add GPU/APU Drivers required for AMD GPUs.
-
+```sh
+sudo pacman -S --needed {lib32-,}{vulkan-radeon,vulkan-icd-loader}
 ```
-yay -S --needed lib32-vulkan-radeon vulkan-radeon lib32-vulkan-icd-loader
+# old command
+# yay -S --needed lib32-vulkan-radeon vulkan-radeon lib32-vulkan-icd-loader
+
+## The wine 10.2 update is broken. Revert to 10.1 with:
+```
+sudo downgrade wine-staging
 ```
 
 ## 4. Install additional libraries
 - Some games require additional libaries to run successfully. We strongly recommend the following libraries are installed:
-```
+```sh
 yay -S --needed lib32-alsa-lib lib32-alsa-plugins lib32-libpulse lib32-openal giflib libgphoto2 libxcrypt-compat zlib gst-plugins-base gst-plugins-good gst-plugins-ugly gst-plugins-bad gstreamer-vaapi gst-libav
 ```
 ## 5. OPTIONAL 
 - Prevent non-LAN activity by default. It is recommended that you prevent access to the WAN for our releases.
-```
+```sh
 yay -S --needed rumpowered/bindtointerface rumpowered/lib32-bindtointerface
 ```
 
@@ -3838,7 +3845,7 @@ yay -S --needed rumpowered/bindtointerface rumpowered/lib32-bindtointerface
 DBG=1 bash /run/media/n30/Ember.Knights-jc141/start.e-w.sh
 ```
 
-```
+```sh
 winetricks atmlib corefonts gdiplus msxml3 msxml6 vcrun2008 vcrun2010 vcrun2012 fontsmooth-rgb gecko
 ```
 

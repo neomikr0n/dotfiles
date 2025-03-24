@@ -5,6 +5,9 @@
     "Books": {
         "save_path": ""
     },
+    "Fun": {
+        "save_path": ""
+    },
     "Game": {
         "save_path": "/run/media/n30/nvme_chivos/linuxsaurio"
     },
