@@ -20,7 +20,7 @@
       "default": ""
     },
     "persistent-workspaces": {
-            "*": 5
+      "*": 5
     }
   },
 
@@ -43,6 +43,7 @@
 
   // Hyprland Window
   "hyprland/window": {
+    "max-length": 60,
     "rewrite": {
       "(.*) - Brave": "$1",
       "(.*) - Chromium": "$1",
@@ -87,7 +88,7 @@
     "return-type": "json",
     "exec": "~/.config/ml4w/scripts/updates.sh",
     "interval": 1800,
-    "on-click": "$(cat ~/.config/ml4w/settings/terminal.sh) --class dotfiles-floating -e ~/.config/ml4w/scripts/installupdates.sh",
+    "on-click": "~/.config/ml4w/settings/installupdates.sh",
     "on-click-right": "~/.config/ml4w/settings/software.sh"
   },
 
@@ -172,13 +173,17 @@
     "tooltip-format": "Left: Notifications\nRight: Do not disturb",
     "format": "{icon}",
     "format-icons": {
-      "notification": "<span foreground='red'><sup></sup></span>",
+      "notification":
+        "<span rise='8pt'><span foreground='red'><sup></sup></span></span>",
       "none": "",
-      "dnd-notification": "<span foreground='red'><sup></sup></span>",
+      "dnd-notification":
+        "<span rise='8pt'><span foreground='red'><sup></sup></span></span>",
       "dnd-none": "",
-      "inhibited-notification": "<span foreground='red'><sup></sup></span>",
+      "inhibited-notification":
+        "<span rise='8pt'><span foreground='red'><sup></sup></span></span>",
       "inhibited-none": "",
-      "dnd-inhibited-notification": "<span foreground='red'><sup></sup></span>",
+      "dnd-inhibited-notification":
+        "<span rise='8pt'><span foreground='red'><sup></sup></span></span>",
       "dnd-inhibited-none": ""
     },
     "return-type": "json",
@@ -227,7 +232,7 @@
 
   // Clock
   "clock": {
-        "format": "{:%H:%M - %a}",
+    "format": "{:%H:%M %a}",
     "on-click": "flatpak run com.ml4w.calendar",
     "timezone": "",
     "tooltip": false
@@ -294,7 +299,7 @@
   "group/links": {
     "orientation": "horizontal",
     "modules": [
-      "custom/chatgpt",
+//      "custom/chatgpt",
       "custom/empty"
     ]
   },
@@ -343,6 +348,19 @@
     // "format-good": "", // An empty format will hide the module
     // "format-full": "",
     "format-icons": [" ", " ", " ", " ", " "]
+  },
+
+  // Power Profiles Daemon
+  "power-profiles-daemon": {
+    "format": "{icon}",
+    "tooltip-format": "Power profile: {profile}\nDriver: {driver}",
+    "tooltip": true,
+    "format-icons": {
+      "default": "",
+      "performance": "",
+      "balanced": "",
+      "power-saver": ""
+    }
   },
 
   // Pulseaudio
@@ -405,5 +423,4 @@
     ],
     "scroll-step": 1
   }
-
 }

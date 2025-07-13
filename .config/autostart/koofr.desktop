@@ -1,0 +1,8 @@
+[Desktop Entry]
+  Name=Koofr
+  GenericName=Hybrid storage cloud
+  Exec=/home/n30/koofr/storagegui
+  Terminal=false
+  Type=Application
+  Icon=/home/n30/koofr/icon.png
+  Categories=Network;FileTransfer;Internet;

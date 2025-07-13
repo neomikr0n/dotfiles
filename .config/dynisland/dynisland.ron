@@ -4,9 +4,9 @@ Config(
     ],
     layout: "DynamicLayout",
     general_style_config: (
-        minimal_height: 32,
-        minimal_width: 300,
-        blur_radius: .0,
+        minimal_height: 29,
+        minimal_width: 400,
+        blur_radius: 0,
         enable_drag_stretch: true,
     ),
     layout_configs: {
@@ -22,7 +22,7 @@ Config(
                     Alignment: "Start",
                 ),
                 margin_x: 290,
-                margin_y: 14,
+                margin_y: -3,
                 exclusive_zone: -1,
                 monitor: "",
                 layer_shell: true,
@@ -38,7 +38,7 @@ Config(
     },
     module_config: {
         "MusicModule": (
-            preferred_player: "",
+            preferred_player: "Cider",
             default_album_art_url: "",
             scrolling_label_speed: 40.0,
             cava_visualizer_script: "cava -p ~/.config/dynisland/scripts/cava-config | awk '{print substr($0, 1, length($0)-1); fflush()}'",
