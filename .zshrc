@@ -34,3 +34,5 @@ done
 if [ -f ~/.zshrc_custom ] ;then
     source ~/.zshrc_custom
 fi
+
+eval "$(zoxide init zsh)"

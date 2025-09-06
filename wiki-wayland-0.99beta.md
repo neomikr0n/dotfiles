@@ -6833,3 +6833,21 @@ mangohud FSR4_UPGRADE=1 PROTON_ENABLE_WAYLAND=1 PROTON_ENABLE_HDR=1 %command%
 mangohud SDL_VIDEODRIVER=x11 PROTON_FSR4_UPGRADE=1 %command%
 
 test
+
+  ❯❯ /home/n30 : ldd /usr/lib/libHSdata-array-byte*.so | grep 'not found'
+	libHStemplate-haskell-2.18.0.0-ghc9.2.8.so => not found
+	libHSpretty-1.1.3.6-ghc9.2.8.so => not found
+	libHSghc-boot-th-9.2.8-ghc9.2.8.so => not found
+	libHSdeepseq-1.4.6.1-ghc9.2.8.so => not found
+	libHSarray-0.5.4.0-ghc9.2.8.so => not found
+	libHSbase-4.16.4.0-ghc9.2.8.so => not found
+	libHSghc-bignum-1.2-ghc9.2.8.so => not found
+	libHSghc-prim-0.8.0-ghc9.2.8.so => not found
+
+  yay -S ghc --rebuildtree && yay -S $(yay -Qq | grep '^haskell-') --rebuildtree
+
+------
+### [Formato de información para el diagnóstico del SED del personal operativo de la APF](https://upsp.buengobierno.gob.mx/subsistema-de-evaluacion-del-desempeno/)
+
+### [Watermark Remover](https://www.watermarkremover.io/upload)
+
