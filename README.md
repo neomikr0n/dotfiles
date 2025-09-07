@@ -21,7 +21,7 @@ The Matrix revolves around questioning reality, and yellow serves as the perfect
 
 🔥 Aesthetic Vision
 
-Yellow symbolizes rebirth—a visual metaphor for breaking free from simulated boundaries. It evokes warmth and luminosity, qualities that align with the Matrix’s duality of cold machinery and human spirit. The animated wallpaper crystallizes this contrast: a serene yet powerful female figure stands at the center, bathed in golden light as Matrix code fractures around her. This juxtaposition of organic beauty and digital chaos reflects the narrative’s core—the pursuit of transcendence through rebellion. The aesthetic isn’t just striking; it’s a deliberate narrative device, merging cinematic symbolism with modern design principles.
+Designed to evoke warmth and luminosity in contrast of a black void, qualities that align with the Matrix’s duality of cold machinery and human spirit. The animated wallpaper crystallizes this contrast: a serene yet powerful female figure stands at the center, in clear extasis, bathed in golden light as Matrix code fractures around her. This juxtaposition of organic beauty and digital chaos reflects the narrative’s core—the pursuit of transcendence through rebellion. The aesthetic isn’t just striking; it’s a deliberate narrative device, merging cinematic symbolism with modern design principles.
 
 
 🙏 Credits  
