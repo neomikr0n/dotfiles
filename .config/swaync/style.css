@@ -1,7 +1,8 @@
 /* Colors */
 
 @import '../../.cache/wal/colors-waybar.css';
-@define-color background #242424;
+/* @define-color background #242424; */
+@define-color background #000000;
 @define-color groupbackground #363636;
 @define-color buttoncolor #4a4a4a;
 @define-color bordercolor @color11;
@@ -9,19 +10,38 @@
 
 * {
     font-family: "Fira Sans Semibold";
+    /* font-family: "JetBrains Mono Bold 12"; */
 }
 
-/* Control Center */
+.notification-row {
+  outline: none;
+  background: @background;
+}
 
+.notification-row:focus, .notification-row:hover {
+    background: @background;
+}
+
+.notification-row .notification-background {
+  /* padding: 5px 3px; */
+}
+
+
+
+/* Control Center */
 .control-center {
     border: 3px solid @bordercolor;
-    padding: 10px;
+    padding: 7px;
+    background: @background;
 }
 
 button {
-    border: 0px;
+    border: 1px;
     min-width: 35px;
-    background: @buttoncolor;
+    /* background: @buttoncolor;transparent */
+    background: transparent;
+    /* background: alpha(#101010,0.9); */
+    /* background: alpha(#101010,0.9); */
 }
 
 .notification-group-header {
@@ -38,6 +58,7 @@ button {
     border: 3px solid @bordercolor;
 	border-radius: 10px;
     padding:10px;
+    background: alpha(#101010,0.5);
 }
 
 .notification-default-action:hover,
