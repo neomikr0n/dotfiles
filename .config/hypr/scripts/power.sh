@@ -47,7 +47,7 @@ fi
 if [[ "$1" == "lock" ]]; then
   echo ":: Lock"
   sleep 0.5
-  hyprlock
+  /home/n30/dotfiles/share/scripts/screenlock.sh
 fi
 
 if [[ "$1" == "reboot" ]]; then

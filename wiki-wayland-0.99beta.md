@@ -537,7 +537,28 @@ Xcursor.size: 32
 XCURSOR_SIZE=32 konsole
 
 ---
+> # **[Zen-browser])**
+# completely chrome-less UI!
+about:config
+zen.theme.content-element-separation 0 
+# [Thanks to you all for helping me make the ZENTERNET better 🥰 ](https://www.reddit.com/r/zen_browser/comments/1niako0/thanks_to_you_all_for_helping_me_make_the/)
+# [How do I make this marked area transparent](https://www.reddit.com/r/zen_browser/comments/1nha186/how_do_i_make_this_marked_area_transparent/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1)
+- Zen Browser extension + color transparency config enabled
 
+- STEAMPUNK: Zen nebula mod, zen internet firefox addon
+    Sine https://github.com/CosmoCreeper/Sine/tree/main?tab=readme-ov-file#%EF%B8%8F-installation
+
+Applied for all profiles as not sure which one is active one
+
+2. Zen Settings (Preference) > Sine Mods
+3. Find "Nebula"
+
+4. Click "Nebula" extension icon to open setting for setup (Setup is simple but this one took me sometime to figure out setup is needed)
+
+5. "Zen internet firefox" https://addons.mozilla.org/en-US/firefox/addon/zen-internet/
+
+Restart Zen several times to ensure everything applied. 
+---
 > # **[swaync](https://github.com/ErikReider/SwayNotificationCenter)**
 
 ---
@@ -3413,6 +3434,33 @@ Settings -> Compatibility -> Enable Steam Play for all other titles
 gamescope -W 3440 -H 1440 -f -e -- mangohud %command%
 
 gamescope -w 3440 -h 1440 -f -r 60 -- steam steam://rungameid/238960
+
+
+# PoE
+windowrulev2 = tag +poe, title:(Path of Exile)
+windowrulev2 = tag +poe, class:(steam_app_238960)
+#windowrulev2 = float, tag:poe
+
+windowrulev2 = tag +apt, title:(Awakened PoE Trade)
+windowrulev2 = float, tag:apt 
+windowrulev2 = noblur, tag:apt
+windowrulev2 = nofocus, tag:apt # Disable auto-focus
+windowrulev2 = noshadow, tag:apt
+windowrulev2 = noborder, tag:apt
+windowrulev2 = size 100% 100%, tag:apt
+windowrulev2 = center, tag:apt
+
+bind = SHIFT,Space,pass, tag:apt
+bind = CTRL,D,pass, tag:apt
+bind = CTRL ALT,D,pass, tag:apt
+#bind = CTRL,V,pass, tag:apt
+
+# Trade UI (Mod+Shift+E)
+bind = $mainMod SHIFT, E, exec, hyprctl activewindow | grep -q "class: steam_app_2694490" && /path/to/hypr-exiled -showTrades
+
+# Quick hideout (F5)
+bind = , F5, exec, hyprctl activewindow | grep -q "class: steam_app_2694490" && /path/to/hypr-exiled -hideout
+
 
 ## STALKER HEARTH OF CHORNOBYL
 ```
