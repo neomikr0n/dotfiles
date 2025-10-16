@@ -4,9 +4,9 @@ Config(
     ],
     layout: "DynamicLayout",
     general_style_config: (
-        minimal_height: 29,
-        minimal_width: 400,
-        blur_radius: 0,
+        minimal_height: 23,
+        minimal_width: 500,
+        blur_radius: 10,
         enable_drag_stretch: true,
     ),
     layout_configs: {
@@ -22,7 +22,7 @@ Config(
                     Alignment: "Start",
                 ),
                 margin_x: 290,
-                margin_y: -3,
+                margin_y: 7,
                 exclusive_zone: -1,
                 monitor: "",
                 layer_shell: true,

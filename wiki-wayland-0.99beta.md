@@ -538,6 +538,11 @@ XCURSOR_SIZE=32 konsole
 
 ---
 > # **[Zen-browser])**
+
+# profiles startup
+about:profiles
+zen-browser -P tidal --app=https://tidal.com --class=tidal
+
 # completely chrome-less UI!
 about:config
 zen.theme.content-element-separation 0 
@@ -6989,3 +6994,5 @@ Confirma activación.”
 
     esta es una imagen de un gato viéndose en un espejo, cambiale el piso a esta imagen, pon a todo el piso vitropiso, elabora detenidamente el reflejo tanto del gato como del piso, asegúrate de cubrir todo el piso con vitropiso, ponle un marco negro al espejo. No cambies la expresión de la cara del gato, pero si ajusta la iluminacion y la saturación de los colores del gato para que coincida con la escena
 
+
+yay -S garuda-hardware-profile-standard garuda-hardware-profile-standard-x11
