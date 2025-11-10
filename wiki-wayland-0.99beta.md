@@ -1142,6 +1142,11 @@ curl https://raw.githubusercontent.com/cr3eperall/dynisland-modules/refs/heads/m
 
 ### See [dynisland-modules](https://github.com/cr3eperall/dynisland-modules) for the module specific configs
 
+# ID de la aplicación
+com.github.cr3eperall.dynisland
+# Ruta del recurso
+/com/github/cr3eperall/dynisland
+
 ---
 > # **[waybar]()**
 ## Font size shenanigans:
@@ -3172,6 +3177,11 @@ cd ~/Downloads && chmod +x VirtualBox*.run && sudo ./VirtualBox*.run uninstall
   spicetify backup apply
   ``````    
 ### best themes tho
+
+- ### [DefaultDynamic](https://github.com/JulienMaille/spicetify-dynamic-theme) 
+```
+curl -fsSL https://raw.githubusercontent.com/JulienMaille/spicetify-dynamic-theme/master/install.sh | sh
+```
 
 - ### [DribbblishDynamic](https://github.com/JulienMaille/dribbblish-dynamic-theme) 
 
@@ -6996,3 +7006,498 @@ Confirma activación.”
 
 
 yay -S garuda-hardware-profile-standard garuda-hardware-profile-standard-x11
+
+:: (1/2) Analizando SRCINFO: cavalier
+:: (2/2) Analizando SRCINFO: cavasik
+
+# [ELECTRON FLAGS](https://wiki.archlinux.org/title/Electron)
+
+cat > ~/.config/electron-flags.conf <<'EOF'
+--enable-features=WaylandWindowDecorations,AllowQt
+# --ozone-platform-hint=wayland (removed in Electron 38)
+--ozone-platform=wayland
+# GTK4 works better on Wayland.
+--gtk-version=4
+EOF
+
+## Secret Service API
+Electron provides the safestorage API to interact with a keyring compatible with the FreeDesktop.org's Secret Service API. Example of supported keyrings are GNOME/Keyring through GNOME libsecret, KDE Wallet and KeePass.
+
+The backend can be chosen on the command-line with the --password-store flag when running an Electron application. As an example, running electron-desktop (built with Electron) to interact with libsecret or KeePass: 
+```
+$ electron-desktop --password-store="gnome-libsecret"
+```
+
+# GAME MODE SCRIPT:
+Si quieres, puedo hacer una guía rápida de optimizaciones adicionales para AMD Navi 48, para sacar el máximo rendimiento sin tocar root, usando solo gamemoded + PipeWire + Hyprland.
+
+
+
+    Evita múltiples instancias
+    Gamemoded integrado (activación automática por PID)
+    Steam real detectado por AppID (solo activa Modo Juego en juegos reales)
+    Hyprland reversible (animaciones, blur, shadow, gaps, rounding)
+    PipeWire optimizado
+    mpvpaper cerrado
+    Variables de entorno para Proton/Wayland/MangoHUD
+    Notificaciones modernas con emojis
+    Mensajes en tiempo real cuando Gamemode se activa/desactiva para un juego
+
+# PROJECT CHATYIPITI
+
+REGLAS:
+1. prefiero usar yay sobre pacman
+2. los comandos para la terminal son shell zsh
+3. preferentemente comandos de una sola linea
+4. mis scripts estan en $HOME/dotfiles/share/scripts/
+5. mis scripts estan en $HOME/dotfiles/
+
+
+echo $XDG_SESSION_TYPE
+wayland
+
+echo $XDG_SESSION_DESKTOP
+Hyprland
+
+hyprctl version
+Hyprland 0.51.1 built from branch  at commit 71a1216abcc7031776630a6d88f105605c4dc1c9  ([gha] Nix: update inputs).
+Date: Mon Sep 22 20:54:03 2025
+Tag: v0.51.1, commits: 6436
+built against:
+ aquamarine 0.9.5
+ hyprlang 0.6.3
+ hyprutils 0.10.0
+ hyprcursor 0.1.13
+ hyprgraphics 0.2.0
+
+yay --version 2>/dev/null || paru --version 2>/dev/null
+yay v12.5.2 - libalpm v15.0.0
+
+cat /etc/os-release
+NAME="Garuda Linux"
+PRETTY_NAME="Garuda Linux"
+ID=garuda
+ID_LIKE=arch
+BUILD_ID=rolling
+ANSI_COLOR="38;2;23;147;209"
+HOME_URL="https://garudalinux.org/"
+DOCUMENTATION_URL="https://wiki.garudalinux.org/"
+SUPPORT_URL="https://forum.garudalinux.org/"
+BUG_REPORT_URL="https://gitlab.com/groups/garuda-linux/"
+PRIVACY_POLICY_URL="https://terms.archlinux.org/docs/privacy-policy/"
+LOGO=garudalinux
+
+uname -a
+Linux n30-garuda 6.17.2-zen1-1-zen #1 ZEN SMP PREEMPT_DYNAMIC Sun, 12 Oct 2025 12:45:04 +0000 x86_64 GNU/Linux
+
+lscpu
+Arquitectura:                            x86_64
+  modo(s) de operación de las CPUs:      32-bit, 64-bit
+  Tamaños de las direcciones:            46 bits physical, 48 bits virtual
+  Orden de los bytes:                    Little Endian
+CPU(s):                                  20
+  Lista de la(s) CPU(s) en línea:        0-19
+ID de fabricante:                        GenuineIntel
+  Nombre del modelo:                     13th Gen Intel(R) Core(TM) i5-13600K
+    Familia de CPU:                      6
+    Modelo:                              183
+    Hilo(s) de procesamiento por núcleo: 2
+    Núcleo(s) por «socket»:              14
+    «Socket(s)»:                         1
+    Revisión:                            1
+    CPU(s) factor de escala MHz:         77%
+    CPU MHz máx.:                        5200.0000
+    CPU MHz mín.:                        800.0000
+    BogoMIPS:                            6988.80
+    Indicadores:                         fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse3
+                                         6 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb r
+                                         dtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopolog
+                                         y nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 mon
+                                         itor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 
+                                         sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdran
+                                         d lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_
+                                         enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust b
+                                         mi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_
+                                         pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk 
+                                         avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp
+                                          hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpi
+                                         d movdiri movdir64b fsrm md_clear serialize pconfig arch_lbr flush_l1d
+                                          arch_capabilities
+Características de virtualización:       
+  Virtualización:                        VT-x
+Cachés (suma de todas):                  
+  L1d:                                   544 KiB (14 instancias)
+  L1i:                                   704 KiB (14 instancias)
+  L2:                                    20 MiB (8 instancias)
+  L3:                                    24 MiB (1 instancia)
+NUMA:                                    
+  Modo(s) NUMA:                          1
+  CPU(s) del nodo NUMA 0:                0-19
+Vulnerabilidades:                        
+  Gather data sampling:                  Not affected
+  Ghostwrite:                            Not affected
+  Indirect target selection:             Not affected
+  Itlb multihit:                         Not affected
+  L1tf:                                  Not affected
+  Mds:                                   Not affected
+  Meltdown:                              Not affected
+  Mmio stale data:                       Not affected
+  Old microcode:                         Not affected
+  Reg file data sampling:                Mitigation; Clear Register File
+  Retbleed:                              Not affected
+  Spec rstack overflow:                  Not affected
+  Spec store bypass:                     Mitigation; Speculative Store Bypass disabled via prctl
+  Spectre v1:                            Mitigation; usercopy/swapgs barriers and __user pointer sanitization
+  Spectre v2:                            Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS S
+                                         W sequence; BHI BHI_DIS_S
+  Srbds:                                 Not affected
+  Tsa:                                   Not affected
+  Tsx async abort:                       Not affected
+  Vmscape:                               Mitigation; IBPB before exit to userspace
+
+  MemTotal:       32657724 kB
+
+  lspci | grep -i vga
+03:00.0 VGA compatible controller: Advanced Micro Devices, Inc. [AMD/ATI] Navi 48 [Radeon RX 9070/9070 XT/9070 GRE] (rev c0)
+
+printenv | grep -E "PATH|HOME|PYTHON|VIRTUAL"
+HOME=/home/n30
+PATH=/usr/lib/ccache/bin/:/usr/local/sbin:/usr/local/bin:/usr/bin:/home/n30/.local/share/flatpak/exports/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl
+XDG_SEAT_PATH=/org/freedesktop/DisplayManager/Seat0
+XDG_SESSION_PATH=/org/freedesktop/DisplayManager/Session2
+VIRTUAL_ENV_DISABLE_PROMPT=1
+PYENV_VIRTUALENV_DISABLE_PROMPT=1
+
+lspci -k | grep -A 2 "VGA"
+glxinfo | grep "OpenGL version"
+
+# Versión de herramientas de desarrollo
+gcc --version
+python --version
+python3 --version
+rustc --version
+node --version
+npm --version
+git --version
+03:00.0 VGA compatible controller: Advanced Micro Devices, Inc. [AMD/ATI] Navi 48 [Radeon RX 9070/9070 XT/9070 GRE] (rev c0)
+	Subsystem: XFX Limited Device 8811
+	Kernel driver in use: amdgpu
+OpenGL version string: 4.6 (Compatibility Profile) Mesa 26.0.0-devel (git-ad421cdf2e)
+gcc (GCC) 15.2.1 20250813
+Copyright (C) 2025 Free Software Foundation, Inc.
+Esto es software libre; vea el código para las condiciones de copia.  NO hay
+garantía; ni siquiera para MERCANTIBILIDAD o IDONEIDAD PARA UN PROPÓSITO EN
+PARTICULAR
+
+Python 3.13.7
+Python 3.13.7
+rustc 1.90.0 (1159e78c4 2025-09-14) (Arch Linux rust 1:1.90.0-3)
+v20.19.5
+11.6.2
+git version 2.51.1.dirty
+
+Paquetes (1) mesa-git-26.0.0_devel.213720.b1370e1935c.d41d8cd-1
+2  aur/proton-cachyos                         1:10.0.20250906-1     -> 1:10.0.20251015-1
+
+https://youtu.be/NZYb3DnayAE?si=08XtoGV2DZrHNNJ4
+
+
+GSK_RENDERER=gl DEBUG=1 easyeffects
+
+---
+- Installation Guide
+Quick Start (5 minutes)
+1. Clone Repository
+```
+git clone https://github.com/ind4skylivey/0ptiscaler4linux.git
+cd 0ptiscaler4linux
+```
+ 
+2. Run Installer
+```
+bash scripts/install.sh
+```
+
+The installer will:
+
+    ✓ Detect your GPU automatically
+    ✓ Scan Steam library for supported games
+    ✓ Generate optimized configuration files
+
+═══════════════════════════════════════════════════════════════════════════
+                                                                           
+                    OPTISCALER UNIVERSAL INSTALLER                        
+                                                                           
+           Unlock your GPU's full potential on Linux - automatically      
+                                                                           
+═══════════════════════════════════════════════════════════════════════════
+
+Version: 0.1.0-alpha
+License: MIT - Open Source
+
+[INFO] Starting OptiScaler Universal installation...
+
+
+═══════════════════════════════════════════════════════════════════════════
+  Checking System Requirements
+═══════════════════════════════════════════════════════════════════════════
+
+[INFO] SECTION: Checking System Requirements
+✓ Bash version: 5.3.3(1)-release
+[INFO] SUCCESS: Bash version: 5.3.3(1)-release
+✓ lspci: found
+[INFO] SUCCESS: lspci: found
+✓ sed: found
+[INFO] SUCCESS: sed: found
+✓ awk: found
+[INFO] SUCCESS: awk: found
+✓ grep: found
+[INFO] SUCCESS: grep: found
+✓ python3: found (for YAML parsing)
+[INFO] SUCCESS: python3: found (for YAML parsing)
+[INFO] All requirements met
+
+
+═══════════════════════════════════════════════════════════════════════════
+  Detecting GPU Configuration
+═══════════════════════════════════════════════════════════════════════════
+
+[INFO] SECTION: Detecting GPU Configuration
+[INFO] Detecting GPU configuration...
+[INFO] GPU Detection Results:
+[INFO]   Vendor: AMD
+[INFO]   Architecture: RDNA
+[INFO]   Generation: RDNA4
+[INFO]   Model: Navi 48 [Radeon RX 9070/9070 XT/9070 GRE]
+[INFO]   Capabilities: FSR3 FSR4_NATIVE ANTI_LAG_2 XESS_SW DLSS_INPUTS_RECOMMENDED
+
+
+═══════════════════════════════════════════════════════════════════════════
+  Detected Configuration
+═══════════════════════════════════════════════════════════════════════════
+
+[INFO] SECTION: Detected Configuration
+GPU Vendor:      AMD
+Architecture:    RDNA
+Generation:      RDNA4
+Model:           Navi 48 [Radeon RX 9070/9070 XT/9070 GRE]
+Capabilities:    FSR3 FSR4_NATIVE ANTI_LAG_2 XESS_SW DLSS_INPUTS_RECOMMENDED
+
+Recommended GPU Profile: amd-rdna4
+
+[INFO] Mesa version 26.0.0 meets requirements
+
+
+═══════════════════════════════════════════════════════════════════════════
+  Scanning for Supported Games
+═══════════════════════════════════════════════════════════════════════════
+
+[INFO] SECTION: Scanning for Supported Games
+[INFO] Scanning Steam library for games...
+[INFO] Found 4 Steam library location(s)
+
+3. Copy Configuration
+
+# Copy generated configs to your game
+cp ~/.optiscaler-universal/generated/*.ini "$GAME_DIR/Bin64/"
+
+cp ~/.optiscaler-universal/generated/*.ini "/run/media/n30/nvme_chivos/SteamLibrary/steamapps/common/ARK Survival Ascended/ShooterGame/Binaries/Win64"
+
+4. Configure Steam
+
+Right-click game → Properties → Launch Options:
+
+mangohud WINEDLLOVERRIDES=dxgi.dll=n,b PROTON_FSR4_UPGRADE=1 %command%
+
+Select Proton: Proton-EM 10.0-30 (or GE-Proton 10-21+)
+5. In-Game Settings
+
+    Upscaling: DLSS Quality
+    NVIDIA Reflex: On + Boost
+    VSync: Off
+
+6. Verify
+
+Press HOME in-game → OptiScaler menu should appear
+Supported Games
+
+    Cyberpunk 2077
+    New World
+    Starfield
+    Red Dead Redemption 2
+    Spider-Man Remastered
+    God of War
+    Alan Wake 2
+    Hogwarts Legacy
+    The Witcher 3
+    Elden Ring
+
+Troubleshooting
+
+    No DLSS option: Check Steam launch options
+    Low FPS: Verify correct GPU profile loaded
+    Crashes: Try different Proton version
+
+For more help: https://github.com/ind4skylivey/0ptiscaler4linux/issues
+
+
+Window 55aa10b44300 -> SafeEyes-0:
+	mapped: 1
+	hidden: 0
+	at: 0,0
+	size: 3440,1440
+	workspace: 3 (3)
+	floating: 0
+	pseudo: 0
+	monitor: 0
+	class: io.github.slgobinath.SafeEyes
+	title: SafeEyes-0
+	initialClass: io.github.slgobinath.SafeEyes
+	initialTitle: SafeEyes-0
+	pid: 19351
+	xwayland: 0
+	pinned: 0
+	fullscreen: 2
+	fullscreenClient: 2
+	grouped: 0
+	tags: 
+	swallowing: 0
+	focusHistoryID: 0
+	inhibitingIdle: 0
+	xdgTag: 
+	xdgDescription: 
+
+
+---
+# [OPTISCALER](https://github.com/optiscaler/OptiScaler/wiki/Automated-Install)
+# fOR Running Ark Ascended
+
+steam -applaunch 2399830 "$@"
+steam steam://rungameid/2399830
+
+/run/media/n30/nvme_chivos/SteamLibrary/steamapps/common/ARK Survival Ascended/ShooterGame/Binaries/Win64/
+
+WINEDLLOVERRIDES=dxgi.dll=n,b PROTON_FSR4_UPGRADE=1 mangohud %command%
+
+\run\media\n30\nvme_chivos\SteamLibrary\steamapps\common\ARK Survival Ascended\ShooterGame\Saved\Crashes\UECC-Windows-8B1DA3A6465396D5317C7AB7E3A0B772_0000
+
+Z:\run\media\n30\nvme_chivos\SteamLibrary\steamapps\common\ARK Survival Ascended\ShooterGame\Saved\Crashes\UECC-Windows-8B1DA3A6465396D5317C7AB7E3A0B772_0000
+
+
+0a. Download the latest stable build of Optiscaler [from here](https://github.com/optiscaler/OptiScaler/releases/latest) TO:
+/run/media/n30/nvme_chivos/SteamLibrary/steamapps/common/ARK Survival Ascended/ShooterGame/Binaries/Win64/
+_**0a. Download the latest stable build of Optiscaler [from here](https://github.com/optiscaler/OptiScaler/releases/latest).**_
+
+_We also have the Rolling/Nightly releases which might have some newer bleeding edge things_ - [_**Nightly builds**_](https://github.com/optiscaler/OptiScaler/releases/tag/nightly)
+
+Note
+_If you want to send a log file, set `LogLevel=0` and `LogToFile=true`, reproduce the issue and zip the log if it's too big._
+
+## Automated
+[](https://github.com/optiscaler/OptiScaler/wiki/Automated-Installation#automated)
+
+Tip
+**0b.** Please check the [**General Compatibility List**](https://github.com/optiscaler/OptiScaler/wiki/Compatibility-List) first for already documented fixes and workarounds - same for [**FSR4 Compatibility List**](https://github.com/optiscaler/OptiScaler/wiki/FSR4-Compatibility-List)
+
+### **1.** Extract **all** of the Optiscaler files **by the main game exe**.
+[](https://github.com/optiscaler/OptiScaler/wiki/Automated-Installation#1-extract-all-of-the-optiscaler-files-by-the-main-game-exe)
+
+Important
+/run/media/n30/nvme_chivos/SteamLibrary/steamapps/common/ARK Survival Ascended/ShooterGame/Binaries/Win64/
+
+_(for _**Unreal Engine**_ games, look for the _**win\_shipping.exe**_ in one of the subfolders, generally **`<path-to-game>\Game-or-Project-name\Binaries\Win64 or WinGDK\`**, **ignore** the `Engine` folder)_
+
+**Example paths** - _`Expedition 33\Sandfall\Binaries\Win64`_, `Jedi Survivor\SwGame\Binaries\Win64`, `Cyberpunk 2077\bin\x64`, `HITMAN 3\Retail`, `Warhammer 40,000 DARKTIDE\binaries`, `The Witcher 3\bin\x64_dx12`
+
+### **2.** Run the appropriate `setup.bat` script for automating the renaming process. BAT install should work for the vast majority of cases.
+
+[](https://github.com/optiscaler/OptiScaler/wiki/Automated-Installation#2-run-the-appropriate-setupbat-script-for-automating-the-renaming-process-bat-install-should-work-for-the-vast-majority-of-cases)
+
+Tip
+
+**2a.** For **AMD/Intel**, about using **DLSS Inputs** - it is necessary to select **Yes** if you intend to use Nukem mod, if you want Reflex->AL2 conversion (both require _**Fakenvapi**_), and especially if the game has only DLSS
+
+Important
+
+-   **From 0.7.8**, selecting **Yes** to **DLSS Inputs** (as AMD/Intel) no longer creates a `nvngx.dll`, since @FakeMichau managed to workaround that. One less step required now if you were doing it manually.
+-   Now only selecting **No** to DLSS Inputs should **modify Optiscaler.ini** and change `Dxgi=auto` to **`Dxgi=false`**.
+-   With the changes mentioned above, spoofing working properly means `nvngx replacement: Exists` will be mentioned in the Opti Overlay, and that's the important part, `nvngx.dll: Doesn't Exist` is irrelevant if nvngx replacement exists.
+-   If you get **`Access denied`** error during the install, just manually rename the OptiScaler.dll, it's a permissions issue regarding your game folder.
+
+Note
+
+_For FSR2/3-only games that **don't have DLSS** (e.g. The Callisto Protocol or The Outer Worlds: Spacer's Choice Edition), you have to **provide** the `nvngx_dlss.dll` in order to use DLSS in Optiscaler - download link e.g. [TechPowerUp](https://www.techpowerup.com/download/nvidia-dlss-dll/)_
+
+### **3.** If the batch file wasn't successful, please check the [Manual](https://github.com/optiscaler/OptiScaler/wiki/Manual-Installation) steps.
+
+[](https://github.com/optiscaler/OptiScaler/wiki/Automated-Installation#3-if-the-batch-file-wasnt-successful-please-check-the-manual-steps)
+
+_For **AMD/Intel**, it usually fails at locating the `nvngx_dlss.dll` (devs put it in an unexpected place). In that case, it's enough to follow **Step 3** from Manual install._
+
+Tip
+
+If **AMD/Intel** and **DLSS inputs** aren't visible even after selecting **Yes** during Install, game requires adding [**Fakenvapi**](https://github.com/optiscaler/OptiScaler/wiki/Fakenvapi)
+
+* * *
+
+Caution
+
+### If you need **Nukem** or **Fakenvapi**, now check their respective pages:
+
+[](https://github.com/optiscaler/OptiScaler/wiki/Automated-Installation#if-you-need-nukem-or-fakenvapi-now-check-their-respective-pages)
+
+-   [**NukemFG mod**](https://github.com/optiscaler/OptiScaler/wiki/Nukem's-dlssg%E2%80%90to%E2%80%90fsr3)
+-   [**Fakenvapi**](https://github.com/optiscaler/OptiScaler/wiki/Fakenvapi)
+
+* * *
+
+Note
+
+-   Pressing **`Insert`** should open the Optiscaler **Overlay** in-game with all of the options (_`ShortcutKey=` can be changed in the config file_).
+-   Pressing **`Page Up`** shows the performance stats overlay in the top left, and can be cycled between different modes with **`Page Down`** (_keybinds customisable in the overlay_).
+-   If Opti overlay is instantly disappearing after trying Insert a few times, maybe try **`Alt + Insert`** ([reported workaround](https://github.com/optiscaler/OptiScaler/issues/484) for alternate keyboard layouts).
+-   For some games (e.g. Dying Light 2), mouse doesn't work in the overlay, so keyboard navigation is required - Arrow keys, Tab and Space
+
+For more info, please check [Readme - How it works?](https://github.com/optiscaler/OptiScaler?tab=readme-ov-file#how-it-works)
+
+* * *
+
+Tip
+
+_\[1\] Linux users should add renamed dll to overrides:_
+
+    WINEDLLOVERRIDES=dxgi=n,b %COMMAND% 
+    
+
+Important
+
+**Please don't rename the ini file, it should stay as `OptiScaler.ini`**.
+
+Note
+
+### OptiScaler supports these filenames:
+
+[](https://github.com/optiscaler/OptiScaler/wiki/Automated-Installation#optiscaler-supports-these-filenames)
+
+-   dxgi.dll
+-   winmm.dll
+-   d3d12.dll _(from 0.7.7 nightlies)_
+-   dbghelp.dll _(from 0.7.7 nightlies)_
+-   version.dll
+-   wininet.dll
+-   winhttp.dll
+-   OptiScaler.asi _(needs [Ultimate ASI Loader x64](https://github.com/ThirteenAG/Ultimate-ASI-Loader/releases) or similar)_
+
+
+# mesa-git
+```
+cd ~/.cache/yay/mesa-git && rm -f mesa-git-*.pkg.tar.zst && makepkg -sfd && cd ~/.cache/yay/lib32-mesa-git && rm -f lib32-mesa-git-*.pkg.tar.zst && makepkg -sfd && sudo pacman -U ~/.cache/yay/mesa-git/mesa-git-*.pkg.tar.zst ~/.cache/yay/lib32-mesa-git/lib32-mesa-git-*.pkg.tar.zst /var/cache/pacman/pkg/llvm-libs-21.1.4-1-x86_64.pkg.tar.zst /var/cache/pacman/pkg/lib32-llvm-libs-1:21.1.4-1-x86_64.pkg.tar.zst
+```
+
+Explicación:
+
+    pacman -U con múltiples paquetes los instala todos simultáneamente
+    Esto reemplaza mesa-git (LLVM 20) + instala LLVM 21 al mismo tiempo
+    No hay estado roto intermedio
+
+

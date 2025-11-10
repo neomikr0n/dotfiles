@@ -13,5 +13,8 @@
     },
     "Movie": {
         "save_path": ""
+    },
+    "videos": {
+        "save_path": "/run/media/n30/chivos_4t/video"
     }
 }
