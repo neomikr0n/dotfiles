@@ -1,0 +1,305 @@
+/* Original theme: https://github.com/zDyanTB/HyprNova */
+/* Edited (poorly) by @GeodeArc */
+
+@define-color text            @foreground;
+@define-color border          alpha(@foreground, 0.8);
+@define-color background-alt  alpha(@color1, .4);
+@define-color background-bg  alpha(@color1, .75);
+@define-color selected        @color6;
+@define-color hover           alpha(@selected, .4);
+@define-color urgent          @color2;
+
+* {
+  color:            @text;
+  all:              unset;
+  font-size:        14px;
+  font-family:      "FiraCode Nerd Font 10";
+  transition:       200ms;
+
+}
+
+/* Avoid 'annoying' backgroud */
+.blank-window {  
+  background: transparent;  
+}
+  
+/* CONTROL CENTER ------------------------------------------------------------------------ */
+
+.control-center {
+  background: alpha(@background, .50);
+  border-radius: 18px;
+  border: 1px solid @border;
+  box-shadow: 0 0 10px 0 rgba(0,0,0,.6);
+  margin: 10px;
+  padding: 12px;
+  padding-top: 2px;
+}
+
+/* Notifications  */
+.control-center .notification-row .notification-background,
+.control-center .notification-row .notification-background .notification.critical {
+  background-color: alpha(@background, .80);
+  border: 1px solid alpha(@foreground, .60);
+  border-radius: 8px;
+  margin: 4px 0px;
+  padding: 4px;
+}
+
+.control-center .notification-row .notification-background .notification.critical {
+  color: @urgent;
+}
+
+.control-center .notification-row .notification-background .notification .notification-content {
+  margin: 6px;
+  padding: 8px 6px 2px 2px;
+}
+
+.control-center .notification-row .notification-background .notification > *:last-child > * {
+  min-height: 3.4em;
+}
+
+.control-center .notification-row .notification-background .notification > *:last-child > * .notification-action {
+  background: alpha(@selected, .8);
+  color: @text;
+  border-radius: 12px;
+  margin: 6px;
+}
+
+.control-center .notification-row .notification-background .notification > *:last-child > * .notification-action:hover {
+  background: @selected;
+}
+
+.control-center .notification-row .notification-background .notification > *:last-child > * .notification-action:active {
+  background-color: @selected;
+}
+
+/* Buttons */
+
+.control-center .notification-row .notification-background .close-button {
+  background: transparent;
+  border-radius: 6px;
+  color: @text;
+  margin: 0px;
+  padding: 4px;
+}
+
+.control-center .notification-row .notification-background .close-button:hover {
+  background-color: @selected;
+}
+
+.control-center .notification-row .notification-background .close-button:active {
+  background-color: @selected;
+}
+
+progressbar,
+progress {
+  border-radius: 12px;
+}
+
+progressbar {
+  background-color: rgba(255,255,255,.1);
+}
+
+/* Notifications expanded-group */
+
+.notification-group {
+  margin: 2px 8px 2px 8px;
+}
+.notification-group-headers {
+  font-weight: bold;
+  font-size: 1.25rem;
+  color: @text;
+  letter-spacing: 2px;
+  padding-bottom: 10px;
+}
+
+.notification-group-icon {
+  color: @text;
+}
+
+.notification-group-collapse-button,
+.notification-group-close-all-button {
+  background: transparent;
+  color: @text;
+  margin: 4px; 
+  border-radius: 100px;
+  padding: 4px;
+}
+
+.notification-group-collapse-button:hover,
+.notification-group-close-all-button:hover {
+  background: @hover;
+}  
+
+/* WIDGETS --------------------------------------------------------------------------- */
+
+/* Do not disturb */
+.widget-dnd {
+  margin: 10px;
+  font-size: 1.2rem;
+}
+
+.widget-dnd > switch {
+  background: alpha(@background, .50);
+  font-size: initial;
+  border-radius: 6px;
+  padding: 3px;
+}
+
+.widget-dnd > switch:hover {
+  background: @hover;
+}
+
+.widget-dnd > switch:checked {
+  background: @text;
+}
+
+.widget-dnd > switch:checked:hover {
+  background: @hover;
+}
+
+.widget-dnd > switch slider {
+  background: @selected;
+  padding: 11px 11px;
+  border-radius: 5px;
+}
+
+/* Buttons menu */
+.widget-buttons-grid {
+  padding: 4px 2px;
+  margin: 0px 10px 20px 10px;
+  border-radius: 8px;
+  background: alpha(@background, .50);
+}
+
+.widget-buttons-grid>flowbox>flowboxchild>button {
+  margin: 2px 5px;
+  padding: 14px 18px;
+  background: transparent;
+  border-radius: 6px;
+}
+
+.widget-buttons-grid>flowbox>flowboxchild>button:hover {
+  background: @selected;
+}
+
+.widget-buttons-grid button label {
+  font-size: 1.05rem;
+}
+
+
+/* Music player */
+.widget-mpris {
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.widget-mpris-player {
+    border-radius: 8px;
+    margin: 0px 10px 0px 10px;
+}
+
+.mpris-background { 
+  filter: blur(6px);
+  opacity: 0.6;
+  background-color: @background-alt;
+} 
+
+.widget-mpris > box > button {
+  color: @text;
+}
+ 
+.widget-mpris button {
+  color: #FFF;
+  padding: 2px;
+  padding-top: 20px;
+  padding-bottom: 10px;
+}
+
+.widget-mpris button:hover {
+  color: @foreground;
+}
+
+.widget-mpris-album-art {
+  border-radius: 10px;
+  margin: 6px;
+}
+ 
+.widget-mpris-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+ 
+.widget-mpris-subtitle {
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+/* Volume widget */
+trough {
+    border-radius: 6px;
+    background: transparent;
+}
+trough highlight {
+    padding: 5px;
+    background: @selected;
+    border-radius: 5px;
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, .5);
+}
+trough highlight:hover {
+    padding: 5px;
+    background: @selected;
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 1);
+}
+
+.widget-volume {
+  background-color: @background-sec;
+  padding: 8px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  margin: 0px 2px;
+  border-radius: 10px;
+}
+
+.widget-volume trough {
+  padding: 3px;
+  background: alpha(@background, .50);
+}
+
+.widget-volume trough slider {
+  min-height: 1.25rem;
+}
+
+.widget-volume .per-app-volume {
+  padding-right: 26px;
+}
+
+.widget-volume box {
+  padding: 8px;
+}
+
+.widget-volume .per-app-volume image {
+  margin-right: 19px;
+}
+
+.widget-backlight {
+  background-color: @background-sec;
+  padding: 8px;
+  padding-bottom: 4px;
+  padding-right: 44px;
+  margin: 0px 1px;
+  border-radius: 10px;
+}
+
+.widget-backlight trough {
+  padding: 3px;
+  background: alpha(@background, .50);
+}
+
+.widget-backlight trough slider {
+  min-height: 1.25rem;
+}
+
+.widget-backlight box {
+  padding: 8px;
+}
