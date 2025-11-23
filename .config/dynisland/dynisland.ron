@@ -1,28 +1,21 @@
-Config(
-    loaded_modules: [
-        "MusicModule",
+Config(loaded_modules: [ "MusicModule",
     ],
     layout: "DynamicLayout",
-    general_style_config: (
-        minimal_height: 23,
+    general_style_config: (minimal_height: 28,
         minimal_width: 500,
         blur_radius: 10,
         enable_drag_stretch: true,
     ),
     layout_configs: {
-        "DynamicLayout": (
-            window_position: (
-                layer: (
-                    Layer: "Top",
+
+        "DynamicLayout": (window_position: (layer: (Layer: "Top",
                 ),
-                h_anchor: (
-                    Alignment: "start",
+                h_anchor: (Alignment: "start",
                 ),
-                v_anchor: (
-                    Alignment: "Start",
+                v_anchor: (Alignment: "Start",
                 ),
-                margin_x: 290,
-                margin_y: 7,
+                margin_x: 285,
+                margin_y: 15,
                 exclusive_zone: -1,
                 monitor: "",
                 layer_shell: true,
@@ -32,23 +25,29 @@ Config(
             max_active: 1,
             reorder_on_add: true,
             reorder_on_reload: true,
-            windows: {},
+            windows: {}
+
+            ,
         ),
 
-    },
+    }
+
+    ,
     module_config: {
-        "MusicModule": (
-            preferred_player: "Cider",
+
+        "MusicModule": (preferred_player: "tidal-hifi",
             default_album_art_url: "",
             scrolling_label_speed: 40.0,
             cava_visualizer_script: "cava -p ~/.config/dynisland/scripts/cava-config | awk '{print substr($0, 1, length($0)-1); fflush()}'",
             use_fallback_player: true,
-            windows: {
-                
-            },
+            windows: {}
+
+            ,
             max_width: 9999,
             minimal_width: 9999,
         )
-    },
+    }
+
+    ,
     debug: None,
 )

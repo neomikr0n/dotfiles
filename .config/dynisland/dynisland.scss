@@ -5,7 +5,7 @@
             transition-duration: 20ms;
             transition-timing-function: linear;
             border-radius: 100px;
-            border-color: rgba(183, 22, 22, 0.839);
+            border-color: rgba(183, 22, 22, 0);
             /*border-color: rgba(230, 6, 6, 0);*/
 
         }
@@ -45,17 +45,17 @@
             }
         }
 
-        scrolling-label{
-             border: 222px solid rgb(0, 245, 45);
-             border-radius: 5px;
-         }
+        scrolling-label {
+            border: 222px solid rgb(0, 245, 45);
+            border-radius: 5px;
+        }
     }
 
     .mode-expanded {
         background-color: rgb(0, 0, 0);
 
-        scrolling-label:not(.active){
-            label{
+        scrolling-label:not(.active) {
+            label {
                 margin-left: 10px;
             }
         }
@@ -80,6 +80,7 @@
         }
 
         .progress {
+
             .elapsed-time,
             .remaining-time {
                 font-size: 22px;
@@ -89,6 +90,7 @@
             .progress-bar trough {
                 transform: translateY(2px);
                 min-height: 5px;
+
                 slider {
                     background-color: yellow;
                     background-image: none;

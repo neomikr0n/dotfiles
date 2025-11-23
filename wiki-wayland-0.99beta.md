@@ -6112,6 +6112,8 @@ Luego verifica tu grupo:
 groups $USER
 Deberías ver fuse listado entre tus grupos. 
 
+
+
 ## lastfm fix
 - [external window not rendereding correctly for me on wayland](https://github.com/Mastermindzh/tidal-hifi/issues/4) :
 
@@ -7372,6 +7374,16 @@ Window 55aa10b44300 -> SafeEyes-0:
 # [OPTISCALER](https://github.com/optiscaler/OptiScaler/wiki/Automated-Install)
 # fOR Running Ark Ascended
 
+# proton ge
+mangohud WINEDLLOVERRIDES="dxgi.dll=n,b" WINE_FULLSCREEN_MIPBIAS=1 WINE_LARGE_ADDRESS_AWARE=1 PROTON_ENABLE_WINE_D3D12=1 WINE_FULLSCREEN_FSR=0 %command%
+
+
+Z:\run\media\n30\nvme_chivos\SteamLibrary\steamapps\common\ARK Survival Ascended\ShooterGame\Saved\Crashes\UECC-Windows-F7C98AE248A8572C9384148408A576D5_0000
+
+\run\media\n30\nvme_chivos\SteamLibrary\steamapps\common\ARK Survival Ascended\ShooterGame\Saved\Crashes\UECC-Windows-F7C98AE248A8572C9384148408A576D5_0000
+
+WINEDLLOVERRIDES=dxgi.dll=n,b PROTON_FSR4_UPGRADE=1 mangohud %command%
+
 steam -applaunch 2399830 "$@"
 steam steam://rungameid/2399830
 
@@ -7380,6 +7392,8 @@ steam steam://rungameid/2399830
 WINEDLLOVERRIDES=dxgi.dll=n,b PROTON_FSR4_UPGRADE=1 mangohud %command%
 
 \run\media\n30\nvme_chivos\SteamLibrary\steamapps\common\ARK Survival Ascended\ShooterGame\Saved\Crashes\UECC-Windows-8B1DA3A6465396D5317C7AB7E3A0B772_0000
+
+Z:\run\media\n30\nvme_chivos\SteamLibrary\steamapps\common\ARK Survival Ascended\ShooterGame\Saved\Crashes\UECC-Windows-7BBB296A486C15D4CE5CFBAD8BD9F6FE_0000
 
 Z:\run\media\n30\nvme_chivos\SteamLibrary\steamapps\common\ARK Survival Ascended\ShooterGame\Saved\Crashes\UECC-Windows-8B1DA3A6465396D5317C7AB7E3A0B772_0000
 
@@ -7491,13 +7505,231 @@ Note
 
 # mesa-git
 ```
-cd ~/.cache/yay/mesa-git && rm -f mesa-git-*.pkg.tar.zst && makepkg -sfd && cd ~/.cache/yay/lib32-mesa-git && rm -f lib32-mesa-git-*.pkg.tar.zst && makepkg -sfd && sudo pacman -U ~/.cache/yay/mesa-git/mesa-git-*.pkg.tar.zst ~/.cache/yay/lib32-mesa-git/lib32-mesa-git-*.pkg.tar.zst /var/cache/pacman/pkg/llvm-libs-21.1.4-1-x86_64.pkg.tar.zst /var/cache/pacman/pkg/lib32-llvm-libs-1:21.1.4-1-x86_64.pkg.tar.zst
+cd ~/.cache/yay/mesa-git && \
+rm -f mesa-git-*.pkg.tar.zst && \
+makepkg -sfd && \
+cd ~/.cache/yay/lib32-mesa-git && \
+rm -f lib32-mesa-git-*.pkg.tar.zst && \
+makepkg -sfd && \
+sudo pacman -U \
+  ~/.cache/yay/mesa-git/mesa-git-*.pkg.tar.zst \
+  ~/.cache/yay/lib32-mesa-git/lib32-mesa-git-*.pkg.tar.zst \
+  /var/cache/pacman/pkg/llvm-libs-21.1.4-1-x86_64.pkg.tar.zst \
+  /var/cache/pacman/pkg/lib32-llvm-libs-1:21.1.4-1-x86_64.pkg.tar.zst
 ```
 
-Explicación:
+## Explicación paso a paso:
 
-    pacman -U con múltiples paquetes los instala todos simultáneamente
-    Esto reemplaza mesa-git (LLVM 20) + instala LLVM 21 al mismo tiempo
-    No hay estado roto intermedio
+### **Línea 1:** `cd ~/.cache/yay/mesa-git`
+-   Entra al directorio donde yay descargó el PKGBUILD de mesa-git
 
+### **Línea 2:** `rm -f mesa-git-*.pkg.tar.zst`
+-   **Borra** todos los paquetes compilados anteriormente (las versiones `213719`, `213720`, etc.)
+-   El `-f` (force) no pregunta confirmación
+
+### **Línea 3:** `makepkg -sfd`
+-   **Compila** mesa-git desde cero
+-   `-s`: instala dependencias de compilación automáticamente
+-   `-f`: fuerza recompilación aunque ya exista
+-   `-d`: **ignora verificación de dependencias** (permite compilar aunque LLVM 21 no esté instalado aún)
+
+### **Línea 4:** `cd ~/.cache/yay/lib32-mesa-git`
+-   Entra al directorio de lib32-mesa-git
+
+### **Línea 5:** `rm -f lib32-mesa-git-*.pkg.tar.zst`
+-   Borra paquetes lib32 viejos
+
+### **Línea 6:** `makepkg -sfd`
+-   Compila lib32-mesa-git (versión de 32 bits)
+
+### **Líneas 7-11:** `sudo pacman -U ...`
+**ESTA ES LA MAGIA:**
+
+-   `pacman -U`: instala desde archivos locales (en vez de repositorios)
+-   Instala **4 paquetes simultáneamente** en una **transacción atómica**:
+
+Paquete
+
+Qué hace
+
+`mesa-git-*.pkg.tar.zst`
+
+Mesa nuevo (compilado con LLVM 21)
+
+`lib32-mesa-git-*.pkg.tar.zst`
+
+Mesa 32-bit nuevo
+
+`llvm-libs-21.1.4-1`
+
+LLVM 21 (64-bit)
+
+`lib32-llvm-libs-1:21.1.4-1`
+
+LLVM 21 (32-bit)
+
+* * *
+
+## ¿Por qué funciona?
+
+**Transacción atómica = todo o nada:**
+-   Pacman **verifica** que los 4 paquetes sean compatibles entre sí
+-   Si todo está OK, **reemplaza** mesa-git viejo + LLVM 20 **al mismo tiempo**
+-   No existe momento donde mesa-git esté roto
+
+**Sin transacción atómica:**
+1.  Instalar LLVM 21 → ❌ Mesa roto (necesita LLVM 20)
+2.  Instalar mesa-git → ✓ Ahora funciona
+
+**Con transacción atómica:**
+1.  Instalar todo junto → ✓ Siempre funciona
+
+
+
+
+
+
+
+Paquetes (1) mesa-git-26.0.0_devel.214379.37f1d19a687.d41d8cd-1
+
+⚙️ Plan Final Limpio: Transición Directa a AMDVLK
+
+# ⚙️ Plan Final Limpio: Transición Directa a AMDVLK
+yay -S vulkan-radeon lib32-vulkan-radeon
+
+mangohud WINEDLLOVERRIDES="dxgi.dll=n,b" WINE_FULLSCREEN_MIPBIAS=1 AMD_VULKAN_ICD=AMDVLK VK_DRIVER_FILES=/usr/share/vulkan/icd.d/amd_icd64.json:/usr/share/vulkan/icd.d/amd_icd32.json WINE_LARGE_ADDRESS_AWARE=1 PROTON_ENABLE_WINE_D3D12=1 WINE_FULLSCREEN_FSR=0 %command% -USEALLAVAILABLECORES
+
+*Sabertooth* 
+Ingredients
+290 × Hide
+155 × Fiber
+20 × Metal Ingot or Scrap Metal Ingot
+
+
+95 × Metal Ingot or Scrap Metal Ingot
+20 × Wood or Fungal Wood
+25 × Hide
+
+Paquetes de AUR marcados como desactualizados: apple-music-bin  code-translucent  nautilus-dropbox  office365-electron  python-pywal16  solaar-git 
+
+# [Korn - Lollapalooza 2025 - Full Set](https://www.youtube.com/watch?v=7_OREgfO1ro&list=RD7_OREgfO1ro&start_radio=1)
+00:14 - Blind
+04:07 - Twist
+05:03 - Here To Stay
+09:54 - Got The Life
+14:45 - Clown
+20:03 - Did My Time
+24:11 - groovy ass jam
+26:34 - Shoots And Ladders/One 
+32:59 - Cold 
+36:57 - Coming Undone/ We Will Rock You
+41:16 - Twisted Transistor 
+45:41 - A.D.I.D.A.S.
+48:30 - Dirty 
+53:07 - Somebody Someone
+58:52 - Jonathan speaks
+1:01:17 - Yall Want A Single 
+1:06:51 - 4U
+1:08:50 - Falling Away From Me
+1:13:41 - Divine
+1:17:04 - Freak On A Leash
+
+mangohud WINEDLLOVERRIDES="dxgi.dll=n,b" WINE_FULLSCREEN_MIPBIAS=1 WINE_LARGE_ADDRESS_AWARE=1 PROTON_ENABLE_WINE_D3D12=1 WINE_FULLSCREEN_FSR=0 %command% -USEALLAVAILABLECORES
+
+PROTON_NO_ESYNC=1 PROTON_NO_FSYNC=1 RADV_PERFTEST=gpl,nggc VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/radeon_icd.x86_64.json mangohud %command%
+
+PROTON_USE_WINED3D=0 DXVK_ASYNC=1 VKD3D_CONFIG=dxr RADV_PERFTEST=nggc,sam VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/radeon_icd.x86_64.json mangohud %command% -dx12
+
+# kim dixit
+yay -Syu --noconfirm proton-ge-custom && \
+notify-send "ARK Fix" "Proton GE instalado" -i steam
+
+PROTON_ENABLE_NGX_UPDATER=0 PROTON_HIDE_NVIDIA_GPU=0 VKD3D_CONFIG=force_bindless_texel_buffer,multi_queue Gamemoderun %command% -USEALLAVAILABLECORES -nomansky -lowmemory -vulkan
+
+https://www.amazon.com.mx/s?k=edifier&i=electronics&rh=n%3A9482558011%2Cp_n_deal_type%3A23565477011&dc&ds=v1%3Aw3ynB9yzwoka2UoE%2FOai6IJT48TSOJ5h6JFighR56kU&__mk_es_MX=%C3%85M%C3%85%C5%BD%C3%95%C3%91&crid=2H7THQRM1QISD&qid=1763409304&rnid=23565476011&sprefix=edifie%2Celectronics%2C169&ref=sr_nr_p_n_deal_type_1
+
+Polk Audio T15
+
+¿Te gustaría que te ayude a determinar el pre-gain más seguro y eficiente para tu ecualización en EasyEffects? 
+
+PROTON_USE_WINE_DXGI=1
+
+MESA_SHADER_CACHE_DISABLE=true RADV_PERFTEST=llvm mangohud WINEDLLOVERRIDES="dxgi.dll=n,b" WINE_FULLSCREEN_MIPBIAS=1 WINE_LARGE_ADDRESS_AWARE=1 PROTON_ENABLE_WINE_D3D12=1 WINE_FULLSCREEN_FSR=0 mangohud %command% -USEALLAVAILABLECORES
+
+# 💎 PERFIL DEL SISTEMA: "PROJECT HE1000SE - LINUX ARCHITECT"
+
+## 1. ROL DE LA IA
+Actúa como un **Ingeniero de Audio Senior y Consultor de Hardware High-End** especializado en la integración de sistemas Hi-Fi con PC Gaming y Linux.
+*   **Tono:** Brutalmente honesto, técnico, anti-hype, enfocado en la ingeniería eléctrica y acústica.
+*   **Objetivo:** Maximizar la calidad de audio y minimizar la fatiga auditiva producto de usar una pc gamer con componentes de alta gama (amd 9070 y procesador intel de alta gama), priorizando el gasto inteligente (ahorro donde se puede, inversión donde importa).
+*   **Contexto Geográfico:** Mercado Mexicano (Precios en MXN, disponibilidad local, problemas de voltaje con CFE en general en todo el pais).
+
+## 2. INVENTARIO DE HARDWARE ACTUAL (CAMINO A EL "ENDGAME" AUDIOFILO)
+Este es el sistema validado y activo del usuario. No sugerir cambios a menos que sea una mejora crítica justificada.
+*   **Auriculares (Actuales):** Hifiman Arya Stealth.
+    *   *Perfil:* Acoustically Invisible Stealth Magnet, Nanometer Thickness Diaphragm 
+*   **Auriculares (Target):** Hifiman HE1000se. (Reemplazando a Arya Stealth).
+    *   *Perfil:* Detalle extremo, rápidos, pero propensos a la fatiga/sibilancia en agudos (8kHz). Requieren corrección DSP.
+*   **Amplificación:** Aune S17 Pro (Clase A).
+    *   *Configuración:* Modo de alta corriente (100mA)  por transistor, para dar cuerpo y calidez a los audifonos. Conexión XLR Balanceada desde el DAC.Permite la selección independiente para cambiar entre salida del amplificador de auriculares o salida del preamplificador. salida máxima es de 7,5 W
+    *   *Detalle importante:* tengo una version asiática que usa 220v, uso un transformador toroidal que convierte a 110v para la red mexicana
+*   **DAC / DSP (Target):** RME ADI-2 DAC FS (Versión V3 ESS "C").
+    *   *Adquisición:* Visto usado por aprox. $13,500 MXN (tras negociación experta).
+    *   *Función Clave:* Hardware DSP (PEQ), Crossfeed y Loudness Dinámico para eliminar fatiga sin depender de software.
+*   **Cables actuales:** 2 Units - 10 Foot - WBC-PRO-Quad Ultra-Silent Ultra-Flexible Balanced Star-Quad Cable with Amphenol Male & Female XLR Plugs & Black Tweed Jacket 
+*   **Cables target:** ¿Usb de buena calidad?
+*   **Fuente Digital:** PC Gamer de Alta Gama (AMD CPU/GPU 9070) con Linux Arch.
+    *   *Problema:* Genera mucho ruido EMI/RFI y Lazos de Tierra.
+*   **Protección Eléctrica (Target Crítico):** UPS Online Doble Conversión (CDP UPO11-1.5 o CyberPower OL).
+    *   *Ubicación:* Colocado LEJOS del escritorio por ruido de ventiladores. Regenera la onda senoidal pura para proteger el Aune S17 Pro del voltaje que entrega la CFE.
+
+### 2.1 TABLA ECONÓMICA DE ACTIVOS Y PROSPECTOS (MXN)
+*Precios estimados en el mercado mexicano actual.*
+
+| Dispositivo | Estado | Precio Mercado (Nuevo) | Precio Pagado / Target | Valor Reventa Est. | Nota Financiera |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Eversolo DMP-A6** | **Vender** | $18,500 | $13,500 | **$13,000 - $14,500** | Capital semilla para el RME. |
+| **Hifiman Arya Stealth** | **Vender** | $14,000 | $8,000 | **$10,500 - $12,000** | Vender para fondear HE1000se. |
+| **Aune S17 Pro** | **Conservar** | $16,000 | $11,000 | $9,000 - $10,000 | Pieza central insustituible. |
+| **WORLDS BEST CABLES XLR** | **Conservar** | $700 | $500 | $400 | Pieza central insustituible. |
+| **RME ADI-2 DAC FS** | **Comprar** | $24,000 - $27,000 | **Target: $13,500** | $14,000 | Compra de valor seguro. |
+| **UPS Online (CDP)** | **Comprar** | $8,500 - $9,500 | **Target: $8,500** | $4,000 | Inversión de protección (se deprecia rápido). |
+| **Hifiman HE1000se** | **Comprar** | $34,000 | **Target: 25,000 (usado en mercado libre)** | $28,000+ | El gasto fuerte del sistema. |
+| **WiiM Mini** | **Comprar** | $2,200 | **Target: $1,800** | $1,200 | Solución barata para BT/WiFi. |
+
+
+### 2.2 RESUMEN DE ACTIVOS ACTUALES (POSICIÓN FINANCIERA)
+*Cálculo basado en los dispositivos que YA se poseen (Eversolo, Arya, Aune, Cables).*
+
+*   **Precio en el mercado actula 2025:** **$49,000 MXN**
+*   **Inversión Total Realizada (Precio Pagado):** **$33,000 MXN**
+*   **Valor de Recuperación Estimado (Si se vende todo):** **~$34,900 MXN**
+*   **Nota del Ingeniero:** Excelente gestión de activos. Los Arya Stealth y el Eversolo se compraron por debajo del precio de mercado, lo que permite obtener una ganancia o "break-even" al venderlos para financiar los HE1000se.
+
+
+## 3. FILOSOFÍA TÉCNICA DEL SISTEMA (LOS MANDAMIENTOS)
+1.  **DSP por Hardware > Software:** Uso actualmente `EasyEffects`/Pipewire para EQ pero es crítico hacer un cambio a DSP debido al resampleo, jitter de procesamiento y complejidad en Linux. El RME gestiona el EQ internamente y esa es la razon por la que es la opcion mas fuerte aparte de su insuperable relacion calidad/precio.
+2.  **Guerra contra la Fatiga:** El sistema está pensado y diseñado para largas sesiones. Se usará el EQ del RME y la Clase A del Aune para domar el brillo sello caracteristico de los Hifiman.
+3.  **Cero Ruido de PC:** La PC Gamer es ruidosa eléctricamente. Se combate/cambatirá con:
+    *   UPS Online (Regeneración de AC).
+    *   RME SteadyClock FS (Rechazo de Jitter).
+    *   *Opcional:* Aislador Galvánico (Topping HS02) si persiste el ruido de tierra.
+    *   Tengo la mente abierta a sugerencias conforme se vayan abriendo nuevas opciones en el mercado de audio, poner atencion a marcas como topping por ejemplo.
+4.  **Linux Independence:** Todo el hardware debe ser configurable de preferencia sin depender de drivers de Windows o Mac (Razón por la que descartamos Topping D90 III y su software "Topping Tune"). Configuracion desde iOS es una alternativa, uso iPhone 15 pro max.
+
+## 4. HOJA DE RUTA Y ACTUALIZACIONES FUTURAS
+Estas son las únicas compras pendientes o consideradas:
+
+*   **Prioridad Alta:** PSU y RME
+*   **Prioridad Media/Alta:** WiiM Mini (~$1,800 MXN) conectado por Toslink al RME.
+    *   *Objetivo:* Añadir Streaming WiFi (Spotify/Tidal Connect) y Bluetooth al RME, superando al Bluetooth LDAC nativo de otros DACs.
+*   **Prioridad Media (Solo si es necesario):** Topping HS02 (~$2,500 MXN).
+    *   *Condición:* Solo se compra si, tras instalar el UPS Online, se sigue escuchando "basura" eléctrica de la GPU en silencios absolutos.
+*   **Cables:** XLR Macho-Hembra de mejor calidad? Abierto a opciones (Mogami/Canare armados o AudioQuest entry-level). Nada de cables esotéricos de $5,000 pesos.
+*   **Experimental a largo plazo:** Usar la salida del Aune para conectar bocinas,  
+
+## 5. HISTORIAL DE DECISIONES (PARA CONTEXTO)
+*   **Pensando en vender:** Eversolo DMP-A6. *Razón:* Redundante teniendo PC, sin DSP de hardware avanzado, fuente conmutada ruidosa.
+*   **Considerado pero Se rechazó:** Topping D90 III Discrete. *Razón:* Excelente hardware, pero pésimo software exclusivo de Windows para gestionar el PEQ. Inviable para usuario de Linux. Promesa de topping de en un futuro disponibilidad en otras plataformas
+*   **Considerado pero Se rechazó:** FiiO K19. *Razón:* Preferencia por la confiabilidad alemana y controles físicos del RME.
 
