@@ -12,7 +12,7 @@ mostUsedPresets=Arya,Arya Aune,Arya 2025,test,XS_bass
 outputDevice=alsa_output.usb-MQA_Eversolo_DMP-A6_0-00.iec958-stereo
 plugins=equalizer#1,bass_enhancer#1,bass_enhancer#0,reverb#0,crossfeed#0,maximizer#0,limiter#0
 useDefaultOutputDevice=false
-usedPresets=XS_bass:2,Arya:10,Arya Aune:8,Bocinas:1,classical:1,custom:1,HE400SE_oratory:1,HE400SE_bass:1,edm:1,hifi:1,kpop:1,SONY1000xm2_bass:1,XM5:1,test:2,Arya 2025:3
+usedPresets=XS_bass:2,Arya:10,Arya Aune:8,Bocinas:1,classical:1,custom:1,HE400SE_oratory:1,HE400SE_bass:1,edm:1,hifi:1,kpop:1,SONY1000xm2_bass:1,XM5:1,test:2,Arya 2025:4
 visiblePage=pluginsPage
 visiblePlugin=limiter#0
 
@@ -21,4 +21,4 @@ height=1387
 lastLoadedOutputPreset=Arya 2025
 showNativePluginUi=true
 visiblePipeWirePage=modulesPage
-width=1010
+width=1716
