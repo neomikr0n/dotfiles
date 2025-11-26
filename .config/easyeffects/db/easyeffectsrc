@@ -1,24 +1,27 @@
+[EffectsPipelines]
+bypass=true
+
 [Spectrum]
 nPoints=200
 spectrumColorTheme=orangeSeries
 
 [StreamInputs]
-inputDevice=alsa_output.pci-0000_00_1f.3.iec958-stereo
+inputDevice=alsa_input.usb-RME_ADI-2_DAC__51100523__7BF05DF3F61F3C8-00.analog-stereo
 useDefaultInputDevice=false
 visiblePage=pluginsPage
 
 [StreamOutputs]
 mostUsedPresets=Arya,Arya Aune,Arya 2025,test,XS_bass
-outputDevice=alsa_output.usb-MQA_Eversolo_DMP-A6_0-00.iec958-stereo
+outputDevice=alsa_output.usb-RME_ADI-2_DAC__51100523__7BF05DF3F61F3C8-00.analog-stereo
 plugins=equalizer#1,bass_enhancer#1,bass_enhancer#0,reverb#0,crossfeed#0,maximizer#0,limiter#0
 useDefaultOutputDevice=false
 usedPresets=XS_bass:2,Arya:10,Arya Aune:8,Bocinas:1,classical:1,custom:1,HE400SE_oratory:1,HE400SE_bass:1,edm:1,hifi:1,kpop:1,SONY1000xm2_bass:1,XM5:1,test:2,Arya 2025:4
 visiblePage=pluginsPage
-visiblePlugin=limiter#0
+visiblePlugin=bass_enhancer#1
 
 [Window]
-height=1387
+height=1436
 lastLoadedOutputPreset=Arya 2025
 showNativePluginUi=true
-visiblePipeWirePage=modulesPage
-width=1716
+visiblePipeWirePage=testSignalsPage
+width=1111

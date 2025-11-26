@@ -1,6 +1,7 @@
 [soe][BassEnhancer#0]
 amount=3.500000000000005
 blend=-10
+bypass=true
 scope=137
 
 [soe][BassEnhancer#1]

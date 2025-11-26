@@ -135,6 +135,7 @@ band9Mode=6
 band9Q=6
 
 [soe][Equalizer#1]
+bypass=true
 numBands=10
 outputGain=-12
 

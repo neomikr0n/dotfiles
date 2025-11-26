@@ -7500,5 +7500,3 @@ Explicación:
     Esto reemplaza mesa-git (LLVM 20) + instala LLVM 21 al mismo tiempo
     No hay estado roto intermedio
 
-
-@popular @category:"themes" transparent
