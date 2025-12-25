@@ -563,6 +563,7 @@ Applied for all profiles as not sure which one is active one
 5. "Zen internet firefox" https://addons.mozilla.org/en-US/firefox/addon/zen-internet/
 
 Restart Zen several times to ensure everything applied. 
+
 ---
 > # **[swaync](https://github.com/ErikReider/SwayNotificationCenter)**
 
@@ -7500,3 +7501,11 @@ Explicación:
     Esto reemplaza mesa-git (LLVM 20) + instala LLVM 21 al mismo tiempo
     No hay estado roto intermedio
 
+
+Neutrogena Face Care Intensive Crema Hidratante Facial Mate 3 en 1 D Pantenol 100g
+Boost Anti Signos de la edad Hidratante Facial Neoglucosamina 50 gr
+Neutrogena Bright Boost Anti Signos de la edad Hidratante Facial Neoglucosamina 50 gr
+Neutrogena Pack Rutina Facil Hydroboost Acido Hialuronico Water Gel 50 gr + Serum + Crema de Ojos
+Neutrogena Gel Limpiador Facial Deep Clean Intensive Toronja Ácido Salicílico 60 ml
+Neutrogena Sun Fresh Protector Solar Corporal FPS50, 200ml
+Crema Hidratante Facial Reparador Nocturno Neutrogena Face Care Intensive Colageno 100g

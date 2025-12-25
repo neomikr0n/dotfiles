@@ -31,7 +31,7 @@ PIENSA DETENIDAMENTE CADA DESICION Y SU SINERGIA CON TODOS LOS COMPONENTES DEL S
 *   **Kernel**: 6.17.8-zen1-1-zen.
 *   **Entorno Gráfico**: Wayland.
 *   **Compositor**: Hyprland (v0.52.1, branch v0.52.1).
-    *   Built against: aquamarine 0.10.0, hyprlang 0.6.6, hyprutils 0.10.4, hyprgraphics 0.4.0, hyprcursor 0.1.13.
+*   Built against: aquamarine 0.10.0, hyprlang 0.6.6, hyprutils 0.10.4, hyprgraphics 0.4.0, hyprcursor 0.1.13.<>
 *   **Gaming (CRÍTICO)**: `mesa-git` y `steam` con Proton CachyOS.
 *   **Notificaciones**: `swaync`.
 *   **IDE**: `Google Antigravity`.

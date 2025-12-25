@@ -12,7 +12,7 @@
       "alignment": "left",
       "segments": [
         {
-          "options": {
+          "properties": {
             "cache_duration": "none"
           },
           "template": "\n\u256d\u2500",
@@ -21,7 +21,7 @@
           "style": "plain"
         },
         {
-          "options": {
+          "properties": {
             "cache_duration": "none"
           },
           "leading_diamond": "\ue0b6",
@@ -32,7 +32,7 @@
           "style": "diamond"
         },
         {
-          "options": {
+          "properties": {
             "cache_duration": "none"
           },
           "template": "\udb85\udc0b",
@@ -43,7 +43,7 @@
           "style": "powerline"
         },
         {
-          "options": {
+          "properties": {
             "cache_duration": "none"
           },
           "template": "{{ .Icon }}  ",
@@ -54,7 +54,7 @@
           "style": "powerline"
         },
         {
-          "options": {
+          "properties": {
             "cache_duration": "none",
             "style": "full"
           },
@@ -72,7 +72,7 @@
       "alignment": "right",
       "segments": [
         {
-          "options": {
+          "properties": {
             "branch_icon": "",
             "cache_duration": "none",
             "display_changing_color": true,
@@ -98,7 +98,7 @@
           "style": "diamond"
         },
         {
-          "options": {
+          "properties": {
             "display_mode": "files",
             "extensions": [
               "package-lock.json"
@@ -113,7 +113,7 @@
           "style": "diamond"
         },
         {
-          "options": {
+          "properties": {
             "display_mode": "files",
             "extensions": [
               "pnpm-lock.yaml"
@@ -128,7 +128,7 @@
           "style": "diamond"
         },
         {
-          "options": {
+          "properties": {
             "display_mode": "files"
           },
           "leading_diamond": "\ue0b6",
@@ -164,7 +164,7 @@
       "alignment": "left",
       "segments": [
         {
-          "options": {
+          "properties": {
             "always_enabled": true,
             "cache_duration": "none"
           },
@@ -177,7 +177,7 @@
       "newline": true
     }
   ],
-  "version": 4,
-  "final_space": true,
-  "patch_pwsh_bleed": true
+  "version": 3,
+  "patch_pwsh_bleed": true,
+  "final_space": true
 }

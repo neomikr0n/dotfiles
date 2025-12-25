@@ -5,5 +5,5 @@ decayTime=1.10354
 diffusion=0.69
 hfDamp=2182.58
 predelay=6.5
-roomSize=4
+roomSize=0
 trebleCut=4064.15

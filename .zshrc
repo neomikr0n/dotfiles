@@ -35,4 +35,5 @@ if [ -f ~/.zshrc_custom ] ;then
     source ~/.zshrc_custom
 fi
 
-eval "$(zoxide init zsh)"
+eval "$(zoxide init zsh)"export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"

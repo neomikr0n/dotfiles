@@ -1,39 +1,21 @@
 #!/usr/bin/env bash
-# 🕹️ Modo Juego para Hyprland - Versión Final
+# 🕹️ Modo Juego para Hyprland - Optimizado
+# Context: context/linux_rules.md
+
 set -euo pipefail
 
+# Configuración
 SCRIPT_NAME=$(basename "$0")
 CHECK_INTERVAL=5
 ML4W_FLAG="$HOME/.config/ml4w/settings/gamemode-enabled"
 DEBUG="${DEBUG:-0}"
 
-# ---------------- EVITAR MÚLTIPLES INSTANCIAS ----------------
-INSTANCE_COUNT=$(pgrep -fc "$SCRIPT_NAME")
+# Logging
+log() { printf "\e[1;32m[AutoGame]\e[0m %s\n" "$1"; }
+warn() { printf "\e[1;33m[⚠️ AutoGame]\e[0m %s\n" "$1" >&2; }
+debug() { [[ "$DEBUG" == "1" ]] && printf "\e[1;34m[DEBUG]\e[0m %s\n" "$1" || true; }
 
-if [[ $INSTANCE_COUNT -gt 1 ]]; then
-    if command -v notify-send &>/dev/null; then
-        timeout 2 notify-send -t 7000 -u normal "🎮 Ya Estoy Aquí" "¡Tranquilo! Ya estoy cazando juegos 🎯" -i input-gaming 2>/dev/null &
-    fi
-    echo "Ya hay una instancia de $SCRIPT_NAME corriendo"
-    exit 0
-fi
-
-# Notificación de inicio
-if command -v notify-send &>/dev/null; then
-    timeout 2 notify-send -t 7000 -u normal "🎮 Game Hunter Activado" "¡Modo cazador de juegos iniciado! 🎯\nReactividad: cada ${CHECK_INTERVAL}s ⚡" -i input-gaming 2>/dev/null &
-fi
-
-# TRAP LIMPIEZA
-cleanup() {
-    exit 0
-}
-trap cleanup SIGTERM SIGINT EXIT
-
-# FUNCIONES UTILIDAD
-log() { echo -e "\e[1;32m[AutoGame]\e[0m $1"; }
-warn() { echo -e "\e[1;33m[⚠️ AutoGame]\e[0m $1" >&2; }
-DEBUG_LOG() { [[ "$DEBUG" == "1" ]] && echo -e "\e[1;34m[DEBUG]\e[0m $1" || true; }
-
+# Notificaciones
 notify_modern() {
     local TITLE="$1" MSG="$2"
     if command -v notify-send &>/dev/null; then
@@ -41,9 +23,22 @@ notify_modern() {
     fi
 }
 
-# VALIDAR DEPENDENCIAS
+# Control de Instancias
+if [[ $(pgrep -fc "$SCRIPT_NAME") -gt 1 ]]; then
+    notify_modern "🎮 Ya Estoy Aquí" "Ya estoy cazando juegos 🎯"
+    warn "Ya hay una instancia de $SCRIPT_NAME corriendo"
+    exit 0
+fi
+
+# Trap para limpieza
+cleanup() {
+    exit 0
+}
+trap cleanup SIGTERM SIGINT EXIT
+
+# Validar dependencias
 check_dependencies() {
-    local REQUIRED=("notify-send" "hyprctl" "pgrep")
+    local REQUIRED=("notify-send" "hyprctl" "pgrep" "jq")
     local MISSING=()
     
     for cmd in "${REQUIRED[@]}"; do
@@ -54,6 +49,7 @@ check_dependencies() {
     
     if [[ ${#MISSING[@]} -gt 0 ]]; then
         warn "Dependencias faltantes: ${MISSING[*]}"
+        warn "Instala 'jq' para una detección precisa: yay -S jq"
         return 1
     fi
     
@@ -61,39 +57,42 @@ check_dependencies() {
     return 0
 }
 
-# DETECCIÓN DE JUEGOS
+# Detección de Juegos
 is_game_running() {
-    DEBUG_LOG "Verificando procesos activos..."
+    debug "Verificando procesos activos..."
     
-    # Búsqueda combinada: Steam, Wine, Proton, Lutris
+    # 1. Búsqueda por procesos (Steam, Wine, Proton, Lutris)
     if pgrep -E "SteamAppId=|wine$|proton|lutris|\.exe$" >/dev/null 2>&1; then
-        DEBUG_LOG "✓ Detectado: Proceso de juego (pgrep)"
+        debug "✓ Detectado: Proceso de juego (pgrep)"
         return 0
     fi
     
-    # Detectar steam_app_XXXXX por Hyprland
+    # 2. Detección precisa en Hyprland usando jq
     if [[ "$XDG_SESSION_DESKTOP" == "Hyprland" ]]; then
-        if hyprctl clients -j 2>/dev/null | grep -q "steam_app_"; then
-            DEBUG_LOG "✓ Detectado: Steam App (Hyprland)"
+        if hyprctl clients -j 2>/dev/null | jq -e '.[] | select(.class | test("steam_app_"))' >/dev/null; then
+            debug "✓ Detectado: Steam App (Hyprland JSON)"
             return 0
         fi
     fi
     
-    DEBUG_LOG "✗ Sin juegos activos"
+    debug "✗ Sin juegos activos"
     return 1
 }
 
-# OBTENER PID DEL JUEGO
+# Obtener PID (para info)
 get_game_pid() {
-    local pid=0
+    local pid
     
-    if pid=$(pgrep -E "SteamAppId=|wine$|proton|lutris|\.exe$" 2>/dev/null | head -n1); then
+    # Intento 1: pgrep
+    pid=$(pgrep -E "SteamAppId=|wine$|proton|lutris|\.exe$" 2>/dev/null | head -n1)
+    if [[ -n "$pid" ]]; then
         echo "$pid"
         return 0
     fi
     
+    # Intento 2: Hyprland JSON
     if [[ "$XDG_SESSION_DESKTOP" == "Hyprland" ]]; then
-        pid=$(hyprctl clients -j 2>/dev/null | grep -o '"pid":[0-9]*' | grep -o '[0-9]*' | head -n1)
+        pid=$(hyprctl clients -j 2>/dev/null | jq -r '.[] | select(.class | test("steam_app_")) | .pid' | head -n1)
         if [[ -n "$pid" ]]; then
             echo "$pid"
             return 0
@@ -103,29 +102,21 @@ get_game_pid() {
     echo "0"
 }
 
-# ACTIVAR MODO JUEGO
+# Activar Modo Juego
 activate_mode() {
     log "🎮 Activando Modo Juego..."
     
-    # 1. Iniciar gamemoded (si está disponible)
+    # 1. Iniciar gamemoded
     if command -v gamemoded &>/dev/null; then
         systemctl --user start gamemoded.service 2>/dev/null || true
-        DEBUG_LOG "✓ gamemoded iniciado"
+        debug "✓ gamemoded iniciado"
     fi
     
-    # 2. Variables entorno optimizadas
-    export __GL_THREADED_OPTIMIZATIONS=1
-    export __GL_SHADER_DISK_CACHE=1
-    export DXVK_ASYNC=1
-    export MANGOHUD=1
-    export SDL_VIDEODRIVER=wayland
-    export vblank_mode=0
-    DEBUG_LOG "✓ Variables de entorno configuradas"
-    
-    # 3. Optimizaciones Hyprland
+    # 2. Optimizaciones Hyprland (Visuales)
     if [[ "$XDG_SESSION_DESKTOP" == "Hyprland" ]]; then
         mkdir -p "$(dirname "$ML4W_FLAG")"
         if [[ ! -f "$ML4W_FLAG" ]]; then
+            # Desactivar efectos costosos
             hyprctl --batch "
                 keyword animations:enabled 0;
                 keyword decoration:shadow:enabled 0;
@@ -136,64 +127,58 @@ activate_mode() {
                 keyword decoration:rounding 0" 2>/dev/null || true
             
             touch "$ML4W_FLAG"
-            DEBUG_LOG "✓ Hyprland optimizado"
+            debug "✓ Hyprland optimizado (Efectos desactivados)"
         fi
     fi
     
-    # 4. Matar mpvpaper
+    # 3. Matar mpvpaper (ahorra recursos de GPU)
     pkill -f mpvpaper 2>/dev/null || true
-    DEBUG_LOG "✓ mpvpaper cerrado"
+    debug "✓ mpvpaper cerrado"
 }
 
-# RESTAURAR MODO NORMAL
+# Restaurar Modo Normal
 restore_mode() {
     log "💤 Restaurando modo normal..."
     
-    # 1. Limpiar variables de entorno
-    unset __GL_THREADED_OPTIMIZATIONS 2>/dev/null || true
-    unset __GL_SHADER_DISK_CACHE 2>/dev/null || true
-    unset DXVK_ASYNC 2>/dev/null || true
-    unset MANGOHUD 2>/dev/null || true
-    unset SDL_VIDEODRIVER 2>/dev/null || true
-    unset vblank_mode 2>/dev/null || true
-    DEBUG_LOG "✓ Variables de entorno limpiadas"
-    
-    # 2. Detener gamemoded
+    # 1. Detener gamemoded
     if command -v gamemoded &>/dev/null; then
         systemctl --user stop gamemoded.service 2>/dev/null || true
-        DEBUG_LOG "✓ gamemoded detenido"
+        debug "✓ gamemoded detenido"
     fi
     
-    # 3. Recargar Hyprland (restaura TODO a config original)
+    # 2. Recargar Hyprland
     if [[ -f "$ML4W_FLAG" ]]; then
         hyprctl reload 2>/dev/null || true
         rm -f "$ML4W_FLAG"
-        DEBUG_LOG "✓ Hyprland recargado"
+        debug "✓ Hyprland recargado"
     fi
 }
 
-# LOOP PRINCIPAL
+# Loop Principal
 main() {
     check_dependencies || exit 1
+    
+    notify_modern "🎮 Game Hunter Activado" "¡Modo cazador de juegos iniciado! 🎯\nReactividad: cada ${CHECK_INTERVAL}s ⚡"
     log "✓ Monitoreo iniciado (intervalo: ${CHECK_INTERVAL}s)"
     
-    ACTIVE=0
+    local active=0
+    local game_pid
     
     while true; do
         if is_game_running; then
-            if [[ $ACTIVE -eq 0 ]]; then
-                GAME_PID=$(get_game_pid)
-                DEBUG_LOG "Juego detectado: PID=$GAME_PID"
+            if [[ $active -eq 0 ]]; then
+                game_pid=$(get_game_pid)
+                debug "Juego detectado: PID=$game_pid"
                 activate_mode
-                ACTIVE=1
-                notify_modern "🚀 ¡A Jugar!" "Modo turbo activado 🔥\nPID: $GAME_PID"
+                active=1
+                notify_modern "🚀 ¡A Jugar!" "Modo turbo activado 🔥\nPID: $game_pid"
             fi
         else
-            if [[ $ACTIVE -eq 1 ]]; then
+            if [[ $active -eq 1 ]]; then
                 restore_mode
-                DEBUG_LOG "Juego finalizado"
+                debug "Juego finalizado"
                 notify_modern "😴 GG WP" "Volviendo al modo zen 🧘\nModo gaming desactivado"
-                ACTIVE=0
+                active=0
             fi
         fi
         
@@ -201,5 +186,4 @@ main() {
     done
 }
 
-# EJECUTAR
 main "$@"
