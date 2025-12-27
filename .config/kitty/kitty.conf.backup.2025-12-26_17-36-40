@@ -1,0 +1,46 @@
+#    __ ___ __  __
+#   / //_(_) /_/ /___ __
+#  / ,< / / __/ __/ // /
+# /_/|_/_/\__/\__/\_, /
+#                /___/
+#
+# Configuration
+font_family                 JetBrainsMono Nerd Font
+font_size                   12
+bold_font                   auto
+italic_font                 auto
+bold_italic_font            auto
+remember_window_size        no
+initial_window_width        950
+initial_window_height       500
+cursor_blink_interval       0.5
+cursor_stop_blinking_after  1
+scrollback_lines            2000
+wheel_scroll_min_lines      1
+enable_audio_bell           no
+window_padding_width        10
+hide_window_decorations     yes
+dynamic_background_opacity  yes
+confirm_os_window_close     0
+selection_foreground        none
+
+# Include pywal colors
+include $HOME/.cache/wal/colors-kitty.conf
+
+# Include Custom Configuration
+# Create the file custom.conf in ~/.config/kitty to overwrite the default configuration
+include ./custom.conf
+
+# Enable transparency
+background_opacity 0.3
+
+# Set background color to black
+background #000000
+
+# Optional: Set text colors for better contrast
+foreground #ffffff
+cursor #ffffff
+selection_background #444444
+
+#map ctrl+shift+a program --stdin-source=@last_cmd_output wl-copy
+map ctrl+shift+a launch --location=last --stdin-source=@last_cmd_output wl-copy
