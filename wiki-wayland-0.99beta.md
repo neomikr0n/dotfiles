@@ -7680,3 +7680,55 @@ Troubleshooting:
 Press Enter to exit.
 
 Full logs: /tmp/dankinstall-1766792120.log
+
+# 🛠️ Solución: Glitches y Clics de Audio en PipeWire (Xruns)
+# Gemini dixit
+## El Problema: "The Quantum Trap"
+
+El sistema presentaba clics, pops y micro-cortes de audio, especialmente visibles en aplicaciones como **Chromium**, **EasyEffects** y visualizadores como **Cava**.
+
+### Causa Técnica
+
+El valor de **Quantum** (tamaño del buffer) estaba fijado en **64 samples**. A una frecuencia de muestreo de **48,000Hz**, esto significa que el sistema intentaba procesar audio cada **1.3 milisegundos**.
+
+-   **El Conflicto:** Aunque el DAC (RME ADI-2) es capaz de manejar latencias bajas, el procesamiento intermedio (EasyEffects) y las aplicaciones de usuario no siempre pueden responder en ese margen de tiempo tan ínfimo
+-   **Resultado:** Se producen **Xruns** (errores de sincronización). El procesador no llega a tiempo, el buffer se vacía y se escucha un "clic" eléctrico.
+    
+## 🔍 Diagnóstico
+
+Para confirmar este problema, se utilizó la herramienta de monitoreo en tiempo real de PipeWire:
+
+```bash
+pw-top
+```
+
+**Indicadores de fallo:**
+
+-   Valores altos o incrementales en la columna **ERR**.
+-   Un valor de **QUANT** demasiado bajo (ej. 64 o 128) para una carga de trabajo con efectos (DSP).
+    
+## 🚀 Solución Inmediata (Hotfix)
+
+Para forzar un buffer más estable sin reiniciar el sistema, se aumenta el Quantum a **1024** (aprox. 21ms de latencia), lo cual es imperceptible para el oído humano pero una "eternidad" de alivio para el procesador:
+
+```bash
+pw-metadata -n settings 0 clock.force-quantum 1024
+```
+
+## 💾 Solución Permanente (Configuración)
+
+Para evitar que PipeWire vuelva a negociar un buffer demasiado pequeño al reiniciar, se debe crear un archivo de configuración de contexto.
+
+```bash
+mkdir -p ~/.config/pipewire/pipewire.conf.d/ && printf "context.properties = {\n    default.clock.quantum       = 1024\n    default.clock.min-quantum   = 512\n    default.clock.max-quantum   = 2048\n}\n" > ~/.config/pipewire/pipewire.conf.d/99-force-quantum.conf
+```
+**Ruta:** `~/.config/pipewire/pipewire.conf.d/99-force-quantum.conf`
+**Contenido:**
+```
+context.properties = {
+        # Forzar valores de buffer seguros para evitar Xruns
+        default.clock.quantum       = 1024
+        default.clock.min-quantum   = 512
+        default.clock.max-quantum   = 2048
+    }
+```
