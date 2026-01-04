@@ -18,7 +18,7 @@
 @define-color window_bg_color #131313;
 @define-color window_fg_color #e2e2e2;
 /* Make it more similar to Adwaita */
-@define-color view_bg_color #0e0e0e;
+@define-color view_bg_color #131313;
 @define-color view_fg_color #e2e2e2;
 @define-color headerbar_bg_color #131313;
 @define-color headerbar_fg_color #e2e2e2;
@@ -32,7 +32,17 @@ a color between surface and surface container so I think just giving this surfac
 @define-color card_fg_color #e2e2e2;
 @define-color overview_bg_color #1f1f1f;
 @define-color overview_fg_color #e2e2e2;
-@define-color popover_bg_color #0e0e0e;
+@define-color popover_bg_color #1f1f1f;
 @define-color popover_fg_color #e2e2e2;
-@define-color dialog_bg_color #0e0e0e;
+@define-color dialog_bg_color #131313;
 @define-color dialog_fg_color #e2e2e2;
+
+/* Backdrop/unfocused states - prevents white flash on window unfocus */
+@define-color headerbar_backdrop_color @window_bg_color;
+@define-color sidebar_backdrop_color @sidebar_bg_color;
+@define-color theme_unfocused_fg_color @window_fg_color;
+@define-color theme_unfocused_text_color @view_fg_color;
+@define-color theme_unfocused_bg_color @window_bg_color;
+@define-color theme_unfocused_base_color @window_bg_color;
+@define-color theme_unfocused_selected_bg_color @accent_bg_color;
+@define-color theme_unfocused_selected_fg_color @accent_fg_color;

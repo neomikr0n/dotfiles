@@ -98,6 +98,13 @@
       "id": "idleInhibitor",
       "enabled": true,
       "width": 50
+    },
+    {
+      "id": "brightnessSlider",
+      "enabled": true,
+      "width": 50,
+      "instanceId": "mjvopx4xsjf4q0eqlubrt5rdwxxub",
+      "deviceName": ""
     }
   ],
   "showWorkspaceIndex": false,
@@ -127,8 +134,6 @@
   "appLauncherGridColumns": 8,
   "spotlightCloseNiriOverview": true,
   "niriOverviewOverlayEnabled": true,
-  "weatherLocation": "Morelia, Michoacán",
-  "weatherCoordinates": "19.6546004,-101.2623797",
   "useAutoLocation": false,
   "weatherEnabled": true,
   "networkPreference": "auto",
@@ -147,16 +152,16 @@
   "fontScale": 1,
   "notepadUseMonospace": true,
   "notepadFontFamily": "",
-  "notepadFontSize": 14,
+  "notepadFontSize": 13,
   "notepadShowLineNumbers": false,
-  "notepadTransparencyOverride": -1,
-  "notepadLastCustomTransparency": 0.7,
+  "notepadTransparencyOverride": 0.92,
+  "notepadLastCustomTransparency": 0.92,
   "soundsEnabled": true,
   "useSystemSoundTheme": false,
   "soundNewNotification": true,
   "soundVolumeChanged": true,
   "soundPluggedIn": true,
-  "acMonitorTimeout": 0,
+  "acMonitorTimeout": 180,
   "acLockTimeout": 0,
   "acSuspendTimeout": 0,
   "acSuspendBehavior": 0,
@@ -208,7 +213,7 @@
   "notificationTimeoutNormal": 10000,
   "notificationTimeoutCritical": 0,
   "notificationPopupPosition": 0,
-  "osdAlwaysShowValue": false,
+  "osdAlwaysShowValue": true,
   "osdPosition": 4,
   "osdVolumeEnabled": true,
   "osdMediaVolumeEnabled": true,
@@ -218,8 +223,8 @@
   "osdCapsLockEnabled": true,
   "osdPowerProfileEnabled": true,
   "osdAudioOutputEnabled": true,
-  "powerActionConfirm": true,
-  "powerActionHoldDuration": 0.5,
+  "powerActionConfirm": false,
+  "powerActionHoldDuration": 0.25,
   "powerMenuActions": [
     "reboot",
     "logout",
@@ -236,8 +241,8 @@
   "customPowerActionHibernate": "",
   "customPowerActionReboot": "",
   "customPowerActionPowerOff": "",
-  "updaterUseCustomCommand": false,
-  "updaterCustomCommand": "",
+  "updaterUseCustomCommand": true,
+  "updaterCustomCommand": "yay",
   "updaterTerminalAdditionalParams": "",
   "displayNameMode": "system",
   "screenPreferences": {
@@ -251,7 +256,7 @@
       "id": "default",
       "name": "Main Bar",
       "enabled": true,
-      "position": 0,
+      "position": 2,
       "screenPreferences": [
         "all"
       ],
@@ -292,6 +297,10 @@
         }
       ],
       "rightWidgets": [
+        {
+          "id": "runningApps",
+          "enabled": false
+        },
         {
           "id": "weather",
           "enabled": true
@@ -357,5 +366,6 @@
       "maximizeDetection": true
     }
   ],
-  "configVersion": 2
+  "configVersion": 5,
+  "desktopWidgetInstances": []
 }
