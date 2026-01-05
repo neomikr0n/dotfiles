@@ -17,27 +17,54 @@ PIENSA DETENIDAMENTE CADA DESICION Y SU SINERGIA CON TODOS LOS COMPONENTES DEL S
 
 ## Especificaciones del Sistema
 
-### Hardware
+### Hardware comprado en noviembre 2022
 *   **CPU**: 13th Gen Intel(R) Core(TM) i5-13600K (20 núcleos).
 *   **GPU**: AMD Radeon RX 9070/9070 XT/9070 GRE (Navi 48).
-*   **RAM**: ~32 GB.
+*   **Motherboard**: ASUS Z690 Intel Prime Z690-A, ATX con PCIe 5.0, DDR5, 4 Puertos M.2, HDMI, DisplayPort, USB 3.2 Gen 2x2 Type-C, Thunderbolt 4 y Aura Sync. https://www.amazon.com.mx/dp/B09J1SD9J2
+*   **RAM**: ~32 GB. Kingston Fury Beast Black DDR5, Memoria Gamer, Capacidad: 32GB Kit (2x16GB), Frecuencia: 5200MT/s, Latencia: CL40, Factor de Forma: DIMM, Intel XMP, Color: Negro, SKU: KF552C40BBK2-32. https://www.amazon.com.mx/dp/B09KCLP63B?th=1 
+ *sudo dmidecode -t memory | grep -E "Manufacturer|Part Number|Speed|Configured"* #estable
+	Speed: 4800 MT/s
+	Manufacturer: Kingston
+	Part Number: KF552C40-16         
+	Configured Memory Speed: 4800 MT/s
+	Configured Voltage: 1.1 V
+	Module Manufacturer ID: Bank 2, Hex 0x98
+	Memory Subsystem Controller Manufacturer ID: Unknown
+	Speed: 4800 MT/s
+	Manufacturer: Kingston
+	Part Number: KF552C40-16         
+	Configured Memory Speed: 4800 MT/s
+	Configured Voltage: 1.1 V
+	Module Manufacturer ID: Bank 2, Hex 0x98
+	Memory Subsystem Controller Manufacturer ID: Unknown
+
+
 *   **Monitor**: LG ULTRAGEAR+ (3440x1440@240Hz).
+*   **Teclado**: Logitech  MX Mechanical Keys con retroiluminación estatica activada con fn + iluminación.
+*   **Mouse**: Logitech Lift Mouse Ergonómico Vertical, Inalámbrico.
+*   **Fuente**: Corsair RM750x 80 PLUS Gold. https://www.amazon.com.mx/dp/B08R5W27JS
+*   **SSD**: Unidad de Estado Solido SSD SU800 512 GB M.2 2280 3D TLC 560 MB/s de lectura y 520MB/s de escritura. https://www.amazon.com.mx/dp/B01M3Z3UC2
+Adata ASU800NS38-512GT-C Unidad de Estado Sólido (SSD) SU800 3D NAND 512GB, SATA III, M.2 2280
+*   **SSD**: MSI SPATIUM M461 PCIe 4.0 NVMe M.2 2TB SSD Interno PCIe Gen4 NVMe (SPATIUM M461 PCIe 4.0 NVMe M.2 2TB). https://www.amazon.com.mx/dp/B0BWSHLJMJ
+*   **UPS**: CyberPower CP1500PFCLCD No Break, 1500 VA, Negro. https://www.amazon.com.mx/dp/B00429N19W?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1
 
 ### Audio
 # Context: context/audio_rules.md
 
 ### Software
 *   **OS**: Garuda Linux (Rolling Release, base Arch).
-*   **Kernel**: 6.17.8-zen1-1-zen.
+*   **Kernel**: 6.18.3-zen1-1-zen.
 *   **Entorno Gráfico**: Wayland.
-*   **Compositor**: Hyprland (v0.52.1, branch v0.52.1).
+*   **Compositor**: Hyprland (v0.53).
 *   Built against: aquamarine 0.10.0, hyprlang 0.6.6, hyprutils 0.10.4, hyprgraphics 0.4.0, hyprcursor 0.1.13.<>
 *   **Gaming (CRÍTICO)**: `mesa-git` y `steam` con Proton CachyOS.
-*   **Notificaciones**: `swaync`.
+*   **Notificaciones y shell**: `dank shell`.
 *   **IDE**: `Google Antigravity`.
 *   **Terminal**: `kitty`.
 *   **Navegador**: `Zen Browser`.   
 *   **Drivers Gráficos**: OpenGL 4.6 (Compatibility Profile) Mesa 26.0.0-devel (git).
+*   **MangoHud**: v0.8.3-rc1-4-g85f9ed40.
+*   **Control inalambrico**: solaar .
 *   **Lenguajes/Compiladores**:
     *   GCC 15.2.1
     *   Python 3.13.7
@@ -83,6 +110,7 @@ go version 2>/dev/null
 Prioriza siempre la información de estas fuentes, en este orden:
 
 1.  **[Hyprland Wiki](https://wiki.hyprland.org/)**: La fuente de verdad absoluta para el compositor.
-2.  **[Arch Wiki](https://wiki.archlinux.org/)**: Para configuración general del sistema y paquetes.
-3.  **[Garuda Linux Wiki](https://wiki.garudalinux.org/)**: Para herramientas específicas de la distribución (como `garuda-update`).
-4.  **[CachyOS Wiki](https://wiki.cachyos.org/)**: Excelente referencia para optimizaciones de gaming y kernel (útil dado tu uso de Proton CachyOS).
+2.  **[Hyprland Window Rules](https://wiki.hypr.land/Configuring/Window-Rules/)**: Para configuración de las reglas de los ventanas.
+3.  **[Arch Wiki](https://wiki.archlinux.org/)**: Para configuración general del sistema y paquetes.
+4.  **[Garuda Linux Wiki](https://wiki.garudalinux.org/)**: Para herramientas específicas de la distribución (como `garuda-update`).
+5.  **[CachyOS Wiki](https://wiki.cachyos.org/)**: Excelente referencia para optimizaciones de gaming y kernel (útil dado tu uso de Proton CachyOS).
