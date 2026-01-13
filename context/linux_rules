@@ -23,21 +23,21 @@ PIENSA DETENIDAMENTE CADA DESICION Y SU SINERGIA CON TODOS LOS COMPONENTES DEL S
 *   **Motherboard**: ASUS Z690 Intel Prime Z690-A, ATX con PCIe 5.0, DDR5, 4 Puertos M.2, HDMI, DisplayPort, USB 3.2 Gen 2x2 Type-C, Thunderbolt 4 y Aura Sync. https://www.amazon.com.mx/dp/B09J1SD9J2
 *   **RAM**: ~32 GB. Kingston Fury Beast Black DDR5, Memoria Gamer, Capacidad: 32GB Kit (2x16GB), Frecuencia: 5200MT/s, Latencia: CL40, Factor de Forma: DIMM, Intel XMP, Color: Negro, SKU: KF552C40BBK2-32. https://www.amazon.com.mx/dp/B09KCLP63B?th=1 
  *sudo dmidecode -t memory | grep -E "Manufacturer|Part Number|Speed|Configured"* #estable
-	Speed: 4800 MT/s
+ 	Speed: 5400 MT/s
 	Manufacturer: Kingston
 	Part Number: KF552C40-16         
-	Configured Memory Speed: 4800 MT/s
+	Configured Memory Speed: 5400 MT/s
 	Configured Voltage: 1.1 V
 	Module Manufacturer ID: Bank 2, Hex 0x98
 	Memory Subsystem Controller Manufacturer ID: Unknown
-	Speed: 4800 MT/s
+	Speed: 5400 MT/s
 	Manufacturer: Kingston
 	Part Number: KF552C40-16         
-	Configured Memory Speed: 4800 MT/s
+	Configured Memory Speed: 5400 MT/s
 	Configured Voltage: 1.1 V
 	Module Manufacturer ID: Bank 2, Hex 0x98
 	Memory Subsystem Controller Manufacturer ID: Unknown
-
+	Velocidad: Certificada por **mbw -t0 1024** con picos de 25.2 GB/s.
 
 *   **Monitor**: LG ULTRAGEAR+ (3440x1440@240Hz).
 *   **Teclado**: Logitech  MX Mechanical Keys con retroiluminación estatica activada con fn + iluminación.
@@ -106,11 +106,21 @@ go version 2>/dev/null
 ```
 
 ## Recursos y Documentación
+### optiscaler ark ascended
+/run/media/n30/nvme_chivos/SteamLibrary/steamapps/common/ARK Survival Ascended/ShooterGame/Binaries/Win64/optiscaler.ini
 
 Prioriza siempre la información de estas fuentes, en este orden:
-
 1.  **[Hyprland Wiki](https://wiki.hyprland.org/)**: La fuente de verdad absoluta para el compositor.
 2.  **[Hyprland Window Rules](https://wiki.hypr.land/Configuring/Window-Rules/)**: Para configuración de las reglas de los ventanas.
 3.  **[Arch Wiki](https://wiki.archlinux.org/)**: Para configuración general del sistema y paquetes.
 4.  **[Garuda Linux Wiki](https://wiki.garudalinux.org/)**: Para herramientas específicas de la distribución (como `garuda-update`).
 5.  **[CachyOS Wiki](https://wiki.cachyos.org/)**: Excelente referencia para optimizaciones de gaming y kernel (útil dado tu uso de Proton CachyOS).
+
+
+/dev/nvme1n1p2
+/run/media/n30feik/garuda/
+
+sudo mkdir /run/media/n30feik/efi
+sudo mount /dev/nvme1n1p1 /run/media/n30feik/efi
+
+sudo garuda-chroot /run/media/n30feik/garuda

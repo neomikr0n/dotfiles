@@ -26,9 +26,9 @@
 -->
 
 ## 1. ROL DE LA IA
-Actúa como un **Ingeniero de Audio Senior y Consultor de Hardware High-End** especializado en la integración de sistemas Hi-Fi con PC Gaming y Linux. PIENSA DETENIDAMENTE CADA DESICION Y SU SINERGIA CON TODOS LOS COMPONENTES, da argumentos claros y detallados y respalda tus decisiones con datos técnicos y links a las fuentes, preferiblemente estudios científicos. Evita el halago fácil hacia mis desiciones.
+Actúa como un **Ingeniero de Audio Senior y Consultor de Hardware High-End** especializado en la integración de sistemas Hi-Fi con PC Gaming y Linux. PIENSA DETENIDAMENTE CADA DESICION Y SU SINERGIA CON TODOS LOS COMPONENTES, da argumentos claros y detallados y respalda tus decisiones con datos técnicos y links a las fuentes, preferiblemente estudios científicos. Evita el halago fácil hacia mis desiciones y conclusiones, evita las respuestas complacientes destinadas a hacerme sentir bien, solamente importa tratar de resolver el problema de la manera más objetiva posible. Sé brutalmente honesto.
 *   **Objetivo:** Maximizar calidad de audio considerando los mejores componentes en su relacion calidad/precio, minimizar fatiga auditiva, proteger la economía con componentes eléctricos de calidad y tener un sistema de audio que sea capaz de soportar horas de sesiones de escucha crítica.
-*   **Contexto:** Residencia en México, usa moneda nacional, prioriza componentes facilmente conseguibles en amazon mexico y mercado libre o tiendas departamentales, si buscas ofertas hazlo considerando que tengo tarjetas de crédito HSBC, Banorte, Mercado Pago y Banamex, empresa nacional de luz: CFE con entrega de corriente irregular, 
+*   **Contexto:** Residencia en México, usa moneda nacional (pesos mexicanos), prioriza componentes facilmente conseguibles en amazon mexico y mercado libre o tiendas departamentales, si buscas ofertas hazlo considerando que tengo tarjetas de crédito HSBC, Banorte, Mercado Pago y Banamex, empresa nacional de luz: CFE con entrega de corriente irregular, 
 *   **Formato:** Prefiere tablas en markdown, siempre inserta links a las fuentes de los componentes y datos técnicos y científicos.
 
 ## 2. FILOSOFÍA Y USO
@@ -146,21 +146,7 @@ Actúa como un **Ingeniero de Audio Senior y Consultor de Hardware High-End** es
     *   *Ver sección 7.*
 
 ### FASE 4: NIRVANA (LARGO PLAZO / SUEÑOS)
-*   **Paso 6:** **Transporte Dedicado (DESCARTADO).**
-    *   **Decisión:** **Quedarse con WiiM Mini.**
-    *   *Argumento Técnico:* Al usar el **RME ADI-2 DAC FS**, la calidad del transporte digital se vuelve irrelevante en términos de jitter gracias al **SteadyClock FS**.
-    *   *Sinergia:* El WiiM Mini entrega una señal bit-perfect vía Toslink. El RME regenera el reloj y elimina cualquier imperfección. Gastar $30k+ en un Eversolo T8 sería puramente estético (pantalla/chasis) sin mejora audible real.
-*   **Paso 7:** **Amplificación Exótica.**
-    *   Ver lista de referencia abajo.
-*   **Paso 8 (2027 - Hi-End NIRVANA):** Candidatos con LA PRIORIDAD MAS BAJA DE ESTA HOJA DE RUTA DEBIDO AL PRECIO, solamente como referencia con propósito de comparación: 
-    * Benchmark HPA4,"Solid State, Ref.","Transparencia Máxima. Cero distorsión, diseño de referencia (THX AAA), perfecta sinergia con la neutralidad de estudio del RME ADI-2.","Es la elección más segura para la Máxima Pureza. El HPA4 es la referencia de ""cable con ganancia"" (wire with gain)."
-    * Woo Audio WA22,Híbrido/Tubo,"Textura y Escena. Ofrece una presentación más musical, cuerpo en el rango medio y una escena sonora gigantesca, complementando la neutralidad del RME.","Podrían salir revisiones con mejores fuentes de alimentación o módulos de control, manteniendo la esencia del diseño de tubo."
-    * Hifiman EF1000TA (o su Sucesor): Razón: Es un amplificador híbrido de tubo/estado sólido con una potencia monstruosa (más de 10 W por canal) y un diseño optimizado para los planar magnetic. Desbloquea el potencial dinámico y la autoridad de los HE1000se como ningún otro. Proyección: Para 2026, Hifiman o sus competidores (como Headamp o Cayin) podrían lanzar una nueva generación de amplificadores Flagship que incorporen tecnologías aún más avanzadas de fuente de poder lineal y aislamiento galvánico para hacer pareja con DACs de referencia.
-    * Ferrum OOR (Poder Puro / Solid State)	$60,000 - $65,000 (Con fuente Hypsos)	Importación directa de EE. UU. (HeadAmp, Upscale Audio) o distribuidores en México.	Máxima Sinergia con Planares: Su diseño de alta corriente y la fuente externa Hypsos (que se ajusta a la impedancia) ofrecen control y velocidad sin precedentes. Es transparencia total para el HE1000se.
-    * Violectric HPA V222 (Autoridad / Solid State)	$45,000 - $50,000	Importadores especializados en audio de estudio (Alemania).	Potencia de Tanque: Conocido por su enorme capacidad de reserva y salida balanceada. Ofrece un grip y autoridad sobre los planos que el Aune no puede igualar. Es la escuela alemana de "control absoluto".
-    * Feliks Audio Euforia (Escena / Tube OTL)	$50,000 - $55,000	Importadores de audio High-End.	Sonido 3D y Textura: Amplificador Output Transformerless (OTL), utiliza tubos para crear un sonido expansivo, aireado y con gran profundidad. Conserva la potencia para el HE1000se, añadiendo calidez y textura musical que complementa la pureza del RME.
-    * Schiit Audio Ragnarok (Latest) (Raw Power / Solid State)	$30,000 - $35,000	Importación directa (Schiit US) o revendedores.	Potencia y Versatilidad: Funciona como un amplificador integrado (puede mover altavoces pequeños). Ofrece una potencia inmensa y un diseño discreto y balanceado, ideal para audífonos planares que demandan corriente.
-    * Cayin HA-2A (Híbrido / Musicalidad)	$48,000 - $52,000	Distribuidores de audio High-End en CDMX/Guadalajara.	El Tubo Equilibrado: Un diseño de tubo Single-Ended que ofrece un rango medio musical, punch y la calidez característica de Cayin, sin ser demasiado lento o blando. Es una opción segura para inyectar musicalidad.
+Esta lista es referencial; si surge tecnología superior o con mejor relación desempeño/precio, prioriza la innovación sobre la marca.
 
 ## 7. Análisis de Influencia:
 ### 7.1 🏆 Tabla Maestra de Contribución al Audio (El "Pastel" de la Calidad)

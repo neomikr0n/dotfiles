@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<PROFILE active="true" name="_global_" exe="_global_">
+	<CPU active="true" physicalId="0">
+		<CPU_CPUFREQ_MODE active="true" mode="CPU_CPUFREQ">
+			<NOOP active="false" />
+			<CPU_CPUFREQ active="true" scalingGovernor="powersave" eppHint="default" />
+		</CPU_CPUFREQ_MODE>
+		<CPU_FREQ_PACK active="true" />
+		<CPU_USAGE active="true" />
+		<CPU_CORE_TEMP active="true" />
+	</CPU>
+	<GPU active="true" index="0" deviceid="7550" revision="C0" uniqueid="EB7162E02A100CC4">
+		<AMD_PM_PERFMODE active="true" mode="AMD_PM_ADVANCED">
+			<NOOP active="false" />
+			<AMD_PM_AUTO active="false" />
+			<AMD_PM_FIXED active="false" mode="high" />
+			<AMD_PM_ADVANCED active="true">
+				<AMD_PM_POWERCAP active="true" value="280" />
+				<AMD_PM_POWER_PROFILE active="true" mode="POWER_SAVING" />
+				<AMD_PM_OVERDRIVE active="true">
+					<AMD_PM_FREQ_OFFSET active="true" id="sclk" value="-301" />
+					<AMD_PM_VOLT_OFFSET active="true" value="-40" />
+					<AMD_PM_FREQ_RANGE active="true" id="mclk">
+						<STATE index="0" freq="97" />
+						<STATE index="1" freq="1259" />
+					</AMD_PM_FREQ_RANGE>
+				</AMD_PM_OVERDRIVE>
+			</AMD_PM_ADVANCED>
+		</AMD_PM_PERFMODE>
+		<AMD_GPU_FREQ active="true" />
+		<AMD_MEM_FREQ active="true" />
+		<AMD_GPU_TEMP active="true" />
+		<AMD_GPU_MEMORY_TEMP active="true" />
+		<AMD_FAN_MODE active="true" mode="AMD_OD_FAN_AUTO">
+			<NOOP active="false" />
+			<AMD_OD_FAN_AUTO active="true" />
+			<AMD_OD_FAN_CURVE active="false" stop="true">
+				<CURVE>
+					<POINT temp="35" speed="20" />
+					<POINT temp="52" speed="22" />
+					<POINT temp="67" speed="30" />
+					<POINT temp="78" speed="50" />
+					<POINT temp="85" speed="82" />
+				</CURVE>
+			</AMD_OD_FAN_CURVE>
+		</AMD_FAN_MODE>
+		<AMD_GPU_VOLT active="true" />
+		<AMD_POWER active="true" />
+		<AMD_GPU_JUNCTION_TEMP active="true" />
+		<AMD_MEM_USAGE active="true" />
+		<AMD_ACTIVITY active="true" />
+		<AMD_FAN_SPEED_RPM active="true" />
+	</GPU>
+</PROFILE>

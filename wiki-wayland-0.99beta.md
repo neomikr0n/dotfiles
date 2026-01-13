@@ -7732,3 +7732,114 @@ context.properties = {
         default.clock.max-quantum   = 2048
     }
 ```
+FORMATEA mi .conf... REGLAS
+
+1. traduce todos los comentarios al inglés
+
+2. El Formato "Lista Vertical" para todas las reglas cuando aplique
+
+3. Migra a windowrulev2 cuando aplique
+
+
+#RAM BIOS
+ Save configuration and reset?
+```BASH
+Ai Overclock Tuner MP I]->[Manual]
+BCLK Frequency [Auto]->[100.0000]
+DRAM Frequency [DDR5-4800MHz]->[DDR5-5400MHz]
+DRAM CAS# Latency [38]->[36]
+DRAM RAS# ACT Time [701->[76]
+CPU System Agent Voltage [Auto]>[Manual Mode]
+CPU System Agent Voltage Override [Auto]->[1.20000]
+DRAM VDD Voltage [1.10000]->[1.35000]
+DRAM VDQ Voltage [1.10000]->[1.35000]
+IVR Transmitter VpDo Voltage IAuto］>11.25000］
+PMIC Voltages [Sync All PMICS]->[Auto]
+PCI Express Native Power Management [Enabled] >[Disabled]
+ASPM [Auto]->[Disabled] 
+```
+## 1. Confirmar la velocidad real
+sudo dmidecode -t memory | grep "Configured Memory Speed"
+	Configured Memory Speed: 5400 MT/s
+	Configured Memory Speed: 5400 MT/s
+la RAM está operando a 5400 MT/s. Has pasado de tener una RAM "dormida" a 4800 CL40 a una RAM con un ~12.5% más de frecuencia y latencias más bajas (CL36). Esto se traduce directamente en una reducción del frametime jitter en tus juegos a 240Hz.
+
+## 2. Verificar que el bus PCIe ya no escupa errores
+sudo dmesg | grep -i "AER"
+[    0.254856] acpi PNP0A08:00: _OSC: OS now controls [AER PCIeCapability LTR DPC]
+[    0.364985] pcieport 0000:00:01.0: AER: enabled with IRQ 120
+[    0.365150] pcieport 0000:00:06.0: AER: enabled with IRQ 121
+[    0.365336] pcieport 0000:00:1a.0: AER: enabled with IRQ 122
+[    0.365757] pcieport 0000:00:1c.3: AER: enabled with IRQ 125
+[    0.366080] pcieport 0000:00:1d.4: AER: enabled with IRQ 127
+
+- Antes: Tenías miles de líneas de PCIe Bus Error: severity=Correctable inundando tu CPU.
+- Ahora: Solo ves AER: enabled. Esto es perfecto. Significa que el sistema de reporte de errores está encendido, pero ya no hay errores que reportar. El bus PCIe ahora es estable gracias a que desactivamos el ASPM y ajustamos el GRUB.
+
+## 3. Ganancia Teórica de Rendimiento
+Al pasar de 4800 CL40 (base) a 5400 CL36 (tu OC actual):
+
+- Latencia Real (First Word Latency): Bajaste de 16.66 ns a 13.33 ns. Es una mejora del 20% en el tiempo de respuesta de la memoria.
+- Ancho de Banda (Bandwidth): Subiste de 38.4 GB/s a 43.2 GB/s por canal (teórico). Un aumento del 12.5%.
+- Impacto en sistema (240Hz):
+    - FPS Máximos: Mejora marginal (+2-4%).
+    - 1% Lows (Fluidez): Aquí es donde está la magia. Deberías notar una mejora de entre el 10% y 15% en la estabilidad de los frames. Esos micro-tirones que ocurren cuando el CPU espera datos de la RAM se habrán reducido drásticamente.
+    - Input Lag en Hyprland: Al ser un compositor Wayland, la comunicación entre buffers es constante. La reducción de latencia de 3ns se traduce en una respuesta del escritorio ligeramente más "snappy".
+
+## 4. Consumo Energético
+    DDR5 base (1.1V): Consume aproximadamente 2W a 3W por módulo bajo carga.
+    DDR5 Overclock (1.35V): El consumo sube aproximadamente a 4W a 5W por módulo.
+
+    El aumento es despreciable. Total: Tu sistema ahora consume unos 4W a 5W más en total que antes. Para una fuente de poder moderna y un i5-13600K, esto es como añadir una gota de agua al océano. Lo que sí subirá un poco (2-4°C) es la temperatura interna de los módulos, pero a 1.35V no corren ningún peligro.
+
+## 5. El Beneficio "Oculto": Eficiencia del CPU
+
+Lo más importante no es lo que consume la RAM, sino que ahora tu i5-13600K es más eficiente. Al no tener que esperar tantos ciclos de reloj a que la RAM responda (gracias a los timings más apretados), el procesador termina sus tareas más rápido y puede volver a estados de reposo o concentrarse en la lógica del juego de forma más fluida.
+MétricaAntes (Stock)Ahora (Tuning)Estado**Spam de Errores PCIe**Alto (Miles/seg)**Cero**✅ Sistema Limpio**Latencia RAM**16.6 ns**13.3 ns**✅ Más Rápido**Estabilidad de Bus**Inestable (ASPM Bug)**Sólida**✅ Rock Solid
+
+
+🛠️ 2. El Procedimiento de Rescate del GRUB (Chroot)
+
+Desde una Live USB de Garuda, identifica tu disco de 2TB (ej. /dev/nvme1n1) que es donde vive la instalacion principal y sigue estos pasos:
+A. Montaje del Entorno Es vital montar el subvolumen @ (donde vive el sistema) y no el subvolumen raíz del disco.
+
+```bash
+# 1. Montar la raíz real (Subvolumen @)
+sudo mount -o subvol=@ /dev/nvme1n1p2 /mnt
+
+# 2. Montar la partición EFI
+sudo mount /dev/nvme1n1p1 /mnt/boot/efi
+
+# 3. Vincular sistemas críticos (Manual para evitar fallos de script)
+sudo mount --bind /dev /mnt/dev
+sudo mount --bind /proc /mnt/proc
+sudo mount --bind /sys /mnt/sys
+sudo mount --bind /run /mnt/run
+```
+B. Reparación Interna (Chroot)
+
+Una vez dentro (sudo chroot /mnt /bin/bash), ejecuta:
+
+    Reinstalar Kernel: (Asegura que los archivos /boot/vmlinuz existan).
+```bash
+pacman -Sy linux-zen linux-zen-headers --overwrite "*"
+```
+
+Generar Initramfs:
+```bash
+dracut --force --kver 6.18.4-zen1-1-zen /boot/initramfs-linux-zen.img
+```
+
+Instalación Maestra de GRUB (Fuerza Bruta): Este comando es el más efectivo porque usa la ruta de "emergencia" (--removable) que la BIOS siempre busca.
+```bash 
+grub-install --target=x86_64-efi --efi-directory=/boot/efi --removable --recheck
+grub-mkconfig -o /boot/grub/grub.cfg
+```
+
+🔍 3. Solución de Conflictos entre Discos (WD vs MSI)
+
+Si la BIOS ignora el disco MSI y salta al WD:
+
+    Flag Removible: El uso de --removable en el paso anterior soluciona esto al crear un archivo en /boot/efi/EFI/BOOT/BOOTX64.EFI.
+
+    Prioridad BBS: En la BIOS, buscar "Hard Drive BBS Priorities" y poner el MSI en el puesto #1.
