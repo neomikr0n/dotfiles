@@ -1,4 +1,13 @@
 [soe][Limiter#0]
+alr=true
+attack=2
 gainBoost=false
-release=10
-threshold=-1
+release=20
+threshold=-3
+
+[soe][Limiter#1]
+alr=true
+attack=3
+gainBoost=false
+release=15
+threshold=-0.5

@@ -1,0 +1,58 @@
+<ADI-2DAC>
+	<General>
+		<val e="Version" v="2"/>
+	</General>
+	<EQPreset1Left>
+		<val e="EQEnable" v="1.00,"/>
+		<val e="EQBand1Type" v="0.00,"/>
+		<val e="EQBand1Gain" v="3.50,"/>
+		<val e="EQBand1Freq" v="40.00,"/>
+		<val e="EQBand1Q" v="0.90,"/>
+		<val e="EQBand2Gain" v="2.50,"/>
+		<val e="EQBand2Freq" v="2000.00,"/>
+		<val e="EQBand2Q" v="1.50,"/>
+		<val e="EQBand3Gain" v="-2.00,"/>
+		<val e="EQBand3Freq" v="3500.00,"/>
+		<val e="EQBand3Q" v="2.00,"/>
+		<val e="EQBand4Gain" v="-1.50,"/>
+		<val e="EQBand4Freq" v="5500.00,"/>
+		<val e="EQBand4Q" v="3.00,"/>
+		<val e="EQBand5Type" v="0.00,"/>
+		<val e="EQBand5Gain" v="1.00,"/>
+		<val e="EQBand5Freq" v="8000.00,"/>
+		<val e="EQBand5Q" v="2.00,"/>
+		<val e="BassTrebleEn" v="1.00,"/>
+		<val e="EQBassGain" v="5.50,"/>
+		<val e="EQBassFreq" v="105.00,"/>
+		<val e="EQBassQ" v="0.70,"/>
+		<val e="EQTrebleGain" v="-0.50,"/>
+		<val e="EQTrebleFreq" v="10000.00,"/>
+		<val e="EQTrebleQ" v="0.70,"/>
+		<val e="DualEQ" v="0.00,"/>
+		<val e="EQ Preset Select" v="0.00,"/>
+		<val e="Load BT w. EQ" v="1.00,"/>
+	</EQPreset1Left>
+	<EQPreset1Right>
+		<val e="EQEnable" v="1.00,"/>
+		<val e="EQBand1Type" v="0.00,"/>
+		<val e="EQBand1Gain" v="3.50,"/>
+		<val e="EQBand1Freq" v="40.00,"/>
+		<val e="EQBand1Q" v="0.90,"/>
+		<val e="EQBand2Gain" v="2.50,"/>
+		<val e="EQBand2Freq" v="2000.00,"/>
+		<val e="EQBand2Q" v="1.50,"/>
+		<val e="EQBand3Gain" v="-2.00,"/>
+		<val e="EQBand3Freq" v="3500.00,"/>
+		<val e="EQBand3Q" v="2.00,"/>
+		<val e="EQBand4Gain" v="-1.50,"/>
+		<val e="EQBand4Freq" v="5500.00,"/>
+		<val e="EQBand4Q" v="3.00,"/>
+		<val e="EQBand5Type" v="0.00,"/>
+		<val e="EQBand5Gain" v="1.00,"/>
+		<val e="EQBand5Freq" v="8000.00,"/>
+		<val e="EQBand5Q" v="2.00,"/>
+	</EQPreset1Right>
+	<PresetNames>
+		<val e="EQPresetName1" v="HE1000SE-SLAM"/>
+	</PresetNames>
+</ADI-2DAC>

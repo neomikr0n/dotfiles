@@ -1,10 +1,9 @@
 [soe][Reverb#0]
-amount=-10.716679676582991
-bassCut=514.079
-bypass=true
-decayTime=1.10354
-diffusion=0.69
-hfDamp=2182.58
-predelay=6.5
+amount=-14
+bassCut=150
+decayTime=0.8
+diffusion=0.75
+hfDamp=4000
+predelay=12
 roomSize=4
-trebleCut=4064.15
+trebleCut=6000

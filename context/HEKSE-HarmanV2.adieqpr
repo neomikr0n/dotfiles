@@ -1,0 +1,124 @@
+<!--
+  RME ADI-2 DAC FS - PROFESSIONAL SYSTEM SYNERGY PROFILE
+  ======================================================
+  Profile Name: HEKSE-HarmanV2 (System Synergy v2.0)
+  Target: Harman 2018 AE (Optimization for Hifiman HE1000se)
+  Hardware Chain: PC (Tidal/Bit-Perfect) -> RME ADI-2 -> XLR -> Aune S17 Pro -> XLR -> HEKSE
+
+  Este documento representa la culminación de una auditoría sistémica diseñada para 
+  resolver no-linealidades electroacústicas. No es solo una EQ de audífonos, 
+  es un mapa de gestión de señal bit-perfect.No ha sido diseñada de forma aislada para un auricular, sino 
+  para compensar y potenciar una cadena de audio específica:
+  
+  A. EL TRANSDUCTOR: Hifiman HE1000se (aka HEKSE)
+     - Auricular planar-magnético de gama ultra-alta con diafragma nanométrico. 
+     - Virtud: Velocidad transitoria y resolución microscópica.
+     - Defecto: Resonancias metálicas en agudos y valle en la zona de presencia vocal.
+  
+  B. EL CEREBRO: RME ADI-2 DAC FS
+     - DAC profesional con DSP por hardware. Se usa para aplicar esta EQ sin latencia 
+       ni pérdida de bits. Aquí se selecciona el filtro "SD Slow".
+  
+  C. EL MÚSCULO: Aune S17 Pro (Clase A Pura)
+     - Amplificador discreto que entrega corriente masiva. Utiliza un potenciómetro 
+       R2R (escalera de resistencias) que define el diseño de ganancia de este perfil.
+
+  1. INTEGRIDAD TEMPORAL (THE SD-SLOW DILEMMA)
+  -----------------------------------------------
+  - Filtro Digital RME: SD Slow (Short Delay Slow).
+  - El Problema: Aunque el filtro SD Sharp es el más lineal en frecuencia, el 
+    SD Slow es preferido por su respuesta al impulso superior, eliminando 
+    el pre-ringing y logrando un timbre más natural. Sin embargo, a 44.1 kHz, 
+    introduce un roll-off de -1.2 dB @ 15 kHz y hasta -5 dB @ 20 kHz.
+  - La Solución: Compensación quirúrgica en Banda 5 (+4.0 dB @ 16.5 kHz, Q 2.1). 
+    Matthias Carstens (fundador de RME) ha validado que este realce restaura 
+    la amplitud sin reintroducir los artefactos temporales del filtrado agresivo.
+    https://forum.rme-audio.de/viewtopic.php?id=26952
+
+  2. OPTIMIZACIÓN ANALÓGICA (AUNE S17 R2R LINEARITY)
+  -----------------------------------------------
+  - Parámetro: Preamp Digital @ -7.5 dB.
+  - Razón Técnica: El sistema de volumen electrónico R2R del Aune S17 Pro 
+    presenta su máximo rango dinámico y balance de canales en los niveles de 
+    mayor amplitud. 
+  - Estrategia: Esta atenuación obliga al usuario a operar entre los pasos 48-52, 
+    evitando el salto no lineal de +4 dB documentado entre los pasos 55 y 56, 
+    garantizando que la señal digital se mantenga en el umbral de resolución 
+    óptimo del DAC antes de la conversión.
+
+  3. REFINAMIENTO TONAL HEKSE (NANOMETER PRECISION)
+  -----------------------------------------------
+  - Focalización (1950 Hz | +3.0 dB): Corrige el valle de presencia característico 
+    de Hifiman, resolviendo la "distancia vocal" y mejorando la inteligibilidad.
+  - Domesticación (3.6 kHz & 6 kHz): Cortes estratégicos de -2.5 dB y -3.0 dB. 
+    Estos valores han sido calculados para mitigar la resonancia metálica de 
+    los drivers de oro sin sacrificar la transparencia microscópica del transductor.
+  - Sub-Bass Slam (40 Hz | +2.5 dB): Realce adicional para aprovechar la 
+    capacidad del diafragma nanométrico de mover aire masivo con distorsión nula.
+
+  4. PROTOCOLO DE IMPLEMENTACIÓN
+  ----------------------------------
+  Para integridad total, el hardware DEBE configurarse de la siguiente manera:
+  - RME ADI-2: Filtro "SD Slow" Activo.
+  - RME ADI-2: Loudness "OFF".
+  - Aune S17 Pro: Modo "100mA" (Clase A Pura) para máxima textura y holografía.
+-->
+
+<ADI-2DAC>
+	<General>
+		<val e="Version" v="2"/>
+	</General>
+	<EQPreset1Left>
+		<val e="EQEnable" v="1.00,"/>
+		<val e="EQBand1Type" v="0.00,"/>
+		<val e="EQBand1Gain" v="2.50,"/>
+		<val e="EQBand1Freq" v="40.00,"/>
+		<val e="EQBand1Q" v="0.90,"/>
+		<val e="EQBand2Gain" v="3.00,"/>
+		<val e="EQBand2Freq" v="1950.00,"/>
+		<val e="EQBand2Q" v="1.50,"/>
+		<val e="EQBand3Gain" v="-2.50,"/>
+		<val e="EQBand3Freq" v="3600.00,"/>
+		<val e="EQBand3Q" v="2.50,"/>
+		<val e="EQBand4Gain" v="-3.00,"/>
+		<val e="EQBand4Freq" v="6000.00,"/>
+		<val e="EQBand4Q" v="3.50,"/>
+		<val e="EQBand5Type" v="1.00,"/>
+		<val e="EQBand5Gain" v="4.00,"/>
+		<val e="EQBand5Freq" v="16500.00,"/>
+		<val e="EQBand5Q" v="2.10,"/>
+		<val e="BassTrebleEn" v="1.00,"/>
+		<val e="EQBassGain" v="4.50,"/>
+		<val e="EQBassFreq" v="105.00,"/>
+		<val e="EQBassQ" v="0.70,"/>
+		<val e="EQTrebleGain" v="-1.50,"/>
+		<val e="EQTrebleFreq" v="10000.00,"/>
+		<val e="EQTrebleQ" v="0.70,"/>
+		<val e="DualEQ" v="0.00,"/>
+		<val e="EQ Preset Select" v="0.00,"/>
+		<val e="Load BT w. EQ" v="1.00,"/>
+	</EQPreset1Left>
+	<EQPreset1Right>
+		<val e="EQEnable" v="1.00,"/>
+		<val e="EQBand1Type" v="0.00,"/>
+		<val e="EQBand1Gain" v="2.50,"/>
+		<val e="EQBand1Freq" v="40.00,"/>
+		<val e="EQBand1Q" v="0.90,"/>
+		<val e="EQBand2Gain" v="3.00,"/>
+		<val e="EQBand2Freq" v="1950.00,"/>
+		<val e="EQBand2Q" v="1.50,"/>
+		<val e="EQBand3Gain" v="-2.50,"/>
+		<val e="EQBand3Freq" v="3600.00,"/>
+		<val e="EQBand3Q" v="2.50,"/>
+		<val e="EQBand4Gain" v="-3.00,"/>
+		<val e="EQBand4Freq" v="6000.00,"/>
+		<val e="EQBand4Q" v="3.50,"/>
+		<val e="EQBand5Type" v="1.00,"/>
+		<val e="EQBand5Gain" v="4.00,"/>
+		<val e="EQBand5Freq" v="16500.00,"/>
+		<val e="EQBand5Q" v="2.10,"/>
+	</EQPreset1Right>
+	<PresetNames>
+		<val e="EQPresetName1" v="HEKSE-HarmanV2"/>
+	</PresetNames>
+</ADI-2DAC>

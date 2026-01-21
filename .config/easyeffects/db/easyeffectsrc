@@ -2,7 +2,7 @@
 bypass=true
 
 [Presets]
-lastLoadedOutputPreset=arya2026
+lastLoadedOutputPreset=HE1000SE_opus-slam
 
 [Spectrum]
 nPoints=200
@@ -14,16 +14,16 @@ useDefaultInputDevice=false
 visiblePage=pluginsPage
 
 [StreamOutputs]
-mostUsedPresets=Arya,Arya Aune,arya2026,Arya 2025,test
+mostUsedPresets=HE1000SE,Arya,Arya Aune,HE1000SE_opus,arya2026
 outputDevice=alsa_output.usb-RME_ADI-2_DAC__51100523__7BF05DF3F61F3C8-00.analog-stereo
-plugins=equalizer#1,bass_enhancer#1,bass_enhancer#0,reverb#0,crossfeed#0,maximizer#0,limiter#0
+plugins=limiter#0,equalizer#0,bass_enhancer#0,reverb#0,limiter#1
 useDefaultOutputDevice=false
-usedPresets=XS_bass:2,Arya:10,Arya Aune:8,Bocinas:1,classical:1,custom:1,HE400SE_oratory:1,HE400SE_bass:1,edm:1,hifi:1,kpop:1,SONY1000xm2_bass:1,XM5:1,test:2,Arya 2025:4,arya2026:5
+usedPresets=XS_bass:2,Arya:10,Arya Aune:8,Bocinas:1,classical:1,custom:1,HE400SE_oratory:1,HE400SE_bass:1,edm:1,hifi:1,kpop:1,SONY1000xm2_bass:1,XM5:1,test:2,Arya 2025:4,arya2026:6,HE1000SE:33,HE1000SE_BASS:3,HE1000SE_opus:6,HE1000SE_opus-slam:5
 visiblePage=pluginsPage
-visiblePlugin=bass_enhancer#0
+visiblePlugin=limiter#1
 
 [Window]
-height=1392
+height=1428
 lastLoadedOutputPreset=Arya 2025
 showNativePluginUi=true
-width=985
+width=1099

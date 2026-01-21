@@ -4001,15 +4001,9 @@ sudo rm /var/lib/pacman/db.lck
 
 # **[Easyeffects]()**
 
-## Backup
-`
-mv ~/.config/easyeffects/output/*.json ~/<WHEREVER>
-`
+<!-- version 8 -->
+/home/n30/.local/share/easyeffects/
 
-## Restore
-`
-mv ~/Downloads/*.json ~/.config/easyeffects/output/
-`
 
 ## Presets:
 [PulseEffects/EasyEffects Loudness Equalizer Preset](https://github.com/Digitalone1/EasyEffects-Presets)
@@ -7843,3 +7837,10 @@ Si la BIOS ignora el disco MSI y salta al WD:
     Flag Removible: El uso de --removable en el paso anterior soluciona esto al crear un archivo en /boot/efi/EFI/BOOT/BOOTX64.EFI.
 
     Prioridad BBS: En la BIOS, buscar "Hard Drive BBS Priorities" y poner el MSI en el puesto #1.
+
+# RME ADI-2 Remote
+
+
+wine msiexec /i /home/n30/Descargas/SetupAdi2Remote.msi
+
+wine "/home/n30/.wine/drive_c/Program Files (x86)/RME/ADI-2 Remote/Adi2Remote.exe"

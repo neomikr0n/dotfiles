@@ -1,4 +1,4 @@
-# 💎 AUDIO: "PROJECT HE1000SE"
+# 💎 AUDIO: "SISTEMA HE1000SE" (COMPLETADO)
 
 <!-- 
 # 📚 Contexto y Manuales Oficiales
@@ -7,6 +7,7 @@
 # Context: context/EVERSOLO-DMP-A6-User-Manual-v1.0.pdf
 # Context: context/Manual_RME_ADIDAC_FS.pdf
 # Context: context/manual-aune-s17-pro.pdf 
+# Context: context/HEKSE-HarmanV2.adieqpr
 1. Fuentes Digitales & DAC
 # Eversolo DMP-A6: https://www.eversolo.com/Support/download/index.html
 # RME ADI-2 DAC FS: https://www.rme-audio.de/adi-2-dac.html
@@ -36,140 +37,189 @@ Actúa como un **Ingeniero de Audio Senior y Consultor de Hardware High-End** es
     *   *PC con Linux:* 90% de la escucha crítica con Tidal-Hifi lossless y ocasionalmente Cider (que usa Apple Music lossy aac de 256kbps), he hecho prubas y no distingo la diferencia de calidad entre ambos.
     *   *Streamer:* 10% de la escucha crítica con Tidal-Hifi lossless y ocasionalmente Apple Music lossless.
 *   **2.2 Para el trabajo** un par de bocinas medianas con Apple Music lossy (aac 256kbps) por bluetooth en un escritorio mediano, posiblemente un subwoofer medianito o pequeño en el futuro , posiblemente con Airplay usando un WiiM Mini en el futuro.
+*   **Protección Externa:** Uso de **EarDial HiFi** en conciertos, bares o entornos con ruido >85dB.
 
 ## 3. INVENTARIO UNIFICADO: TÉCNICO Y FINANCIERO
 
 | Dispositivo                 | Estado y prioridad | Precio Nuevo | Pagado / Target     | Reventa |
 | :-------------------------- | :----------------- | :----------- | :------------------ | :------ |
-| **Eversolo DMP-A6**         | 🔴 **VENDER (P0)**  | $18,500      | **$13,500**         | $13,000 |
-| **Hifiman Arya Stealth**    | 🔴 **VENDER (P1)**  | $14,000      | **$8,000**          | $10,000 |
-| **Aune S17 Pro EVO (220V)** | 🟢 **ADQUIRIDO**    | $14,000      | **$11,000**         | $10,000 |
+| **Hifiman HE1000se**        | 🟢 **ADQUIRIDO**    | $35,000      | **$20,000** ✅       | $25,000 |
 | **RME ADI-2 DAC FS**        | 🟢 **ADQUIRIDO**    | $26,000      | **$13,000**         | $15,000 |
-| **XLR WORLDS BEST CABLES**  | 🟢 **ADQUIRIDO**    | $1,600       | **$1,000**          | $500    |
+| **Aune S17 Pro EVO (220V)** | 🟢 **ADQUIRIDO**    | $14,000      | **$11,000**         | $10,000 |
 | **CyberPower CP1500PFCLCD** | 🟢 **ADQUIRIDO**    | $6,700       | **$4,500**          | $3,500  |
+| **XLR WORLDS BEST CABLES**  | 🟢 **ADQUIRIDO**    | $1,600       | **$1,000**          | $500    |
 | **Cable USB Oyaide Neo d+** | 🟢 **ADQUIRIDO**    | $800         | **$700**            | $500    |
 | **KabelDirekt – 0.5m**      | 🟢 **ADQUIRIDO**    | $150         | **$150**            | $150    |
+| **Eversolo DMP-A6**         | 🟢 **ADQUIRIDO**    | $18,500      | **$13,500**         | $13,000 |
+| **Hifiman Arya Stealth**    | 🔴 **VENDER (P1)**  | $14,000      | **$8,000**          | $10,000 |
 | **Edifier R1855db**         | 🟢 **ADQUIRIDO**    | $3,800       | **$2,500**          | $150    |
 | **FiiO K7BT**               | 🟢 **ADQUIRIDO**    | $5,400       | **$4,500**          | $3,500  |
 | **Apple Airport Express**   | 🟢 **ADQUIRIDO**    | $1,200       | **$630**            | $500    |
-| **Hifiman HE1000se**        | 🎯 **COMPRAR (P2)** | $34,000      | **Target: $25,000** | $28,000 |
-| **WiiM Mini**               | 🎯 **COMPRAR (P3)** | $2,200       | **Target: $1,800**  | ~$1,200 |
-| **Apple AirPods Pro 2**     | 🟢 **COMPRADOS**    | $3,500       | **$3,000**          | ~$2,500 |
-| **Focal Bathys**            | 🎯 **COMPRAR (P4)** | $16,000      | **Target: $12,000** | ~$9,000 |
-| **Apple AirPods Pro 3**     | 🎯 **COMPRAR (P5)** | $6,700       | **Target: $5,000**  | ~$2,500 |
+| **Apple AirPods Pro 2**     | 🟢 **ADQUIRIDO**    | $3,500       | **$3,000**          | ~$2,500 |
+| **WiiM Mini**               | 🎯 **COMPRAR (P2)** | $2,200       | **Target: $1,800**  | ~$1,200 |
+| **Focal Bathys**            | 🎯 **COMPRAR (P3)** | $16,000      | **Target: $12,000** | ~$9,000 |
+| **Apple AirPods Pro 3**     | 🎯 **COMPRAR (P4)** | $6,700       | **Target: $5,000**  | ~$2,500 |
 
 ### 3.1 RESUMEN FINANCIERO:
-*   **Sistema en Casa (Actual):**
-    *   Valor de Mercado: **~$81,750 MXN**
-    *   Pagado: **~$51,850 MXN**
-*   **Sistema en Casa (META):** *(Incluye HE1000se + WiiM / Excluye Ventas)*
-    *   Valor de Mercado: **~$85,450 MXN**
-    *   Costo Meta (Retenido + Targets): **~$57,150 MXN**
-*   **Sistema en Oficina:**
-    *   Valor de Mercado: **~$10,400 MXN**
-    *   Pagado: **~$7,630 MXN**
-*   **Inversión Real TOTAL:** **~$62,480 MXN** *(Suma de todo lo pagado hasta hoy, incluyendo AirPods).*
 
-## 4. 🔌 Resumen de Conexiones
-### 4.1
-* Pared -> UPS CyberPower.
-* UPS (Salidas Battery+Surge):
-    * Cable de poder -> PC Gamer.
-    * Cable de poder -> Monitor.
-    * Transformador toroidal de 110v a 220v -> Cable de poder -> Aune S17 Pro.
-    * Cable de poder -> RME ADI-2.
-    * Cable de poder -> Eversolo. 
-### 4.2 Datos (Señal):
-*       PC --> (USB Oyaide Neo d+ Tipo A a B)--> RME.
-*       Router--> (Amazon Basics Cable de conexión Ethernet Cat 7 RJ45)--> Eversolo
-*       Eversolo --> (Óptico KabelDirekt)--> RME.
-### 4.3 Audio Analógico:
-*      RME --> (XLR Macho-Hembra)--> Aune S17 Pro.
-*      Aune S17 EVO--> (XLR)--> Audífonos.
+#### 🏠 Sistema en Casa (ACTUAL - Post Compra HE1000se)
+| Métrica                           | Valor         | Notas                                                  |
+| :-------------------------------- | :------------ | :----------------------------------------------------- |
+| **Valor de Mercado (Inventario)** | **~$102,750** | Suma de precios nuevos de lo que posees.               |
+| **Inversión Real (Lo Pagado)**    | **$63,850**   | Suma de lo que realmente pagaste.                      |
+| **Ahorro Total vs Nuevo**         | **$38,900**   | Beneficio acumulado por compras inteligentes.          |
+| **% de Eficiencia de Compra**     | **62.1%**     | Pagaste 62 centavos por cada peso de valor de mercado. |
+| **Capital Recuperable (Reventa)** | **~$68,150**  | Si vendieras todo hoy a precios razonables.            |
+| **"Equity" en Hardware**          | **+$4,300**   | Tu inversión vale más de lo que pagaste si liquidas.   |
+
+#### 📦 Activos a Vender (Liquidación Pendiente)
+| Dispositivo              | Pagado  | Reventa Esperada | Ganancia/Pérdida |
+| :----------------------- | :------ | :--------------- | :--------------- |
+| **Eversolo DMP-A6**      | $13,500 | $13,000          | -$500            |
+| **Hifiman Arya Stealth** | $8,000  | $10,000          | **+$2,000** ✅    |
+| **TOTAL:**               | $21,500 | $23,000          | **+$1,500**      |
+
+*   **Análisis:** Al vender ambos, **recuperas $23,000 MXN**. Esto cubre el **115%** del costo de los HE1000se ($20,000). Técnicamente, **los HE1000se te salen "gratis" + $3,000 de ganancia.**
+
+#### 🏠 Sistema en Casa (META - Post Ventas)
+*Después de vender Eversolo y Arya, y adquirir WiiM Mini:*
+| Métrica                             | Valor        | Notas                                            |
+| :---------------------------------- | :----------- | :----------------------------------------------- |
+| **Valor de Mercado (Retenido)**     | **~$87,950** | Solo componentes que te quedas + WiiM.           |
+| **Costo Meta (Retenido + Targets)** | **$52,150**  | Lo pagado por lo que retienes + target del WiiM. |
+| **Liquidez Neta Post-Ventas**       | **+$3,000**  | Capital libre después de vender y comprar WiiM.  |
+
+#### 💼 Sistema en Oficina
+| Métrica                     | Valor        |
+| :-------------------------- | :----------- |
+| **Valor de Mercado**        | **~$10,400** |
+| **Inversión Real (Pagado)** | **~$7,630**  |
+
+#### 💰 INVERSIÓN TOTAL GLOBAL
+| Métrica                           | Valor           |
+| :-------------------------------- | :-------------- |
+| **Inversión Real TOTAL (Pagada)** | **$74,480 MXN** |
+| **Valor de Mercado TOTAL**        | **$113,150**    |
+
+## 4. 🔌 FLUJO DE SEÑAL Y ENERGÍA (INTERCONEXIÓN)
+*El diseño de interconexión optimiza el aislamiento y la pureza de la señal desde la pared hasta el oído.*
+
+### 4.1 Cadena de Suministro Eléctrico (Suelo Limpio)
+1.  **Red (CFE) --> UPS CyberPower (Pure Sine Wave):** Transforma la corriente irregular en onda senoidal pura, vital para el transformador toroidal del Aune.
+2.  **UPS --> Transformador 110v-220v:** Eleva el voltaje para el Aune S17 Pro, permitiendo una operación en Clase A con mayor eficiencia térmica y dinámica.
+3.  **UPS --> PC / RME / Eversolo:** Suministro regulado y filtrado contra ruido EMI/RFI.
+
+### 4.2 Cadena de Señal Digital (Transporte Bit-Perfect)
+1.  **PC Gaming --> USB Oyaide Neo d+ --> RME ADI-2:** El cable blindado protege los paquetes de datos del ruido electromagnético de la tarjeta gráfica (GPU) mientras el RME regenera el reloj (SteadyClock FS).
+2.  **Eversolo / WiiM Mini --> Óptico KabelDirekt --> RME ADI-2:** Aislamiento galvánico total vía Toslink. El ruido de tierra de los streamers nunca toca la etapa de audio.
+
+### 4.3 Cadena de Señal Analógica (La "Vía Balanceada")
+1.  **RME ADI-2 --> XLR WBC (Canare/Mogami) --> Aune S17 Pro:** 
+    *   *Por qué:* La conexión balanceada (+4dBu / +19dBu) aprovecha el rechazo de modo común del Aune, eliminando interferencias de radiofrecuencia.
+2.  **Aune S17 Pro --> XLR Balanceado --> HEKSE:** 
+    *   *Por qué:* Entrega el doble de corriente y voltaje (Slew Rate superior) para controlar el diafragma masivo del HEKSE con precisión quirúrgica.
+
+### 4.4 Higiene Digital: Upsampling Inteligente (192kHz)
+*El transporte digital opera a una tasa fija de 192kHz para optimizar la respuesta temporal del DAC y eliminar el roll-off del filtro reconstructor.*
+
+*   **Source: INT (Internal Clock):** Estado **OBLIGATORIO**. El RME usa su **SteadyClock FS**.
+*   **Fix de PipeWire (192k Fixed):** Configurado `clock.rate = 192000` y `allowed-rates = [ 192000 ]`.
+    *   *Resultado:* Cualquier stream se remuestrea a 192k por software (PipeWire).
+    *   *Razón Técnica (EL FILTRO):* Al usar 192k, el filtro **SD Slow** del RME desplaza su caída de agudos fuera del rango audible (>20kHz). Esto permite un sonido "analógico" (sin pre-ringing) pero con respuesta de frecuencia plana.
+    *   *Veredicto:* Calidad técnica superior y conveniencia (sin clics de relés al cambiar de app).
 
 ## 5. PERFILES DSP (RME ADI-2)
-### 5.1 Hifiman Arya Stealth (Target: Harman 2018)
-*Basado en Oratory1990 (Adaptado a 5-Bandas + Shelves)*
-*   **Preamp:** -5.5 dB (O usar Auto Ref Level)
-*   **Bass (Low Shelf):** Freq: 105 Hz | Gain: **+5.5 dB** | Q: 0.7
-*   **Band 1 (Peak):** Freq: 73 Hz | Gain: -1.4 dB | Q: 0.9
-*   **Band 2 (Peak):** Freq: 230 Hz | Gain: -1.0 dB | Q: 1.0
-*   **Band 3 (Peak):** Freq: 1850 Hz | Gain: **+6.1 dB** | Q: 0.9 (Corrección Crítica Medios)
-*   **Band 4 (Peak):** Freq: 2950 Hz | Gain: -3.9 dB | Q: 2.5 (Corrección Crítica Agudos)
-*   **Band 5 (Peak):** Freq: 4900 Hz | Gain: -3.5 dB | Q: 3.5
-*   **Treble (High Shelf):** Freq: 10000 Hz | Gain: -1.0 dB | Q: 0.7
+### 🎧 5.1 PERFIL: HE1000se "HEKSE-HarmanV3.1 (Tiger Unchained)"
+*Filosofía de Máxima Resolución: Resonancia Cero, Aire Infinito. Aprovecha la pureza del SD-Slow a 192kHz sin domesticar la extensión natural.*
+*   **Preamp:** **-7.5 dB** (Linealidad Aune R2R).
+*   **Bass Control (LSC):** 105 Hz | **+4.5 dB** | Q: 0.7 (Fundamento Harman).
+*   **Band 1 (PK):** 40 Hz | +2.5 dB | Q: 0.9 (Sub-bajo).
+*   **Band 2 (PK):** 1950 Hz | **+3.0 dB** | Q: 1.5 (Voz).
+*   **Band 3 (PK):** 3600 Hz | -2.5 dB | Q: 2.5 (Sibilancia).
+*   **Band 4 (PK):** 6000 Hz | -3.0 dB | Q: 3.5 (Driver resonance).
+*   **Band 5 (PK):** 8200 Hz | **-1.5 dB** | Q: 3.0 (**Filtro "Anti-Metálico"**).
+*   **Treble Control (HSC):** 10000 Hz | **0.0 dB** | Q: 0.7 (**Liberación de Aire**).
 
-### 💪 5.2 PERFIL: ARYA "MUSCLE" (Basshead Edition) by openIA 5.1 (23/11/2025)
-*   **Preamp:** **-6.5 dB**
-*   **Perilla BASS:** **+4.0 dB**
-*   **Perilla TREBLE:** **-2.0 dB**
-| Banda      | Freq        | Gain        | Q       | Efecto Sónico                                                                                    |
-| :--------- | :---------- | :---------- | :------ | :----------------------------------------------------------------------------------------------- |
-| **Band 1** | **63 Hz**   | **+3.8 dB** | **1.1** | **Sub-Bass Focus.** Ligeramente más bajo y preciso que el perfil anterior (65Hz).                |
-| **Band 2** | **150 Hz**  | **+1.8 dB** | **1.0** | **Cuerpo Controlado.** Menos ganancia que antes (+2.5dB) para evitar enturbiar los medios bajos. |
-| **Band 3** | **1850 Hz** | **+4.5 dB** | **1.0** | **Presencia Vocal.** Un poco menos agresivo que el original (+6.1dB) para voces más naturales.   |
-| **Band 4** | **3000 Hz** | **-3.8 dB** | **2.2** | **Control de Fatiga.** Corte quirúrgico en la zona más sensible del oído.                        |
-| **Band 5** | **5000 Hz** | **-3.2 dB** | **4.0** | **Suavizado.** Q más estrecho (4.0) para atacar solo la resonancia metálica específica.          |
+### 5.1.1 🎧 Niveles de Escucha y Seguridad (HE1000se)
+*Válido para Perfil: **System Synergy v2.0** | RME: -7dB (Auto Ref) | Preamp: -7.5dB | Aune: G-L*
 
-### 5.3 VENTAJAS TÉCNICAS: HARDWARE DSP VS SOFTWARE
-*   **El Problema del "Crunch" (Xruns):** Al usar EasyEffects, el audio compite por la CPU con juegos o compiladores. Si la CPU se satura al 100% (aunque sea por 1ms), el buffer de audio se vacía y escuchas un "crujido" o glitch.
-*   **La Solución RME:** El procesamiento ocurre en el chip FPGA del DAC, **fuera de tu PC**.
-    *   **Resultado:** Cero glitches, cero latencia añadida, cero uso de CPU. Puedes tener la PC compilando el kernel de Linux mientras juegas Cyberpunk, y el audio seguirá siendo cristalino.
-    *   **Mitigación en Software (Si te quedas con EasyEffects):** Aumentar el `min-quantum` en PipeWire (aumenta latencia) o usar un kernel `realtime` (complejo).
-  
+| Nivel Aune  | SPL Promedio (DR10) | Tiempo NIOSH | Propósito / Notas Técnicas          |
+| :---------- | :------------------ | :----------- | :---------------------------------- |
+| **34 - 38** | ~80 - 83 dB         | >8 h         | **Fondo** Seguridad auditiva.       |
+| **42 - 44** | ~87 - 90 dB         | 4 - 6 h      | **Casual:** Escucha relajada.       |
+| **48 - 52** | ~94 - 98 dB         | 30 - 60 min  | **Sinergia R2R:** Máxima linealidad |
+| **54 - 55** | ~102 - 106 dB       | <15 min      | **Análisis:** Ráfagas cortas.       |
+
+### 5.1.2 🧬 Análisis de Sinergia de Ingeniería (Hardware Audit)
+*Explicación técnica de las decisiones de diseño del perfil HEKSE-HarmanV2.*
+
+*   **Compensación de Fase (SD-Slow):** El filtro *SD Slow* del RME es preferido por su nulo *pre-ringing* temporal, pero a 44.1kHz cae -1.2dB @ 15kHz. La **Banda 5 (+4dB @ 16.5kHz)** restaura esa caída sin reintroducir los artefactos de amplitud de filtros más agresivos.
+*   **Gestión de Linealidad (Aune R2R):** El potenciómetro del Aune S17 Pro es más lineal en los pasos altos. El **Preamp de -7.5dB** desplaza el volumen al rango **48-52**, alejándolo del salto no-lineal de **+4dB** documentado en los pasos 55-56.
+*   **Tratamiento de Resonancias:** Se aplican cortes físicos en **3.6kHz (-2.5dB)** y **6kHz (-3.0dB)** para domesticar la resonancia del driver de oro del HEKSE, permitiendo sesiones críticas de larga duración sin fatiga.
+*   **Focalización Focal:** El realce en **1950Hz** resuelve el valle de presencia de Hifiman, recentrando la imagen holográfica de las voces.
+
 ## 6. HOJA DE RUTA (PRIORIDADES ESTRATÉGICAS)
 
-### FASE 1: CAPITALIZACIÓN (INMEDIATO)
-*   **Objetivo:** Convertir activos subutilizados en liquidez para el HE1000se.
-*   **Paso 1:** **Vender Eversolo DMP-A6.**
+### ✅ FASE 1: COMPLETADA - EL SALTO CUÁNTICO
+*   **Objetivo:** Adquirir HE1000se. ✅ **COMPLETADO (15/ENE/2026)**
+*   **Resultado:** Compra exitosa a $20,000 MXN (42.8% descuento).
+
+### FASE 2: CAPITALIZACIÓN (INMEDIATO)
+*   **Objetivo:** Convertir activos redundantes en liquidez y capital libre.
+*   **Paso 1:** **Vender Hifiman Arya Stealth.** 🔴 **URGENTE**
+    *   *Razón:* Ya tienes el upgrade. Cada día que pasa, pierden valor. ¡Muévelos ya!
+    *   *Meta:* Obtener ~$10,000 MXN.
+    *   *Plataformas:* Mercado Libre, Facebook Marketplace (grupos de audio), AVExchange.
+*   **Paso 2:** **Vender Eversolo DMP-A6.** 🔴 **URGENTE**
     *   *Razón:* Es un "transporte de lujo" de $18k que usas al 5%. Un WiiM Mini ($2k) hace lo mismo vía Toslink al RME.
     *   *Meta:* Obtener ~$13,000 MXN.
-*   **Paso 2:** **Vender Hifiman Arya Stealth.**
-    *   *Razón:* No tiene sentido tenerlos si vas por el HE1000se.
-    *   *Meta:* Obtener ~$10,000 MXN.
 
-### FASE 2: EL SALTO CUÁNTICO (CORTO PLAZO)
-*   **Paso 3:** **Adquirir Hifiman HE1000se.**
-    *   *Estrategia:* Usar el capital de Fase 1 + Tarjeta de Crédito en promoción (Buen Fin / Hot Sale).
-    *   *Target:* $25,000 - $30,000 MXN (Open Box o Oferta).
+*   **💰 Capital Libre Post-Ventas:** ~$23,000 MXN.
 
-### FASE 3: EXPANSIÓN Y LIFESTYLE (MEDIO PLAZO)
+### FASE 3: OPTIMIZACIÓN (CORTO PLAZO)
+*   **Paso 3:** **Adquirir WiiM Mini.**
+    *   *Razón:* Reemplaza la funcionalidad de streaming del Eversolo a una fracción del costo.
+    *   *Target:* $1,800 MXN.
+    *   *Conexión:* WiiM Mini -> (Óptico) -> RME ADI-2.
+
+### FASE 4: EXPANSIÓN Y LIFESTYLE (MEDIO PLAZO)
 *   **Paso 4:** **Proyecto Bluetooth Audiófilo.**
-    *   **Candidato A:** **AirPods Max 2 (Rumoreados).**
-        *   *Por qué:* Esperar a que salgan.
-    *   **Candidato B:** **Focal Bathys.**
-        *   *Por qué:* Calidad de sonido actual muy superior a Apple/Sony. Modo DAC USB-C interno excelente.
-        *   *Precio:* ~$14,000 - $16,000 MXN.
+    *   **Candidato A:** **Focal Bathys.**
+        *   *Por qué:* Calidad de sonido superior a Apple/Sony. Modo DAC USB-C interno excelente.
+        *   *Target:* ~$12,000 MXN.
+    *   **Candidato B:** **AirPods Max 2 (Cuando salgan).**
+        *   *Por qué:* Esperar a que salgan para evaluar.
 *   **Paso 5:** **Proyecto Teatro en Casa (2.1).**
-    *   *Ver sección 8.*
+    *   *Ver sección 9.*
 *   **Paso 6:** **Proyecto Oficina (2.1).**
-    *   *Ver sección 7.*
+    *   *Ver sección 8.*
 
-### FASE 4: NIRVANA (LARGO PLAZO / SUEÑOS)
+### FASE 5: NIRVANA (LARGO PLAZO / SUEÑOS)
 Esta lista es referencial; si surge tecnología superior o con mejor relación desempeño/precio, prioriza la innovación sobre la marca.
 
 ## 7. Análisis de Influencia:
 ### 7.1 🏆 Tabla Maestra de Contribución al Audio (El "Pastel" de la Calidad)
-*Asignación de peso sónico real en tu cadena actual:*
-| Componente              | % Aporte | Costo por 1% (Mercado) | Costo por 1% (Pagado) | Justificación Técnica "Sin Bullshit"                                                                                                                |
-| :---------------------- | :------- | :--------------------- | :-------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **1. Hifiman HE1000se** | **50%**  | **$680** (Alto Valor)  | **$500** (Excelente)  | **El Transductor.** Es el elemento físico que mueve el aire. Determina el 90% del detalle, la escena sonora y el timbre. Es la ventana a la música. |
-| **2. RME ADI-2 DAC FS** | **30%**  | **$866** (Bueno)       | **$433** (MVP 👑)      | **El Cerebro.** No solo convierte (D/A), sino que *arregla* la respuesta de frecuencia (EQ) y limpia la señal digital (SteadyClock).                |
-| **3. Aune S17 Pro**     | **15%**  | **$933** (Normal)      | **$733** (Bueno)      | **El Músculo.** Provee la corriente necesaria para mover los drivers planares con autoridad. Al ser Clase A, añade textura y suavidad.              |
-| **4. CyberPower UPS**   | **4%**   | **$1,675** (Seguro)    | **$1,125** (Justo)    | **El Suelo.** Baja el piso de ruido eléctrico. Permite que el silencio sea silencio. Protege la inversión.                                          |
-| **5. Cables (XLR/USB)** | **1%**   | **$2,400** (Lujo)      | **$1,700** (Lujo)     | **La Higiene.** Si están bien construidos, su trabajo es no estorbar. No "mejoran" el sonido, solo evitan que se degrade.                           |
-| **TOTAL**               | **100%** | *Promedio: ~$1,310*    | *Promedio: ~$898*     | *La sinergia de estos componentes crea tu experiencia Hi-End.*                                                                                      |
+| Componente              | % Aporte | Costo por 1% (Mercado) | Costo por 1% (Pagado)    | Justificación Técnica "Sin Bullshit"                                                                                                                |
+| :---------------------- | :------- | :--------------------- | :----------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1. Hifiman HE1000se** | **50%**  | **$700** (Alto Valor)  | **$400** (EXCEPCIONAL) ✅ | **El Transductor.** Es el elemento físico que mueve el aire. Determina el 90% del detalle, la escena sonora y el timbre. Es la ventana a la música. |
+| **2. RME ADI-2 DAC FS** | **30%**  | **$866** (Bueno)       | **$433** (MVP 👑)         | **El Cerebro.** No solo convierte (D/A), sino que *arregla* la respuesta de frecuencia (EQ) y limpia la señal digital (SteadyClock).                |
+| **3. Aune S17 Pro**     | **15%**  | **$933** (Normal)      | **$733** (Bueno)         | **El Músculo.** Provee la corriente necesaria para mover los drivers planares con autoridad. Al ser Clase A, añade textura y suavidad.              |
+| **4. CyberPower UPS**   | **4%**   | **$1,675** (Seguro)    | **$1,125** (Justo)       | **El Suelo.** Baja el piso de ruido eléctrico. Permite que el silencio sea silencio. Protege la inversión.                                          |
+| **5. Cables (XLR/USB)** | **1%**   | **$2,400** (Lujo)      | **$1,700** (Lujo)        | **La Higiene.** Si están bien construidos, su trabajo es no estorbar. No "mejoran" el sonido, solo evitan que se degrade.                           |
+| **TOTAL**               | **100%** | **$84,100** (Mercado)  | **$50,350** (Pagado)     | *Inversión total del sistema. Costo promedio ponderado: ~$503/punto.*                                                                               |
 
-### 7.2 ️ Tabla de Valor Holístico (Sinergia + Protección + Funcionalidad)
+*   **🎯 Análisis HE1000se:** A **$400 MXN por punto porcentual**, es ahora el componente con **mejor relación costo/beneficio** de todo tu sistema. Compra excepcional.
+
+### 7.2 Tabla de Valor Holístico (Sinergia + Protección + Funcionalidad)
 *Asignación de valor real considerando que un sistema es más que solo sonido (Seguridad, Interfaz, Durabilidad):*
-| Componente              | % Valor Total | Costo por 1% (Mercado) | Costo por 1% (Pagado) | Justificación de Sinergia y Rol Sistémico                                                                                                                                                                          |
-| :---------------------- | :------------ | :--------------------- | :-------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **1. RME ADI-2 DAC FS** | **35%**       | **$742** (Bueno)       | **$371** (MVP 👑)      | **El Sistema Operativo.** Es la interfaz humano-máquina. Su pantalla, analizador, DSP y preamplificador definen la experiencia de uso diaria. Sin él, el sistema es "tonto".                                       |
-| **2. Hifiman HE1000se** | **30%**       | **$1,133** (Lujo)      | **$833** (Alto)       | **La Meta.** Es la razón de ser del sistema, pero es el componente más pasivo. Depende totalmente de la protección del UPS y la señal del RME.                                                                     |
-| **3. CyberPower UPS**   | **20%**       | **$335** (Ganga)       | **$225** (Regalo 🎁)   | **La Fundación.** De 4% sónico sube a 20% sistémico. Sin él, una tormenta eléctrica convierte tu inversión de $100k en pisapapeles. Es la vida del sistema.                                                        |
-| **4. Aune S17 Pro**     | **12%**       | **$1,166** (Lujo)      | **$916** (Alto)       | **El Motor de Corriente.** Los HE1000se requieren amperaje, no solo voltaje. Su rol es entregar corriente masiva en Clase A para controlar los drivers, liberando al RME de la carga y añadiendo cuerpo analógico. |
-| **5. Cables (XLR/USB)** | **3%**        | **$800** (Normal)      | **$566** (Bien)       | **La Confiabilidad.** Un mal cable causa estática o desconexiones que arruinan la experiencia. Su valor está en la durabilidad mecánica.                                                                           |
-| **TOTAL**               | **100%**      | *Promedio: ~$835*      | *Promedio: ~$582*     | *El UPS se revela como el componente más costo-efectivo del sistema.*                                                                                                                                              |
+| Componente              | % Valor Total | Costo por 1% (Mercado) | Costo por 1% (Pagado) | Justificación de Sinergia y Rol Sistémico                                                                                                             |
+| :---------------------- | :------------ | :--------------------- | :-------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1. Hifiman HE1000se** | **40%**       | **$875** (Excelente)   | **$500** (GANGA) ✅    | **La Razón de Ser.** Sin transductor no hay sistema. Es el componente que justifica toda la inversión. Todo lo demás existe para servirle.            |
+| **2. RME ADI-2 DAC FS** | **30%**       | **$866** (Bueno)       | **$433** (MVP 👑)      | **El Sistema Operativo.** Interfaz humano-sistema. Pantalla, analizador, DSP y preamplificador definen la experiencia de uso diaria.                  |
+| **3. Aune S17 Pro**     | **15%**       | **$933** (Normal)      | **$733** (Bueno)      | **El Motor de Corriente.** Los HE1000se requieren amperaje, no solo voltaje. Entrega corriente masiva en Clase A para controlar los drivers planares. |
+| **4. CyberPower UPS**   | **12%**       | **$558** (Bueno)       | **$375** (Ganga 🎁)    | **El Seguro.** Protección contra CFE. No produce sonido, pero evita catástrofes. Su valor es preventivo, no productivo.                               |
+| **5. Cables (XLR/USB)** | **3%**        | **$800** (Commodity)   | **$566** (Normal)     | **La Higiene.** Una vez instalados, su trabajo está hecho. Cualquier cable decente cumple. No justifican inversión "boutique".                        |
+| **TOTAL**               | **100%**      | **$84,100** (Mercado)  | **$50,350** (Pagado)  | *Los HE1000se dominan el valor sistémico (40%). El UPS es seguro, no mejora.*                                                                         |
 
 
 ### 7.3 🔌 CyberPower CP1500PFCLCD 
@@ -182,7 +232,7 @@ Esta lista es referencial; si surge tecnología superior o con mejor relación d
 Justificación Técnica:
 No es un "Mejorador": Un UPS no añade detalle, ni escena sonora, ni graves. Un UPS quita problemas. Su trabajo es ser invisible.
 El "Suelo de Ruido" (Noise Floor): Ese 4% representa el silencio. En pasajes silenciosos de música clásica o jazz, la ausencia de hiss o hum eléctrico es lo que permite percibir la "negrura" del fondo. Sin este UPS (conectado directo a la pared en una zona con mala luz), podrías perder ese fondo negro, ensuciando la presentación.
-Protección vs Calidad: Aunque su aporte al sonido es del 8%, su aporte a la integridad del sistema es del 100%. Sin él, un pico de voltaje de CFE podría freír el Aune S17 Pro.
+Protección vs Calidad: Aunque su aporte al sonido es del 4%, su aporte a la integridad del sistema es del 100%. Sin él, un pico de voltaje de CFE podría freír el Aune S17 Pro.
 💡 Veredicto Final
 Es el guardián silencioso que permite que el RME y el Aune operen al 100% de su capacidad teórica.
 
@@ -191,7 +241,7 @@ Es el guardián silencioso que permite que el RME y el Aune operen al 100% de su
 *   **Análisis de Contribución:**
     *   **SteadyClock FS (El Asesino del Jitter):** La mayoría de los DACs dependen de la calidad del reloj de la fuente (tu PC). El RME ignora eso. Su reloj interno regenera la señal con precisión de *femtosegundos* (Rechazo >99.9%). Esto se traduce en una imagen estéreo "clavada" y una separación de instrumentos quirúrgica. [Ref: Jitter Theory](https://www.audiosciencereview.com/forum/index.php?threads/jitter-theory-and-digital-audio.444/)
     *   **Transparencia Absoluta ("Wire with Gain"):** A diferencia de DACs "musicales" que colorean el sonido (añaden distorsión eufónica), el RME busca la fidelidad matemática. Lo que entra es lo que sale. Esto es CRÍTICO para el HE1000se, que es un microscopio. Si el DAC coloreara, perderías la referencia real de la grabación.
-    *   **DSP por Hardware (El verdadero MVP):** Aquí es donde el RME supera a DACs de $50,000. Su EQ Paramétrico de 5 bandas no añade latencia ni distorsión de fase perceptible. Te permite corregir la tonalidad de los audífonos (como el perfil Harman para los Arya) *antes* de que la señal se convierta a analógico. Esto tiene más impacto en el sonido final que cualquier cable o amplificador.
+    *   **DSP por Hardware (El verdadero MVP):** Aquí es donde el RME supera a DACs de $50,000. Su EQ Paramétrico de 5 bandas no añade latencia ni distorsión de fase perceptible. Te permite corregir la tonalidad de los audífonos (como el perfil Harman para los HE1000se) *antes* de que la señal se convierta a analógico. Esto tiene más impacto en el sonido final que cualquier cable o amplificador.
     *   **Salida IEM (Silencio Absoluto):** Con un piso de ruido de -121 dBu, garantiza que incluso con los IEMs más sensibles, el fondo sea negro absoluto.
     *   **Fuente Conmutada Filtrada:** A menudo malinterpretada, la fuente interna del RME es una obra maestra de ingeniería que ofrece un **rechazo >100 dB** al ruido de línea.
     *   **Inmunidad USB Total (Aislamiento + Buffering):**
@@ -199,10 +249,16 @@ Es el guardián silencioso que permite que el RME y el Aune operen al 100% de su
         *   **Ground Lift Automático:** Rompe bucles de tierra en la interfaz digital.
         *   **Buffering Asíncrono:** El DAC trabaja independientemente de la carga de la CPU, eliminando glitches incluso si compilas código mientras escuchas música.
 
-*   **📊 Asignación de Porcentaje:**
-    # **30%**
-    **Justificación:** 10% por la conversión D/A perfecta y 20% por la capacidad de DSP/EQ que transforma radicalmente la respuesta de frecuencia de tus audífonos.
+*   **📊 Asignación de Porcentaje: 30%**
+    *   10% por la conversión D/A perfecta.
+    *   20% por la capacidad de DSP/EQ que transforma radicalmente la respuesta de frecuencia de tus audífonos.
 
+### 7.4.1 VENTAJAS TÉCNICAS: HARDWARE DSP VS SOFTWARE
+*   **El Problema del "Crunch" (Xruns):** Al usar EasyEffects, el audio compite por la CPU con juegos o compiladores. Si la CPU se satura al 100% (aunque sea por 1ms), el buffer de audio se vacía y escuchas un "crujido" o glitch.
+*   **La Solución RME:** El procesamiento ocurre en el chip FPGA del DAC, **fuera de tu PC**.
+    *   **Resultado:** Cero glitches, cero latencia añadida, cero uso de CPU. Puedes tener la PC compilando el kernel de Linux mientras juegas Cyberpunk, y el audio seguirá siendo cristalino.
+    *   **Mitigación en Software (Si te quedas con EasyEffects):** Aumentar el `min-quantum` en PipeWire (aumenta latencia) o usar un kernel `realtime` (complejo).
+  
 ### 7.5 🔥 Aune S17 Pro EVO (220V)
 
 *   **Rol:** El "Músculo" y "Corazón Analógico".
@@ -212,12 +268,26 @@ Es el guardián silencioso que permite que el RME y el Aune operen al 100% de su
     *   **Transformador Toroidal TM333-500VA:** Este es el componente estrella. Un transformador de 500VA es masivo (común en amplificadores de bocinas de 100W, no de audífonos).
         *   *Sinergia con UPS:* Los toroidales grandes son propensos a vibrar (hum mecánico) si la corriente está sucia (DC offset). Tu **CyberPower CP1500PFCLCD** es vital aquí, garantizando que este monstruo reciba onda senoidal pura y opere en silencio absoluto.
         *   *Beneficio Sónico:* Reserva de corriente instantánea. Cuando un bombo o una explosión suena, el amplificador no se "ahoga"; entrega la energía inmediatamente, controlando los drivers planares del HE1000se con autoridad total.
+    *   **Sinergia con HE1000se:** Los drivers nanométricos del HE1000se (< 0.01mm de espesor) son extremadamente ligeros y responden instantáneamente a cambios de corriente. El Aune entrega esa corriente sin compresión, lo que resulta en una microdinámica y resolución excepcionales.
 
-*   **📊 Asignación de Porcentaje:**
-    # **15%**
-    **Justificación:** Es el encargado de dar "vida" y cuerpo a la señal perfecta del RME. Su operación en Clase A añade esa capa de realismo y tridimensionalidad que los chips no pueden emular.
+*   **📊 Asignación de Porcentaje: 15%**
+    *   Es el encargado de dar "vida" y cuerpo a la señal perfecta del RME.
+    *   Su operación en Clase A añade esa capa de realismo y tridimensionalidad que los chips no pueden emular.
 
-### 7.6 🔗 Cables (XLR Worlds Best Cables & USB Oyaide Neo d+)
+### 7.6 🎧 Hifiman HE1000se
+
+*   **Rol:** El "Transductor" y "Ventana a la Música".
+*   **Análisis de Contribución:**
+    *   **Driver Nanométrico:** Diafragma de < 0.01mm de espesor. Es literalmente más delgado que un cabello humano. Esto significa masa mínima y respuesta transitoria instantánea.
+    *   **Diseño Open-Back:** Escena sonora amplia y natural. No hay coloración por la caja del audífono.
+    *   **Impedancia 60Ω:** Relativamente fácil de manejar, pero requiere corriente significativa para control óptimo. El Aune S17 Pro es perfecto para esto.
+    *   **Sensibilidad 90dB:** No son particularmente eficientes. Necesitan un amplificador con "músculo" para alcanzar volúmenes de escucha sin compresión.
+
+*   **📊 Asignación de Porcentaje: 50%**
+    *   Es el elemento físico que mueve el aire. Todo lo demás (DAC, Amp, Cables) existe para servir al transductor.
+    *   Si el transductor es malo, nada lo salva. Si es excepcional (como el HE1000se), todo el sistema brilla.
+
+### 7.7 🔗 Cables (XLR Worlds Best Cables & USB Oyaide Neo d+)
 *   **Rol:** "La Higiene" y "Aislamiento".
 *   **Análisis de Contribución:**
     *   **XLR (Interconexión Balanceada):**
@@ -225,11 +295,11 @@ Es el guardián silencioso que permite que el RME y el Aune operen al 100% de su
         *   **Eliminación de Ground Loops:** Al separar físicamente la señal de la tierra, estos cables rompen los bucles de tierra entre el RME y el Aune. El ruido de tierra no viaja con la música.
         *   *Referencia Técnica:* Whitlock, B. "Balanced Lines in Audio Systems" - JAES, 1995.
     *   **USB Oyaide Neo d+ (Datos):**
-        *   **Blindaje:** Su construcción plana y blindaje múltiple protege la señal digital de la interferencia de alta frecuencia (RFI) generada por la GPU AMD 9070XT a plena carga. Aunque el RME regenera el reloj, un cable USB pobre puede introducir errores de bit o cortes si la interferencia es extrema.
+        *   **Blindaje:** Su construcción plana y blindaje múltiple protege la señal digital de la interferencia de alta frecuencia (RFI) generada por la GPU a plena carga. Aunque el RME regenera el reloj, un cable USB pobre puede introducir errores de bit o cortes si la interferencia es extrema.
 
-*   **📊 Asignación de Porcentaje:**
-    # **1%**
-    **Justificación:** No mejoran el sonido "per se" (un cable no añade calidad), pero aseguran que el 99% restante del sistema opere sin degradación. Su valor es la **transparencia total**.
+*   **📊 Asignación de Porcentaje: 1%**
+    *   No mejoran el sonido "per se" (un cable no añade calidad), pero aseguran que el 99% restante del sistema opere sin degradación.
+    *   Su valor es la **transparencia total**.
 
 ## 8. PROYECTO AUDIO OFICINA DE MI TRABAJO (Presupuesto ~$6,000 MXN)
 *Objetivo completado: Reemplazadas Creative Pebble v3*
@@ -323,3 +393,80 @@ Es el guardián silencioso que permite que el RME y el Aune operen al 100% de su
 *   **Pros:** Calidad de música BRUTAL (casi nivel HE1000se en bocinas).
 *   **Contras:** No es surround. Es estéreo. Pero estéreo de nivel dios.
 
+## 10. PROMPT PARA GEM DE GOOGLE (AUDIO ENDGAME)
+
+Eres un Ingeniero de Audio Senior y Consultor de Hardware High-End especializado en la integración de sistemas Hi-Fi con PC Gaming y Linux.
+
+## TU PERSONALIDAD
+- Sé brutalmente honesto. Evita halagos fáciles y respuestas complacientes.
+- Piensa detenidamente cada decisión y su sinergia con todos los componentes.
+- Respalda tus decisiones con datos técnicos y links a fuentes (preferiblemente estudios científicos).
+- Usa tablas en markdown cuando sea apropiado.
+
+## MI CONTEXTO
+Vivo en México. Usa pesos mexicanos (MXN). Prioriza Amazon México, Mercado Libre y tiendas departamentales. Tengo tarjetas HSBC, Banorte, Mercado Pago y Banamex. La CFE entrega corriente irregular.
+
+## MI SISTEMA DE AUDIO (CASA) - Precios de Enero 2026
+*Inversión real: ~$50,350 MXN | Valor de mercado: ~$84,100 MXN*
+
+| Componente                  | Pagado  | Mercado (Nuevo) |
+| :-------------------------- | :------ | :-------------- |
+| **Hifiman HE1000se**        | $20,000 | $35,000         |
+| **RME ADI-2 DAC FS**        | $13,000 | $26,000         |
+| **Aune S17 Pro EVO 220V**   | $11,000 | $14,000         |
+| **CyberPower CP1500PFCLCD** | $4,500  | $6,700          |
+| **Cables (XLR + USB)**      | $1,700  | $2,400          |
+
+**Pendientes de venta:**
+- Eversolo DMP-A6 (Pagado: $13,500 | Reventa: ~$13,000)
+- Hifiman Arya Stealth (Pagado: $8,000 | Reventa: ~$10,000)
+
+## ANÁLISIS DE VALOR (MI SISTEMA)
+| Componente | Aporte Sónico | Aporte Sistémico |
+| :--------- | :------------ | :--------------- |
+| HE1000se   | 50%           | 40%              |
+| RME ADI-2  | 30%           | 30%              |
+| Aune S17   | 15%           | 15%              |
+| CyberPower | 4%            | 12%              |
+| Cables     | 1%            | 3%               |
+
+## MI SISTEMA DE AUDIO (OFICINA) ~$7,630 MXN
+- Edifier R1855db + FiiO K7BT + Apple Airport Express
+
+## CADENA DE SEÑAL
+PC → USB Oyaide → RME ADI-2 → XLR → Aune S17 Pro → HE1000se
+
+## EQ PRINCIPAL (RME ADI-2 Hardware DSP)
+*HE1000se "HEKSE-HarmanV2" (Linearidad R2R + Compensación SD-Slow):*
+- Preamp: -7.5 dB (Optimización pasos 48-52 Aune)
+- Bass Control (LSC): 105 Hz | +4.5 dB | Q 0.7
+- Band 1 (PK): 40 Hz | +2.5 dB | Q 0.9 (Sub-bass)
+- Band 2 (PK): 1950 Hz | +3.0 dB | Q 1.5 (Vocal Presence)
+- Band 3 (PK): 3600 Hz | -2.5 dB | Q 2.5 (Sibilancia)
+- Band 4 (PK): 6000 Hz | -3.0 dB | Q 3.5 (Resonancia Driver)
+- Band 5 (HSC): 16500 Hz | +4.0 dB | Q 2.1 (Anti SD-Slow Roll-off)
+- Treble Control (HSC): 10000 Hz | -1.5 dB | Q 0.7
+
+## MI USO
+- 90% escucha crítica desde PC Linux (Tidal Hi-Fi Lossless)
+- 10% streaming (Tidal/Apple Music Lossless)
+
+## TU OBJETIVO
+- Maximizar calidad de audio con la mejor relación calidad/precio
+- Proteger la inversión con componentes eléctricos de calidad
+- Asesorar compras futuras con análisis técnico y financiero
+- Mantener un sistema capaz de sesiones de escucha crítica prolongadas
+- Ayudame a aprender conceptos técnicos de audio en tus respuestas
+- Explicar conceptos de audio como si fuera un ingeniero junior
+- Desmitificar snake oil y marketing audiófilo sin fundamento técnico
+- Recomendar recursos (papers, videos, foros) para profundizar
+
+## PRÓXIMAS COMPRAS (TARGETS)
+- WiiM Mini: Target $1,800 MXN (reemplazo del Eversolo)
+- Focal Bathys: Target $12,000 MXN (audífonos Bluetooth premium)
+
+## AUDÍFONOS (HISTORIAL)
+- 2023-2025: Hifiman Edition XS
+- 2025-2026: Hifiman Arya Stealth  
+- 2026-actual: **Hifiman HE1000se** (Endgame)
+- 2026-01-16: Bitácora de Salud: Edad 39 años. Límite de frecuencia detectable: **14 kHz** (Aune Vol 30 G-L). **Status:** Excelente (5-7 años por debajo de la edad cronológica).
