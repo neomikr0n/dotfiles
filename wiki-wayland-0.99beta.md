@@ -7844,3 +7844,110 @@ Si la BIOS ignora el disco MSI y salta al WD:
 wine msiexec /i /home/n30/Descargas/SetupAdi2Remote.msi
 
 wine "/home/n30/.wine/drive_c/Program Files (x86)/RME/ADI-2 Remote/Adi2Remote.exe"
+
+WAYDROID
+yay -S waydroid waydroid-script-git python-pyclip \
+&& sudo waydroid init -s GAPPS -f
+
+sudo waydroid-extras install libhoudini
+sudo waydroid-extras install widevine
+
+sudo systemctl enable --now waydroid-container
+
+waydroid session start & \
+sleep 5 && \
+waydroid show-full-ui
+
+#### 3\. Optimización para Hyprland y Wayland
+
+Para evitar problemas de parpadeo con tu monitor de 240Hz y asegurar que la RX 9070 maneje el renderizado, debemos ajustar las propiedades de Waydroid:
+
+Bash
+
+waydroid prop set persist.waydroid.multi_windows true \
+    && waydroid prop set persist.waydroid.width 1440 \
+    && waydroid prop set persist.waydroid.height 3440
+
+#### 4\. Reglas de Ventana para Hyprland
+
+Añade esto a tu configuración en `$HOME/dotfiles/hypr/hyprland.conf` para que el juego se comporte correctamente en tu monitor LG UltraGear+:
+
+Code snippet
+
+# Regla para Waydroid: Centrar y dar un aspecto ratio de móvil si no está en pantalla completa
+    windowrulev2 = float, class:^(waydroid)$
+    windowrulev2 = size 540 960, class:^(waydroid)$
+    windowrulev2 = center, class:^(waydroid)$
+
+* * *
+
+### Comparativa Técnica: Waydroid vs. Genymotion
+
+| Característica       | Genymotion (Old School)       | Waydroid (Tu sistema 2026)              |
+| -------------------- | ----------------------------- | --------------------------------------- |
+| **Arquitectura**     | VM Completa (VirtualBox/QEMU) | Contenedor Nativo (LXC)                 |
+| **GPU Pass-through** | Emulado/Translación lenta     | **Directo via Mesa 26.0-git**           |
+| **Kernel**           | Invitado (Guest) genérico     | **Tu Kernel 6.18-zen**                  |
+| **Latencia**         | Alta (capas de abstracción)   | Casi nula                               |
+| **Integración**      | Ventana aislada               | Integración con el portapapeles y shell |
+
+Si te da un error de "Dispositivo no certificado", es normal en Android emulado.
+
+sudo waydroid-extras certified
+
+2. Registrar en Google
+
+    Ve a la página oficial de registro de dispositivos de Google: https://www.google.com/android/uncertified.
+
+    Inicia sesión con la misma cuenta de Google que usarás en el juego.
+
+    Pega el ID en el campo "ID de Google Services Framework" y haz clic en Registro
+
+### 3\. Limpieza de Caché (Obligatorio)
+
+Para que Google Play reconozca el cambio sin esperar horas, debes forzar la actualización de los servicios dentro de Waydroid. Ejecuta esto en tu terminal `kitty`:
+
+Bash
+sudo waydroid shell pm clear com.android.vending && \
+sudo waydroid shell pm clear com.google.android.gms
+
+sudo systemctl restart waydroid-container && \
+waydroid session start &
+
+> **Nota para Navi 48:** Al limpiar la caché de los servicios, podrías notar un pico de uso de CPU en tu **i5-13600K** mientras se reconstruyen los índices; es normal. Con 20 núcleos, no deberías sentir degradación en Hyprland.
+
+* * *
+
+### 4\. Lanzamiento Definitivo de JWA
+
+Una vez registrado, reinicia el contenedor para asegurar que todo el stack de **Mesa-git** y los servicios de Google carguen limpios:
+
+Bash
+
+    sudo systemctl restart waydroid-container && \
+    waydroid session start & \
+    sleep 3 && \
+    waydroid app launch com.ludia.jw2
+
+
+### Opción 1: Desactivar la App de Asistencia (La más rápida)
+
+La forma más limpia es decirle a Android que no use ninguna aplicación como asistente predeterminado. Ejecuta esto desde tu `kitty`:
+
+Bash
+
+    waydroid shell settings put secure assistant "" && \
+    waydroid shell settings put secure voice_interaction_service ""
+
+
+sudo waydroid shell wm size 1920x2530 
+
+sudo waydroid shell wm density
+Physical density: 180
+Override density: 320
+
+╰─ ❯❯ sudo waydroid shell getprop debug.hwui.renderer
+sudo waydroid shell getprop debug.hwui.renderer
+opengl
+
+sudo waydroid container stop && pkill -9 -f waydroid

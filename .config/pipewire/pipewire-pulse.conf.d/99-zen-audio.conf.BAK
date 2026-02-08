@@ -1,0 +1,20 @@
+# Calidad de resampleo global para el puente Pulse
+stream.properties = {
+    resample.quality = 4
+}
+
+pulse.rules = [
+    {
+        # Aplicar margen de seguridad específico para Zen Browser
+        matches = [ { application.process.binary = "zen" } ]
+        actions = {
+            update-props = {
+                pulse.min.req          = 2048/192000
+                pulse.min.quantum      = 2048/192000
+                pulse.min.frag         = 2048/192000
+                # Evita que el navegador pida latencias imposibles
+                node.latency           = 2048/192000
+            }
+        }
+    }
+]

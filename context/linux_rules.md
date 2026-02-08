@@ -51,6 +51,28 @@ Adata ASU800NS38-512GT-C Unidad de Estado Sólido (SSD) SU800 3D NAND 512GB, SAT
 ### Audio
 # Context: context/audio_rules.md
 
+bat -p ~/.config/pipewire/pipewire.conf.d/99-rme-fix.conf
+
+context.properties = {
+    default.clock.rate          = 192000
+    default.clock.allowed-rates = [ 192000 ]
+    default.clock.quantum       = 2048
+    default.clock.min-quantum   = 1024
+    default.clock.max-quantum   = 4096
+}
+
+context.modules = [
+    { name = libpipewire-module-rt
+      args = {
+          nice.level   = -15
+          rt.prio      = 88
+          rt.time.soft = -1
+          rt.time.hard = -1
+      }
+      flags = [ ifexists nofail ]
+    }
+]
+
 ### Software
 *   **OS**: Garuda Linux (Rolling Release, base Arch).
 *   **Kernel**: 6.18.3-zen1-1-zen.
@@ -70,6 +92,11 @@ Adata ASU800NS38-512GT-C Unidad de Estado Sólido (SSD) SU800 3D NAND 512GB, SAT
     *   Python 3.13.7
     *   Rust 1.91.1
     *   Go 1.25.4
+
+#### Grub
+cat /proc/cmdline
+
+BOOT_IMAGE=/vmlinuz-linux-zen root=UUID=bd233266-6d8f-4786-affc-5c811ad251cc rw rootflags=subvol=@ split_lock_detect=off quiet loglevel=3 amdgpu.ppfeaturemask=0xffffffff pci=noaer pcie_aspm=off nowatchdog i2c_designware.2=force rcutree.kthread_prio=50
 
 ## Comandos de Diagnóstico Sugeridos
 

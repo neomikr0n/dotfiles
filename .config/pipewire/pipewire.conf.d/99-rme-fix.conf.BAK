@@ -1,0 +1,11 @@
+context.properties = {
+    default.clock.rate          = 192000
+    default.clock.allowed-rates = [ 192000 ]
+    default.clock.quantum       = 1024
+    default.clock.min-quantum   = 512
+    default.clock.max-quantum   = 4096
+}
+
+stream.properties = {
+    resample.quality = 10
+}

@@ -8,7 +8,7 @@
   --arrowpanel-color: #e2e2e2 !important;
   --arrowpanel-background: #1f1f1f !important;
   --sidebar-text-color: #e2e2e2 !important;
-/*  --zen-main-browser-background: #131313 !important; */
+  --zen-main-browser-background: #131313 !important;
 }
 
 .sidebar-placesTree {
@@ -50,8 +50,8 @@ toolbar .toolbarbutton-1 {
 }
 
 .identity-color-blue {
-  --identity-tab-color: #ffcb8c !important;
-  --identity-icon-color: #ffcb8c !important;
+  --identity-tab-color: #ffc375 !important;
+  --identity-icon-color: #ffc375 !important;
 }
 
 .identity-color-turquoise {
@@ -60,33 +60,33 @@ toolbar .toolbarbutton-1 {
 }
 
 .identity-color-green {
-  --identity-tab-color: #a8e086 !important;
-  --identity-icon-color: #a8e086 !important;
+  --identity-tab-color: #9fff8d !important;
+  --identity-icon-color: #9fff8d !important;
 }
 
 .identity-color-yellow {
-  --identity-tab-color: #e8c297 !important;
-  --identity-icon-color: #e8c297 !important;
+  --identity-tab-color: #ffeb8d !important;
+  --identity-icon-color: #ffeb8d !important;
 }
 
 .identity-color-orange {
-  --identity-tab-color: #dbae7b !important;
-  --identity-icon-color: #dbae7b !important;
+  --identity-tab-color: #ffe04c !important;
+  --identity-icon-color: #ffe04c !important;
 }
 
 .identity-color-red {
-  --identity-tab-color: #e05f8e !important;
-  --identity-icon-color: #e05f8e !important;
+  --identity-tab-color: #ff8d85 !important;
+  --identity-icon-color: #ff8d85 !important;
 }
 
 .identity-color-pink {
-  --identity-tab-color: #ad683e !important;
-  --identity-icon-color: #ad683e !important;
+  --identity-tab-color: #ffce8d !important;
+  --identity-icon-color: #ffce8d !important;
 }
 
 .identity-color-purple {
-  --identity-tab-color: #bf955e !important;
-  --identity-icon-color: #bf955e !important;
+  --identity-tab-color: #764300 !important;
+  --identity-icon-color: #764300 !important;
 }
 
 #zen-appcontent-navbar-container {
