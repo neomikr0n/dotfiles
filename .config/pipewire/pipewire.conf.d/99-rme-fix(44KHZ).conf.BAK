@@ -1,0 +1,33 @@
+context.properties = {
+    ## Cambiamos a 48kHz como base (estándar de sistema)
+    ## Pero permitimos 44.1kHz para evitar resampleo innecesario de música
+    default.clock.rate          = 48000
+    default.clock.allowed-rates = [ 44100 48000 88200 96000 176400 192000 ]
+    default.clock.quantum       = 1024
+    default.clock.min-quantum   = 1024
+    default.clock.max-quantum   = 2048
+    
+    settings.check-quantum      = true
+    settings.check-rate         = true
+    
+    mem.allow-mlock             = true
+    default.video.width         = 1920
+    default.video.height        = 1080
+    default.video.rate.num      = 60
+    default.video.rate.den      = 1
+}
+
+context.modules = [
+    { name = libpipewire-module-rt
+      args = {
+          nice.level    = -15
+          rt.prio       = 88
+          rt.time.soft  = 200000
+          rt.time.hard  = 200000
+          ## Seguimos priorizando P-Cores
+          uclamp.min    = 1024
+          uclamp.max    = 1024
+      }
+      flags = [ ifexists nofail ]
+    }
+]

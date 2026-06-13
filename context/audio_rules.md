@@ -506,3 +506,47 @@ Planeas usar el equipo principalmente en casa, siendo el sonido mandado desde un
 (5) Evaluar la necesidad de un DDC (Digital-to-Digital Converter) para aislamiento galvánico y reclocking en cada rango, analizando si las entradas USB de los DACs propuestos superan la tecnología SteadyClock FS del RME (adi2dac_e.pdf).
 (6) Validar que las propuestas mantengan un headroom suficiente para aplicar perfiles de EQ agresivos (preamp negativo de -7.5 dB o más) sin entrar en clipping analógico o digital.
 (7) Comparar las tres cadenas propuestas contra el sistema actual en una tabla que incluya SINAD, versatilidad de EQ, potencia efectiva a 60Ω y un análisis de rendimientos decrecientes en relación al costo.
+
+# 12. configuraciones de audio
+
+## cat /etc/security/limits.d/99-realtime.conf
+@realtime - rtprio 98
+@realtime - memlock unlimited
+@realtime - nice -19
+
+## cat ~/.config/pipewire/pipewire.conf.d/99-rme-fix.conf
+context.properties = {
+    ## Mantenemos tu estándar de oro
+    default.clock.rate          = 192000
+    default.clock.allowed-rates = [ 192000 ]
+    
+    ## Ajuste de Quantum: Subimos el mínimo para proteger contra micro-cortos
+    ## 2048 a 192kHz son ~10.6ms, ideal para estabilidad total
+    default.clock.quantum       = 2048
+    settings.check-quantum      = true
+    settings.check-rate         = true
+    default.clock.min-quantum   = 2048 
+    default.clock.max-quantum   = 4096
+    
+    ## Prioridad de memoria y locking
+    mem.allow-mlock             = true
+    default.video.width         = 1920
+    default.video.height        = 1080
+    default.video.rate.num      = 60
+    default.video.rate.den      = 1
+}
+
+context.modules = [
+    { name = libpipewire-module-rt
+      args = {
+          nice.level    = -15
+          rt.prio       = 88
+          ## Ajuste crítico para evitar que el kernel mate el hilo de audio
+          rt.time.soft  = 200000
+          rt.time.hard  = 200000
+          uclamp.min    = 1024
+          uclamp.max    = 1024
+      }
+      flags = [ ifexists nofail ]
+    }
+]

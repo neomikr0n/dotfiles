@@ -1,5 +1,6 @@
 [soe][BassEnhancer#0]
 amount=6
+bypass=true
 floor=25
 floorActive=true
 harmonics=4

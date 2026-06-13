@@ -1,6 +1,7 @@
 [soe][Limiter#0]
 alr=true
 attack=2
+bypass=true
 gainBoost=false
 release=20
 threshold=-3
@@ -8,6 +9,7 @@ threshold=-3
 [soe][Limiter#1]
 alr=true
 attack=3
+bypass=true
 gainBoost=false
 release=15
 threshold=-0.5
