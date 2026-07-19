@@ -4,7 +4,7 @@
 GENY_PATH="/opt/genymotion"
 PLAYER="$GENY_PATH/player"
 GENYSHELL="$GENY_PATH/genyshell"
-VM_NAME="Google Pixel 6 Pro"
+VM_NAME="Google Pixel 6"
 
 # Coordenadas Morelia
 LAT="19.73663978"
@@ -22,7 +22,7 @@ fi
 
 # 2. Esperar conexión ADB
 echo "📡 Sincronizando ADB..."
-adb connect 127.0.0.1:5555 > /dev/null 2>&1
+adb connect 127.0.0.1:6555 > /dev/null 2>&1
 SERIAL=$(adb devices | grep -m 1 "device$" | awk '{print $1}')
 
 while [ -z "$SERIAL" ]; do
@@ -34,7 +34,9 @@ echo -e "\n✅ Conectado a $SERIAL"
 
 # 3. Configurar Pantalla (SIN REINICIAR)
 echo "🖥️  Ajustando resolución Tablet..."
-adb -s $SERIAL shell wm size 1536x2048
+#adb -s $SERIAL shell wm size 1536x2048
+#adb -s $SERIAL shell wm density 320
+adb -s $SERIAL shell wm size 1080x2160
 adb -s $SERIAL shell wm density 320
 
 # 4. Potencia GPU
