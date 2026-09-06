@@ -1,15 +1,25 @@
 [soe][Limiter#0]
 alr=true
 attack=2
-bypass=true
 gainBoost=false
+inputToLink=0
+inputToSidechain=0
+linkToInput=0
+linkToSidechain=0
 release=20
+sidechainToInput=0
+sidechainToLink=0
 threshold=-3
 
 [soe][Limiter#1]
 alr=true
 attack=3
-bypass=true
 gainBoost=false
+inputToLink=0
+inputToSidechain=0
+linkToInput=0
+linkToSidechain=0
 release=15
+sidechainToInput=0
+sidechainToLink=0
 threshold=-0.5
