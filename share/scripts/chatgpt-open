@@ -1,0 +1,286 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+PET_WIDTH="${CHATGPT_PET_WIDTH:-220}"
+PET_HEIGHT="${CHATGPT_PET_HEIGHT:-300}"
+CHATGPT_WORKSPACE="${CHATGPT_WORKSPACE:-2}"
+CHATGPT_WINDOW_CLASS="${CHATGPT_WINDOW_CLASS:-Chatgpt}"
+SOURCE_ASAR="${CHATGPT_ASAR:-/usr/lib/chatgpt/resources/app.asar}"
+CHATGPT_BINARY="${CHATGPT_BINARY:-/usr/lib/chatgpt/ChatGPT}"
+
+readonly PET_WIDTH PET_HEIGHT CHATGPT_WORKSPACE CHATGPT_WINDOW_CLASS
+readonly SOURCE_ASAR CHATGPT_BINARY
+
+prepare_only=false
+
+log() {
+    printf 'chatgpt-open: %s\n' "$*" >&2
+}
+
+require_command() {
+    command -v "$1" >/dev/null 2>&1 || {
+        log "falta la dependencia: $1"
+        exit 1
+    }
+}
+
+usage() {
+    cat <<'EOF'
+Uso: chatgpt-open [--prepare | --help]
+
+Inicia ChatGPT Desktop con el viewport de la mascota parcheado sin modificar
+la instalación del sistema.
+
+Variables opcionales:
+  CHATGPT_PET_WIDTH       Ancho de tres dígitos (predeterminado: 200)
+  CHATGPT_PET_HEIGHT      Alto de tres dígitos (predeterminado: 250)
+  CHATGPT_WORKSPACE       Espacio de trabajo (predeterminado: 2)
+  CHATGPT_WINDOW_CLASS    Clase de ventana (predeterminado: Chatgpt)
+  CHATGPT_BINARY          Ruta al binario de ChatGPT Desktop
+  CHATGPT_ASAR            Ruta a resources/app.asar
+EOF
+}
+
+chatgpt_window_pids() {
+    hyprctl -j clients 2>/dev/null \
+        | jq -r --arg class "$CHATGPT_WINDOW_CLASS" '
+            [.[]
+                | select((.class | ascii_downcase) == ($class | ascii_downcase))
+                | .pid]
+            | unique[]
+        '
+}
+
+chatgpt_window_exists() {
+    [[ -n "$(chatgpt_window_pids)" ]]
+}
+
+process_uses_patched_asar() {
+    local pid="$1"
+    local patched_asar="$2"
+    local process_asar="/proc/${pid}/root${SOURCE_ASAR}"
+
+    [[ -r "$process_asar" ]] || return 1
+    [[ "$(stat -Lc '%d:%i' "$process_asar")" == \
+        "$(stat -Lc '%d:%i' "$patched_asar")" ]]
+}
+
+patched_window_exists() {
+    local patched_asar="$1"
+    local pid
+
+    while IFS= read -r pid; do
+        [[ -n "$pid" ]] || continue
+        if process_uses_patched_asar "$pid" "$patched_asar"; then
+            return 0
+        fi
+    done < <(chatgpt_window_pids)
+
+    return 1
+}
+
+if [[ "${1:-}" == "--run-patched" ]]; then
+    patched_asar="${2:?falta la ruta del app.asar parcheado}"
+    launch_log="${3:?falta la ruta del registro de inicio}"
+    exec bwrap \
+        --bind / / \
+        --dev-bind /dev /dev \
+        --ro-bind "$patched_asar" "$SOURCE_ASAR" \
+        "$CHATGPT_BINARY" "${@:4}" \
+        >>"$launch_log" 2>&1
+fi
+
+case "${1:-}" in
+    --prepare)
+        prepare_only=true
+        ;;
+    --help|-h)
+        usage
+        exit 0
+        ;;
+    "")
+        ;;
+    *)
+        log "opción desconocida: $1"
+        usage >&2
+        exit 2
+        ;;
+esac
+
+for dependency in bwrap cp flock hyprctl jq python3 readlink sleep stat; do
+    require_command "$dependency"
+done
+
+[[ -r "$SOURCE_ASAR" ]] || {
+    log "no se puede leer $SOURCE_ASAR"
+    exit 1
+}
+
+[[ -x "$CHATGPT_BINARY" ]] || {
+    log "no se puede ejecutar $CHATGPT_BINARY"
+    exit 1
+}
+
+if [[ ! "$PET_WIDTH" =~ ^[0-9]{3}$ || ! "$PET_HEIGHT" =~ ^[0-9]{3}$ ]]; then
+    log "CHATGPT_PET_WIDTH y CHATGPT_PET_HEIGHT deben tener tres dígitos"
+    exit 1
+fi
+
+if [[ ! "$CHATGPT_WORKSPACE" =~ ^[1-9][0-9]*$ ]]; then
+    log "CHATGPT_WORKSPACE debe ser un entero mayor que cero"
+    exit 1
+fi
+
+cache_root="${XDG_CACHE_HOME:-${HOME}/.cache}/chatgpt-open"
+source_signature="$(stat -c '%s-%Y' "$SOURCE_ASAR")"
+patched_dir="${cache_root}/${source_signature}-${PET_WIDTH}x${PET_HEIGHT}"
+patched_asar="${patched_dir}/app.asar"
+lock_file="${cache_root}/build.lock"
+
+mkdir -p "$cache_root"
+exec 9>"$lock_file"
+flock 9
+
+if [[ ! -f "$patched_asar" ]]; then
+    mkdir -p "$patched_dir"
+    temporary_asar="${patched_asar}.tmp.$$"
+    trap 'rm -f "${temporary_asar:-}"' EXIT
+
+    # En sistemas con reflinks (como Btrfs), esta copia casi no ocupa espacio.
+    cp --reflink=auto --preserve=mode,timestamps "$SOURCE_ASAR" "$temporary_asar"
+
+    python3 - "$temporary_asar" "$PET_WIDTH" "$PET_HEIGHT" <<'PY'
+import hashlib
+import json
+import struct
+import sys
+
+
+asar_path = sys.argv[1]
+pet_width = int(sys.argv[2])
+pet_height = int(sys.argv[3])
+
+with open(asar_path, "r+b") as asar:
+    asar.seek(4)
+    header_size = struct.unpack("<I", asar.read(4))[0]
+    data_start = 8 + header_size
+
+    asar.seek(12)
+    json_size = struct.unpack("<I", asar.read(4))[0]
+    header_json = asar.read(json_size)
+    header = json.loads(header_json)
+
+    entries = header["files"][".vite"]["files"]["build"]["files"]
+    main_name, main_entry = next(
+        (name, value)
+        for name, value in entries.items()
+        if name.startswith("main-") and name.endswith(".js")
+    )
+
+    main_offset = data_start + int(main_entry["offset"])
+    main_size = int(main_entry["size"])
+    asar.seek(main_offset)
+    main_js = asar.read(main_size)
+
+    native_mode = b"let d=n==null?`native`:`legacy`"
+    legacy_mode = b"let d=n==null?`legacy`:`legacy`"
+    default_viewport = b"var zp={width:356,height:320}"
+    compact_viewport = (
+        f"var zp={{width:{pet_width:03d},height:{pet_height:03d}}}"
+    ).encode()
+
+    if main_js.count(native_mode) != 1:
+        raise SystemExit(
+            f"no se encontró una única selección de layout en {main_name}"
+        )
+    if main_js.count(default_viewport) != 1:
+        raise SystemExit(
+            f"no se encontró un único viewport predeterminado en {main_name}"
+        )
+    if len(compact_viewport) != len(default_viewport):
+        raise SystemExit("el viewport parcheado alteraría el tamaño del ASAR")
+
+    patched_js = main_js.replace(native_mode, legacy_mode)
+    patched_js = patched_js.replace(default_viewport, compact_viewport)
+
+    block_size = int(main_entry["integrity"]["blockSize"])
+    full_hash = hashlib.sha256(patched_js).hexdigest()
+    block_hashes = [
+        hashlib.sha256(patched_js[i : i + block_size]).hexdigest()
+        for i in range(0, len(patched_js), block_size)
+    ]
+
+    replacements = {
+        main_entry["integrity"]["hash"].encode(): full_hash.encode(),
+    }
+    for old_hash, new_hash in zip(
+        main_entry["integrity"]["blocks"], block_hashes, strict=True
+    ):
+        replacements[old_hash.encode()] = new_hash.encode()
+
+    patched_header = header_json
+    for old_hash, new_hash in replacements.items():
+        if old_hash not in patched_header:
+            raise SystemExit("no se encontró un hash de integridad en el encabezado")
+        patched_header = patched_header.replace(old_hash, new_hash)
+
+    if len(patched_header) != len(header_json):
+        raise SystemExit("el encabezado ASAR cambió de tamaño")
+
+    asar.seek(16)
+    asar.write(patched_header)
+    asar.seek(main_offset)
+    asar.write(patched_js)
+    asar.flush()
+
+print(f"app.asar parcheado: layout legacy, viewport {pet_width}x{pet_height}")
+PY
+
+    mv "$temporary_asar" "$patched_asar"
+    trap - EXIT
+fi
+
+if [[ "$prepare_only" == true ]]; then
+    log "copia parcheada preparada en $patched_asar"
+    exit 0
+fi
+
+if chatgpt_window_exists; then
+    if patched_window_exists "$patched_asar"; then
+        log "ChatGPT ya está abierto con el parche ${PET_WIDTH}x${PET_HEIGHT}"
+        exit 0
+    fi
+
+    log "hay una instancia de ChatGPT abierta sin el parche"
+    log "elimina cualquier otro autoinicio de ChatGPT, ciérralo por completo y vuelve a ejecutar este script"
+    exit 1
+fi
+
+script_path="$(readlink -f "$0")"
+launch_log="${cache_root}/launch.log"
+: >"$launch_log"
+printf -v launch_command '%q ' \
+    "$script_path" --run-patched "$patched_asar" "$launch_log"
+
+hyprctl dispatch exec \
+    "[workspace ${CHATGPT_WORKSPACE} silent] ${launch_command% }" \
+    >/dev/null
+
+for _ in {1..80}; do
+    if patched_window_exists "$patched_asar"; then
+        log "ChatGPT iniciado en el espacio ${CHATGPT_WORKSPACE} con mascota ${PET_WIDTH}x${PET_HEIGHT}"
+        exit 0
+    fi
+
+    if chatgpt_window_exists; then
+        log "otra instancia de ChatGPT ganó el inicio y no está usando el parche"
+        log "revisa que este script sea el único autoinicio de ChatGPT"
+        exit 1
+    fi
+
+    sleep 0.25
+done
+
+log "ChatGPT no creó una ventana tras 20 segundos; revisa $launch_log"
+exit 1

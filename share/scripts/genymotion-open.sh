@@ -34,6 +34,10 @@ GENY_TITLE_PREFIX="Google Pixel 6 ("
 # Ancho exacto deseado del tile
 GENY_WIDTH=767
 
+# Límite de intercambios al llevar el tile al borde izquierdo.
+# Normalmente basta uno; el límite también cubre workspaces con muchos tiles.
+GENY_LEFT_MAX_SWAPS=32
+
 # ------------------------------------------------------------
 # ADB
 # ------------------------------------------------------------
@@ -198,6 +202,106 @@ wait_for_pixel_window() {
 
     echo "⚠️ Timeout esperando ventana." >&2
     return 1
+}
+
+
+# ============================================================
+# HYPRLAND - LLEVAR PIXEL AL EXTREMO IZQUIERDO
+#
+# Dwindle decide dónde insertar una ventana nueva según el foco/cursor.
+# Para no depender de esa decisión, intercambiamos el tile con el vecino
+# situado a su izquierda hasta que alcance la X mínima de su monitor.
+# Se usa la address, no el título ni la ventana que estuviera enfocada.
+# ============================================================
+
+move_pixel_window_left() {
+
+    local address="$1"
+    local active_address=""
+    local state=""
+    local x=""
+    local min_x=""
+    local floating=""
+    local result=""
+    local attempt
+
+    have hyprctl || return 0
+
+    echo
+    echo "🧭 Moviendo el tile de Genymotion al extremo izquierdo..."
+
+    active_address="$(
+        hyprctl activewindow -j 2>/dev/null |
+            jq -r '.address // empty' 2>/dev/null || true
+    )"
+
+    for ((attempt=1; attempt<=GENY_LEFT_MAX_SWAPS; attempt++)); do
+
+        state="$(
+            hyprctl clients -j 2>/dev/null |
+                jq -r \
+                    --arg addr "$address" '
+                        (.[] | select(.address == $addr)) as $target
+                        | [
+                            $target.at[0],
+                            ([.[]
+                                | select(
+                                    .monitor == $target.monitor
+                                    and .workspace.id == $target.workspace.id
+                                    and .floating == false
+                                    and .mapped == true
+                                )
+                                | .at[0]
+                            ] | min),
+                            $target.floating
+                          ]
+                        | @tsv
+                    ' 2>/dev/null
+        )"
+
+        IFS=$'\t' read -r x min_x floating <<< "$state"
+
+        if ! [[ "$x" =~ ^-?[0-9]+$ && "$min_x" =~ ^-?[0-9]+$ ]]; then
+            echo "⚠️ No pude determinar la posición horizontal del tile."
+            break
+        fi
+
+        if [[ "$floating" == "true" ]]; then
+            echo "⚠️ La ventana es flotante; no pertenece al árbol Dwindle."
+            break
+        fi
+
+        if (( x <= min_x )); then
+            echo "✅ Tile situado en el extremo izquierdo (x=${x})."
+            break
+        fi
+
+        # swapwindow actúa sobre la ventana activa. El batch enfoca por
+        # address y hace el intercambio como una sola operación, evitando
+        # que el cursor o el foco previo elijan otra ventana.
+        result="$(
+            hyprctl --batch \
+                "dispatch focuswindow address:${address}; dispatch swapwindow l" \
+                2>&1
+        )"
+
+        if [[ "$result" == *"error"* || "$result" == *"Err"* ]]; then
+            echo "⚠️ Hyprland no pudo intercambiar el tile: $result"
+            break
+        fi
+
+        sleep 0.1
+    done
+
+    if (( attempt > GENY_LEFT_MAX_SWAPS )); then
+        echo "⚠️ Se alcanzó el límite de ${GENY_LEFT_MAX_SWAPS} intercambios."
+    fi
+
+    # Restaurar la ventana que estaba enfocada al comenzar este ajuste.
+    if [[ -n "$active_address" && "$active_address" != "$address" ]]; then
+        hyprctl dispatch focuswindow "address:${active_address}" \
+            >/dev/null 2>&1 || true
+    fi
 }
 
 
@@ -719,6 +823,9 @@ main() {
         if [[ -n "$pixel_address" ]]; then
 
             echo "   Address limpia: <$pixel_address>"
+
+            move_pixel_window_left "$pixel_address" ||
+                echo "⚠️ El movimiento a la izquierda falló, continúo."
 
             resize_pixel_window "$pixel_address" ||
                 echo "⚠️ El resize falló, continúo."

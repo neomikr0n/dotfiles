@@ -5,20 +5,18 @@
 # 📊 MAIN LAYER: SYSTEM STATISTICS
 ##########################################
 legacy_layout=false
-background_alpha=0.5
+background_alpha=0.2
 round_corners=10
 background_color=000000
 
-font_size=22
+font_size=23
 text_color=a87617
 position=top-left
-table_columns=4
+table_columns=3
 pci_dev=0:03:00.0
 
 # FPS
 fps
-fps_text=.
-frametime=0
 fps_limit=144
 fps_limit_method=late
 fps_color_change
@@ -27,8 +25,7 @@ fps_value=30,60
 
 # Clock
 time
-time_no_label
-text_color=E8DFC8
+time_color=B57EDC
 
 # Hotkeys
 toggle_hud=Shift_R+F1
@@ -40,10 +37,7 @@ toggle_logging=Shift_L+F2
 ##########################################
 # Displays MPRIS info (Spotify, etc.)
 media_player
-# Independent size for song title, artist and album
-font_size_text=20
-font_scale_media_player=.8
-media_player_color=E1A31C
+media_player_color=a95d20
 
 # Additional text (if using a script)
 custom_text_color=FFD700
