@@ -7,7 +7,7 @@ case "$kind" in
   level)
     case "$value" in ''|*[!0-9.-]*) exit 1;; esac
     title="🎧 RME · $value dB"
-    details='LINE OUT · Techo −15 dB · 1 dB · Shift: 5 dB'
+    details='LINE OUT · Techo −12 dB · 1 dB · Shift: 5 dB'
     method=infoWith
     ;;
   mute)

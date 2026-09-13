@@ -6,7 +6,7 @@ ShellRoot {
  id: root
  property real db: -114.5
  property bool active: false
- property real fraction: Math.max(0, Math.min(1, (db + 114.5) / 99.5))
+ property real fraction: Math.max(0, Math.min(1, (db + 114.5) / 102.5))
  Timer { id: hideTimer; interval: 1600; onTriggered: root.active = false }
  Timer { id: exitTimer; interval: 20000; running: true; onTriggered: Qt.quit() }
  IpcHandler {
@@ -33,7 +33,7 @@ ShellRoot {
    id: card
    anchors.fill: parent; anchors.margins: 6
    radius: 25; color: "#ed101214"
-   border.color: root.db >= -15 ? "#ffaa00" : "#55473a"
+   border.color: root.db >= -12 ? "#ffaa00" : "#55473a"
    border.width: 1
    opacity: root.active ? 1 : 0
    Behavior on opacity { NumberAnimation { duration: 180 } }
@@ -48,7 +48,7 @@ ShellRoot {
     }
    }
    Text { x: 24; y: 110; text: "RECORRIDO EN dB"; color: "#9a9186"; font.pixelSize: 10; font.letterSpacing: 1 }
-   Text { anchors.right: parent.right; anchors.rightMargin: 24; y: 109; text: "TECHO  −15 dB"; color: "#d5a75b"; font.pixelSize: 11 }
+   Text { anchors.right: parent.right; anchors.rightMargin: 24; y: 109; text: "TECHO  −12 dB"; color: "#d5a75b"; font.pixelSize: 11 }
   }
  }
 }

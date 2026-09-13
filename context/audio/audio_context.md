@@ -123,7 +123,7 @@ Son relaciones de referencia, no niveles recomendados de escucha ni mediciones e
 
 ### El amplificador
 
-El manual específico del **S17 Pro EVO** declara entrada RCA y XLR de **10 kΩ**, impedancia de salida de audífonos de **1 Ω**, dos ganancias y polarización de **50 o 100 mA por transistor**. Tiene salidas de audífonos de 6.35 mm, 4.4 mm y XLR de cuatro pines; también salidas de preamplificador. Su control de volumen usa una red de resistencias R2R: aquí R2R describe la atenuación analógica, no un DAC de escalera. [Manual del EVO, páginas PDF 3–6](/home/n30/dotfiles/context/audio/Manual-aune-s17-evo.pdf).
+El manual específico del **S17 Pro EVO** declara entrada RCA y XLR de **10 kΩ**, impedancia de salida de audífonos de **1 Ω**, dos ganancias y polarización de **50 o 100 mA por transistor**. Tiene salidas de audífonos de 6.35 mm, 4.4 mm y XLR de cuatro pines; también salidas de preamplificador. Su control de volumen usa una red de resistencias R2R: aquí R2R describe la atenuación analógica, no un DAC de escalera. [Manual del EVO, páginas PDF 3–6](/home/n30/dotfiles/context/audio/manuales/Manual-aune-s17-evo.pdf).
 
 Para una carga de 32 Ω, el manual publica:
 
@@ -150,7 +150,7 @@ El propietario ya comparó la salida directa del RME con el Aune y prefiere clar
 
 ## 4. RME y XLR: conversión, procesamiento y niveles
 
-El **ADI-2 DAC FS** recibe audio digital y lo convierte a analógico. Incorpora EQ paramétrica de cinco bandas, controles Bass/Treble, Loudness, Crossfeed, análisis de señal y salidas de audífonos. Las salidas y sus ajustes deben distinguirse: la cadena con Aune utiliza la salida de línea. No se atribuyen al ADI-2 DAC las entradas analógicas y funciones de conversión A/D del ADI-2 Pro. [Manual local RME](/home/n30/dotfiles/context/audio/MANUAL-RMEadi2dac_e.pdf).
+El **ADI-2 DAC FS** recibe audio digital y lo convierte a analógico. Incorpora EQ paramétrica de cinco bandas, controles Bass/Treble, Loudness, Crossfeed, análisis de señal y salidas de audífonos. Las salidas y sus ajustes deben distinguirse: la cadena con Aune utiliza la salida de línea. No se atribuyen al ADI-2 DAC las entradas analógicas y funciones de conversión A/D del ADI-2 Pro. [Manual local RME](/home/n30/dotfiles/context/audio/manuales/MANUAL-RMEadi2dac_e.pdf).
 
 Se consultó inicialmente la revisión **1.8** del manual disponible localmente. **Actualización: el chip de esta unidad queda identificado como ESS ES9028Q2M, revisión C**, por la letra «c» visible en la fotografía de su etiqueta aportada por el propietario. La correspondencia C→ESS está documentada por RME. No se ha abierto el aparato; el firmware continúa sin identificar. Las cifras de las secciones siguientes extraídas del manual 1.8 se conservan como referencia documental histórica, no como especificaciones verificadas de la revisión ESS; para esta revisión debe consultarse el [manual oficial actualizado](https://rme-audio.de/downloads/adi2dacr_e.pdf).
 
@@ -194,7 +194,7 @@ Los niveles de referencia XLR publicados por RME son +1, +7, +13 y +19 dBu a 0 d
 
 **dBFS** compara una señal digital con su escala máxima; **dBu** expresa una tensión analógica respecto a 0.775 V RMS. Son referencias diferentes. La tensión real también depende del contenido, volumen y DSP. No se comprobó la referencia seleccionada, Auto Ref Level ni el volumen del RME; tampoco hay un dato suficiente del máximo de entrada sin saturación del Aune para declarar que +19 dBu sea siempre la elección óptima.
 
-El manual publica para la salida de línea 117 dB de relación señal/ruido sin ponderación y 120 dBA con ponderación A en las referencias indicadas de +7/+13/+19 dBu, y THD+N de −110 dB a −1 dBFS. La relación señal/ruido compara señal y ruido; THD+N agrega distorsión armónica y ruido bajo condiciones de prueba. La ponderación A reduce la contribución de ciertas frecuencias al resultado. Estas cifras no se deben comparar con otras medidas a diferente nivel, carga o ancho de banda como si fueran equivalentes. [Manual RME, especificaciones de salida](/home/n30/dotfiles/context/audio/MANUAL-RMEadi2dac_e.pdf).
+El manual publica para la salida de línea 117 dB de relación señal/ruido sin ponderación y 120 dBA con ponderación A en las referencias indicadas de +7/+13/+19 dBu, y THD+N de −110 dB a −1 dBFS. La relación señal/ruido compara señal y ruido; THD+N agrega distorsión armónica y ruido bajo condiciones de prueba. La ponderación A reduce la contribución de ciertas frecuencias al resultado. Estas cifras no se deben comparar con otras medidas a diferente nivel, carga o ancho de banda como si fueran equivalentes. [Manual RME, especificaciones de salida](/home/n30/dotfiles/context/audio/manuales/MANUAL-RMEadi2dac_e.pdf).
 
 ### Por qué XLR de línea es una elección coherente
 
@@ -204,11 +204,11 @@ RME y Aune disponen de interfaces XLR de línea compatibles. Usarlas aprovecha e
 
 El par comprado es **WBC-PRO-Quad, ASIN B0CZRXDVBF**: dos cables independientes de **10 pies / 3.048 m cada uno**, cubierta exterior de tweed negro y conectores **Amphenol AX3M macho y AXX3F hembra**, de tres pines y contactos plateados según la publicación. Conecta las salidas XLR L/R del RME con las entradas L/R del Aune. Se confirmó directamente la página de compra. [Amazon: producto exacto](https://www.amazon.com.mx/dp/B0CZRXDVBF).
 
-La geometría **star-quad** utiliza cuatro conductores, con los opuestos agrupados para cada polaridad, para equilibrar la captación de interferencia. Complementa la pantalla y la entrada diferencial. El vendedor anuncia pantalla trenzada de cobertura superior al 98% y conductores OFC; son especificaciones publicadas, no ensayos locales. Se descartan sus afirmaciones de cancelación total de EMI/RFI o superioridad universal sobre Mogami/Canare. No se comprobó capacitancia por metro de este ensamblaje, por lo que no se calcula una modificación de respuesta atribuida al cable. [Fundamento star-quad de Canare](https://www.canare.com/analogaudiocable), [ficha ilustrada del par WBC](/home/n30/dotfiles/context/audio/ficha_wbc_xlr.pdf).
+La geometría **star-quad** utiliza cuatro conductores, con los opuestos agrupados para cada polaridad, para equilibrar la captación de interferencia. Complementa la pantalla y la entrada diferencial. El vendedor anuncia pantalla trenzada de cobertura superior al 98% y conductores OFC; son especificaciones publicadas, no ensayos locales. Se descartan sus afirmaciones de cancelación total de EMI/RFI o superioridad universal sobre Mogami/Canare. No se comprobó capacitancia por metro de este ensamblaje, por lo que no se calcula una modificación de respuesta atribuida al cable. [Fundamento star-quad de Canare](https://www.canare.com/analogaudiocable), [ficha ilustrada del par WBC](/home/n30/dotfiles/context/audio/fichas/ficha_wbc_xlr.pdf).
 
 ## 5. Ecualización del HE1000se
 
-El propietario declara que utiliza la EQ del RME con ambas fuentes y que ya no aplica EQ convencional en la PC. El archivo de referencia es [HEKSE-HarmanV3.1.adieqpr](/home/n30/dotfiles/context/audio/HEKSE-HarmanV3.1.adieqpr). Se verificaron sus valores, **no su carga actual en el aparato**.
+El propietario declara que utiliza la EQ del RME con ambas fuentes y que ya no aplica EQ convencional en la PC. El archivo de referencia es [HEKSE-HarmanV3.1.adieqpr](/home/n30/dotfiles/context/audio/presets/HEKSE-HarmanV3.1.adieqpr). Se verificaron sus valores, **no su carga actual en el aparato**.
 
 | Filtro | Frecuencia | Ganancia | Q | Efecto previsto sobre la respuesta |
 |---|---:|---:|---:|---|
@@ -236,7 +236,7 @@ El comentario del archivo menciona **−7.5 dB de preamplificación**, pero no h
 
 Como cálculo general, un realce de 6 dB demanda aproximadamente el doble de tensión y cuatro veces la potencia en la región afectada si se conserva la referencia de nivel en el resto del espectro. Un realce de 7.5 dB equivaldría a 2.37 veces la tensión y 5.62 veces la potencia. Esto explica la utilidad de la reserva del Aune, sin afirmar que esta EQ tenga exactamente ese máximo combinado.
 
-En el registro previo figura el filtro de reconstrucción **SD Slow**. No se comprobó su selección actual. Los filtros de reconstrucción intercambian características de transición en frecuencia, rechazo fuera de banda y respuesta temporal. No se atribuye a SD Slow una superioridad audible universal. Loudness y Crossfeed también pueden cambiar la señal: su estado actual está pendiente. [Funciones DSP y filtros en el manual RME](/home/n30/dotfiles/context/audio/MANUAL-RMEadi2dac_e.pdf).
+En el registro previo figura el filtro de reconstrucción **SD Slow**. No se comprobó su selección actual. Los filtros de reconstrucción intercambian características de transición en frecuencia, rechazo fuera de banda y respuesta temporal. No se atribuye a SD Slow una superioridad audible universal. Loudness y Crossfeed también pueden cambiar la señal: su estado actual está pendiente. [Funciones DSP y filtros en el manual RME](/home/n30/dotfiles/context/audio/manuales/MANUAL-RMEadi2dac_e.pdf).
 
 ## 6. Fuentes digitales: óptico, USB y Eversolo
 
@@ -248,17 +248,17 @@ El aislamiento corresponde al enlace óptico: una conexión USB adicional, otras
 
 S/PDIF transporta datos junto con información temporal. El receptor recupera el reloj y gestiona su sincronización. El RME incorpora SteadyClock FS para reducir la influencia del jitter, la variación temporal de los instantes del reloj. El fabricante ha publicado una prueba con jitter inyectado sin degradación apreciable en su ensayo; corresponde a aquella unidad, firmware y método, no a una medición de esta instalación. [Prueba de RME](https://forum.rme-audio.de/viewtopic.php?id=33497).
 
-Un cable óptico necesita suficiente margen de transmisión y conectores correctamente asentados. Sus fallos pueden causar errores o pérdida de sincronía. El cable activo en PC–RME es ahora el **Amazon Basics Toslink de 3 m, $169**. El enlace proporcionado termina en `/dp/B0` y no contiene un ASIN completo: no se asignan material de fibra, radio mínimo de curvatura o garantía de tasa de un modelo parecido. La ficha provisional reúne lo que sí está confirmado. No hay una medición de errores o margen óptico de este ejemplar. [Ficha Toslink](/home/n30/dotfiles/context/audio/ficha_toslink.pdf).
+Un cable óptico necesita suficiente margen de transmisión y conectores correctamente asentados. Sus fallos pueden causar errores o pérdida de sincronía. El cable activo en PC–RME es ahora el **Amazon Basics Toslink de 3 m, $169**. El enlace proporcionado termina en `/dp/B0` y no contiene un ASIN completo: no se asignan material de fibra, radio mínimo de curvatura o garantía de tasa de un modelo parecido. La ficha provisional reúne lo que sí está confirmado. No hay una medición de errores o margen óptico de este ejemplar. [Ficha Toslink](/home/n30/dotfiles/context/audio/fichas/ficha_toslink.pdf).
 
 ### Formatos y límites de la ruta
 
 Una tasa de 48 kHz significa 48,000 muestras por segundo y canal; no expresa el bitrate comprimido de Apple Music. La profundidad de bits describe la representación de cada muestra. Remuestrear a 192 kHz no recupera información que una fuente no contenía.
 
-El DMP-A6 original admite por óptico/coaxial PCM hasta **24 bits/192 kHz**. Su salida USB admite PCM hasta 32 bits/768 kHz y DSD512; el formato común lo limita también el receptor. El manual disponible del RME documenta PCM hasta 768 kHz y DSD256 por USB. **La conexión actual Eversolo–RME es USB**, no óptica. El DAC interno y las salidas analógicas del Eversolo quedan fuera de esta ruta digital; no se suman sus prestaciones de conversión a las del RME. [Manual original del Eversolo](</home/n30/dotfiles/context/audio/Manual EVERSOLO-DMP-A6-v1.0.pdf>), [manual RME](/home/n30/dotfiles/context/audio/MANUAL-RMEadi2dac_e.pdf).
+El DMP-A6 original admite por óptico/coaxial PCM hasta **24 bits/192 kHz**. Su salida USB admite PCM hasta 32 bits/768 kHz y DSD512; el formato común lo limita también el receptor. El manual disponible del RME documenta PCM hasta 768 kHz y DSD256 por USB. **La conexión actual Eversolo–RME es USB**, no óptica. El DAC interno y las salidas analógicas del Eversolo quedan fuera de esta ruta digital; no se suman sus prestaciones de conversión a las del RME. [Manual original del Eversolo](</home/n30/dotfiles/context/audio/manuales/Manual EVERSOLO-DMP-A6-v1.0.pdf>), [manual RME](/home/n30/dotfiles/context/audio/manuales/MANUAL-RMEadi2dac_e.pdf).
 
 La ventaja funcional es reproducir sin mantener encendida la PC y conservar ésta en la entrada óptica. Apple Music ejecutado en el Eversolo y AirPlay desde un teléfono siguen siendo rutas distintas: **LAN confirma el medio de red, no cuál de esas aplicaciones/protocolos se usa ni el formato recibido**. Falta verificar la pantalla de reproducción y los ajustes de salida/volumen del streamer.
 
-El cable es **Oyaide Neo d+ Class B de 1 m, USB tipo A–B**, identificado por la compra **B003TN74S6**. Se conecta desde **USB Audio Out** del Eversolo a **USB 2.0 tipo B** del RME; no desde la entrada USB-C del Eversolo. Oyaide publica compatibilidad USB 2.0 High-Speed, doble pantalla y conductores OFC plateados. Class B es su denominación comercial, no un estándar de calidad sonora. Su ficha contiene referencias discrepantes a PVC/TPE para la cubierta: no se asigna una de ellas como inspección del ejemplar. [Compra exacta](https://www.amazon.com.mx/dp/B003TN74S6), [fabricante Oyaide](https://shop.oyaide.com/products/p-4433.html), [ficha ilustrada USB](/home/n30/dotfiles/context/audio/ficha_oyaide_usb.pdf).
+El cable es **Oyaide Neo d+ Class B de 1 m, USB tipo A–B**, identificado por la compra **B003TN74S6**. Se conecta desde **USB Audio Out** del Eversolo a **USB 2.0 tipo B** del RME; no desde la entrada USB-C del Eversolo. Oyaide publica compatibilidad USB 2.0 High-Speed, doble pantalla y conductores OFC plateados. Class B es su denominación comercial, no un estándar de calidad sonora. Su ficha contiene referencias discrepantes a PVC/TPE para la cubierta: no se asigna una de ellas como inspección del ejemplar. [Compra exacta](https://www.amazon.com.mx/dp/B003TN74S6), [fabricante Oyaide](https://shop.oyaide.com/products/p-4433.html), [ficha ilustrada USB](/home/n30/dotfiles/context/audio/fichas/ficha_oyaide_usb.pdf).
 
 USB establece un enlace eléctrico; este cable no ofrece aislamiento galvánico. La tasa nominal del bus, 480 Mb/s, no expresa resolución musical. Los fallos previos desde PC por USB no demuestran que se repitan desde Eversolo. La EQ debe comprobarse con el formato activo: el manual RME documenta limitaciones de DSP a tasas muy altas y DSD Direct no conserva la misma ruta de EQ de PCM. No hay razón documentada para activar remuestreo máximo sólo por disponer de USB.
 
@@ -266,7 +266,7 @@ USB establece un enlace eléctrico; este cable no ofrece aislamiento galvánico.
 
 El módem/router está conectado al Eversolo con **Amazon Basics B089MG7CY3**, **9.1 m**, plano, blanco, comercializado como **Cat 7 STP / 600 MHz**, conectores RJ45 y 15 sujetadores. El costo declarado es **$160**. La publicación indica conductor 32 AWG y sección exterior de 2.3 × 7.3 mm. No se efectuó certificación de categoría o blindaje. [Compra exacta](https://www.amazon.com.mx/dp/B089MG7CY3).
 
-El puerto del DMP-A6 es **10/100/1000 Mb/s**; no se ha leído su velocidad negociada real. Los 600 MHz describen el ancho de banda eléctrico anunciado del cable y no equivalen a 600 Mb/s ni a una frecuencia de audio. Como referencia calculada, PCM estéreo 24/192 ocupa **9.216 Mb/s** antes de protocolos. El enlace LAN evita depender del Wi-Fi entre router y streamer, pero no demuestra más detalle audible ni elimina fallos del servicio o firmware. La red entrega contenido al Eversolo y un enlace distinto, USB, entrega audio al RME. [Manual Eversolo](</home/n30/dotfiles/context/audio/Manual EVERSOLO-DMP-A6-v1.0.pdf>), [ficha ilustrada Ethernet](/home/n30/dotfiles/context/audio/ficha_ethernet.pdf).
+El puerto del DMP-A6 es **10/100/1000 Mb/s**; no se ha leído su velocidad negociada real. Los 600 MHz describen el ancho de banda eléctrico anunciado del cable y no equivalen a 600 Mb/s ni a una frecuencia de audio. Como referencia calculada, PCM estéreo 24/192 ocupa **9.216 Mb/s** antes de protocolos. El enlace LAN evita depender del Wi-Fi entre router y streamer, pero no demuestra más detalle audible ni elimina fallos del servicio o firmware. La red entrega contenido al Eversolo y un enlace distinto, USB, entrega audio al RME. [Manual Eversolo](</home/n30/dotfiles/context/audio/manuales/Manual EVERSOLO-DMP-A6-v1.0.pdf>), [ficha ilustrada Ethernet](/home/n30/dotfiles/context/audio/fichas/ficha_ethernet.pdf).
 
 ## 7. PC: hardware y estado de audio observado
 
@@ -425,7 +425,7 @@ La reproducción Bluetooth convencional desde iPhone no equivale a la distribuci
 
 **Verificación del ASIN (2026-09-12):** la [página de compra Amazon México B00429N19W](https://www.amazon.com.mx/dp/B00429N19W?th=1), con las opciones 1500 VA y Minitorre seleccionadas, anuncia CP1500PFCLCD, 1,500 VA / 1,000 W y doce tomas en el encabezado. Sin embargo, las viñetas indican 900 W y la tabla de información identifica el modelo y número de parte como CP1500PFCLCDA. La ficha comercial es internamente contradictoria: el ASIN identifica la publicación, pero por sí solo no resuelve el sufijo ni la revisión de la unidad entregada. Se conserva el modelo sin «a», 1,000 W y doce tomas conforme a la confirmación del propietario; las especificaciones de operación se toman del manual indicado a continuación, con sus limitaciones documentales explícitas.
 
-La referencia principal de operación es el [manual de usuario CP1350PFCLCD/CP1500PFCLCD aportado](</home/n30/dotfiles/context/audio/MANUAL PFC SINEWAVE UPS SERIES 1500PFCLCD.pdf>). Tiene dos inconsistencias editoriales: la página 9 añade «a» al nombre y menciona cinco tomas con batería, mientras la página 5 y el dibujo de portada muestran seis. Se conserva la identificación confirmada por el propietario y la distribución coherente con la descripción y el dibujo.
+La referencia principal de operación es el [manual de usuario CP1350PFCLCD/CP1500PFCLCD aportado](</home/n30/dotfiles/context/audio/manuales/MANUAL PFC SINEWAVE UPS SERIES 1500PFCLCD.pdf>). Tiene dos inconsistencias editoriales: la página 9 añade «a» al nombre y menciona cinco tomas con batería, mientras la página 5 y el dibujo de portada muestran seis. Se conserva la identificación confirmada por el propietario y la distribución coherente con la descripción y el dibujo.
 
 | Característica | Datos del manual de usuario y modelo confirmado |
 |---|---|
@@ -443,7 +443,7 @@ La referencia principal de operación es el [manual de usuario CP1350PFCLCD/CP15
 | Dimensiones / masa | **100 × 280 × 355 mm / 11.3 kg** |
 | Operación | **0–40 °C**; humedad 0–95% sin condensación |
 
-Se conserva la [ficha CP1500PFCLCDa](</home/n30/dotfiles/context/audio/Manual CyberPower_DS_CP1000-1500PFCLCDa_NEMA_es_v2.pdf>) como referencia comparativa, no como identificador del aparato. Esa ficha publica línea interactiva, AVR de aumento único, entrada 88–144 V, transferencia típica de 4 ms, filtro EMI/RFI y autonomía de 10/2.5 minutos a media/plena carga. No se trasladan automáticamente todas sus condiciones a la unidad sin «a» sólo por coincidir capacidad y número de tomas.
+Se conserva la [ficha CP1500PFCLCDa](</home/n30/dotfiles/context/audio/manuales/Manual CyberPower_DS_CP1000-1500PFCLCDa_NEMA_es_v2.pdf>) como referencia comparativa, no como identificador del aparato. Esa ficha publica línea interactiva, AVR de aumento único, entrada 88–144 V, transferencia típica de 4 ms, filtro EMI/RFI y autonomía de 10/2.5 minutos a media/plena carga. No se trasladan automáticamente todas sus condiciones a la unidad sin «a» sólo por coincidir capacidad y número de tomas.
 
 **Qué aporta a la cadena:** mantiene alimentación durante ciertos cortes, corrige determinadas variaciones mediante AVR y limita determinadas sobretensiones. La onda senoidal en batería es compatible con cargas de PFC activo. Sus puertos de carga USB no son una ruta de audio, y el USB de gestión no convierte al UPS en DAC. La protección RJ45 sólo interviene si el cableado pasa físicamente por ella; no está confirmado que el enlace LAN del Eversolo lo haga.
 
@@ -455,7 +455,7 @@ Los VA expresan potencia aparente y los W potencia real. Para dimensionar un UPS
 
 ### Elevador identificado: Shunhong TM333-500VA
 
-La fotografía del propietario permite leer **TM333-500VA**, **entrada 110 V~**, **salida 220 V~**, **500 VA**, **50/60 Hz** y **Foshan Shunhong Electric Co., Ltd.** Fue enviado desde China **incluido en el precio de $11,000 del Aune**, por lo que no se suma otro gasto. [Foto de la etiqueta](/home/n30/dotfiles/context/audio/tm333_etiqueta.png), [ficha técnica ilustrada](/home/n30/dotfiles/context/audio/ficha_transformador.pdf).
+La fotografía del propietario permite leer **TM333-500VA**, **entrada 110 V~**, **salida 220 V~**, **500 VA**, **50/60 Hz** y **Foshan Shunhong Electric Co., Ltd.** Fue enviado desde China **incluido en el precio de $11,000 del Aune**, por lo que no se suma otro gasto. [Foto de la etiqueta](/home/n30/dotfiles/context/audio/imagenes/tm333_etiqueta.png), [ficha técnica ilustrada](/home/n30/dotfiles/context/audio/fichas/ficha_transformador.pdf).
 
 Se encontró la [página del fabricante de la variante elevadora 110→220 V](https://www.shunhongtransformer.com/500VA-Voltage-Converter-110V-To-220V-Global-Application-Voltage-Compatibility-Solution-for-Home-Appliances-pd505054368.html). Distingue **500 VA máximos** de **300 VA de servicio** y menciona un ciclo **30/60 min** sin explicarlo inequívocamente. Por tanto, **no se documenta como 500 W continuos**. Esas condiciones publicadas no son un ensayo de esta unidad. No se mezclan con la variante inversa 220→110 V que comparte denominación de familia.
 
@@ -467,7 +467,7 @@ Con la relación nominal ideal `220/110 = 2`, entradas de 110, 120 o 127 V darí
 
 A igual potencia, una alimentación de mayor tensión requiere menos corriente en el primario, pero eso no demuestra una mejora en la salida de audio de un aparato diseñado para su tensión correspondiente. La comparación relevante depende de fuentes internas, regulación, ruido y mediciones a la salida. No hay evidencia para afirmar que la versión de 220 V del EVO suene mejor que una de 110/120 V.
 
-La fuente externa del RME está especificada en el manual como 12 V/2 A con entrada universal de red. Los 24 W resultantes son capacidad nominal del adaptador, no consumo medido del DAC. No se levantó un mapa confirmado de qué aparatos están conectados a cada toma del UPS o al elevador. [Manual RME, alimentación](/home/n30/dotfiles/context/audio/MANUAL-RMEadi2dac_e.pdf).
+La fuente externa del RME está especificada en el manual como 12 V/2 A con entrada universal de red. Los 24 W resultantes son capacidad nominal del adaptador, no consumo medido del DAC. No se levantó un mapa confirmado de qué aparatos están conectados a cada toma del UPS o al elevador. [Manual RME, alimentación](/home/n30/dotfiles/context/audio/manuales/MANUAL-RMEadi2dac_e.pdf).
 
 ## 10. Críticas, desventajas y límites de la evidencia
 
@@ -527,10 +527,10 @@ Las siguientes fichas fueron elaboradas para esta instalación; **no son manuale
 
 | Documento | Evidencia principal |
 |---|---|
-| [Oyaide USB Class B](/home/n30/dotfiles/context/audio/ficha_oyaide_usb.pdf) | Compra B003TN74S6 y ficha de Oyaide |
-| [Toslink Amazon Basics](/home/n30/dotfiles/context/audio/ficha_toslink.pdf) | Marca, 3 m, $169 y ruta confirmados por el propietario; modelo pendiente |
-| [Ethernet Amazon Basics](/home/n30/dotfiles/context/audio/ficha_ethernet.pdf) | Compra B089MG7CY3; red LAN confirmada |
-| [Par XLR WBC-PRO-Quad](/home/n30/dotfiles/context/audio/ficha_wbc_xlr.pdf) | Compra B0CZRXDVBF; Amphenol AX3M/AXX3F, 3.048 m por canal |
-| [Elevador Shunhong](/home/n30/dotfiles/context/audio/ficha_transformador.pdf) | Foto de la etiqueta y página del fabricante para variante 110→220 V |
+| [Oyaide USB Class B](/home/n30/dotfiles/context/audio/fichas/ficha_oyaide_usb.pdf) | Compra B003TN74S6 y ficha de Oyaide |
+| [Toslink Amazon Basics](/home/n30/dotfiles/context/audio/fichas/ficha_toslink.pdf) | Marca, 3 m, $169 y ruta confirmados por el propietario; modelo pendiente |
+| [Ethernet Amazon Basics](/home/n30/dotfiles/context/audio/fichas/ficha_ethernet.pdf) | Compra B089MG7CY3; red LAN confirmada |
+| [Par XLR WBC-PRO-Quad](/home/n30/dotfiles/context/audio/fichas/ficha_wbc_xlr.pdf) | Compra B0CZRXDVBF; Amphenol AX3M/AXX3F, 3.048 m por canal |
+| [Elevador Shunhong](/home/n30/dotfiles/context/audio/fichas/ficha_transformador.pdf) | Foto de la etiqueta y página del fabricante para variante 110→220 V |
 
 Las fotografías comerciales se atribuyen a las publicaciones de Amazon consultadas el 12/09/2026; no se presentan como fotografías de las unidades del propietario. El transformador sí se ilustra con su fotografía. Los diagramas son explicativos, no planos de fabricación. Los manuales originales del RME, Aune y Eversolo conservados en esta carpeta siguen siendo la referencia de operación de esos equipos. Para el UPS confirmado se utiliza el manual CP1350PFCLCD/CP1500PFCLCD; la ficha CP1000PFCLCDa/CP1500PFCLCDa se conserva como comparación documental.

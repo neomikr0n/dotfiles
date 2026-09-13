@@ -1,0 +1,10 @@
+{
+  "lockfileVersion": 1,
+  "plugins": {
+    "dankPomodoroTimer": {
+      "repo": "https://github.com/AvengeMedia/dms-plugins",
+      "path": "DankPomodoroTimer",
+      "commit": "6fc7f25bfb24f93b6488fb8a36ed67b5f242abdb"
+    }
+  }
+}

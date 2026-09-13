@@ -37,7 +37,7 @@ else
         "$base/rme-osd" level "$level" >/dev/null 2>&1 &
     fi
     case "$result" in
-      *Limite*) message='🛑 ¡Hasta aquí el solo! Techo de −15 dB o límite de salida alcanzado.' ;;
+      *Limite*) message='🛑 ¡Hasta aquí el solo! Techo de −12 dB o límite de salida alcanzado.' ;;
       *bloqueado*) message='🔒 El RME tiene el candado puesto. Desbloquea su volumen para usar las teclas.' ;;
       *no\ conectado*) message='🔌 ¡RME fuera de escena! Revisa su conexión USB.' ;;
       *Auto\ Ref*) message='🧭 Auto Ref cambió la escala. Hace falta recalibrar antes de subir.' ;;

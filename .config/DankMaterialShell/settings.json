@@ -1,6 +1,7 @@
 {
   "currentThemeName": "dynamic",
   "matugenScheme": "scheme-rainbow",
+  "matugenContrast": -0.03,
   "popupTransparency": 0.94,
   "widgetColorMode": "colorful",
   "cornerRadius": 12,
@@ -69,7 +70,11 @@
     }
   ],
   "showWorkspacePadding": true,
+  "appleMusicAnimatedArtEnabled": true,
   "runningAppsCurrentWorkspace": false,
+  "greeterAutoLogin": true,
+  "greeterWallpaperPath": "/home/n30/dotfiles/share/wallpapers/ss_2025-02-09_10-35_17_garuda.jpeg",
+  "greeterWallpaperFillMode": "Fit",
   "appLauncherViewMode": "grid",
   "appLauncherGridColumns": 8,
   "appDrawerSectionViewModes": {
@@ -77,7 +82,7 @@
   },
   "cursorSettings": {
     "theme": "System Default",
-    "size": 24,
+    "size": 29,
     "niri": {
       "hideWhenTyping": false,
       "hideAfterInactiveMs": 0
@@ -114,11 +119,13 @@
       "urgency": "default"
     }
   ],
+  "dankIslandBarId": "default",
   "osdAlwaysShowValue": true,
   "osdPosition": 4,
   "osdPowerProfileEnabled": true,
   "powerActionConfirm": false,
   "powerActionHoldDuration": 0.25,
+  "updaterCheckOnStart": true,
   "updaterUseCustomCommand": true,
   "updaterCustomCommand": "yay",
   "screenPreferences": {
@@ -131,7 +138,7 @@
       "id": "default",
       "name": "Main Bar",
       "enabled": true,
-      "position": 2,
+      "position": 0,
       "screenPreferences": [
         "all"
       ],
@@ -217,7 +224,7 @@
       "innerPadding": 4,
       "bottomGap": 0,
       "transparency": 0.21,
-      "widgetTransparency": 0.94,
+      "widgetTransparency": 0.45,
       "squareCorners": false,
       "noBackground": false,
       "gothCornersEnabled": false,
@@ -238,7 +245,9 @@
       "visible": true,
       "popupGapsAuto": true,
       "popupGapsManual": 4,
-      "maximizeDetection": true
+      "maximizeDetection": true,
+      "shadowIntensity": 0,
+      "attachToScreenEdge": false
     }
   ],
   "desktopClockCustomColor": {
