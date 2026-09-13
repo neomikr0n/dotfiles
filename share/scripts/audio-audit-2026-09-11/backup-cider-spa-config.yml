@@ -1,0 +1,705 @@
+migration_level: 51
+general:
+  displayName: NOE GARCIA HUERTA
+  language: en-US
+  keybindings:
+    search:
+      - ctrlKey
+      - KeyF
+    home:
+      - ctrlKey
+      - KeyH
+    listenNow:
+      - ctrlKey
+      - KeyL
+    browse:
+      - ctrlKey
+      - KeyN
+    recentlyAdded:
+      - ctrlKey
+      - Digit1
+    librarySongs:
+      - ctrlKey
+      - Digit2
+    libraryAlbums:
+      - ctrlKey
+      - Digit3
+    libraryArtists:
+      - ctrlKey
+      - Digit4
+    immersiveMode:
+      - ctrlKey
+      - KeyP
+    commandCenter:
+      - shiftKey
+      - Space
+    miniPlayer:
+      - ctrlKey
+      - KeyK
+  collapsedItems: []
+  closeToTray: false
+  promptOnClose: false
+  warnBeforeQueueOverride: true
+  onStartup: resumeLastSession
+  startupPage: /new-tab
+  checkForMarketplaceUpdates: true
+  checkForUpdates: true
+  jumpListClickPlays: false
+performance:
+  gameMode: false
+  preloadSidebarPages: idle
+accessibility:
+  boldText: false
+  uiScale: 1
+  highContrast: false
+  forceFocusVisible: false
+  reducedMotion: false
+  motionIntensity: normal
+  cardMotion: false
+  sounds:
+    enabled: false
+    volume: 0.4
+    pack: default
+    hoverEnabled: false
+audio:
+  volume: 1
+  volumeStep: 0.01
+  exponentialVolume: true
+  maxVolume: 1
+  atmos:
+    enabled: true
+    binaural: true
+    devicePreferences: {}
+  crossfade:
+    enabled: true
+    durationSec: 5
+    skipEnabled: false
+    tempoSensitivity: 0.6
+    loudnessSensitivity: 0.75
+    exclusions:
+      albums: false
+      playlists: false
+      djMixes: true
+      liveAlbums: true
+      autoplayContinuation: false
+  automix:
+    enabled: true
+    spectralSeparation: 1
+    vocalGuard: true
+    tempoAlign: true
+    normalizeDurationMs: 4000
+    exclusions:
+      albums: false
+      playlists: false
+      djMixes: true
+      liveAlbums: true
+      autoplayContinuation: false
+  occlusion:
+    mode: off
+  volumeDisplaySPL:
+    enabled: false
+    calibration: 90
+  equalizer:
+    enabled: false
+    preset: default
+    frequencies:
+      - 32
+      - 63
+      - 125
+      - 250
+      - 500
+      - 1000
+      - 2000
+      - 4000
+      - 8000
+      - 16000
+    gain:
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    Q:
+      - 0.707
+      - 0.707
+      - 0.707
+      - 0.707
+      - 0.707
+      - 0.707
+      - 0.707
+      - 0.707
+      - 0.707
+      - 0.707
+    mix: 1
+    vibrantBass: 0
+    userGenerated: false
+  showBitrateBadge: false
+  ciderAudio:
+    enabled: true
+    showInToolbar: false
+    showBadges: true
+    ciderPPE: true
+    ciderPPE_value: MAIKIWI
+    staticOptimizer:
+      state: false
+      lock: false
+    lastNode: n1
+    firstNode: n1
+    opportunisticCorrection_state: OFF
+    atmosphereRealizer1: false
+    atmosphereRealizer1_value: NATURAL_STANDARD
+    atmosphereRealizer2: false
+    atmosphereRealizer2_value: Z3600
+    spatial: false
+    spatialProfile: maikiwinewer
+  normalization: true
+  normalizationTargetLufs: -14
+  podcastsPlaybackSpeed: 1
+  allowPlaybackRateChangeEverywhere: false
+  deviceOutput: default
+  hostAudioCapture:
+    mode: off
+    deviceId: default
+    gainDb: 0
+    autoEnable: false
+    autoApps: []
+    exclusive:
+      sampleRate: 0
+      bitDepth: 0
+visual:
+  appearance: dark
+  layoutType: mojave-if
+  layoutView: HHh LpR FFf
+  useAdaptiveColors: true
+  useEmotionEngine: true
+  paletteContrast: standard
+  largeHeaderTitle: true
+  adaptiveColorPercent: 10
+  viewTransitions: true
+  prefersReducedMotion: false
+  windowSize:
+    - 1024
+    - 640
+  windowPosition:
+    - 0
+    - 0
+  titleBarStyle: default
+  artworkLoadingMethod: lazy
+  artworkBlurMap:
+    fpsLimit: 60
+    renderer: auto
+    lowerFpsOnBlur: true
+  backgroundBlurMap:
+    enabled: false
+    src: ""
+    filter:
+      blur: 128
+      saturate: 200
+      brightness: 10
+      contrast: 100
+  immersive:
+    useAnimatedBackground: true
+    useAnimatedArtwork: true
+    backgroundType: default
+    layoutType: solarium
+    layoutTypePortrait: sonoma
+    maxBackgroundBrightness: 50
+    enableHDR: false
+    hdrBoostScale: 1
+    useBackgroundBPM: true
+    startFullscreen: false
+    filter:
+      saturate: 180
+      contrast: 1.3
+    fsrUpscale:
+      enabled: false
+      forceAlways: false
+      thresholdYear: 2010
+      sharpness: 0.5
+  customCSS: ""
+  lyricSpeedMultiplier: 1
+  scalingFactor: 1
+  fonts:
+    main: Host Grotesk
+    lyrics: Figtree
+  verticalDrawerMode: auto
+  overlayDrawer: false
+  scrollbarType: native
+  vibrancyMode: mica
+  acrylicDarkValue: 0.5
+  hiresImages: false
+  pauseAnimatedOnBlur: true
+  sweetener:
+    useImmersiveBG: false
+    immersiveBGStyle: lite
+    immersive_bg_fps: 25
+    immersive_lower_fps_on_blur: true
+    immersive_bg_filter:
+      blur: 128
+      saturate: 100
+      brightness: 60
+      contrast: 100
+  ui_custom:
+    useSystemAccentColor: false
+    customAccentColor: false
+    customAccentColorValue: "#fa2d48"
+    customTintColor: false
+    customTintColorValue: "#fa2d48"
+    customTintColorRatio: 0.5
+  ultraWide: true
+  sizing: default
+  transparency: true
+  forceViewportRounding: false
+  headerStyle: default
+  artistHeaderAlignment: left
+  contextMenuIcons: all
+ui:
+  chromeTopWidget: search
+  leftDrawerOverlay: false
+  windowControlOverride: default
+  mainMenuPosition: left
+  forceMPWindowControls: false
+components:
+  Sidebar:
+    Style: default
+    MergeAppleMusicPlaylists: false
+  SidebarPlaylist:
+    ShowArtwork: true
+  PlaylistTimeMachine:
+    maxEntries: 10
+  Search:
+    SearchType: default
+  FloatingSearch:
+    EnterShowsResults: true
+    BlurBackground: false
+    ClearSearchOnClose: false
+  AddToPlaylist:
+    RecentsLimit: 3
+  AMProgressBar:
+    iOSStyle: true
+    useAccentColor: false
+  AMVolumeSlider:
+    iOSStyle: false
+  HeaderSearch:
+    NoRedirectOnSelect: false
+  ImmersiveSonoma:
+    UseRadialMask: true
+    LyricArc: true
+  ImmersiveSolarium:
+    MaskType: radial
+    LyricsType: full
+    AspectRatio: 16/9
+    QueueIsDrawer: false
+    MaskYPosition: 50
+  ImmersiveSpectrumDeck:
+    BandCount: 24
+    ColorMode: artwork
+    ShowReflection: true
+    ShowPeakHold: true
+    ShowBloom: true
+    BloomIntensity: 0.6
+    Brightness: 1
+    LayoutMode: perspective
+    ShowGrid: true
+    ShowSun: true
+    ShowArtwork: false
+  Immersive:
+    StartTab: queue
+    MaxLyricSize: 70
+    KeepCompletedLyrics: false
+    ControlsTimeout: 1
+    ArtworkHighlight: true
+    HideSidePanelWhenNoLyrics: false
+    EnableTransparency: false
+    TransparencyValue: 1
+    CustomImagePath: ""
+    CustomImageFilter:
+      blur: 0
+      saturate: 100
+      brightness: 100
+      contrast: 100
+    CustomImageMixValue: 0.5
+    GlowEffectOnActiveLyrics: true
+  SimpleImmersiveBGArtwork:
+    UseMask: true
+    filter:
+      blur: 0
+      saturate: 280
+      brightness: 50
+      contrast: 100
+  MediaItem:
+    AnimateArtworkOnHover: true
+  MediaItemArtwork:
+    DisableImageFadeIn: false
+    Highlights: true
+    DisableFadeIn: true
+  PlaylistsPage:
+    iOSLayout: false
+    iOSLayoutAlways: false
+    editorialLayout: false
+    editorialPreference:
+      - bannerUber
+      - storeFlowcase
+      - subscriptionHero
+      - originalFlowcaseBrick
+  CompactSidebar:
+    size: small
+    align: top
+  Window:
+    TitleBarControlSize: large
+  ListItemProvider:
+    fetchAttributes: true
+  MiniPlayer:
+    AnimatedArtwork: true
+    allowResizing: false
+    userTallHeight: null
+  MojaveLayouts:
+    PlayerType: default
+    ShowQuickActions: true
+    WindowingMode: auto
+    PrecisionScrollSpeed: 0.7
+    FloatingPlayer: false
+    FloatingPlayerPadding: 8
+    FloatingPlayerRadius: 0
+    LCDChromaticAberration: false
+    LCDChromaticAberrationIntensity: 0.04
+    PlayerMaterial: default
+    LiquidGlassPlayer: true
+    LiquidGlassScrollPerf: true
+  AMPLCD:
+    Style: glass
+  RichAlbumGrid:
+    ScrollToPosition: top
+    DisableScrollAnimation: false
+    AlwaysNavigateToPage: false
+  ThreeDQueue:
+    Style: default
+  PlayingIndicator:
+    useRealtimeVisualizer: false
+  SidebarProfile:
+    Enabled: true
+    HasMainMenu: false
+    HandleVisible: true
+    NameVisible: true
+  ImmersiveSingAlong:
+    CustomCSS: >
+      .lyric_fade-enter-active {
+        transition: 0.5s var(--ease_smoothEase), opacity 1s var(--ease_smoothEase),
+          transform 1s var(--ease_smoothEase), filter 0.36s var(--ease_smoothEase) !important;
+      }
+
+      .lyric_fade-leave-active {
+        transition: 0.5s var(--ease_smoothEase), opacity 0.5s var(--ease_smoothEase),
+          transform 1s var(--ease_smoothEase), filter 0.5s var(--ease_smoothEase) !important;
+      }
+
+      .lyric_fade-enter-from {
+        opacity: 0;
+        transform: translateY(25%) perspective(300px) translateZ(-50px) !important;
+        filter: blur(10px);
+      }
+
+      .lyric_fade-leave-to {
+        opacity: 0;
+        transform: translateY(-25%) perspective(300px) translateZ(-50px) rotateX(0deg) !important;
+        filter: blur(10px);
+      }
+    CustomCSSEnabled: false
+    PlayerIdleBehavior: hide
+  Concerts:
+    Radius: 100
+    RadiusUnit: imperial
+    SortBy: date
+    ShowInSidebar: true
+  Podcasts:
+    ShowInSidebar: true
+  Geolocation:
+    Enabled: false
+    lat: null
+    lon: null
+    displayName: ""
+    placeId: null
+  MusicVideoPlayer:
+    ShowBadgeWhenAvailable: true
+    PinMaxResolution: true
+    PrefetchOnHover: true
+    PrefetchSegmentsOnHover: false
+  HLSVideo:
+    NVFix: false
+caching:
+  LibraryAlbums: true
+  Content: true
+  ArtistChips: true
+  Home: true
+lyrics:
+  timeOffset: 0
+  fpsLimit: 60
+  thirdPartySources: true
+  scaleOnAny: false
+  characterFlow: false
+  singEngine: waapi
+  lineStaggering: true
+  lineStaggeringImmersive: true
+  singLyricsEverywhere: false
+  translationEnabled: false
+  translationLanguage: en
+  defaultProvider: auto
+  preferUserLyrics: true
+  translationMode: manual
+  showDualLanguage: true
+  showTimestamps: true
+  timestampStyle: ring
+  localeOverrides: {}
+  trackOverrides: {}
+  style:
+    enabled: false
+    easingFunction: ""
+    easingFunctionImmersive: ""
+    duration: 0.5
+    durationImmersive: 1
+advanced:
+  flags: []
+  disableLogging: false
+  enableMediaItemInspect: false
+  disableLargeRequestOffloading: true
+  testing:
+    musicVideos: false
+    forceExplicit: false
+    floatingSearch: false
+    localMusicProvider: false
+connectivity:
+  playbackNotifications: true
+  webSockets:
+    enabled: true
+  apiTokensRequired: true
+  apiTokens: []
+  parties:
+    enabled: true
+    displayName: ""
+    avatarDataUri: ""
+    avatarCustomized: false
+    defaultTransportMode: host
+    defaultQueueMode: open
+    driftThresholdMs: 750
+  discord:
+    enabled: true
+    client: Cider
+    clearOnPause: true
+    stateFormat: by {artist}
+    detailsFormat: "{title}"
+    timestampFormat: remaining
+    buttons: []
+    useAnimatedArtwork: false
+    showAlbum: true
+    showArtist: true
+    showMultipleArtists: true
+    smallImage: artists
+    largeImage: animated
+    artistImageSource: apple
+  scrobbler:
+    services:
+      lastfm:
+        enabled: true
+        loggedIn: true
+        username: Shokyto
+      librefm:
+        enabled: false
+        loggedIn: false
+        username: ""
+      maloja:
+        enabled: false
+        loggedIn: false
+        username: ""
+        baseUrl: ""
+      listenbrainz:
+        enabled: false
+        loggedIn: false
+        username: ""
+    settings:
+      scrobbleTrigger: either
+      scrobbleDelay: "50"
+      scrobbleAbsoluteSeconds: 240
+      minDurationSeconds: 30
+      maxDurationSeconds: 0
+      removeFeat: both
+      removeExtension: false
+      useAlbumArtist: false
+      cleanRemaster: true
+      cleanEdition: false
+      cleanLive: false
+      rewriteRules: []
+      blacklistArtists: []
+      blacklistAlbums: []
+      blacklistGenres: []
+      updateNowPlaying: true
+      loveSync: false
+  atmosRatings:
+    enabled: true
+appleMusic:
+  enabled: true
+  drmSystem: default
+  animatedArtwork: true
+  catalogAnimatedArtwork: false
+  animatedArtworkEngine: native
+  animatedArtworkQuality: quality
+  showUserInfo: true
+  seamlessAudioTransitions: true
+  showStorefrontWarning: true
+  popularityThreshold: 0.6
+  backgroundRefreshTime: 60
+  showBPM: false
+  language: auto
+  storefront: mx
+  noPlayingAction: play-recent-tracks
+  lyrics:
+    singLyrics: true
+    staticLyrics: false
+  libraryAlbums:
+    sortBy: none
+    order: desc
+  recentlyAdded:
+    sortBy: none
+    order: asc
+  librarySongs:
+    sortBy: none
+    order: desc
+    showArtwork: true
+    itemSize: default
+    columnWidths: {}
+    queueLimit: 100
+  libraryPlaylists:
+    sortBy: none
+    order: asc
+  smartPlaylists:
+    enabled: true
+    autoRefreshIntervalMinutes: 30
+    perPlaylistMinIntervalMinutes: 10
+    defaultTrackLimit: 100
+    refreshOnView: true
+  home:
+    pinnedItems: []
+    pinnedItemsViewType: list
+    sectionsOrder:
+      - pinnedItems
+      - recentlyPlayed
+      - artistFeed
+      - moodRecommendations
+      - madeForYou
+      - fromShazam
+      - friendsListeningTo
+    buttonLocation: sidebar
+    lastSelectedMood: Chill
+    artwork:
+      enabled: false
+      url: ""
+      video: false
+      position: center
+    layoutMode: classic
+    bento:
+      layout:
+        - instanceId: cc31c283-32f9-47e0-b92e-d07e55cb4c0a
+          type: pinnedItems
+          x: 0
+          y: 0
+          w: 6
+          h: 2
+        - instanceId: 40470bd2-94d5-4483-9fb3-68cc7e9415e2
+          type: recentlyPlayed
+          x: 0
+          y: 2
+          w: 6
+          h: 2
+        - instanceId: d7807138-0ba7-48e4-bf05-bd9098531c1b
+          type: artistFeed
+          x: 0
+          y: 4
+          w: 3
+          h: 3
+        - instanceId: a64b1e50-6aa5-437c-838e-87ada476666a
+          type: moodRecommendations
+          x: 3
+          y: 4
+          w: 3
+          h: 3
+        - instanceId: 272e3289-693e-42d9-90de-4e5254793e05
+          type: madeForYou
+          x: 0
+          y: 7
+          w: 6
+          h: 4
+        - instanceId: 099fa6ff-0d43-49fe-85df-50fbb9a1e064
+          type: fromShazam
+          x: 0
+          y: 11
+          w: 3
+          h: 3
+        - instanceId: 9ac2a096-d2c2-46a2-a122-1e9e890b9275
+          type: friendsListeningTo
+          x: 3
+          y: 11
+          w: 3
+          h: 3
+      columns: 6
+      narrowBreakpoint: 720
+      showGreeting: true
+      cardBackgrounds: false
+      revision: 0
+    followedArtists: []
+  browse:
+    hideHeroItems: false
+    moveUpLinks: false
+    contentFilter:
+      enabled: false
+      keywords: []
+      hideAppleRecommends: false
+  useAMPComponents: {}
+  podcasts:
+    following: []
+  deadCatalogIds:
+    sid: ""
+    ids: {}
+casting:
+  enabled: false
+  chromecast:
+    enabled: false
+    lyrics: false
+queue:
+  smartQueue:
+    useByDefault: false
+  autoRemoveDisliked: false
+  filterDislikedOnAdd: false
+  autoplayByDefault: false
+  restoreLastQueue: true
+remote:
+  enabled: false
+  autostartTunnel: true
+  tunnelUUID: ""
+updates:
+  updateChannel: stable
+  checkForUpdates: true
+debug:
+  mklite: false
+  bgDiagnostics: false
+notifications:
+  categories: {}
+  mutedSources: []
+  history:
+    persist: true
+    cap: 200
+DVTCfg: {}
+snippets:
+  css:
+    installed: []
+LocalMusicSettings:
+  AudioEngine: webaudio
+  ScanFolders: []
+  InferArtworkFromNearbyImages: true
+  Components:
+    SongsPage: {}
+    AlbumPage:
+      ViewType: grid

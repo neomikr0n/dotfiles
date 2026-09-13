@@ -1,0 +1,20 @@
+[
+  {
+    "path": "/home/n30/dotfiles/.config/pipewire/pipewire.conf.d/99-rme-fix.conf",
+    "backup": "/home/n30/dotfiles/share/scripts/audio-audit-2026-09-11/backup-pipewire/0-99-rme-fix.conf",
+    "before_sha256": "5c9e684e9982be808da24636559d07e20e934b0e390f86a924fee6940cc89747",
+    "after_sha256": "92d7e7ef46f05c2562fdac8e1deb02acaf0b331fe0912f7de1b438c8a24e5e99"
+  },
+  {
+    "path": "/home/n30/dotfiles/.config/pipewire/pipewire-pulse.conf.d/force-192k.conf",
+    "backup": "/home/n30/dotfiles/share/scripts/audio-audit-2026-09-11/backup-pipewire/1-force-192k.conf",
+    "before_sha256": "8d4fb11a736d3685b6048d175e78acfd84739b05acf92efae20cb4f47f80235f",
+    "after_sha256": "4b67f656d925fa33117430a0574040d64cdc553b38712f558b3548cec72e9bcf"
+  },
+  {
+    "path": "/home/n30/dotfiles/.config/pipewire/client.conf.d/resampling.conf",
+    "backup": "/home/n30/dotfiles/share/scripts/audio-audit-2026-09-11/backup-pipewire/2-resampling.conf",
+    "before_sha256": "b07eacc250bcd3412d5faddbb056f19a7408373ef4839883d8886d687a3e1298",
+    "after_sha256": "23714e56e58e944f43b33b8e43b34e25eee511693b04ffa4464574175b628490"
+  }
+]

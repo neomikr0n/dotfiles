@@ -1,0 +1,49 @@
+#!/bin/sh
+# USB MIDI volume for the owner's RME only; never alters PipeWire volume.
+set -eu
+base=/home/n30/dotfiles/share/scripts
+cache="${XDG_CACHE_HOME:-$HOME/.cache}/rme-volume"
+mkdir -p "$cache"
+if [ ! -x "$cache/control" ] || [ "$base/rme-volume.c" -nt "$cache/control" ]; then
+    (
+        flock 9
+        if [ ! -x "$cache/control" ] || [ "$base/rme-volume.c" -nt "$cache/control" ]; then
+            cc -Wall -Wextra -Werror -O2 "$base/rme-volume.c" -lasound -o "$cache/control.new"
+            mv "$cache/control.new" "$cache/control"
+        fi
+    ) 9>"$cache/build.lock"
+fi
+# Refresh existing OSD on every key, even when the MIDI guard drops repeats.
+case "${1:-status}" in
+    up|down|up5|down5)
+        quickshell ipc -p "$base/rme-osd-ui" call rme pulse >/dev/null 2>&1 &
+        ;;
+esac
+if result=$("$cache/control" "${1:-status}" 2>&1); then
+    printf '%s\n' "$result"
+    mute=$(printf '%s\n' "$result" | sed -n 's/^RME Mute: //p')
+    if [ -n "$mute" ]; then
+        "$base/rme-osd" mute "$mute" >/dev/null 2>&1 &
+    fi
+    level=$(printf '%s\n' "$result" | sed -n 's/^RME Line Out: \([-0-9.]*\) dB$/\1/p')
+    if [ -n "$level" ]; then
+        "$base/rme-osd" level "$level" >/dev/null 2>&1 &
+    fi
+else
+    printf '%s\n' "$result" >&2
+    # Show the freshly read level also at a ceiling/lock; never invent a value.
+    level=$(printf '%s\n' "$result" | sed -n 's/^Line Out \([-0-9.]*\) dB;.*/\1/p')
+    if [ -n "$level" ]; then
+        "$base/rme-osd" level "$level" >/dev/null 2>&1 &
+    fi
+    case "$result" in
+      *Limite*) message='🛑 ¡Hasta aquí el solo! Techo de −15 dB o límite de salida alcanzado.' ;;
+      *bloqueado*) message='🔒 El RME tiene el candado puesto. Desbloquea su volumen para usar las teclas.' ;;
+      *no\ conectado*) message='🔌 ¡RME fuera de escena! Revisa su conexión USB.' ;;
+      *Auto\ Ref*) message='🧭 Auto Ref cambió la escala. Hace falta recalibrar antes de subir.' ;;
+      *Mute/Dim*) message='🤫 Mute o Dim está activo. No subo el volumen a escondidas.' ;;
+      *) message="🎛️ Pausa técnica: no se confirmó el cambio. $result" ;;
+    esac
+    "$base/rme-osd" warn "$message" >/dev/null 2>&1 &
+    exit 1
+fi

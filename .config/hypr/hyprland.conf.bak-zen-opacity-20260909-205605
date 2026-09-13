@@ -214,7 +214,6 @@ windowrule {
 windowrule {
   name = windowrule-19
   opacity = 0.9 0.9
-  match:class = negative:^(zen)$
   match:float = 0
   match:focus = 0
 }
@@ -250,12 +249,9 @@ bind = $mod SHIFT, E, exit
 bind = CTRL ALT, Delete, exec, dms ipc call processlist focusOrToggle
 
 # === Audio Controls ===
-# RME: anterior control de volumen de la PC, desactivado
-# bindel = , XF86AudioRaiseVolume, exec, dms ipc call audio increment 3
-# RME: anterior control de volumen de la PC, desactivado
-# bindel = , XF86AudioLowerVolume, exec, dms ipc call audio decrement 3
-# RME: anterior mute de la PC
-# bindl = , XF86AudioMute, exec, dms ipc call audio mute
+bindel = , XF86AudioRaiseVolume, exec, dms ipc call audio increment 3
+bindel = , XF86AudioLowerVolume, exec, dms ipc call audio decrement 3
+bindl = , XF86AudioMute, exec, dms ipc call audio mute
 bindl = , XF86AudioMicMute, exec, dms ipc call audio micmute
 
 # === Brightness Controls ===

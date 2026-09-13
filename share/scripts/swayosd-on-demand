@@ -1,0 +1,11 @@
+#!/bin/sh
+# Legacy brightness/Caps Lock only. No autostart needed.
+if swayosd-client "$@" 2>/dev/null; then exit 0; fi
+(
+ flock -w 2 9 || exit 1
+ if ! pgrep -u "$(id -u)" -x swayosd-server >/dev/null; then
+  nohup swayosd-server >/dev/null 2>&1 </dev/null &
+ fi
+ sleep 0.3
+ swayosd-client "$@"
+) 9>"${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/swayosd-start.lock"

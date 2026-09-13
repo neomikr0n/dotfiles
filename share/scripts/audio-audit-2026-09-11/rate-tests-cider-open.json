@@ -1,0 +1,34 @@
+[
+  {
+    "requested_rate": 44100,
+    "hw_params": "access: MMAP_INTERLEAVED\nformat: S32_LE\nsubformat: STD\nchannels: 2\nrate: 192000 (192000/1)\nperiod_size: 4096\nbuffer_size: 32768\n",
+    "metadata": "Found \"settings\" metadata 33\nupdate: id:0 key:'log.level' value:'2' type:''\nupdate: id:0 key:'clock.rate' value:'48000' type:''\nupdate: id:0 key:'clock.allowed-rates' value:'[ 44100, 48000, 88200, 96000, 192000 ]' type:''\nupdate: id:0 key:'clock.quantum' value:'256' type:''\nupdate: id:0 key:'clock.min-quantum' value:'128' type:''\nupdate: id:0 key:'clock.max-quantum' value:'512' type:''\nupdate: id:0 key:'clock.force-quantum' value:'0' type:''\nupdate: id:0 key:'clock.force-rate' value:'0' type:''\n",
+    "returncode": 0,
+    "stderr": "",
+    "matches": false
+  },
+  {
+    "requested_rate": 48000,
+    "hw_params": "access: MMAP_INTERLEAVED\nformat: S32_LE\nsubformat: STD\nchannels: 2\nrate: 192000 (192000/1)\nperiod_size: 4096\nbuffer_size: 32768\n",
+    "metadata": "Found \"settings\" metadata 33\nupdate: id:0 key:'log.level' value:'2' type:''\nupdate: id:0 key:'clock.rate' value:'48000' type:''\nupdate: id:0 key:'clock.allowed-rates' value:'[ 44100, 48000, 88200, 96000, 192000 ]' type:''\nupdate: id:0 key:'clock.quantum' value:'256' type:''\nupdate: id:0 key:'clock.min-quantum' value:'128' type:''\nupdate: id:0 key:'clock.max-quantum' value:'512' type:''\nupdate: id:0 key:'clock.force-quantum' value:'0' type:''\nupdate: id:0 key:'clock.force-rate' value:'0' type:''\n",
+    "returncode": 0,
+    "stderr": "",
+    "matches": false
+  },
+  {
+    "requested_rate": 96000,
+    "hw_params": "access: MMAP_INTERLEAVED\nformat: S32_LE\nsubformat: STD\nchannels: 2\nrate: 192000 (192000/1)\nperiod_size: 4096\nbuffer_size: 32768\n",
+    "metadata": "Found \"settings\" metadata 33\nupdate: id:0 key:'log.level' value:'2' type:''\nupdate: id:0 key:'clock.rate' value:'48000' type:''\nupdate: id:0 key:'clock.allowed-rates' value:'[ 44100, 48000, 88200, 96000, 192000 ]' type:''\nupdate: id:0 key:'clock.quantum' value:'256' type:''\nupdate: id:0 key:'clock.min-quantum' value:'128' type:''\nupdate: id:0 key:'clock.max-quantum' value:'512' type:''\nupdate: id:0 key:'clock.force-quantum' value:'0' type:''\nupdate: id:0 key:'clock.force-rate' value:'0' type:''\n",
+    "returncode": 0,
+    "stderr": "",
+    "matches": false
+  },
+  {
+    "requested_rate": 192000,
+    "hw_params": "access: MMAP_INTERLEAVED\nformat: S32_LE\nsubformat: STD\nchannels: 2\nrate: 192000 (192000/1)\nperiod_size: 4096\nbuffer_size: 32768\n",
+    "metadata": "Found \"settings\" metadata 33\nupdate: id:0 key:'log.level' value:'2' type:''\nupdate: id:0 key:'clock.rate' value:'48000' type:''\nupdate: id:0 key:'clock.allowed-rates' value:'[ 44100, 48000, 88200, 96000, 192000 ]' type:''\nupdate: id:0 key:'clock.quantum' value:'256' type:''\nupdate: id:0 key:'clock.min-quantum' value:'128' type:''\nupdate: id:0 key:'clock.max-quantum' value:'512' type:''\nupdate: id:0 key:'clock.force-quantum' value:'0' type:''\nupdate: id:0 key:'clock.force-rate' value:'0' type:''\n",
+    "returncode": 0,
+    "stderr": "",
+    "matches": true
+  }
+]
