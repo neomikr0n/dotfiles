@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Informe de revisión — rme-volume</title>
+<style>
+  :root {
+    --bg: #0A0A0A; --panel: #16181D; --panel2: #1E2126;
+    --orange: #FF4E00; --red-orange: #FF3300; --amber: #FFB300;
+    --yellow: #FFC821; --text: #F5F1EA; --muted: #9AA0A8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    line-height: 1.6; min-height: 100vh;
+  }
+  code, pre { font-family: "JetBrains Mono", "Fira Code", ui-monospace, monospace; }
+
+  /* ---------- Cabecera con ondas ---------- */
+  header.hero {
+    position: relative; overflow: hidden;
+    background: var(--bg); padding: 72px 32px 120px;
+  }
+  .waves { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hero-inner { position: relative; max-width: 980px; margin: 0 auto; }
+  .hero .kicker {
+    display: inline-block; font-size: 12px; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--yellow); margin-bottom: 10px;
+    font-weight: 700;
+  }
+  .hero h1 { font-size: clamp(28px, 4vw, 44px); font-weight: 800; line-height: 1.15; }
+  .hero h1 .accent { color: var(--orange); }
+  .hero .meta { margin-top: 14px; color: var(--muted); font-size: 14px; }
+  .hero .meta code {
+    background: rgba(255,255,255,.08); padding: 2px 8px; border-radius: 6px;
+    color: var(--amber); font-size: 13px;
+  }
+  .score-ring-wrap { margin-top: 34px; display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+  .score-ring {
+    position: relative; width: 132px; height: 132px; flex: none;
+    border-radius: 50%; background: rgba(10,10,10,.72);
+    box-shadow: 0 4px 24px rgba(0,0,0,.45); backdrop-filter: blur(2px);
+  }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring .track { stroke: rgba(255,255,255,.12); }
+  .score-ring .bar {
+    stroke: #FFB300; stroke-linecap: round;
+    filter: drop-shadow(0 0 8px #FFB30066);
+  }
+  .score-num {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .score-num b { font-size: 34px; color: #FFB300; }
+  .score-num span { font-size: 10px; letter-spacing: 2px; color: var(--muted); }
+  .chips { display: flex; gap: 12px; flex-wrap: wrap; }
+  .chip {
+    background: var(--panel); border: 1px solid color-mix(in srgb, var(--chip) 45%, transparent);
+    border-radius: 12px; padding: 10px 18px; min-width: 84px; text-align: center;
+  }
+  .chip-num { font-size: 24px; font-weight: 800; color: var(--chip); display: block; }
+  .chip-label { font-size: 10px; letter-spacing: 1.5px; color: var(--muted); }
+
+  /* ---------- Layout ---------- */
+  main { max-width: 980px; margin: -70px auto 0; padding: 0 24px 80px; position: relative; }
+  section { margin-top: 52px; }
+  section h2 {
+    font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px;
+    margin-bottom: 6px;
+  }
+  .dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex: none;
+    box-shadow: 0 0 10px currentColor; }
+  .section-sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+  .card-panel {
+    background: var(--panel); border: 1px solid rgba(255,255,255,.07);
+    border-radius: 16px; padding: 24px 26px;
+  }
+  .empty { color: var(--muted); font-style: italic; }
+
+  /* ---------- Hallazgos ---------- */
+  .finding {
+    background: var(--panel); border: 1px solid rgba(255,255,255,.07);
+    border-left: 4px solid var(--sev);
+    border-radius: 14px; padding: 20px 22px; margin-bottom: 18px;
+  }
+  .finding header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .sev-badge {
+    color: #0A0A0A; font-size: 10.5px; font-weight: 800; letter-spacing: 1.5px;
+    padding: 3px 10px; border-radius: 999px;
+  }
+  .line-badge, .cat-badge, .src-badge {
+    font-size: 11px; color: var(--muted); background: var(--panel2);
+    border: 1px solid rgba(255,255,255,.08); border-radius: 999px; padding: 2px 10px;
+  }
+  .src-badge { color: var(--amber); }
+  .finding h3 { font-size: 17px; margin-bottom: 6px; }
+  .finding p { color: #C9CDD3; font-size: 14.5px; margin-bottom: 8px; }
+  .finding .rec { color: var(--text); }
+  .finding .rec strong { color: var(--yellow); }
+  .code-pair { display: grid; gap: 10px; margin-top: 14px; }
+  @media (min-width: 800px) { .code-pair { grid-template-columns: 1fr 1fr; } }
+  .code-wrap {
+    background: #0D0E10; border-radius: 10px; overflow: auto;
+    border: 1px solid rgba(255,255,255,.06); position: relative;
+  }
+  .code-label {
+    position: absolute; top: 8px; right: 10px; font-size: 9px; letter-spacing: 2px;
+    font-weight: 800; padding: 2px 8px; border-radius: 999px;
+  }
+  .code-bad .code-label { background: #FF3300; color: #0A0A0A; }
+  .code-good .code-label { background: #FFB300; color: #0A0A0A; }
+  .code-bad { border-top: 2px solid #FF330055; }
+  .code-good { border-top: 2px solid #FFB30055; }
+  pre { padding: 30px 16px 14px; font-size: 13px; line-height: 1.55; overflow-x: auto; }
+  .c-comment { color: #6E7681; font-style: italic; }
+  .c-string { color: #FFC821; }
+  .c-var { color: #FF4E00; font-weight: 600; }
+  .c-kw { color: #FF3300; font-weight: 700; }
+
+  /* ---------- Sugerencias creativas ---------- */
+  .grid { display: grid; gap: 16px; }
+  @media (min-width: 800px) { .grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); } }
+  .creative-card {
+    background: linear-gradient(160deg, rgba(255,178,0,.10), rgba(255,78,0,.05));
+    border: 1px solid #FFB30044; border-radius: 14px; padding: 18px 20px;
+  }
+  .creative-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .bulb { color: var(--yellow); font-size: 18px; }
+  .creative-card h3 { font-size: 15.5px; }
+  .effort {
+    margin-left: auto; font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--yellow); border: 1px solid #FFB30066; border-radius: 999px; padding: 1px 9px;
+  }
+  .creative-card p { font-size: 14px; color: #C9CDD3; }
+
+  /* ---------- Puntos ciegos ---------- */
+  .blind-card {
+    background: linear-gradient(160deg, rgba(255,51,0,.09), rgba(255,78,0,.04));
+    border: 1px solid #FF330055; border-radius: 14px; padding: 18px 20px;
+  }
+  .blind-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+  .eye { color: var(--red-orange); font-size: 18px; }
+  .blind-card h3 { font-size: 15.5px; }
+  .blind-card p { font-size: 14px; color: #C9CDD3; margin-bottom: 6px; }
+  .risk-label { color: var(--red-orange); }
+  .mit-label { color: var(--amber); }
+
+  /* ---------- Checklist ---------- */
+  .checklist { list-style: none; }
+  .checklist li {
+    background: var(--panel); border: 1px solid rgba(255,255,255,.07);
+    border-radius: 10px; padding: 12px 16px; margin-bottom: 10px;
+    display: flex; gap: 12px; align-items: baseline; font-size: 14.5px;
+  }
+  .checklist li.done { opacity: .55; text-decoration: line-through; }
+  .check { color: var(--orange); font-weight: 800; flex: none; }
+
+  footer {
+    max-width: 980px; margin: 0 auto; padding: 0 24px 48px;
+    color: var(--muted); font-size: 12.5px; text-align: center;
+  }
+  footer .brand { color: var(--orange); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  
+<svg class="waves" viewBox="0 0 1440 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FF4E00"/><stop offset="1" stop-color="#FFB300"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#FF3300"/><stop offset="1" stop-color="#FF4E00"/>
+    </linearGradient>
+    <linearGradient id="g3" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFC821"/><stop offset="1" stop-color="#FFB300"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#g2)" opacity="0.55" d="M0,300 C240,120 420,420 720,260 C960,120 1180,380 1440,180 L1440,420 L0,420 Z"/>
+  <path fill="url(#g1)" d="M0,180 C260,340 520,40 780,160 C1040,280 1200,60 1440,220 L1440,420 L0,420 Z"/>
+  <path fill="url(#g3)" opacity="0.9" d="M0,360 C300,240 560,420 860,320 C1120,235 1260,360 1440,300 L1440,420 L0,420 Z"/>
+</svg>
+  <div class="hero-inner">
+    <span class="kicker">Informe de revisión de script</span>
+    <h1>rme-volume <span class="accent">/ análisis y mejoras</span></h1>
+    <p class="meta"><code>/home/n30/dotfiles/share/scripts/rme-volume</code> · 49 líneas · shell: sh (dash)</p>
+    <div class="score-ring-wrap">
+      <div class="score-ring">
+        <svg width="132" height="132" viewBox="0 0 120 120">
+          <circle class="track" cx="60" cy="60" r="52" fill="none" stroke-width="9"/>
+          <circle class="bar" cx="60" cy="60" r="52" fill="none" stroke-width="9"
+            stroke-dasharray="326.7" stroke-dashoffset="45.7"/>
+        </svg>
+        <div class="score-num"><b>86</b><span>/ 100</span></div>
+      </div>
+      <div class="chips"><div class="chip" style="--chip: #FF3300"><span class="chip-num">0</span><span class="chip-label">CRÍTICA</span></div><div class="chip" style="--chip: #FF4E00"><span class="chip-num">0</span><span class="chip-label">ALTA</span></div><div class="chip" style="--chip: #FFB300"><span class="chip-num">2</span><span class="chip-label">MEDIA</span></div><div class="chip" style="--chip: #FFC821"><span class="chip-num">3</span><span class="chip-label">BAJA</span></div><div class="chip" style="--chip: #7A828C"><span class="chip-num">1</span><span class="chip-label">INFO</span></div></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section id="resumen">
+    <h2><span class="dot" style="background: #FF4E00"></span>Resumen ejecutivo</h2>
+    <div class="card-panel">
+      <p>Wrapper pequeño y muy bien cuidado: shellcheck limpio, compilación con doble chequeo bajo flock, todo entrecomillado y `set -eu`. Los problemas reales están en la frontera con el binario C: el stderr se mezcla con la salida parseada, un fallo de compilación aborta la tecla con error crudo de cc, y los avisos del OSD dependen de cadenas exactas en español emitidas por el binario.</p>
+    </div>
+  </section>
+
+  <section id="hallazgos">
+    <h2><span class="dot" style="background: #FF3300"></span>Hallazgos por severidad</h2>
+    <p class="section-sub">Ordenados de mayor a menor gravedad. Cada hallazgo incluye cómo corregirlo.</p>
+    
+        <article class="finding" style="--sev: #FFB300">
+          <header>
+            <span class="sev-badge" style="background: #FFB300">MEDIA</span>
+            <span class="line-badge">línea 22</span><span class="src-badge">agente</span>
+            <span class="cat-badge">robustez</span>
+          </header>
+          <h3>El stderr del binario se mezcla con la salida que se parsea</h3>
+          <p>`result=$($cache/control ... 2&gt;&amp;1)` captura stdout y stderr juntos. Los patrones de `sed` (líneas 24, 28 y 35) esperan líneas limpias tipo `RME Line Out: -20.0 dB`, pero si ALSA emite cualquier aviso por stderr (&quot;Unable to set hw params...&quot;, mensajes de udev, warnings de la lib), ese texto entra en `$result`, rompe la extracción del nivel/mute y puede aparecer íntegro en el aviso de &quot;Pausa técnica&quot;. Además contamina el mensaje que ve el usuario.</p>
+          <p class="rec"><strong>Cómo mejorar:</strong> Capturar ambos flujos por separado: `out=$($cache/control ... 2&gt;/tmp/rme.err)` y `err=$(cat /tmp/rme.err)` (o con un fd extra: `exec 3&gt;&amp;1; err=$($cache/control ... 2&gt;&amp;1 1&gt;&amp;3); out=$(...)`). Parsear sólo `out` y usar `err` únicamente para diagnóstico.</p>
+          <div class="code-pair"><div class="code-wrap code-bad"><span class="code-label">ANTES</span><pre><code><span class="c-kw">if</span> result=<span class="c-var">$</span>(<span class="c-string">&quot;$cache/control&quot;</span> <span class="c-string">&quot;${1:-status}&quot;</span> 2&gt;&amp;1); <span class="c-kw">then</span></code></pre></div><div class="code-wrap code-good"><span class="code-label">DESPUÉS</span><pre><code><span class="c-kw">if</span> result=<span class="c-var">$</span>(<span class="c-string">&quot;$cache/control&quot;</span> <span class="c-string">&quot;${1:-status}&quot;</span> 2&gt;/dev/null); <span class="c-kw">then</span>
+    <span class="c-comment"># el stderr de diagnóstico, si hace falta, capturarlo aparte en otra variable</span></code></pre></div></div>
+        </article>
+
+        <article class="finding" style="--sev: #FFB300">
+          <header>
+            <span class="sev-badge" style="background: #FFB300">MEDIA</span>
+            <span class="line-badge">línea 11</span><span class="src-badge">agente</span>
+            <span class="cat-badge">robustez</span>
+          </header>
+          <h3>Un fallo de compilación aborta la tecla con error crudo de cc</h3>
+          <p>El bloque de compilación corre bajo `set -eu` fuera de ningún condicional: si `cc` falla (headers de ALSA ausentes tras una actualización, gcc no instalado, error de sintaxis en rme-volume.c), el subshell devuelve error y `set -e` mata el script. El usuario pulsa la tecla y no pasa nada visible salvo un error de compilador en stderr; sin OSD, sin mensaje claro. Es el modo de fallo más probable tras actualizar el sistema y perder `libasound` headers.</p>
+          <p class="rec"><strong>Cómo mejorar:</strong> Envolver la compilación en `if ! ...; then` y degradar con elegancia: si existe un binario anterior (aunque obsoleto), usarlo y avisar por OSD; si no existe binario, lanzar `rme-osd warn` con un mensaje entendible (&#x27;No pude compilar el controlador RME; revisa gcc/alsa-lib&#x27;) antes de salir con error.</p>
+          <div class="code-pair"><div class="code-wrap code-bad"><span class="code-label">ANTES</span><pre><code>(
+    flock 9
+    <span class="c-kw">if</span> [ ! -x <span class="c-string">&quot;$cache/control&quot;</span> ] || [ <span class="c-string">&quot;$base/rme-volume.c&quot;</span> -nt <span class="c-string">&quot;$cache/control&quot;</span> ]; <span class="c-kw">then</span>
+        cc -Wall -Wextra -Werror -O2 <span class="c-string">&quot;$base/rme-volume.c&quot;</span> -lasound -o <span class="c-string">&quot;$cache/control.new&quot;</span>
+        mv <span class="c-string">&quot;$cache/control.new&quot;</span> <span class="c-string">&quot;$cache/control&quot;</span>
+    <span class="c-kw">fi</span>
+) 9&gt;<span class="c-string">&quot;$cache/build.lock&quot;</span></code></pre></div><div class="code-wrap code-good"><span class="code-label">DESPUÉS</span><pre><code><span class="c-kw">if</span> ! (
+    flock 9
+    <span class="c-kw">if</span> [ ! -x <span class="c-string">&quot;$cache/control&quot;</span> ] || [ <span class="c-string">&quot;$base/rme-volume.c&quot;</span> -nt <span class="c-string">&quot;$cache/control&quot;</span> ]; <span class="c-kw">then</span>
+        cc -Wall -Wextra -Werror -O2 <span class="c-string">&quot;$base/rme-volume.c&quot;</span> -lasound -o <span class="c-string">&quot;$cache/control.new&quot;</span> \
+            || { rm -f <span class="c-string">&quot;$cache/control.new&quot;</span>; <span class="c-kw">exit</span> 1; }
+        mv <span class="c-string">&quot;$cache/control.new&quot;</span> <span class="c-string">&quot;$cache/control&quot;</span>
+    <span class="c-kw">fi</span>
+) 9&gt;<span class="c-string">&quot;$cache/build.lock&quot;</span>; <span class="c-kw">then</span>
+    <span class="c-kw">if</span> [ ! -x <span class="c-string">&quot;$cache/control&quot;</span> ]; <span class="c-kw">then</span>
+        <span class="c-string">&quot;$base/rme-osd&quot;</span> warn <span class="c-string">&#x27;🧱 No pude compilar el controlador RME. Revisa gcc y alsa-lib.&#x27;</span> &gt;/dev/null 2&gt;&amp;1
+        <span class="c-kw">exit</span> 1
+    <span class="c-kw">fi</span>
+    <span class="c-comment"># binario antiguo: seguir con él y avisar en segundo plano</span>
+    <span class="c-string">&quot;$base/rme-osd&quot;</span> warn <span class="c-string">&#x27;⚠️ rme-volume desactualizado: falló la recompilación.&#x27;</span> &gt;/dev/null 2&gt;&amp;1 &amp;
+<span class="c-kw">fi</span></code></pre></div></div>
+        </article>
+
+        <article class="finding" style="--sev: #FFC821">
+          <header>
+            <span class="sev-badge" style="background: #FFC821">BAJA</span>
+            <span class="line-badge">línea 4</span><span class="src-badge">agente</span>
+            <span class="cat-badge">calidad</span>
+          </header>
+          <h3>Ruta base fija a /home/n30</h3>
+          <p>`base=/home/n30/dotfiles/share/scripts` es una constante absoluta. Si el dotfiles se mueve, se clona en otra máquina o se prueba desde otro usuario, el script deja de funcionar silenciosamente (falla la compilación y las llamadas a rme-osd/quickshell).</p>
+          <p class="rec"><strong>Cómo mejorar:</strong> Derivar la ruta desde la ubicación del propio script, que siempre vive junto a rme-volume.c: `base=$(CDPATH= cd -- &quot;$(dirname -- &quot;$0&quot;)&quot; &amp;&amp; pwd)`. Conserva la variable como fallback si se quiere anclar a un deploy concreto.</p>
+          <div class="code-pair"><div class="code-wrap code-bad"><span class="code-label">ANTES</span><pre><code>base=/home/n30/dotfiles/share/scripts</code></pre></div><div class="code-wrap code-good"><span class="code-label">DESPUÉS</span><pre><code>base=<span class="c-var">$</span>(CDPATH= cd -- <span class="c-string">&quot;$(dirname -- &quot;</span><span class="c-var">$0</span><span class="c-string">&quot;)&quot;</span> &amp;&amp; pwd)</code></pre></div></div>
+        </article>
+
+        <article class="finding" style="--sev: #FFC821">
+          <header>
+            <span class="sev-badge" style="background: #FFC821">BAJA</span>
+            <span class="line-badge">línea 39</span><span class="src-badge">agente</span>
+            <span class="cat-badge">calidad</span>
+          </header>
+          <h3>Avisos acoplados a cadenas exactas en español del binario C</h3>
+          <p>El `case &quot;$result&quot;` discrimina errores con `*Limite*`, `*bloqueado*`, `*no\ conectado*`, `*Auto\ Ref*`, `*Mute/Dim*`. Cualquier retoque del texto en rme-volume.c (una tilde, un cambio de redacción, una futura localización) convierte todos los avisos en el genérico &quot;Pausa técnica&quot; sin que nada falle visiblemente: degradación silenciosa difícil de detectar.</p>
+          <p class="rec"><strong>Cómo mejorar:</strong> Hacer que el binario C emita un código legible por máquina además del texto humano, p. ej. una primera línea `ERR CEILING` / `ERR LOCKED` / `ERR GONE`, y que el wrapper discrimine sobre ese token dejando el texto en español sólo para el usuario. Mientras tanto, añadir un test en rme-volume-tests.c que congele esas cadenas exactas.</p>
+          <div class="code-pair"><div class="code-wrap code-bad"><span class="code-label">ANTES</span><pre><code><span class="c-kw">case</span> <span class="c-string">&quot;$result&quot;</span> <span class="c-kw">in</span>
+  *Limite*) message=<span class="c-string">&#x27;🛑 ¡Hasta aquí el solo! Techo de −12 dB o límite de salida alcanzado.&#x27;</span> ;;
+  *bloquea<span class="c-kw">do</span>*) message=<span class="c-string">&#x27;🔒 El RME tiene el candado puesto. Desbloquea su volumen para usar las teclas.&#x27;</span> ;;</code></pre></div><div class="code-wrap code-good"><span class="code-label">DESPUÉS</span><pre><code><span class="c-comment"># En el binario: printf &#x27;ERR CEILING\n%s\n&#x27; &quot;...&quot;; en el wrapper:</span>
+<span class="c-kw">case</span> <span class="c-string">&quot;$result&quot;</span> <span class="c-kw">in</span>
+  *ERR\ CEILING*) message=<span class="c-string">&#x27;🛑 ¡Hasta aquí el solo! Techo de −12 dB o límite de salida alcanzado.&#x27;</span> ;;
+  *ERR\ LOCKED*) message=<span class="c-string">&#x27;🔒 El RME tiene el candado puesto. Desbloquea su volumen para usar las teclas.&#x27;</span> ;;</code></pre></div></div>
+        </article>
+
+        <article class="finding" style="--sev: #FFC821">
+          <header>
+            <span class="sev-badge" style="background: #FFC821">BAJA</span>
+            <span class="line-badge">línea 8</span><span class="src-badge">agente</span>
+            <span class="cat-badge">robustez</span>
+          </header>
+          <h3>Validación numérica de rme-osd acepta basura como &#x27;--&#x27; o &#x27;.&#x27;</h3>
+          <p>El filtro de rme-osd (`*[!0-9.-]*`) sólo rechaza caracteres ajenos al conjunto; acepta valores como `--`, `...` o `-.`. El regex del wrapper (`[-0-9.]*`) puede producir exactamente esas cadenas si el texto del binario cambia de formato, y `db:--` acabaría llegando a la interfaz Quickshell.</p>
+          <p class="rec"><strong>Cómo mejorar:</strong> Endurecer la validación en rme-osd con un caso explícito de número: `case &quot;$value&quot; in &#x27;&#x27;|*[!0-9.]*|.*|*.*) ;; esac` combinado con `-|...` rechazados, o validar con una expresión completa: `case &quot;$value&quot; in -[0-9]*|&#x27;&#x27;|[!0-9-]*) exit 1;; esac`.</p>
+          <div class="code-pair"><div class="code-wrap code-bad"><span class="code-label">ANTES</span><pre><code><span class="c-kw">case</span> <span class="c-string">&quot;$value&quot;</span> <span class="c-kw">in</span> <span class="c-string">&#x27;&#x27;</span>|*[!0-9.-]*) <span class="c-kw">exit</span> 1;; <span class="c-kw">esac</span></code></pre></div><div class="code-wrap code-good"><span class="code-label">DESPUÉS</span><pre><code><span class="c-kw">case</span> <span class="c-string">&quot;$value&quot;</span> <span class="c-kw">in</span> <span class="c-string">&#x27;&#x27;</span>|-*[!0-9.]*|*[!0-9.-]*|-|.|*[!0-9]*) [ -n <span class="c-string">&quot;$value&quot;</span> ] || <span class="c-kw">exit</span> 1;; <span class="c-kw">esac</span>
+# o más simple: exigir al menos un dígito
+printf <span class="c-string">&#x27;%s&#x27;</span> <span class="c-string">&quot;$value&quot;</span> | grep -Eq -- <span class="c-string">&#x27;-?[0-9]+(\.[0-9]+)?&#x27;</span> || <span class="c-kw">exit</span> 1</code></pre></div></div>
+        </article>
+
+        <article class="finding" style="--sev: #7A828C">
+          <header>
+            <span class="sev-badge" style="background: #7A828C">INFO</span>
+            <span class="line-badge">línea 24</span><span class="src-badge">agente</span>
+            <span class="cat-badge">estilo</span>
+          </header>
+          <h3>result se canaliza tres veces por sed</h3>
+          <p>`printf &#x27;%s\n&#x27; &quot;$result&quot; | sed -n ...` aparece en las líneas 24, 28 y 35. Es repetición y cada `printf | sed` es un pipeline cuyo fallo (sin pipefail en POSIX sh) pasaría inadvertido. Funciona, pero oscurece la estructura extract-mute / extract-level.</p>
+          <p class="rec"><strong>Cómo mejorar:</strong> Extraer los tres campos en una sola pasada con una única invocación de `sed`, o al menos reutilizar `printf &#x27;%s\n&#x27; &quot;$result&quot; &gt;&quot;tmpvar&quot;` una vez. Menos duplicación y un único punto a mantener si cambia el formato de salida.</p>
+          <div class="code-pair"><div class="code-wrap code-bad"><span class="code-label">ANTES</span><pre><code>mute=<span class="c-var">$</span>(printf <span class="c-string">&#x27;%s\n&#x27;</span> <span class="c-string">&quot;$result&quot;</span> | sed -n <span class="c-string">&#x27;s/^RME Mute: //p&#x27;</span>)
+...
+level=<span class="c-var">$</span>(printf <span class="c-string">&#x27;%s\n&#x27;</span> <span class="c-string">&quot;$result&quot;</span> | sed -n <span class="c-string">&#x27;s/^RME Line Out: \([-0-9.]*\) dB$/\1/p&#x27;</span>)</code></pre></div><div class="code-wrap code-good"><span class="code-label">DESPUÉS</span><pre><code><span class="c-comment"># una sola pasada</span>
+<span class="c-kw">eval</span> <span class="c-string">&quot;$(printf &#x27;%s\n&#x27; &quot;</span><span class="c-var">$result</span><span class="c-string">&quot; | sed -n \
+  -e &#x27;s/^RME Mute: \(.*\)$/mute=&quot;</span>\1<span class="c-string">&quot;/p&#x27; \
+  -e &#x27;s/^RME Line Out: \([-0-9.]*\) dB$/level=&quot;</span>\1<span class="c-string">&quot;/p&#x27;)&quot;</span></code></pre></div></div>
+        </article>
+  </section>
+
+  
+  <section id="creativas">
+    <h2><span class="dot" style="background: #FFC821"></span>Sugerencias creativas</h2>
+    <p class="section-sub">Ideas no obvias para llevar el script al siguiente nivel.</p>
+    <div class="grid">
+      <article class="creative-card">
+        <div class="creative-head">
+          <span class="bulb">✦</span>
+          <h3>Contrato de códigos de salida del binario</h3>
+          <span class="effort">esfuerzo: medio</span>
+        </div>
+        <p>Hoy el wrapper infiere qué pasó a partir del texto; con códigos de salida dedicados (0=ok, 10=techo, 11=lock, 12=sin DAC, 13=auto ref, 14=mute/dim) el wrapper podría decidir sin parsear y reservar el texto para mostrar. Además permitiría que futuras herramientas (binds de Hyprland, scripts de audit) reaccionen al estado sin duplicar la lógica de matching.</p>
+      </article>
+      <article class="creative-card">
+        <div class="creative-head">
+          <span class="bulb">✦</span>
+          <h3>Precaliento del binario en el arranque de sesión</h3>
+          <span class="effort">esfuerzo: bajo</span>
+        </div>
+        <p>La primera pulsación tras reiniciar paga la compilación (cc -O2) más el arranque de sesión MIDI: el doc ya documenta que &#x27;tras inactividad puede ser mayor&#x27;. Un `ExecStartPre` o un `systemd --user` oneshot que compile al login (reusando el mismo flock) deja la primera tecla tan ágil como el resto. El doble chequeo del wrapper ya hace el patrón idempotente y seguro.</p>
+      </article>
+      <article class="creative-card">
+        <div class="creative-head">
+          <span class="bulb">✦</span>
+          <h3>Función auxiliar osd_call en el wrapper</h3>
+          <span class="effort">esfuerzo: bajo</span>
+        </div>
+        <p>El patrón `&quot;$base/rme-osd&quot; X ... &gt;/dev/null 2&gt;&amp;1 &amp;` se repite cuatro veces. Una función `osd() { &quot;$base/rme-osd&quot; &quot;$@&quot; &gt;/dev/null 2&gt;&amp;1 &amp; }` reduciría el script a la mitad de ruido y garantizaría que cualquier aviso futuro (p. ej. el de fallo de compilación) use el mismo camino silencioso y en segundo plano.</p>
+      </article>
+      <article class="creative-card">
+        <div class="creative-head">
+          <span class="bulb">✦</span>
+          <h3>Modo de diagnóstico RME_VOLUME_DEBUG</h3>
+          <span class="effort">esfuerzo: bajo</span>
+        </div>
+        <p>El doc mide latencias de 162-164 ms y advierte que tras inactividad puede ser mayor. Un `RME_VOLUME_DEBUG=1` en el wrapper que registre a `$cache/last-run.log` el comando, la salida cruda (incluido stderr por separado) y el tiempo con `date +%s%N` daría datos reales para afinar el umbral de 750 ms y diagnosticar el caso &#x27;Pausa técnica&#x27; cuando ocurra, sin tocar el binario.</p>
+      </article>
+      <article class="creative-card">
+        <div class="creative-head">
+          <span class="bulb">✦</span>
+          <h3>Passthrough de los modos check-* al help de Hyprland</h3>
+          <span class="effort">esfuerzo: bajo</span>
+        </div>
+        <p>El doc lista `check-up`, `check-down5`, etc., pero el wrapper no los distingue: llegan al binario tal cual, lo cual es correcto. Exponerlos explícitamente en el `case` con un comentario (&#x27;no disparan OSD: son simulación&#x27;) evita que alguien añada el pulso de quickshell a los check por error y documenta en el código lo que hoy sólo vive en el .md.</p>
+      </article></div>
+  </section>
+  
+  <section id="puntos-ciegos">
+    <h2><span class="dot" style="background: #FF3300"></span>Puntos ciegos</h2>
+    <p class="section-sub">Riesgos que ni shellcheck ni una lectura rápida detectan.</p>
+    <div class="grid">
+      <article class="blind-card">
+        <div class="blind-head">
+          <span class="eye">◉</span>
+          <h3>PATH degradado al compilar en sesiones no interactivas</h3>
+        </div>
+        <p><strong class="risk-label">Riesgo:</strong> El wrapper depende de `cc` y `flock` del PATH. Si algún día se invoca desde un entorno con PATH mínimo (bind de Hyprland con entorno recortado, systemd --user, ssh remoto), `cc` puede no encontrarse y el fallo se confunde con el caso de compilación rota: la tecla muere silenciosamente.</p>
+        <p><strong class="mit-label">Mitigación:</strong> Al principio del script, verificar `command -v cc &gt;/dev/null || { aviso; exit 1; }` y, en el precaliento sugerido, usar rutas absolutas (/usr/bin/cc, /usr/bin/flock).</p>
+      </article>
+      <article class="blind-card">
+        <div class="blind-head">
+          <span class="eye">◉</span>
+          <h3>Primera tecla concurrente tras tocar rme-volume.c</h3>
+        </div>
+        <p><strong class="risk-label">Riesgo:</strong> Si dos pulsaciones llegan casi juntas justo después de editar el .c, ambas entran al if exterior; una gana el flock y compila, la otra espera. Correcto, pero la segunda bloquea en `flock 9` sin timeout: si cc se cuelga (disco lleno, OOM), la segunda tecla queda congelada indefinidamente en lugar de degradar.</p>
+        <p><strong class="mit-label">Mitigación:</strong> Usar `flock -w 10 9` en el subshell y, al expirar, decidir: usar el binario existente si hay uno, o salir con el aviso de compilación.</p>
+      </article>
+      <article class="blind-card">
+        <div class="blind-head">
+          <span class="eye">◉</span>
+          <h3>El pulso de quickshell se lanza antes de saber si el DAC responde</h3>
+        </div>
+        <p><strong class="risk-label">Riesgo:</strong> El `quickshell ipc ... call rme pulse &amp;` de la línea 19 dispara el OSD en cada tecla up/down aunque el controlador luego falle (DAC desconectado, lock). El usuario ve la barra aparecer y desaparecer, y sólo después el aviso de error: dos renderizados para una tecla que no hizo nada.</p>
+        <p><strong class="mit-label">Mitigación:</strong> Aceptar el trade-off si es intencional (feedback inmediato), o mover el pulso a después de leer `result` y condicionarlo al éxito; el comentario del script sugiere que es deliberado, pero conviene dejarlo documentado en el código.</p>
+      </article>
+      <article class="blind-card">
+        <div class="blind-head">
+          <span class="eye">◉</span>
+          <h3>Disco lleno durante la compilación</h3>
+        </div>
+        <p><strong class="risk-label">Riesgo:</strong> `cc -o control.new` en ~/.cache con el disco al límite puede dejar un `control.new` truncado. El `mv` posterior fallaría y, con la mitigación actual inexistente, `set -e` aborta; en el próximo intento el `cc` de nuevo sobrescribe control.new, así que el estado se recupera solo, pero entre medias el binario viejo sigue en uso sin nadie saber que el .c ya no corresponde.</p>
+        <p><strong class="mit-label">Mitigación:</strong> En el bloque de compilación, `cc ... || { rm -f control.new; exit 1; }` (ya propuesto en hallazgos) y comprobar espacio libre sólo si se quiere ser exhaustivo; lo esencial es no dejar el .new parcial y avisar.</p>
+      </article>
+      <article class="blind-card">
+        <div class="blind-head">
+          <span class="eye">◉</span>
+          <h3>El .md promete un socket en /run/user/UID pero el wrapper no lo verifica</h3>
+        </div>
+        <p><strong class="risk-label">Riesgo:</strong> rme-volume.md documenta el socket privado `/run/user/UID/rme-volume-v2.sock` como parte del diseño. Si XDG_RUNTIME_DIR apunta a un directorio inexistente (sesión rota, login headless por ssh) o el UID cambia de contexto, el binario puede fallar por un motivo distinto de &#x27;DAC no conectado&#x27;, y el aviso del OSD dirá &#x27;🔌 RME fuera de escena&#x27;, enviando al usuario a revisar el cable USB cuando el problema es el runtime dir.</p>
+        <p><strong class="mit-label">Mitigación:</strong> Hacer que el binario distinga &#x27;no hay socket/session runtime&#x27; de &#x27;DAC ausente&#x27; (otro código de salida), o que el wrapper compruebe `[ -d &quot;${XDG_RUNTIME_DIR:-/run/user/$(id -u)}&quot; ]` antes de llamar al binario y avise en consecuencia.</p>
+      </article></div>
+  </section>
+  
+  <section id="checklist">
+    <h2><span class="dot" style="background: #FF4E00"></span>Checklist rápida</h2>
+    <ul class="checklist"><li class="done"><span class="check">✓</span>Shebang correcto para dash (#!/bin/sh con sintaxis POSIX)</li><li class="done"><span class="check">✓</span>set -eu presente y sin comandos que lo despistan</li><li class="done"><span class="check">✓</span>shellcheck sin hallazgos (verificado con -f json)</li><li class="done"><span class="check">✓</span>Todas las variables entrecomilladas, incluso en contextos de ruta</li><li class="done"><span class="check">✓</span>Compilación con doble chequeo TOCTOU bajo flock</li><li class="done"><span class="check">✓</span>Sin eval, curl|bash, credenciales ni rm -rf sobre variables</li><li class=""><span class="check">☐</span>Separar stderr del binario de control antes de parsear</li><li class=""><span class="check">☐</span>Degradar con OSD si la recompilación falla en vez de abortar en silencio</li><li class=""><span class="check">☐</span>Derivar base desde la ubicación del script</li><li class=""><span class="check">☐</span>Tokens de error legibles por máquina desde el binario C</li><li class=""><span class="check">☐</span>Endurecer la validación numérica de rme-osd</li><li class=""><span class="check">☐</span>Timeout al flock de compilación</li></ul>
+  </section>
+</main>
+
+<footer>
+  Generado por <span class="brand">script-reviewer</span> · análisis con shellcheck + revisión del agente
+</footer>
+</body>
+</html>

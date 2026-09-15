@@ -1,0 +1,7 @@
+[General]
+theme=WinSur-dark
+
+[Applications]
+KvGnomeDark=polkit-kde-authentication-agent-1
+DolphinAmber=dolphin
+

@@ -1,0 +1,103 @@
+# Fluid Fire — btop theme
+# Basado en la paleta del wallpaper "Abstract Orange Yellow Fluid Waves"
+# Negro #0a0a0c · Amarillo #ffc61a · Naranja #ff7a1f · Rojo-naranja #ff3d00
+
+# Main background (negro del wallpaper)
+theme[main_bg]="#0a0a0c"
+
+# Main text color
+theme[main_fg]="#ffb35c"
+
+# Title color for boxes
+theme[title]="#ffc61a"
+
+# Highlight color for keyboard shortcuts
+theme[hi_fg]="#ffe14d"
+
+# Background color of selected item in processes box
+theme[selected_bg]="#ff6d1f"
+
+# Foreground color of selected item in processes box
+theme[selected_fg]="#0a0a0c"
+
+# Color of inactive/disabled text
+theme[inactive_fg]="#553b16"
+
+# Misc colors for processes box including mini cpu graphs, details memory graph and details status text
+theme[proc_misc]="#ffa51f"
+
+# Cpu box outline color
+theme[cpu_box]="#ff8c1f"
+
+# Memory/disks box outline color
+theme[mem_box]="#ffa51f"
+
+# Net up/down box outline color
+theme[net_box]="#ff7a1f"
+
+# Processes box outline color
+theme[proc_box]="#ff9e3d"
+
+# Box divider line and small boxes line color
+theme[div_line]="#33240e"
+
+# Background of meters (bar showing current value)
+theme[meter_bg]="#221609"
+
+# Text color of graph/meter values
+theme[graph_text]="#ffd9a0"
+
+# Temperature graph colors (amarillo -> naranja -> rojo)
+theme[temp_start]="#ffc61a"
+theme[temp_mid]="#ff8c1f"
+theme[temp_end]="#ff3d00"
+
+# CPU graph colors
+theme[cpu_start]="#ffc61a"
+theme[cpu_mid]="#ff7a1f"
+theme[cpu_end]="#ff3d00"
+
+# Mem/Disk free meter
+theme[free_start]="#ffc61a"
+theme[free_mid]="#ffd95c"
+theme[free_end]="#ffe14d"
+
+# Mem/Disk cached meter
+theme[cached_start]="#ff9e3d"
+theme[cached_mid]="#ff8c2f"
+theme[cached_end]="#ff7a1f"
+
+# Mem/Disk available meter
+theme[available_start]="#ffb340"
+theme[available_mid]="#ff9e3d"
+theme[available_end]="#ff8c1f"
+
+# Mem/Disk used meter
+theme[used_start]="#ff5c14"
+theme[used_mid]="#ff4a08"
+theme[used_end]="#ff3d00"
+
+# Download graph colors
+theme[download_start]="#ffc61a"
+theme[download_mid]="#ff9e3d"
+theme[download_end]="#ff7a1f"
+
+# Upload graph colors
+theme[upload_start]="#ff7a1f"
+theme[upload_mid]="#ff5c14"
+theme[upload_end]="#ff3d00"
+
+# Per-process CPU usage graph colors
+theme[process_start]="#ffc61a"
+theme[process_mid]="#ff7a1f"
+theme[process_end]="#ff3d00"
+
+# Process list banner attributes
+theme[proc_pause_bg]="#553b16"
+theme[proc_follow_bg]="#ff6d1f"
+theme[proc_banner_bg]="#ffc61a"
+theme[proc_banner_fg]="#0a0a0c"
+
+# Process following attributes
+theme[followed_bg]="#ff6d1f"
+theme[followed_fg]="#0a0a0c"

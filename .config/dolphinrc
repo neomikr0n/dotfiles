@@ -1,0 +1,34 @@
+[Baloo KEditCommentDialog]
+3440x1440 screen: Window-Maximized=true
+
+[General]
+AutoExpandFolders=true
+EditableUrl=true
+FilterBar=true
+OpenExternallyCalledFolderInNewTab=false
+ShowCopyMoveMenu=true
+ShowFullPath=true
+ShowFullPathInTitlebar=true
+ShowToolTips=true
+ShowZoomSlider=false
+Version=202
+ViewPropsTimestamp=2024,11,29,19,12,54.735
+
+[IconsMode]
+PreviewSize=256
+
+[KFileDialog Settings]
+Places Icons Auto-resize=false
+Places Icons Static Size=22
+
+[PreviewSettings]
+Plugins=appimagethumbnail,blenderthumbnail,cursorthumbnail,mobithumbnail,audiothumbnail,fontthumbnail,ffmpegthumbs,djvuthumbnail,gsthumbnail,rawthumbnail,directorythumbnail,kraorathumbnail,opendocumentthumbnail,windowsexethumbnail,avif,gdk-pixbuf-thumbnailer,jxl,imagethumbnail,windowsimagethumbnail,exrthumbnail,jpegthumbnail,svgthumbnail,comicbookthumbnail,ebookthumbnail
+
+[Search]
+What=Content
+
+[VersionControl]
+enabledPlugins=Dropbox
+
+[ViewPropertiesDialog]
+3440x1440 screen: Window-Maximized=true

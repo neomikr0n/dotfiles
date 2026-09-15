@@ -1,0 +1,642 @@
+-- ============================================================
+-- hyprland.lua — config unificada (hyprland.conf + n30.conf)
+-- Conflictos resueltos con la config de n30.conf,
+-- EXCEPTO Ctrl+Alt+Del -> processlist de DMS (no reboot).
+-- ============================================================
+
+-- ==================
+-- VARIABLES
+-- ==================
+local mainMod  = "SUPER"
+local files    = "dolphin"
+local browser  = "zen-browser"
+local whatsapp = "zapzap"
+local music    = "cider"
+local term     = "kitty"
+local editor   = "code"
+local soundsDir  = os.getenv("HOME") .. "/dotfiles/share/sounds/"
+local scriptsDir = os.getenv("HOME") .. "/dotfiles/share/scripts/"
+
+-- ==================
+-- MONITORS
+-- ==================
+-- Regla comodín (de hyprland.conf) + DP-2 específico (de n30.conf)
+hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" })
+hl.monitor({
+    output   = "DP-2",
+    mode     = "3440x1440@144.05",
+    position = "auto",
+    scale    = 1,
+    bitdepth = 10,
+})
+-- monitor = eDP-2, 2560x1600@239.998993, 2560x0, 1, vrr, 1  (comentado en el .conf original)
+
+-- ==================
+-- ENV
+-- ==================
+hl.env("GDK_BACKEND", "wayland,x11")
+hl.env("QT_QPA_PLATFORM", "wayland;xcb")
+hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
+hl.env("QT_STYLE_OVERRIDE", "kvantum")
+hl.env("SDL_VIDEODRIVER", "wayland")
+hl.env("CLUTTER_BACKEND", "wayland")
+hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
+hl.env("XCURSOR_THEME", "Bibata-Modern-Amber")
+hl.env("HYPRCURSOR_THEME", "Bibata-Modern-Amber")
+hl.env("XCURSOR_SIZE", "24")
+hl.env("HYPRCURSOR_SIZE", "24")
+-- AMD RDNA 4 (mesa-git). Se quitó "vulkan-driver" (no es una env real).
+hl.env("MESA_LOADER_DRIVER_NAME", "radv")
+
+-- ==================
+-- CONFIG GENERAL
+-- ==================
+hl.config({
+    input = {
+        kb_layout          = "latam",
+        follow_mouse       = 1,
+        numlock_by_default = true,
+        sensitivity        = 0,
+        accel_profile      = "flat",
+    },
+
+    general = {
+        gaps_in            = 0,
+        gaps_out           = { 0, 0, 0, 0 },
+        border_size        = 2,
+        ["col.active_border"]  = "rgba(ffbf00ee)",   -- Ámbar vibrante
+        ["col.inactive_border"] = "rgba(ffff9c00)",  -- corregido (antes rgba(255,255,155,0), formato inválido)
+        layout             = "dwindle",
+    },
+
+    dwindle = { preserve_split = true },
+    master  = { mfact = 0.5 },
+
+    decoration = {
+        rounding          = 12,
+        active_opacity    = 1.0,
+        inactive_opacity  = 0.9,
+        shadow = {
+            enabled      = true,
+            range        = 30,
+            render_power = 5,
+            offset       = "0 5",       -- si Hyprland lo rechaza, probar { x = 0, y = 5 }
+            color        = 0x00000070,
+        },
+    },
+
+    animations = { enabled = true },
+
+    misc = {
+        disable_hyprland_logo      = true,
+        disable_splash_rendering   = true,
+        vrr                        = 2,
+        allow_session_lock_restore = true,
+        session_lock_xray          = true,
+    },
+
+    render = { direct_scanout = false },
+})
+
+-- ==================
+-- ANIMACIONES Y CURVAS
+-- ==================
+hl.curve("linear",        { type = "bezier", points = { { 0, 0 }, { 1, 1 } } })
+hl.curve("md3_standard",  { type = "bezier", points = { { 0.2, 0 }, { 0, 1 } } })
+hl.curve("md3_decel",     { type = "bezier", points = { { 0.05, 0.7 }, { 0.1, 1 } } })
+hl.curve("md3_accel",     { type = "bezier", points = { { 0.3, 0 }, { 0.8, 0.15 } } })
+hl.curve("overshot",      { type = "bezier", points = { { 0.05, 0.9 }, { 0.1, 1.1 } } })
+hl.curve("crazyshot",     { type = "bezier", points = { { 0.1, 1.5 }, { 0.76, 0.92 } } })
+hl.curve("hyprnostretch", { type = "bezier", points = { { 0.05, 0.9 }, { 0.1, 1.0 } } })
+hl.curve("fluent_decel",  { type = "bezier", points = { { 0.1, 1 }, { 0, 1 } } })
+hl.curve("easeInOutCirc", { type = "bezier", points = { { 0.85, 0 }, { 0.15, 1 } } })
+hl.curve("easeOutCirc",   { type = "bezier", points = { { 0, 0.55 }, { 0.45, 1 } } })
+hl.curve("easeOutExpo",   { type = "bezier", points = { { 0.16, 1 }, { 0.3, 1 } } })
+
+hl.animation({ leaf = "windows",         enabled = true, speed = 3,   bezier = "md3_decel", style = "popin 60%" })
+hl.animation({ leaf = "windowsIn",       enabled = true, speed = 3,   bezier = "default" })
+hl.animation({ leaf = "windowsOut",      enabled = true, speed = 3,   bezier = "default" })
+hl.animation({ leaf = "windowsMove",     enabled = true, speed = 4,   bezier = "default" })
+hl.animation({ leaf = "border",          enabled = true, speed = 10,  bezier = "default" })
+hl.animation({ leaf = "fade",            enabled = true, speed = 2.5, bezier = "md3_decel" })
+hl.animation({ leaf = "workspaces",      enabled = true, speed = 2,   bezier = "easeOutExpo", style = "slide" })
+hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 2,  bezier = "md3_decel", style = "slidevert" })
+
+-- ==================
+-- AUTOSTART (exec-once)
+-- ==================
+-- `exec` del .conf original: se re-ejecuta en cada reload.
+-- Se conserva el mismo comportamiento para wallpaper y auto-game-mode.
+local function wallpaperStart()
+    local cleanup = "pkill -TERM -x mpvpaper; pkill -TERM -x gslapper"
+    local mon = "$(hyprctl monitors -j | jq -r '.[0].name')"
+    local opts = "--hwdec=vaapi --loop-file=inf --gamma=-5 --contrast=88 --saturation=79 --brightness=1 --mute=yes --video-unscaled=no --panscan=1"
+    hl.exec_cmd(cleanup .. "; sleep 1; nohup mpvpaper -o \"" .. opts .. "\" " .. mon
+        .. " ~/dotfiles/share/wallpapers/yellowmatrix.mp4 > /dev/null 2>&1 & disown")
+end
+
+local function gameModeStart()
+    hl.exec_cmd(os.getenv("HOME") .. "/dotfiles/share/scripts/auto-game-mode.sh")
+end
+
+-- EN LA CONFIG LUA "hyprland.start" se dispara TAMBIÉN en cada reload,
+-- y re-ejecutaría todos los exec/timers (copyq duplicado comprobado el 17:23).
+-- Guarda con global: el estado de la VM de Lua persiste entre reloads,
+-- así que esto replica el verdadero "exec-once" (una vez por SESIÓN).
+if not _G.__n30_autostart_done then
+    _G.__n30_autostart_done = true
+    hl.on("hyprland.start", function()
+    -- Sesión / entorno (se ejecutan UNA vez; antes estaban duplicados en ambos .conf)
+    hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=Hyprland")
+    hl.exec_cmd("systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
+    hl.exec_cmd("systemctl --user mask xdg-desktop-portal-gnome")
+    hl.exec_cmd("/usr/bin/gnome-keyring-daemon --start --components=pkcs11,secrets,ssh")
+    -- cliphist: una sola instancia, guarda TODOS los tipos de contenido
+    -- (antes había dos: una aquí y otra text-only en n30.conf -> historial duplicado)
+    hl.exec_cmd("wl-paste --watch cliphist store")
+
+    -- Desktop shell
+    hl.exec_cmd("dms run")
+
+    -- Wallpaper engine (mpvpaper). Antes era `exec` (no exec-once):
+    -- se ejecutaba en cada reload. Se conserva igual: ver "config.reloaded" abajo.
+    wallpaperStart()
+    gameModeStart()
+
+    -- Apps con workspace destino
+    hl.exec_cmd(music, { workspace = "special silent" })
+    hl.exec_cmd(term .. " -e -o font_size=10 btop", { workspace = "special silent" })
+    hl.exec_cmd("copyq",  { workspace = "5 silent" })
+    hl.exec_cmd("ksnip",  { workspace = "5 silent" })
+    hl.exec_cmd("corectrl", { workspace = "5 silent" })
+    hl.exec_cmd("megasync", { workspace = "6 silent" })
+
+    -- Apps sin dependencia de red: secuencia fija
+    hl.timer(function() hl.exec_cmd(editor, { workspace = "1 silent" }) end, { timeout = 3000, type = "oneshot" })
+    hl.timer(function() hl.exec_cmd(files,  { workspace = "3 silent" }) end, { timeout = 5000, type = "oneshot" })
+
+    -- Apps que necesitan internet (zen, zapzap, steam): antes eran sleeps fijos y
+    -- si la red tardaba en subir, las apps pedían re-login/QR. Ahora esperan
+    -- conectividad REAL:
+    --   * un único proceso en background hace ping y toca un flag al conectar
+    --   * un timer de 1s lee el flag con io.open (lectura de archivo, no bloquea)
+    --   * al conectar, lanza escalonado (zen -> +2s zapzap -> +4s steam)
+    --   * sin internet a los 60s, lanza igual (gracia para sesión offline)
+    -- (bucle acotado a 120 intentos: si nunca hay red, el proceso se muere solo;
+    --  el lado Lua lanza igual a los 60s por su cuenta)
+    local onlineFlag = (os.getenv("XDG_RUNTIME_DIR") or "/run/user/1000") .. "/hypr-online"
+    hl.exec_cmd("bash -c 'rm -f " .. onlineFlag
+        .. "; for i in $(seq 1 120); do ping -c1 -W2 1.1.1.1 >/dev/null 2>&1 && { touch " .. onlineFlag .. "; exit 0; }; sleep 1; done'")
+
+    local launched = false
+    local waited = 0
+    local poll = hl.timer(function()
+        if launched then return end
+        local f = io.open(onlineFlag, "r")
+        if f then
+            f:close()
+        else
+            waited = waited + 1
+            if waited < 60 then return end
+        end
+        launched = true
+        pcall(function() poll:set_enabled(false) end)
+        hl.exec_cmd(browser, { workspace = "2 silent" })
+        hl.timer(function()
+            hl.exec_cmd("env QT_QUICK_BACKEND=software " .. whatsapp, { workspace = "1 silent" })
+        end, { timeout = 2000, type = "oneshot" })
+        hl.timer(function()
+            hl.exec_cmd("steam", { workspace = "1 silent" })
+            hl.timer(function()
+                hl.dispatch(hl.dsp.window.move({ workspace = 1, follow = false, window = "class:steam" }))
+            end, { timeout = 5000, type = "oneshot" })
+        end, { timeout = 4000, type = "oneshot" })
+    end, { timeout = 1000, type = "repeat" })
+
+    hl.exec_cmd("bash -c \"sleep 10; rclone mount 'koofr:/koofr/Autosync' /home/n30/Autosync/ --vfs-cache-mode full &\"")
+    hl.exec_cmd("ddccontrol -r 0x10 -w 100 dev:/dev/i2c-8")
+
+    -- Scripts varios
+    hl.exec_cmd(scriptsDir .. "mangohud-song.sh")
+    hl.exec_cmd(scriptsDir .. "genymotion-open.sh")
+    hl.exec_cmd("env CHATGPT_PET_WIDTH=320 CHATGPT_PET_HEIGHT=320 " .. scriptsDir .. "chatgpt-open")
+
+    hl.dispatch(hl.dsp.focus({ workspace = 2 }))
+end)
+end
+
+hl.on("config.reloaded", function()
+    wallpaperStart()
+    gameModeStart()
+end)
+
+-- ==================
+-- ZOOM DEL CURSOR
+-- ==================
+-- Antes: 8 binds que spawneaban hyprctl + jq por pulsación.
+-- Ahora: estado nativo en Lua, sin procesos externos.
+local function zoomBy(factor)
+    local v = tonumber(hl.get_config("cursor.zoom_factor")) or 1
+    local nv = v * factor
+    if nv < 1 then nv = 1 end
+    hl.config({ cursor = { zoom_factor = nv } })
+end
+local function zoomReset()
+    hl.config({ cursor = { zoom_factor = 1 } })
+end
+
+-- ==================
+-- KEYBINDS
+-- ==================
+
+-- === Application Launchers ===
+hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(term))
+hl.bind(mainMod .. " + space", hl.dsp.exec_cmd("dms ipc call spotlight toggle"))
+hl.bind(mainMod .. " + Tab", hl.dsp.exec_cmd("dms ipc call hypr toggleOverview"))
+hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("dms ipc call clipboard toggle"))
+hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("dms ipc call processlist focusOrToggle"))
+hl.bind(mainMod .. " + comma", hl.dsp.exec_cmd("dms ipc call settings focusOrToggle"))
+hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("dms ipc call notifications toggle"))
+hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("dms ipc call notepad toggle"))
+hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("dms ipc call dankdash wallpaper"))
+hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("dms ipc call bar toggle index 0"))
+hl.bind(mainMod .. " + CTRL + Return", hl.dsp.exec_cmd("dms ipc call spotlight toggle"))
+
+-- === Cheat sheet ===
+hl.bind(mainMod .. " + SHIFT + Slash", hl.dsp.exec_cmd("dms ipc call keybinds toggle hyprland"))
+
+-- === Security ===
+hl.bind(mainMod .. " + ALT + L", hl.dsp.exec_cmd("dms ipc call lock lock"))
+hl.bind(mainMod .. " + L", hl.dsp.exec_cmd(scriptsDir .. "screenlock.sh"))  -- n30.conf (pisaba el movefocus de hyprland.conf)
+hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exit())  -- sin confirmación (igual que el .conf)
+
+-- Ctrl+Alt+Del: decisión explícita -> processlist de DMS (antes reboot en n30.conf)
+hl.bind("CTRL + ALT + Delete", hl.dsp.exec_cmd("dms ipc call processlist focusOrToggle"))
+
+-- === Screenshots ===
+hl.bind("Print", hl.dsp.exec_cmd("dms screenshot"))
+hl.bind("CTRL + Print", hl.dsp.exec_cmd("dms screenshot full"))
+hl.bind("ALT + Print", hl.dsp.exec_cmd("dms screenshot window"))
+hl.bind("Shift_R", hl.dsp.exec_cmd("dms screenshot region --filename ss_$(date +%Y-%m-%d_%H-%M_%S)_garuda.png")) -- sin modificador (Shift_R ES la tecla)
+hl.bind("CTRL + Shift_R", hl.dsp.exec_cmd("dms screenshot full"))
+hl.bind("ALT + SHIFT + Tab", hl.dsp.exec_cmd("pkill -SIGUSR1 scran"))
+
+-- === Audio (RME) ===
+hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd(scriptsDir .. "rme-volume up"), { repeating = true })
+hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd(scriptsDir .. "rme-volume down"), { repeating = true })
+hl.bind("SHIFT + XF86AudioRaiseVolume", hl.dsp.exec_cmd(scriptsDir .. "rme-volume up5"))
+hl.bind("SHIFT + XF86AudioLowerVolume", hl.dsp.exec_cmd(scriptsDir .. "rme-volume down5"))
+hl.bind("XF86AudioMute", hl.dsp.exec_cmd(scriptsDir .. "rme-volume mute"))
+hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("dms ipc call audio micmute"), { locked = true })
+hl.bind("Caps_Lock", hl.dsp.exec_cmd(scriptsDir .. "swayosd-on-demand --caps-lock"), { release = true })
+
+-- === Brightness ===
+hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("dms ipc call brightness increment 5 \"\""), { repeating = true, locked = true })
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("dms ipc call brightness decrement 5 \"\""), { repeating = true, locked = true })
+
+-- Monitor externo (ddcutil + blue light filter) — eran bindr (release)
+hl.bind(mainMod .. " + Control_R + F1",
+    hl.dsp.exec_cmd("ddccontrol -r 0x10 -w 10 dev:/dev/i2c-8 && " .. scriptsDir .. "swayosd-on-demand --brightness lower & hyprshade toggle blue-light-filter"),
+    { release = true })
+hl.bind(mainMod .. " + Control_R + F2",
+    hl.dsp.exec_cmd("ddccontrol -r 0x10 -w 100 dev:/dev/i2c-8 && " .. scriptsDir .. "swayosd-on-demand --brightness raise & hyprshade toggle blue-light-filter"),
+    { release = true })
+
+-- === Window Management ===
+hl.bind(mainMod .. " + Q", hl.dsp.window.close())
+hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen({ mode = "maximized" }))          -- antes fullscreen 1
+hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen({ mode = "fullscreen" })) -- antes fullscreen 0
+hl.bind(mainMod .. " + SHIFT + T", hl.dsp.window.float({ action = "toggle" }))
+hl.bind(mainMod .. " + G", hl.dsp.group.toggle())
+
+-- === Focus Navigation ===
+hl.bind(mainMod .. " + left", hl.dsp.focus({ direction = "l" }))
+hl.bind(mainMod .. " + down", hl.dsp.focus({ direction = "d" }))
+hl.bind(mainMod .. " + up", hl.dsp.focus({ direction = "u" }))
+hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "r" }))
+hl.bind(mainMod .. " + H", hl.dsp.focus({ direction = "l" }))
+hl.bind(mainMod .. " + J", hl.dsp.focus({ direction = "d" }))
+hl.bind(mainMod .. " + K", hl.dsp.focus({ direction = "u" }))
+-- (mainMod+L lo ocupa screenlock.sh; ver arriba)
+
+-- === Window Movement ===
+hl.bind(mainMod .. " + SHIFT + CTRL + left", hl.dsp.window.move({ direction = "l" }))
+hl.bind(mainMod .. " + SHIFT + CTRL + down", hl.dsp.window.move({ direction = "d" }))
+hl.bind(mainMod .. " + SHIFT + CTRL + up", hl.dsp.window.move({ direction = "u" }))
+hl.bind(mainMod .. " + SHIFT + CTRL + right", hl.dsp.window.move({ direction = "r" }))
+hl.bind(mainMod .. " + SHIFT + CTRL + H", hl.dsp.window.move({ direction = "l" }))
+hl.bind(mainMod .. " + SHIFT + CTRL + J", hl.dsp.window.move({ direction = "d" }))
+hl.bind(mainMod .. " + SHIFT + K", hl.dsp.window.move({ direction = "u" }))
+hl.bind(mainMod .. " + SHIFT + L", hl.dsp.window.move({ direction = "r" }))
+
+-- === Column Navigation ===
+hl.bind(mainMod .. " + Home", hl.dsp.focus({ window = "first" }))
+hl.bind(mainMod .. " + End", hl.dsp.focus({ window = "last" }))
+
+-- === Monitor Navigation ===
+-- left/right los ocupaba el cambio de workspace con sonido (n30.conf); up/down y HJKL siguen aquí
+hl.bind(mainMod .. " + CTRL + up", hl.dsp.focus({ monitor = "u" }))
+hl.bind(mainMod .. " + CTRL + down", hl.dsp.focus({ monitor = "d" }))
+hl.bind(mainMod .. " + CTRL + H", hl.dsp.focus({ monitor = "l" }))
+hl.bind(mainMod .. " + CTRL + J", hl.dsp.focus({ monitor = "d" }))
+hl.bind(mainMod .. " + CTRL + K", hl.dsp.focus({ monitor = "u" }))
+hl.bind(mainMod .. " + CTRL + L", hl.dsp.focus({ monitor = "r" }))
+
+-- === Move to Monitor ===
+-- OJO: en el .conf original estas teclas (left/down/up/right/H/J) también estaban
+-- en "Window Movement" (movewindow l/d/u/r), así que ambos dispatchers disparaban.
+-- Se dejan solo las de dirección (las mon: eran redundantes con una sola fila
+-- de monitores); descomentar si se quiere el comportamiento literal del .conf.
+-- hl.bind(mainMod .. " + SHIFT + CTRL + left", hl.dsp.window.move({ monitor = "l" }))
+-- hl.bind(mainMod .. " + SHIFT + CTRL + down", hl.dsp.window.move({ monitor = "d" }))
+-- hl.bind(mainMod .. " + SHIFT + CTRL + up", hl.dsp.window.move({ monitor = "u" }))
+-- hl.bind(mainMod .. " + SHIFT + CTRL + right", hl.dsp.window.move({ monitor = "r" }))
+hl.bind(mainMod .. " + SHIFT + CTRL + K", hl.dsp.window.move({ monitor = "u" }))
+hl.bind(mainMod .. " + SHIFT + CTRL + L", hl.dsp.window.move({ monitor = "r" }))
+
+-- === Workspace Navigation ===
+hl.bind(mainMod .. " + Page_Down", hl.dsp.focus({ workspace = "e+1" }))
+hl.bind(mainMod .. " + Page_Up", hl.dsp.focus({ workspace = "e-1" }))
+hl.bind(mainMod .. " + U", hl.dsp.focus({ workspace = "e+1" }))
+hl.bind(mainMod .. " + I", hl.dsp.focus({ workspace = "e-1" }))
+-- left/right con sonido (n30.conf ganaba en el .conf)
+hl.bind(mainMod .. " + CTRL + left", function()
+    hl.dispatch(hl.dsp.focus({ workspace = "e-1" }))
+    hl.exec_cmd("play -v 0.1 \"" .. soundsDir .. "gravity/change_workspace.wav\"")
+end)
+hl.bind(mainMod .. " + CTRL + right", function()
+    hl.dispatch(hl.dsp.focus({ workspace = "e+1" }))
+    hl.exec_cmd("play -v 0.1 \"" .. soundsDir .. "gravity/change_workspace.wav\"")
+end)
+hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
+-- mouse_up era zoom-out en n30.conf; ver sección zoom
+
+-- === Move to Workspace ===
+hl.bind(mainMod .. " + CTRL + down", hl.dsp.window.move({ workspace = "e+1" }))
+hl.bind(mainMod .. " + CTRL + up", hl.dsp.window.move({ workspace = "e-1" }))
+hl.bind(mainMod .. " + CTRL + U", hl.dsp.window.move({ workspace = "e+1" }))
+hl.bind(mainMod .. " + CTRL + I", hl.dsp.window.move({ workspace = "e-1" }))
+hl.bind(mainMod .. " + SHIFT + Page_Down", hl.dsp.window.move({ workspace = "e+1" }))
+hl.bind(mainMod .. " + SHIFT + Page_Up", hl.dsp.window.move({ workspace = "e-1" }))
+hl.bind(mainMod .. " + SHIFT + U", hl.dsp.window.move({ workspace = "e+1" }))
+hl.bind(mainMod .. " + SHIFT + I", hl.dsp.window.move({ workspace = "e-1" }))
+hl.bind(mainMod .. " + CTRL + mouse_down", hl.dsp.window.move({ workspace = "e+1" }))
+hl.bind(mainMod .. " + CTRL + mouse_up", hl.dsp.window.move({ workspace = "e-1" }))
+
+-- === Numbered Workspaces (loops en vez de 19 binds) ===
+for i = 1, 9 do
+    hl.bind(mainMod .. " + " .. i, hl.dsp.focus({ workspace = i }))
+    hl.bind(mainMod .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
+    hl.bind("ALT + " .. i, hl.dsp.window.move({ workspace = i, follow = false }))
+end
+hl.bind("ALT + 0", hl.dsp.window.move({ workspace = 10, follow = false }))
+hl.bind("ALT + bar", hl.dsp.window.move({ workspace = "special", follow = false }))
+
+-- === Column Management ===
+hl.bind(mainMod .. " + bracketleft", hl.dsp.layout("preselect l"))
+hl.bind(mainMod .. " + bracketright", hl.dsp.layout("preselect r"))
+hl.bind(mainMod .. " + R", hl.dsp.layout("togglesplit"))
+hl.bind(mainMod .. " + CTRL + F", function() -- antes: resizeactive exact 100%
+    local m = hl.get_active_monitor()
+    local w = m and (m.width or m.widthInPixels or m.pixelWidth)
+    if w then
+        hl.dispatch(hl.dsp.window.resize({ x = w, y = 0, exact = true }))
+    end
+end)
+
+-- === Sizing ===
+-- antes: resizeactive ±10% (resize ya no acepta strings de %); 100px como las flechas
+-- repeating=true: en el .conf eran binde (se repetían al mantener pulsado)
+hl.bind(mainMod .. " + SHIFT + minus", hl.dsp.window.resize({ x = -100, y = 0, relative = true }), { repeating = true })
+hl.bind(mainMod .. " + SHIFT + equal", hl.dsp.window.resize({ x = 100, y = 0, relative = true }), { repeating = true })
+hl.bind(mainMod .. " + SHIFT + right", hl.dsp.window.resize({ x = 100, y = 0, relative = true }), { repeating = true })
+hl.bind(mainMod .. " + SHIFT + left", hl.dsp.window.resize({ x = -100, y = 0, relative = true }), { repeating = true })
+hl.bind(mainMod .. " + SHIFT + down", hl.dsp.window.resize({ x = 0, y = 100, relative = true }), { repeating = true })
+hl.bind(mainMod .. " + SHIFT + up", hl.dsp.window.resize({ x = 0, y = -100, relative = true }), { repeating = true })
+
+-- === Mouse: mover/redimensionar ===
+hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true, description = "Move window" })
+hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true, description = "Resize window" })
+hl.bind(mainMod .. " + code:20", hl.dsp.window.resize({ x = -100, y = 0, relative = true }),
+    { drag = true, description = "Expand window left" })
+hl.bind(mainMod .. " + code:21", hl.dsp.window.resize({ x = 100, y = 0, relative = true }),
+    { drag = true, description = "Shrink window left" })
+
+-- === Zoom del cursor (antes hyprctl+jq por pulsación) ===
+hl.bind(mainMod .. " + mouse_up", function() zoomBy(0.9) end)
+hl.bind(mainMod .. " + equal", function() zoomBy(1.1) end)
+hl.bind(mainMod .. " + minus", function() zoomBy(0.9) end)
+hl.bind(mainMod .. " + KP_ADD", function() zoomBy(1.1) end)
+hl.bind(mainMod .. " + KP_SUBTRACT", function() zoomBy(0.9) end)
+hl.bind(mainMod .. " + SHIFT + mouse_up", zoomReset)
+hl.bind(mainMod .. " + SHIFT + mouse_down", zoomReset)
+hl.bind(mainMod .. " + SHIFT + minus", zoomReset)
+hl.bind(mainMod .. " + SHIFT + KP_SUBTRACT", zoomReset)
+hl.bind(mainMod .. " + SHIFT + 0", zoomReset)
+
+-- === ALT+Tab ===
+hl.bind("ALT + Tab", function()
+    hl.dispatch(hl.dsp.window.cycle_next())
+    hl.dispatch(hl.dsp.window.alter_zorder({ mode = "top" }))
+end)
+
+-- === Pass (Awakened PoE Trade) ===
+hl.bind("SHIFT + space", hl.dsp.pass({ window = "class:^(awakened-poe-trade)$" }))
+hl.bind("CTRL + ALT + D", hl.dsp.pass({ window = "class:^(awakened-poe-trade)$" }))
+
+-- === Sistema ===
+hl.bind(mainMod .. " + SHIFT + P", hl.dsp.dpms({ action = "toggle" }))
+hl.bind(mainMod .. " + CTRL + ALT + W", hl.dsp.exec_cmd("killall mpvpaper"))
+hl.bind(mainMod .. " + CTRL + ALT + A", hl.dsp.exec_cmd("pkill -9 -i -f \"ArkAscended|ShooterGame\""))
+-- === Espacio especial con la tecla Super sola ===
+-- En el .conf era `bindr = $mainMod, $mainMod_L` y funcionaba por accidente:
+-- hyprlang expandía $mainMod_L -> "SUPER_L" (sustitución por prefijo).
+-- Aquí se escribe explícito: Super (como mod) + Super_L (tecla), al soltar.
+hl.bind(mainMod .. " + SUPER_L", hl.dsp.workspace.toggle_special("special"), { release = true })
+
+-- (los binds rotos con CTRLx sí se eliminaron: modificador inválido real)
+
+-- ==================
+-- WINDOW RULES
+-- ==================
+-- IMPORTANTE: se evalúan de arriba hacia abajo; la última coincidencia gana
+-- (las named rules se evalúan antes que las anónimas).
+
+-- Dimming global de ventanas inactivas no flotantes (de hyprland.conf).
+-- ESTA es la regla de EXCEPCIÓN de zen: class = "negative:^(zen)$" excluye a zen,
+-- por eso zen siempre está sin transparencia. DEBE ir ANTES de todas las reglas
+-- de apps con opacity: la última coincidencia gana y las específicas pisan esto.
+hl.window_rule({
+    name = "global-inactive-opacity",
+    match = { class = "negative:^(zen)$", float = false, focus = false },
+    opacity = "0.9 0.9",
+})
+
+-- Terminales
+hl.window_rule({ name = "wezterm-borderless", match = { class = "^(org\\.wezfurlong\\.wezterm)$" }, tile = true, border_size = 0 })
+hl.window_rule({ name = "alacritty-borderless", match = { class = "^(Alacritty)$" }, border_size = 0 })
+hl.window_rule({ name = "kitty", match = { class = "^(kitty)$" }, border_size = 0, opacity = "0.85 0.85" })
+hl.window_rule({ name = "ghostty", match = { class = "^(com\\.mitchellh\\.ghostty)$" }, border_size = 0, opacity = "0.80" })
+
+-- GNOME
+hl.window_rule({ name = "gnome-rounding", match = { class = "^(org\\.gnome\\.)" }, rounding = 12, border_size = 0 })
+hl.window_rule({ name = "gnome-control-tile", match = { class = "^(gnome-control-center)$" }, tile = true })
+hl.window_rule({ name = "gnome-calculator-float", match = { class = "^(org\\.gnome\\.Calculator)$" },
+    float = true, opacity = "0.40 0.20", size = { 700, 380 }, move = { 990, 990 } })
+hl.window_rule({ name = "nautilus-float", match = { class = "^(org\\.gnome\\.Nautilus)$" }, float = true })
+
+-- Calculadoras y utilidades
+hl.window_rule({ name = "calculator-dim", match = { class = "^Calculator$" }, opacity = "0.6 0.1" })
+hl.window_rule({ name = "kalk-opacity", match = { class = "^kalk$" }, opacity = "0.35 0.25" })
+hl.window_rule({ name = "kalk-float", match = { class = "^(org\\.kde\\.kalk.*)$" }, float = true, size = { 150, 276 }, move = { 2141, 121 } })
+hl.window_rule({ name = "galculator-float", match = { class = "^(galculator)$" }, float = true })
+hl.window_rule({ name = "blueman-float", match = { class = "^(blueman-manager)$" }, float = true })
+hl.window_rule({ name = "xdg-portal-float", match = { class = "^(xdg-desktop-portal)$" }, float = true })
+hl.window_rule({ name = "hyprland-dialog-float", match = { class = "^(hyprland-dialog)$" }, float = true, move = { 2900, 60 } })
+hl.window_rule({ name = "kde-dolphin-dim", match = { class = "^(org\\.kde\\.dolphin)$" }, opacity = "0.75 0.75" })
+hl.window_rule({ name = "dolphin-conflict-dialog", match = { class = "^(org\\.kde\\.dolphin)$", title = "^(Ya existe como carpeta — Dolphin)$" },
+    float = true, move = { 1450, 476 } })
+hl.window_rule({ name = "thunar-dim", match = { class = "^Thunar$" }, opacity = "0.70 0.70" })
+hl.window_rule({ name = "thunar-rename-dialog", match = { class = "^(Thunar)$", title = "^(Renombrar.*|Bulk Rename.*)$" },
+    float = true, center = true, size = { 700, 300 } })
+
+-- Navegadores
+-- NOTA zen/steam: zen SIEMPRE queda opaco y sin borde gracias a:
+--   1) esta regla (opacity "1.0 override" -> opacidad absoluta, no multiplicador), y
+--   2) la regla de excepción "global-inactive-opacity" (más arriba, antes de
+--      las reglas de apps), cuyo match
+--      usa class = "negative:^(zen)$" para EXCLUIR a zen del dimming global 0.9
+--      que sufren las demás ventanas no flotantes sin foco.
+-- Lo mismo aplica a los juegos de steam (steam_app), excluidos por su propia
+-- regla "steam-games" con opacity "1.0 override".
+hl.window_rule({ name = "zen-opaque", match = { class = "^(zen)$" }, border_size = 0, opacity = "1.0 override 1.0 override" })
+hl.window_rule({ name = "chromium-bar", match = { class = "^Chromium-browser$" }, float = true, pin = true,
+    move = { 2159, -8 }, border_size = 0, opacity = "0.95 0.95", rounding = 20, size = { 625, 56 } }) -- rounding 40: fuera del máximo (20)
+hl.window_rule({ name = "pip-float", match = { title = "^(Picture-in-Picture)$" },
+    float = true, pin = true, move = { 0, 885 }, size = { 982, 553 } })
+
+-- Mensajería / multimedia
+hl.window_rule({ name = "wasistlos", match = { class = "^(wasistlos)$" }, opacity = "0.75 0.65", workspace = "1 silent" })
+hl.window_rule({ name = "whatsapp-for-linux", match = { class = "^whatsapp-for-linux$" }, opacity = "0.70 0.50" })
+hl.window_rule({ name = "whatsie", match = { class = "^whatsie$" }, opacity = "0.80 0.80" })
+hl.window_rule({ name = "whatsapp-nativefier", match = { class = "^whatsapp-nativefier$" }, opacity = "0.85 0.85" })
+hl.window_rule({ name = "zapzap", match = { class = "^com\\.rtosta\\.zapzap$" }, opacity = "0.85 0.85" })
+hl.window_rule({ name = "discord-dim", match = { class = "^discord$" }, opacity = "0.85 0.85" })
+hl.window_rule({ name = "cider-dim", match = { class = "^(cider)$" }, opacity = "0.79 0.75" })
+hl.window_rule({ name = "tidal-dim", match = { class = "^tidal-hifi$" }, opacity = "0.50 0.50" })
+hl.window_rule({ name = "spotify-dim", match = { class = "^Spotify$" }, opacity = "0.95 0.85" })
+
+-- Herramientas
+hl.window_rule({ name = "easyeffects-dim", match = { class = "^easyeffects$" }, opacity = "0.55 0.55" })
+hl.window_rule({ name = "pavucontrol-tile", match = { class = "^(pavucontrol)$" }, tile = true })
+hl.window_rule({ name = "pavucontrol-dim", match = { class = "^pavucontrol$" }, opacity = "0.90 0.90" })
+hl.window_rule({ name = "nm-connection-tile", match = { class = "^(nm-connection-editor)$" }, tile = true })
+hl.window_rule({ name = "ktimer-dim", match = { class = "^ktimer$" }, opacity = "0.55 0.33" })
+hl.window_rule({ name = "konsole-dim", match = { class = "^konsole$" }, opacity = "0.25 0.11" })
+hl.window_rule({ name = "qdirstat-dim", match = { class = "^qdirstat$" }, opacity = "0.80 0.80" })
+hl.window_rule({ name = "qbittorrent-dim-1", match = { class = "^qBittorrent$" }, opacity = "0.80 0.80" })
+hl.window_rule({ name = "qbittorrent-dim-2", match = { class = "^org\\.qbittorrent\\.qBittorrent$" }, opacity = "0.80 0.80" })
+hl.window_rule({ name = "megasync-dim", match = { class = "^(nz\\.co\\.mega\\.megasync)$" }, opacity = "0.35 0.35" }) -- fusionada (antes x3)
+hl.window_rule({ name = "megasync-x11-dim", match = { class = "^(MEGAsync)$" }, opacity = "0.80 0.70" })
+hl.window_rule({ name = "luna-dim", match = { class = "^luna$" }, opacity = "0.80 0.80" })
+hl.window_rule({ name = "code-oss-dim", match = { class = "^code-oss$" }, opacity = "0.80 0.70" })
+hl.window_rule({ name = "code-dim", match = { class = "^code$" }, opacity = "0.90 0.75" })
+hl.window_rule({ name = "editor-dim", match = { class = "^(code)$" }, opacity = "0.70 0.70" })
+hl.window_rule({ name = "safeeyes", match = { class = "^io\\.github\\.slgobinath\\.SafeEyes$" }, float = true, pin = true,
+    move = { 1444, -11 }, border_size = 0, opacity = "0.85 0.85", rounding = 20, size = { 600, 122 } }) -- rounding 40: fuera del máximo (20)
+hl.window_rule({ name = "rofi-dim", match = { class = "^([Rr]ofi)$" }, opacity = "0.9 0.6" })
+hl.window_rule({ name = "satty", match = { class = "^com\\.gabm\\.satty$" },
+    float = true, center = true, pin = true, size = { "70%", "70%" } })
+hl.window_rule({ name = "dotfiles-floating", match = { class = "^dotfiles-floating$" }, move = { 2, 738 } })
+hl.window_rule({ name = "special-offers", match = { title = "^(.*Special Offers:.*)$" }, move = { 937, 60 } })
+hl.window_rule({ name = "float-by-title", match = { title = "(Extensi.*|.*Bitwarden.*|Open File)" }, float = true })
+hl.window_rule({ name = "bitwarden-panel", match = { title = "^(.*Bitwarden.*)$" }, size = { 420, 698 }, move = { 2345, 49 } })
+
+-- dynisland (zen y steam_app_2399830 quitados de esta alternación: ya cubiertos arriba)
+hl.window_rule({ name = "dynisland-borderless", match = { class = "^(dynisland|dynisland-daemon)$" }, border_size = 0 })
+hl.window_rule({ name = "dynisland-position", match = { class = "^dynisland$" }, move = { 3345, 49 } })
+
+-- Genymotion
+hl.window_rule({ name = "genymotion-dim", match = { title = "^(Genymotion)$" }, opacity = "0.35 0.35" })
+hl.window_rule({ name = "genymotion-gps", match = { title = "^(GPS - Genymotion)$" },
+    float = true, size = { 480, 330 }, move = { 637, 1094 }, opacity = "0.55 0.15" })
+
+-- Mascota de ChatGPT
+hl.window_rule({
+    name = "chatgpt-pet",
+    match = { class = "^(Chatgpt)$", title = "^(ChatGPT)$", xwayland = true, float = true },
+    pin = true,
+    size = { 333, 333 },
+    min_size = { 320, 320 },
+    max_size = { 320, 320 },
+    move = { 3332, 1016 },
+    suppress_event = "x11configurerequest",
+    no_initial_focus = true,
+    border_size = 0,
+    rounding = 0,
+    no_shadow = true,
+    no_blur = true,
+    opacity = "0.9 override 0.8 override",
+})
+
+-- CoreCtrl
+hl.window_rule({
+    name = "corectrl",
+    match = { class = "^(org\\.corectrl\\.CoreCtrl)$" },
+    float = true,
+    size = { 710, 910 },
+    move = { 2720, 520 },
+    workspace = "5 silent",
+    opacity = "0.55 0.35",
+})
+
+-- Steam
+-- Steam en sí (cliente): tile (n30.conf ganaba al float de hyprland.conf)
+hl.window_rule({ name = "steam-client-tiled", match = { class = "^(steam)$" }, tile = true })
+
+-- Juegos de steam: fusión de las reglas que había (opacity 0.99 steam_app_.*3
+-- estaba muerta porque la regla de abajo la pisaba; se eliminó).
+-- NOTA zen/steam: esta regla da opacity "1.0 override" -> opacidad absoluta,
+-- así los juegos quedan SIEMPRE opacos aunque exista el dimming global;
+-- la excepción equivalente para zen es el match negative:^(zen)$ de la regla
+-- "global-inactive-opacity" (más arriba, antes de las reglas de apps).
+hl.window_rule({
+    name = "steam-games",
+    match = { class = "^(steam_app.*)$" },
+    float = true,
+    fullscreen = true,
+    border_size = 0,
+    opacity = "1.0 override 1.0 override",
+    immediate = true,
+    no_blur = true,
+    no_shadow = true,
+    no_initial_focus = true,
+})
+
+-- Ark Survival Ascended (regla específica, se mantiene separada)
+hl.window_rule({
+    name = "ark-survival-ascended",
+    match = { class = "^(steam_app_2399830)$" },
+    immediate = true,
+    fullscreen = true,
+    stay_focused = true,
+    min_size = { 1, 1 },
+})
+
+-- Awakened PoE Trade
+hl.window_rule({
+    name = "awakened-poe-trade",
+    match = { class = "^awakened-poe-trade$" },
+    float = true,
+    no_blur = true,
+    no_shadow = true,
+    border_size = 0,
+})
+
+-- DMS / quickshell
+hl.window_rule({ name = "dms-shell-float", match = { class = "^(org\\.quickshell)$" }, float = true })
+
+-- ==================
+-- LAYER RULES
+-- ==================
+hl.layer_rule({ name = "quickshell-noanim", match = { namespace = "^(quickshell)$" }, no_anim = true })

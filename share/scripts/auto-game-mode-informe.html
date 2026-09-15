@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Informe de revisión — auto-game-mode.sh</title>
+<style>
+  :root {
+    --bg: #0A0A0A; --panel: #16181D; --panel2: #1E2126;
+    --orange: #FF4E00; --red-orange: #FF3300; --amber: #FFB300;
+    --yellow: #FFC821; --text: #F5F1EA; --muted: #9AA0A8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    line-height: 1.6; min-height: 100vh;
+  }
+  code, pre { font-family: "JetBrains Mono", "Fira Code", ui-monospace, monospace; }
+
+  /* ---------- Cabecera con ondas ---------- */
+  header.hero {
+    position: relative; overflow: hidden;
+    background: var(--bg); padding: 72px 32px 120px;
+  }
+  .waves { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hero-inner { position: relative; max-width: 980px; margin: 0 auto; }
+  .hero .kicker {
+    display: inline-block; font-size: 12px; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--yellow); margin-bottom: 10px;
+    font-weight: 700;
+  }
+  .hero h1 { font-size: clamp(28px, 4vw, 44px); font-weight: 800; line-height: 1.15; }
+  .hero h1 .accent { color: var(--orange); }
+  .hero .meta { margin-top: 14px; color: var(--muted); font-size: 14px; }
+  .hero .meta code {
+    background: rgba(255,255,255,.08); padding: 2px 8px; border-radius: 6px;
+    color: var(--amber); font-size: 13px;
+  }
+  .score-ring-wrap { margin-top: 34px; display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+  .score-ring {
+    position: relative; width: 132px; height: 132px; flex: none;
+    border-radius: 50%; background: rgba(10,10,10,.72);
+    box-shadow: 0 4px 24px rgba(0,0,0,.45); backdrop-filter: blur(2px);
+  }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring .track { stroke: rgba(255,255,255,.12); }
+  .score-ring .bar {
+    stroke: #FFB300; stroke-linecap: round;
+    filter: drop-shadow(0 0 8px #FFB30066);
+  }
+  .score-num {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .score-num b { font-size: 34px; color: #FFB300; }
+  .score-num span { font-size: 10px; letter-spacing: 2px; color: var(--muted); }
+  .chips { display: flex; gap: 12px; flex-wrap: wrap; }
+  .chip {
+    background: var(--panel); border: 1px solid color-mix(in srgb, var(--chip) 45%, transparent);
+    border-radius: 12px; padding: 10px 18px; min-width: 84px; text-align: center;
+  }
+  .chip-num { font-size: 24px; font-weight: 800; color: var(--chip); display: block; }
+  .chip-label { font-size: 10px; letter-spacing: 1.5px; color: var(--muted); }
+
+  /* ---------- Layout ---------- */
+  main { max-width: 980px; margin: -70px auto 0; padding: 0 24px 80px; position: relative; }
+  section { margin-top: 52px; }
+  section h2 {
+    font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px;
+    margin-bottom: 6px;
+  }
+  .dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex: none;
+    box-shadow: 0 0 10px currentColor; }
+  .section-sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+  .card-panel {
+    background: var(--panel); border: 1px solid rgba(255,255,255,.07);
+    border-radius: 16px; padding: 24px 26px;
+  }
+  .empty { color: var(--muted); font-style: italic; }
+
+  /* ---------- Hallazgos ---------- */
+  .finding {
+    background: var(--panel); border: 1px solid rgba(255,255,255,.07);
+    border-left: 4px solid var(--sev);
+    border-radius: 14px; padding: 20px 22px; margin-bottom: 18px;
+  }
+  .finding header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .sev-badge {
+    color: #0A0A0A; font-size: 10.5px; font-weight: 800; letter-spacing: 1.5px;
+    padding: 3px 10px; border-radius: 999px;
+  }
+  .line-badge, .cat-badge, .src-badge {
+    font-size: 11px; color: var(--muted); background: var(--panel2);
+    border: 1px solid rgba(255,255,255,.08); border-radius: 999px; padding: 2px 10px;
+  }
+  .src-badge { color: var(--amber); }
+  .finding h3 { font-size: 17px; margin-bottom: 6px; }
+  .finding p { color: #C9CDD3; font-size: 14.5px; margin-bottom: 8px; }
+  .finding .rec { color: var(--text); }
+  .finding .rec strong { color: var(--yellow); }
+  .code-pair { display: grid; gap: 10px; margin-top: 14px; }
+  @media (min-width: 800px) { .code-pair { grid-template-columns: 1fr 1fr; } }
+  .code-wrap {
+    background: #0D0E10; border-radius: 10px; overflow: auto;
+    border: 1px solid rgba(255,255,255,.06); position: relative;
+  }
+  .code-label {
+    position: absolute; top: 8px; right: 10px; font-size: 9px; letter-spacing: 2px;
+    font-weight: 800; padding: 2px 8px; border-radius: 999px;
+  }
+  .code-bad .code-label { background: #FF3300; color: #0A0A0A; }
+  .code-good .code-label { background: #FFB300; color: #0A0A0A; }
+  .code-bad { border-top: 2px solid #FF330055; }
+  .code-good { border-top: 2px solid #FFB30055; }
+  pre { padding: 30px 16px 14px; font-size: 13px; line-height: 1.55; overflow-x: auto; }
+  .c-comment { color: #6E7681; font-style: italic; }
+  .c-string { color: #FFC821; }
+  .c-var { color: #FF4E00; font-weight: 600; }
+  .c-kw { color: #FF3300; font-weight: 700; }
+
+  /* ---------- Sugerencias creativas ---------- */
+  .grid { display: grid; gap: 16px; }
+  @media (min-width: 800px) { .grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); } }
+  .creative-card {
+    background: linear-gradient(160deg, rgba(255,178,0,.10), rgba(255,78,0,.05));
+    border: 1px solid #FFB30044; border-radius: 14px; padding: 18px 20px;
+  }
+  .creative-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .bulb { color: var(--yellow); font-size: 18px; }
+  .creative-card h3 { font-size: 15.5px; }
+  .effort {
+    margin-left: auto; font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--yellow); border: 1px solid #FFB30066; border-radius: 999px; padding: 1px 9px;
+  }
+  .creative-card p { font-size: 14px; color: #C9CDD3; }
+
+  /* ---------- Puntos ciegos ---------- */
+  .blind-card {
+    background: linear-gradient(160deg, rgba(255,51,0,.09), rgba(255,78,0,.04));
+    border: 1px solid #FF330055; border-radius: 14px; padding: 18px 20px;
+  }
+  .blind-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+  .eye { color: var(--red-orange); font-size: 18px; }
+  .blind-card h3 { font-size: 15.5px; }
+  .blind-card p { font-size: 14px; color: #C9CDD3; margin-bottom: 6px; }
+  .risk-label { color: var(--red-orange); }
+  .mit-label { color: var(--amber); }
+
+  /* ---------- Checklist ---------- */
+  .checklist { list-style: none; }
+  .checklist li {
+    background: var(--panel); border: 1px solid rgba(255,255,255,.07);
+    border-radius: 10px; padding: 12px 16px; margin-bottom: 10px;
+    display: flex; gap: 12px; align-items: baseline; font-size: 14.5px;
+  }
+  .checklist li.done { opacity: .55; text-decoration: line-through; }
+  .check { color: var(--orange); font-weight: 800; flex: none; }
+
+  footer {
+    max-width: 980px; margin: 0 auto; padding: 0 24px 48px;
+    color: var(--muted); font-size: 12.5px; text-align: center;
+  }
+  footer .brand { color: var(--orange); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  
+<svg class="waves" viewBox="0 0 1440 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FF4E00"/><stop offset="1" stop-color="#FFB300"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#FF3300"/><stop offset="1" stop-color="#FF4E00"/>
+    </linearGradient>
+    <linearGradient id="g3" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFC821"/><stop offset="1" stop-color="#FFB300"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#g2)" opacity="0.55" d="M0,300 C240,120 420,420 720,260 C960,120 1180,380 1440,180 L1440,420 L0,420 Z"/>
+  <path fill="url(#g1)" d="M0,180 C260,340 520,40 780,160 C1040,280 1200,60 1440,220 L1440,420 L0,420 Z"/>
+  <path fill="url(#g3)" opacity="0.9" d="M0,360 C300,240 560,420 860,320 C1120,235 1260,360 1440,300 L1440,420 L0,420 Z"/>
+</svg>
+  <div class="hero-inner">
+    <span class="kicker">Informe de revisión de script</span>
+    <h1>auto-game-mode.sh <span class="accent">/ análisis y mejoras</span></h1>
+    <p class="meta"><code>/home/n30/dotfiles/share/scripts/auto-game-mode.sh</code> · 322 líneas · shell: bash</p>
+    <div class="score-ring-wrap">
+      <div class="score-ring">
+        <svg width="132" height="132" viewBox="0 0 120 120">
+          <circle class="track" cx="60" cy="60" r="52" fill="none" stroke-width="9"/>
+          <circle class="bar" cx="60" cy="60" r="52" fill="none" stroke-width="9"
+            stroke-dasharray="326.7" stroke-dashoffset="58.8"/>
+        </svg>
+        <div class="score-num"><b>82</b><span>/ 100</span></div>
+      </div>
+      <div class="chips"><div class="chip" style="--chip: #FF3300"><span class="chip-num">0</span><span class="chip-label">CRÍTICA</span></div><div class="chip" style="--chip: #FF4E00"><span class="chip-num">0</span><span class="chip-label">ALTA</span></div><div class="chip" style="--chip: #FFB300"><span class="chip-num">3</span><span class="chip-label">MEDIA</span></div><div class="chip" style="--chip: #FFC821"><span class="chip-num">4</span><span class="chip-label">BAJA</span></div><div class="chip" style="--chip: #7A828C"><span class="chip-num">2</span><span class="chip-label">INFO</span></div></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section id="resumen">
+    <h2><span class="dot" style="background: #FF4E00"></span>Resumen ejecutivo</h2>
+    <div class="card-panel">
+      <p>Script muy sólido: wrapper bash mínimo que delega en Python embebido, con shellcheck limpio, atomicidad en el estado, protección contra PID reuse vía starttime y limpieza en finally. Los hallazgos son de segundo orden: decodificación UTF-8 estricta de /proc que puede matar el monitor, falta de validación de state.json corrupto y algunas condiciones muertas o carreras estrechas.</p>
+    </div>
+  </section>
+
+  <section id="hallazgos">
+    <h2><span class="dot" style="background: #FF3300"></span>Hallazgos por severidad</h2>
+    <p class="section-sub">Ordenados de mayor a menor gravedad. Cada hallazgo incluye cómo corregirlo.</p>
+    
+        <article class="finding" style="--sev: #FFB300">
+          <header>
+            <span class="sev-badge" style="background: #FFB300">MEDIA</span>
+            <span class="line-badge">línea 75</span><span class="src-badge">agente</span>
+            <span class="cat-badge">robustez</span>
+          </header>
+          <h3>Lecturas de /proc con UTF-8 estricto pueden tumbar el monitor</h3>
+          <p>comm admite bytes arbitrarios (salvo &#x27;/&#x27; y NUL) y no está garantizado que sea UTF-8 válido. read_text() lanza UnicodeDecodeError (subclase de ValueError) al encontrar un proceso con nombre binario. En game_reasons el ValueError se captura, pero pause_wallpapers (líneas 131, 138, 150) y restore (línea 183) solo capturan ProcessLookupError/PermissionError/FileNotFoundError, así que un solo proceso con comm exótico mata el ciclo con traceback y termina el monitor.</p>
+          <p class="rec"><strong>Cómo mejorar:</strong> Leer como bytes y decodificar con reposición de errores: (path / &#x27;comm&#x27;).read_bytes().decode(&#x27;utf-8&#x27;, &#x27;replace&#x27;). Aplicarlo también en identity() para stat.</p>
+          <div class="code-pair"><div class="code-wrap code-bad"><span class="code-label">ANTES</span><pre><code>fields = (path / <span class="c-string">&#x27;stat&#x27;</span>).read_text().rsplit(<span class="c-string">&#x27;)&#x27;</span>, 1)[1].split()
+...
+comm = (path / <span class="c-string">&#x27;comm&#x27;</span>).read_text().strip()</code></pre></div><div class="code-wrap code-good"><span class="code-label">DESPUÉS</span><pre><code>stat_text = (path / <span class="c-string">&#x27;stat&#x27;</span>).read_bytes().decode(<span class="c-string">&#x27;utf-8&#x27;</span>, <span class="c-string">&#x27;replace&#x27;</span>)
+fields = stat_text.rsplit(<span class="c-string">&#x27;)&#x27;</span>, 1)[1].split()
+...
+comm = (path / <span class="c-string">&#x27;comm&#x27;</span>).read_bytes().decode(<span class="c-string">&#x27;utf-8&#x27;</span>, <span class="c-string">&#x27;replace&#x27;</span>).strip()</code></pre></div></div>
+        </article>
+
+        <article class="finding" style="--sev: #FFB300">
+          <header>
+            <span class="sev-badge" style="background: #FFB300">MEDIA</span>
+            <span class="line-badge">línea 119</span><span class="src-badge">agente</span>
+            <span class="cat-badge">robustez</span>
+          </header>
+          <h3>state.json corrupto bloquea la recuperación hasta borrado manual</h3>
+          <p>Manager.__init__ hace json.loads sin validación: un state.json truncado (corte de luz, disco lleno) lanza JSONDecodeError y un JSON válido sin las claves esperadas lanza KeyError al acceder a self.state[&#x27;paused&#x27;]. La instancia no arranca, no restaura y los wallpapers quedan congelados hasta que el usuario borra el archivo a mano.</p>
+          <p class="rec"><strong>Cómo mejorar:</strong> Envolver la carga en try/except (ValueError, KeyError, TypeError): si falla, renombrar el archivo a state.json.corrupt, arrancar con estado vacío y avisar por log de que hay cambios sin restaurar. Validar que las claves &#x27;session&#x27;, &#x27;options&#x27; y &#x27;paused&#x27; existan con los tipos esperados.</p>
+          <div class="code-pair"><div class="code-wrap code-bad"><span class="code-label">ANTES</span><pre><code><span class="c-kw">if</span> self.path.exists():
+    self.state = json.loads(self.path.read_text())</code></pre></div><div class="code-wrap code-good"><span class="code-label">DESPUÉS</span><pre><code><span class="c-kw">if</span> self.path.exists():
+    try:
+        loaded = json.loads(self.path.read_text())
+        assert isinstance(loaded.get(<span class="c-string">&#x27;options&#x27;</span>), dict)
+        assert isinstance(loaded.get(<span class="c-string">&#x27;paused&#x27;</span>), list)
+        self.state = loaded
+    except (ValueError, AssertionError, AttributeError):
+        self.path.rename(self.path.with_suffix(<span class="c-string">&#x27;.json.corrupt&#x27;</span>))
+        log(<span class="c-string">&#x27;state.json ilegible; renombrado. Revisa wallpapers detenidos.&#x27;</span>)</code></pre></div></div>
+        </article>
+
+        <article class="finding" style="--sev: #FFB300">
+          <header>
+            <span class="sev-badge" style="background: #FFB300">MEDIA</span>
+            <span class="line-badge">línea 168</span><span class="src-badge">agente</span>
+            <span class="cat-badge">calidad</span>
+          </header>
+          <h3>Condición muerta y confusa al respetar el modo manual ML4W</h3>
+          <p>&#x27;if previous not in (0, 1) or previous == 0: continue&#x27; es redundante: si previous es 0 ya lo excluye &#x27;not in (0, 1)&#x27;, y None (hyprctl falló) también cae ahí. La intención real es &#x27;solo actuar si está activado (=1)&#x27;, pero tal como está escrita obliga a descifrarla y invita a romperla al editar.</p>
+          <p class="rec"><strong>Cómo mejorar:</strong> Simplificar a una comparación directa y comentar la intención.</p>
+          <div class="code-pair"><div class="code-wrap code-bad"><span class="code-label">ANTES</span><pre><code><span class="c-kw">if</span> previous not <span class="c-kw">in</span> (0, 1) or previous == 0:
+    <span class="c-kw">continue</span></code></pre></div><div class="code-wrap code-good"><span class="code-label">DESPUÉS</span><pre><code><span class="c-kw">if</span> previous != 1:  <span class="c-comment"># sólo guardar/restaurar efectos que estaban activados</span>
+    <span class="c-kw">continue</span></code></pre></div></div>
+        </article>
+
+        <article class="finding" style="--sev: #FFC821">
+          <header>
+            <span class="sev-badge" style="background: #FFC821">BAJA</span>
+            <span class="line-badge">línea 184</span><span class="src-badge">agente</span>
+            <span class="cat-badge">robustez</span>
+          </header>
+          <h3>restore() reanuda procesos que el usuario pudo parar a mano</h3>
+          <p>restore() envía SIGCONT a todo lo que esté en &#x27;paused&#x27; sin comprobar el estado actual. Si el usuario hizo SIGSTOP manual del wallpaper entre la pausa y la restauración (o el proceso estaba &#x27;T&#x27; por otra razón), el script lo despierta contra su voluntad. El lado de pausa sí comprueba el estado (&#x27;T&#x27;, &#x27;t&#x27;, &#x27;Z&#x27;); el de restauración no es simétrico.</p>
+          <p class="rec"><strong>Cómo mejorar:</strong> Antes del SIGCONT, leer identity(path) y saltar el SIGCONT si el estado es &#x27;T&#x27; o &#x27;t&#x27; (y descartar el registro igualmente, pues ya no lo gestionamos).</p>
+          <div class="code-pair"><div class="code-wrap code-bad"><span class="code-label">ANTES</span><pre><code><span class="c-kw">if</span> path.stat().st_uid == UID and identity(path)[0] == record[<span class="c-string">&#x27;start&#x27;</span>]:
+    os.kill(record[<span class="c-string">&#x27;pid&#x27;</span>], signal.SIGCONT)</code></pre></div><div class="code-wrap code-good"><span class="code-label">DESPUÉS</span><pre><code><span class="c-kw">if</span> path.stat().st_uid == UID and identity(path)[0] == record[<span class="c-string">&#x27;start&#x27;</span>]:
+    <span class="c-kw">if</span> identity(path)[1] not <span class="c-kw">in</span> (<span class="c-string">&#x27;T&#x27;</span>, <span class="c-string">&#x27;t&#x27;</span>):
+        os.kill(record[<span class="c-string">&#x27;pid&#x27;</span>], signal.SIGCONT)</code></pre></div></div>
+        </article>
+
+        <article class="finding" style="--sev: #FFC821">
+          <header>
+            <span class="sev-badge" style="background: #FFC821">BAJA</span>
+            <span class="line-badge">línea 150</span><span class="src-badge">agente</span>
+            <span class="cat-badge">robustez</span>
+          </header>
+          <h3>IndexError de identity() sin capturar en pause_wallpapers y restore</h3>
+          <p>identity() puede lanzar IndexError si /proc/PID/stat desaparece o se trunca entre la lectura y el split. game_reasons lo captura, pero los except de pause_wallpapers (línea 157) y restore (líneas 185-188) no incluyen IndexError, así que una carrera estrecha aborta el ciclo completo en vez de saltar ese PID.</p>
+          <p class="rec"><strong>Cómo mejorar:</strong> Añadir IndexError a las tuplas de excepción de ambos métodos (o capturar (OSError, IndexError) ya que estadísticamente son el mismo caso: el proceso ya no está).</p>
+          <div class="code-pair"><div class="code-wrap code-bad"><span class="code-label">ANTES</span><pre><code>except (ProcessLookupError, PermissionError, FileNotFoundError):
+    <span class="c-kw">continue</span></code></pre></div><div class="code-wrap code-good"><span class="code-label">DESPUÉS</span><pre><code>except (ProcessLookupError, PermissionError, FileNotFoundError, IndexError):
+    <span class="c-kw">continue</span></code></pre></div></div>
+        </article>
+
+        <article class="finding" style="--sev: #FFC821">
+          <header>
+            <span class="sev-badge" style="background: #FFC821">BAJA</span>
+            <span class="line-badge">línea 156</span><span class="src-badge">agente</span>
+            <span class="cat-badge">robustez</span>
+          </header>
+          <h3>Carrera de reutilización de PID entre identity() y SIGSTOP</h3>
+          <p>En pause_wallpapers, entre leer starttime (línea 150) y os.kill(SIGSTOP) puede morir el proceso y reutilizar su PID. El SIGSTOP golpearía a un proceso inocente cuyo starttime no coincide con el registro, y restore() nunca lo reanudaría: ese proceso quedaría detenido para siempre. La ventana es microscópica pero el daño es permanente.</p>
+          <p class="rec"><strong>Cómo mejorar:</strong> Releer /proc/PID/stat inmediatamente antes del kill y comprobar que el starttime sigue coincidiendo con el que se acaba de guardar; si no, descartar el registro.</p>
+          <div class="code-pair"><div class="code-wrap code-bad"><span class="code-label">ANTES</span><pre><code>record = {<span class="c-string">&#x27;pid&#x27;</span>: int(path.name), <span class="c-string">&#x27;start&#x27;</span>: start}
+self.state[<span class="c-string">&#x27;paused&#x27;</span>].append(record)
+self.save()
+os.kill(record[<span class="c-string">&#x27;pid&#x27;</span>], signal.SIGSTOP)</code></pre></div><div class="code-wrap code-good"><span class="code-label">DESPUÉS</span><pre><code>record = {<span class="c-string">&#x27;pid&#x27;</span>: int(path.name), <span class="c-string">&#x27;start&#x27;</span>: start}
+<span class="c-kw">if</span> identity(PROC / path.name)[0] != start:
+    <span class="c-kw">continue</span>  <span class="c-comment"># el PID cambió de dueño entre lecturas</span>
+self.state[<span class="c-string">&#x27;paused&#x27;</span>].append(record)
+self.save()
+os.kill(record[<span class="c-string">&#x27;pid&#x27;</span>], signal.SIGSTOP)</code></pre></div></div>
+        </article>
+
+        <article class="finding" style="--sev: #FFC821">
+          <header>
+            <span class="sev-badge" style="background: #FFC821">BAJA</span>
+            <span class="line-badge">línea 123</span><span class="src-badge">agente</span>
+            <span class="cat-badge">robustez</span>
+          </header>
+          <h3>save() sin fsync: corte de luz puede dejar state.json vacío</h3>
+          <p>write_text + replace es atómico frente a crashes del proceso, pero no frente a pérdida de energía: los datos pueden no haber llegado a disco cuando se hace el rename, dejando un state.json vacío en el peor momento (justo tras pausar wallpapers). Se conecta con el hallazgo del estado corrupto.</p>
+          <p class="rec"><strong>Cómo mejorar:</strong> Abrir el temporal en modo binario, escribir, flush y os.fsync(fileno) antes de replace.</p>
+          <div class="code-pair"><div class="code-wrap code-bad"><span class="code-label">ANTES</span><pre><code>temporary = self.path.with_suffix(<span class="c-string">&#x27;.tmp&#x27;</span>)
+temporary.write_text(json.dumps(self.state))
+temporary.replace(self.path)</code></pre></div><div class="code-wrap code-good"><span class="code-label">DESPUÉS</span><pre><code>temporary = self.path.with_suffix(<span class="c-string">&#x27;.tmp&#x27;</span>)
+with temporary.open(<span class="c-string">&#x27;w&#x27;</span>) as handle:
+    handle.write(json.dumps(self.state))
+    handle.flush()
+    os.fsync(handle.fileno())
+temporary.replace(self.path)</code></pre></div></div>
+        </article>
+
+        <article class="finding" style="--sev: #7A828C">
+          <header>
+            <span class="sev-badge" style="background: #7A828C">INFO</span>
+            <span class="line-badge">línea 102</span><span class="src-badge">agente</span>
+            <span class="cat-badge">rendimiento</span>
+          </header>
+          <h3>Doble lectura de environ para PIDs ya detectados por SteamLaunch</h3>
+          <p>Cuando un PID ya revela su AppId por cmdline (SteamLaunch), se sigue leyendo y parseando su environ en la misma iteración. Además, cada ciclo lee cmdline de todos los procesos del usuario cada 5 segundos, lo que es asumible pero prescindible para PIDs ya descartados con el mismo starttime.</p>
+          <p class="rec"><strong>Cómo mejorar:</strong> Hacer &#x27;continue&#x27; tras añadir el hallazgo por cmdline cuando el AppId ya coincidió, y opcionalmente cachear (pid, starttime) de procesos descartados para no reescanearlos en cada ciclo.</p>
+          <div class="code-pair"><div class="code-wrap code-bad"><span class="code-label">ANTES</span><pre><code><span class="c-kw">if</span> re.fullmatch(rb<span class="c-string">&#x27;AppId=[1-9][0-9]*&#x27;</span>, argument) and argument.split(b<span class="c-string">&#x27;=&#x27;</span>, 1)[1] not <span class="c-kw">in</span> NON_GAME_APPIDS:
+    found.add(<span class="c-string">&#x27;SteamLaunch &#x27;</span> + argument.decode() + <span class="c-string">&#x27; (PID &#x27;</span> + path.name + <span class="c-string">&#x27;)&#x27;</span>)</code></pre></div><div class="code-wrap code-good"><span class="code-label">DESPUÉS</span><pre><code><span class="c-kw">if</span> re.fullmatch(rb<span class="c-string">&#x27;AppId=[1-9][0-9]*&#x27;</span>, argument) and argument.split(b<span class="c-string">&#x27;=&#x27;</span>, 1)[1] not <span class="c-kw">in</span> NON_GAME_APPIDS:
+    found.add(<span class="c-string">&#x27;SteamLaunch &#x27;</span> + argument.decode() + <span class="c-string">&#x27; (PID &#x27;</span> + path.name + <span class="c-string">&#x27;)&#x27;</span>)
+    <span class="c-kw">break</span></code></pre></div></div>
+        </article>
+
+        <article class="finding" style="--sev: #7A828C">
+          <header>
+            <span class="sev-badge" style="background: #7A828C">INFO</span>
+            <span class="line-badge">línea 7</span><span class="src-badge">agente</span>
+            <span class="cat-badge">robustez</span>
+          </header>
+          <h3>El wrapper no comprueba que python3 exista</h3>
+          <p>exec python3 falla con un mensaje críptico de bash si python3 no está en PATH (instalación mínima, chroot, PATH roto en cron/systemd).</p>
+          <p class="rec"><strong>Cómo mejorar:</strong> Verificar con command -v antes del exec y dar un mensaje claro.</p>
+          <div class="code-pair"><div class="code-wrap code-bad"><span class="code-label">ANTES</span><pre><code><span class="c-kw">exec</span> python3 - <span class="c-string">&quot;$@&quot;</span> &lt;&lt;<span class="c-string">&#x27;PYTHON&#x27;</span></code></pre></div><div class="code-wrap code-good"><span class="code-label">DESPUÉS</span><pre><code>command -v python3 &gt;/dev/null 2&gt;&amp;1 || { echo <span class="c-string">&#x27;auto-game-mode: python3 no está disponible&#x27;</span> &gt;&amp;2; <span class="c-kw">exit</span> 127; }
+<span class="c-kw">exec</span> python3 - <span class="c-string">&quot;$@&quot;</span> &lt;&lt;<span class="c-string">&#x27;PYTHON&#x27;</span></code></pre></div></div>
+        </article>
+  </section>
+
+  
+  <section id="creativas">
+    <h2><span class="dot" style="background: #FFC821"></span>Sugerencias creativas</h2>
+    <p class="section-sub">Ideas no obvias para llevar el script al siguiente nivel.</p>
+    <div class="grid">
+      <article class="creative-card">
+        <div class="creative-head">
+          <span class="bulb">✦</span>
+          <h3>Modo --once para probar reglas de detección sin arrancar un juego</h3>
+          <span class="effort">esfuerzo: bajo</span>
+        </div>
+        <p>Un flag --once que ejecute un único ciclo de detección (clients + game_reasons) e imprima si activaría el modo juego y por qué, sin tocar hyprctl keyword ni SIGSTOP. Hoy verificar un AppId nuevo obliga a arrancar el juego de verdad o usar --check a mano; con --once la prueba es de ida y vuelta y sirve para validar cambios en HELPERS/NON_GAME_APPIDS.</p>
+      </article>
+      <article class="creative-card">
+        <div class="creative-head">
+          <span class="bulb">✦</span>
+          <h3>Configuración externalizada en ~/.config/auto-game-mode.json</h3>
+          <span class="effort">esfuerzo: medio</span>
+        </div>
+        <p>HELPERS, NON_GAME_APPIDS, OPTIONS y los nombres de compositores están hardcodeados. Un JSON de usuario (con valores por defecto si no existe) permitiría añadir el AppId de una launcher no-Steam o un nuevo helper sin editar el script, y el fichero versionable en dotfiles serviría de documentación de qué se considera &#x27;juego&#x27;.</p>
+      </article>
+      <article class="creative-card">
+        <div class="creative-head">
+          <span class="bulb">✦</span>
+          <h3>Unidad systemd --user con Restart=on-failure</h3>
+          <span class="effort">esfuerzo: bajo</span>
+        </div>
+        <p>Si el script muere con SIGKILL (OOM mientras un juego devora RAM, crash de Python), el finally no corre y los wallpapers quedan congelados hasta que el usuario lo relaanza. Una unidad systemd user (ExecStart=auto-game-mode.sh, Restart=on-failure) garantiza que el siguiente arranque ejecuta la rama de recuperación del estado pendiente sin intervención manual, y simplifica el arranque automático con la sesión.</p>
+      </article>
+      <article class="creative-card">
+        <div class="creative-head">
+          <span class="bulb">✦</span>
+          <h3>Resumen de sesión: tiempo total en modo juego</h3>
+          <span class="effort">esfuerzo: bajo</span>
+        </div>
+        <p>Al restaurar, log(&#x27;Modo juego OFF...&#x27;) podría incluir cuánto tiempo duró el modo juego (timestamp en state.json al activar). Es telemetría gratis con los datos que ya persistes, y ayuda a afinar AUTO_GAME_EXIT_DELAY viendo cuántas restauraciones se disparan por salidas breves.</p>
+      </article>
+      <article class="creative-card">
+        <div class="creative-head">
+          <span class="bulb">✦</span>
+          <h3>Verbosidad graduable con AUTO_GAME_VERBOSE</h3>
+          <span class="effort">esfuerzo: bajo</span>
+        </div>
+        <p>log() imprime poco: en una sesión con problemas no sabes qué PIDs se examinaron ni por qué se descartó un wallpaper (otra sesión, estado T, AppId excluido). Un nivel verbose que trace las decisiones de game_reasons y pause_wallpapers convertiría los puntos ciegos de /proc en diagnóstico visible.</p>
+      </article>
+      <article class="creative-card">
+        <div class="creative-head">
+          <span class="bulb">✦</span>
+          <h3>Deshidratación progresiva en vez de SIGSTOP binario</h3>
+          <span class="effort">esfuerzo: alto</span>
+        </div>
+        <p>Hoy el wallpaper pasa de 100% a 0% de golpe con SIGSTOP. Para fondos con audio o transiciones, una alternativa suave es primero enviar la señal de pausa propia del backend (mpv: SIGSTOP ya, pero gslapper podría aceptar un hyprctl plugin/dispatch) y reservar SIGSTOP como último recurso, dejando el comportamiento registrado en state.json para restaurar exactamente lo que se pausó.</p>
+      </article></div>
+  </section>
+  
+  <section id="puntos-ciegos">
+    <h2><span class="dot" style="background: #FF3300"></span>Puntos ciegos</h2>
+    <p class="section-sub">Riesgos que ni shellcheck ni una lectura rápida detectan.</p>
+    <div class="grid">
+      <article class="blind-card">
+        <div class="blind-head">
+          <span class="eye">◉</span>
+          <h3>Muerte con SIGKILL deja wallpapers congelados indefinidamente</h3>
+        </div>
+        <p><strong class="risk-label">Riesgo:</strong> El camino de recuperación depende del finally o de que el usuario vuelva a ejecutar el script. Si el OOM killer o un kill -9 se lo lleva por delante durante una sesión de juego intensiva, los wallpapers quedan en SIGSTOP y las opciones de Hyprland en 0 hasta que alguien lance el script de nuevo; si el usuario no lo hace (porque cree que sigue vigilando), el escritorio queda degradado para siempre.</p>
+        <p><strong class="mit-label">Mitigación:</strong> Guardar un timestamp en state.json y, en --status, avisar con claridad (&#x27;recuperación pendiente desde hace N minutos&#x27;); mejor aún, unidad systemd --user con Restart=on-failure que ejecute la rama de recuperación automáticamente.</p>
+      </article>
+      <article class="blind-card">
+        <div class="blind-head">
+          <span class="eye">◉</span>
+          <h3>hyprctl puede apuntar a otra instancia de Hyprland</h3>
+        </div>
+        <p><strong class="risk-label">Riesgo:</strong> El script solo comprueba que HYPRLAND_INSTANCE_SIGNATURE no esté vacía. Si se lanza desde un contexto cuya instancia heredada ya no existe (sesión anterior, export en un .profile, lanzamiento desde otra sesión del mismo usuario), hyprctl usará ese socket y getoption/keyword consultarán y cambiarán los efectos del compositors equivocado, mientras la detección de wallpapers filtra por la SESSION vieja y no encuentra nada.</p>
+        <p><strong class="mit-label">Mitigación:</strong> Tras el arranque, validar que &#x27;hyprctl -j activewindow&#x27; o &#x27;hyprctl version&#x27; responda para ESA instancia antes de entrar al bucle, y abortar con mensaje si no.</p>
+      </article>
+      <article class="blind-card">
+        <div class="blind-head">
+          <span class="eye">◉</span>
+          <h3> environ de procesos ajenos puede no ser UTF-8 y el parseo asume formato</h3>
+        </div>
+        <p><strong class="risk-label">Riesgo:</strong> game_reasons parsea environ como pares clave=valor binarios y decodifica argumentos con .decode() sin errores=&#x27;replace&#x27; (línea 98). Un argumento AppId con bytes raros lanzaría UnicodeDecodeError dentro de found.add, que sí está cubierto por el except ValueError del bloque... pero solo porque ese except es tan amplio que también se tragaría bugs reales de lógica, ocultándolos silenciosamente ciclo tras ciclo.</p>
+        <p><strong class="mit-label">Mitigación:</strong> Decodificar con errors=&#x27;replace&#x27; en los .decode() de datos de /proc y estrechar los except a los errores esperados, dejando que los inesperados logged con traceback en modo verbose.</p>
+      </article>
+      <article class="blind-card">
+        <div class="blind-head">
+          <span class="eye">◉</span>
+          <h3>Duplicados de compositores rompen el fallback de PermissionError</h3>
+        </div>
+        <p><strong class="risk-label">Riesgo:</strong> En pause_wallpapers, el fallback &#x27;si el único compositor es Hyprland, pausar aunque Yama bloquee environ&#x27; compara compositors != [&#x27;Hyprland&#x27;]. Con dos instancias de Hyprland del mismo usuario la lista es [&#x27;Hyprland&#x27;, &#x27;Hyprland&#x27;] y el fallback se desactiva (conservador, bien); pero si el usuario corre nested Hyprland dentro de otro compositors de la lista, la sesión real del juego puede quedar fuera del filtro y el fondo de la sesión anfitriona se pausa o se ignora de forma no obvia.</p>
+        <p><strong class="mit-label">Mitigación:</strong> Usar un set en vez de lista y registrar en log (verbose) cuándo se aplica el fallback y qué compositores se vieron, para que el comportamiento sea diagnosticable.</p>
+      </article>
+      <article class="blind-card">
+        <div class="blind-head">
+          <span class="eye">◉</span>
+          <h3>AUTO_GAME_INTERVAL inválido produce un error críptico</h3>
+        </div>
+        <p><strong class="risk-label">Riesgo:</strong> float(os.environ.get(&#x27;AUTO_GAME_INTERVAL&#x27;, &#x27;5&#x27;)) lanza ValueError que el try del __main__ convierte en &#x27;Error: could not convert string to float: ...&#x27; y salida 1. En un lanzamiento desde Hyprland exec-once el usuario no ve el mensaje y el script simplemente &#x27;no funciona&#x27;.</p>
+        <p><strong class="mit-label">Mitigación:</strong> Parsear con try/except propio y parser.error() con mensaje accionable que incluya el valor recibido y el rango válido.</p>
+      </article></div>
+  </section>
+  
+  <section id="checklist">
+    <h2><span class="dot" style="background: #FF4E00"></span>Checklist rápida</h2>
+    <ul class="checklist"><li class=""><span class="check">☐</span>Decodificar lecturas de /proc con errors=&#x27;replace&#x27; (comm y stat)</li><li class=""><span class="check">☐</span>Validar state.json al cargar y renombrar a .corrupt si es ilegible</li><li class=""><span class="check">☐</span>Simplificar la condición de la línea 168 a &#x27;previous != 1&#x27;</li><li class=""><span class="check">☐</span>Comprobar estado &#x27;T&#x27;/&#x27;t&#x27; antes de SIGCONT en restore()</li><li class=""><span class="check">☐</span>Añadir IndexError a los except de pause_wallpapers y restore</li><li class=""><span class="check">☐</span>Re-verificar starttime justo antes del SIGSTOP</li><li class=""><span class="check">☐</span>fsync del temporal en save()</li><li class=""><span class="check">☐</span>Comprobar python3 con command -v en el wrapper bash</li><li class=""><span class="check">☐</span>Continuar el bucle de argumentos tras detectar AppId por cmdline</li></ul>
+  </section>
+</main>
+
+<footer>
+  Generado por <span class="brand">script-reviewer</span> · análisis con shellcheck + revisión del agente
+</footer>
+</body>
+</html>

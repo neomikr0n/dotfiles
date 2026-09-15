@@ -20,6 +20,8 @@ import time
 
 OPTIONS = ('animations:enabled', 'decoration:blur:enabled', 'decoration:shadow:enabled')
 WALLPAPERS = {'mpvpaper', 'gslapper'}
+# Wallpaper Engine is a desktop utility, not a game.
+NON_GAME_APPIDS = {b'431960'}
 HELPERS = {'steam', 'steamwebhelper', 'steamservice', 'steam-runtime-l',
            'steam-runtime-s', 'pressure-vessel', 'pv-bwrap', 'bwrap',
            'wineserver', 'services.exe', 'winedevice.exe', 'explorer.exe',
@@ -79,7 +81,7 @@ def game_reasons(clients):
     for client in clients:
         for key in ('class', 'initialClass'):
             match = re.fullmatch(r'steam_app_([1-9][0-9]*)', client.get(key, '') or '')
-            if match:
+            if match and match[1].encode() not in NON_GAME_APPIDS:
                 found.add('ventana Steam ' + match[1])
     for path in processes():
         try:
@@ -92,7 +94,7 @@ def game_reasons(clients):
                 argv = (path / 'cmdline').read_bytes().split(b'\0')
                 if b'SteamLaunch' in argv:
                     for argument in argv:
-                        if re.fullmatch(rb'AppId=[1-9][0-9]*', argument):
+                        if re.fullmatch(rb'AppId=[1-9][0-9]*', argument) and argument.split(b'=', 1)[1] not in NON_GAME_APPIDS:
                             found.add('SteamLaunch ' + argument.decode() + ' (PID ' + path.name + ')')
             except OSError:
                 pass
@@ -100,6 +102,8 @@ def game_reasons(clients):
             env = dict(item.split(b'=', 1) for item in (path / 'environ').read_bytes().split(b'\0') if b'=' in item)
             appid = env.get(b'SteamAppId', b'0')
             gameid = env.get(b'SteamGameId', b'0')
+            if any(value in NON_GAME_APPIDS for value in (appid, gameid)):
+                continue
             if any(value.isdigit() and int(value) > 0 for value in (appid, gameid)):
                 found.add('proceso Steam ' + path.name + ' (' + comm + ')')
         except (OSError, ValueError, IndexError):

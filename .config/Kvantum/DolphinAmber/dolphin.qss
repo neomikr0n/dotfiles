@@ -1,0 +1,6 @@
+DolphinMainWindow, DolphinMainWindow QWidget {
+ color: #fff4de;
+ alternate-background-color: transparent;
+ selection-background-color: #a96f20;
+ selection-color: #fff4de;
+}

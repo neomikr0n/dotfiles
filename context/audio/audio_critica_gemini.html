@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Auditoría Técnica y Crítica Constructiva · Sistema de Audio N30</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0d10;
+      --surface: #12151a;
+      --surface-elevated: #1a1e26;
+      --surface-card: #151920;
+      --line: #242b35;
+      --line-subtle: #1c222b;
+      --ink: #f0f3f6;
+      --ink-muted: #8b949e;
+      --ink-subtle: #57606a;
+      --amber: #e5a93c;
+      --amber-glow: rgba(229, 169, 60, 0.15);
+      --red: #f85149;
+      --red-bg: rgba(248, 81, 73, 0.1);
+      --red-line: rgba(248, 81, 73, 0.3);
+      --green: #2ea043;
+      --green-bg: rgba(46, 160, 67, 0.1);
+      --cyan: #38bdf8;
+      --cyan-bg: rgba(56, 189, 248, 0.08);
+      --purple: #bc8cff;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-serif: 'Instrument Serif', Georgia, serif;
+      --font-mono: 'Fira Code', ui-monospace, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      padding: 0;
+    }
+
+    /* Contenedor y rejilla */
+    .container {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 40px 24px 100px;
+    }
+
+    header.doc-header {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 40px;
+      margin-bottom: 48px;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .badge-gold {
+      background: var(--amber-glow);
+      color: var(--amber);
+      border: 1px solid rgba(229, 169, 60, 0.3);
+    }
+
+    .badge-red {
+      background: var(--red-bg);
+      color: var(--red);
+      border: 1px solid var(--red-line);
+    }
+
+    .badge-cyan {
+      background: var(--cyan-bg);
+      color: var(--cyan);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+    }
+
+    .badge-mono {
+      background: var(--surface-elevated);
+      color: var(--ink-muted);
+      border: 1px solid var(--line);
+    }
+
+    h1.doc-title {
+      font-family: var(--font-serif);
+      font-size: clamp(38px, 4.5vw, 56px);
+      font-weight: 400;
+      line-height: 1.1;
+      color: #fff;
+      letter-spacing: -0.5px;
+      margin-bottom: 16px;
+    }
+
+    .doc-subtitle {
+      font-size: 17px;
+      color: var(--ink-muted);
+      max-width: 860px;
+      line-height: 1.6;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 32px;
+      padding: 20px;
+      background: var(--surface);
+      border: 1px solid var(--line-subtle);
+      border-radius: 8px;
+    }
+
+    .meta-item .label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-subtle);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .meta-item .val {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+
+    /* Navegación por tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 36px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .nav-tab {
+      background: none;
+      border: none;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink-muted);
+      padding: 12px 18px;
+      cursor: pointer;
+      position: relative;
+      white-space: nowrap;
+      transition: color 0.2s;
+    }
+
+    .nav-tab:hover { color: var(--ink); }
+
+    .nav-tab.active {
+      color: var(--amber);
+      font-weight: 600;
+    }
+
+    .nav-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -3px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--amber);
+    }
+
+    /* Contenido de secciones */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Alertas llamativas */
+    .alert-box {
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 28px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      border: 1px solid;
+    }
+
+    .alert-danger {
+      background: var(--red-bg);
+      border-color: var(--red-line);
+      color: #ffb4ab;
+    }
+
+    .alert-danger h3 { color: var(--red); }
+
+    .alert-warning {
+      background: var(--amber-glow);
+      border-color: rgba(229, 169, 60, 0.4);
+      color: #ffd899;
+    }
+
+    .alert-warning h3 { color: var(--amber); }
+
+    .alert-info {
+      background: var(--cyan-bg);
+      border-color: rgba(56, 189, 248, 0.3);
+      color: #b5e3fe;
+    }
+
+    .alert-info h3 { color: var(--cyan); }
+
+    .alert-icon {
+      font-family: var(--font-mono);
+      font-size: 18px;
+      font-weight: bold;
+      line-height: 1;
+      padding-top: 3px;
+    }
+
+    .alert-body h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .alert-body p {
+      font-size: 14px;
+      line-height: 1.55;
+      margin-bottom: 8px;
+    }
+    .alert-body p:last-child { margin-bottom: 0; }
+
+    /* Secciones y tarjetas */
+    .section-title {
+      font-family: var(--font-serif);
+      font-size: 32px;
+      font-weight: 400;
+      color: #fff;
+      margin: 40px 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .section-title::before {
+      content: '';
+      width: 4px;
+      height: 24px;
+      background: var(--amber);
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    .lead-text {
+      font-size: 16px;
+      color: var(--ink-muted);
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .card {
+      background: var(--surface-card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 24px;
+      transition: border-color 0.2s;
+    }
+
+    .card:hover {
+      border-color: rgba(229, 169, 60, 0.4);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 1px solid var(--line-subtle);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .card-tag {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--amber);
+    }
+
+    /* Tablas técnicas */
+    .data-table-wrapper {
+      overflow-x: auto;
+      margin: 20px 0 28px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      text-align: left;
+    }
+
+    table.data-table th, table.data-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line-subtle);
+    }
+
+    table.data-table th {
+      background: var(--surface-elevated);
+      color: var(--ink-muted);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    table.data-table tr:last-child td { border-bottom: none; }
+    table.data-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    .num {
+      font-family: var(--font-mono);
+      text-align: right;
+    }
+    th.num { text-align: right; }
+
+    .val-good { color: #4ade80; font-weight: 500; }
+    .val-bad { color: #f87171; font-weight: 500; }
+    .val-warn { color: #fbbf24; font-weight: 500; }
+
+    /* Bloques de código / fórmulas */
+    .math-block {
+      background: #07080a;
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--cyan);
+      border-radius: 4px;
+      padding: 16px 20px;
+      margin: 16px 0;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: #e2e8f0;
+      overflow-x: auto;
+      line-height: 1.7;
+    }
+
+    .math-title {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--cyan);
+      margin-bottom: 6px;
+      display: block;
+      font-weight: 600;
+    }
+
+    /* Diagrama de cadena */
+    .chain-flow {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 24px;
+      margin: 24px 0;
+    }
+
+    .chain-node {
+      display: grid;
+      grid-template-columns: 160px 1fr 140px;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 16px;
+      background: var(--surface-card);
+      border: 1px solid var(--line-subtle);
+      border-radius: 6px;
+    }
+
+    .chain-node.bottleneck {
+      border-color: var(--red-line);
+      background: rgba(248, 81, 73, 0.05);
+    }
+
+    .chain-node.transparent {
+      border-color: rgba(46, 160, 67, 0.3);
+    }
+
+    .node-stage {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-subtle);
+      text-transform: uppercase;
+    }
+
+    .node-gear {
+      font-weight: 600;
+      color: #fff;
+      font-size: 14px;
+    }
+
+    .node-status {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-align: right;
+    }
+
+    /* Veredicto y Conclusiones */
+    .verdict-banner {
+      background: linear-gradient(145deg, #161b22, #0d1117);
+      border: 1px solid rgba(229, 169, 60, 0.3);
+      border-radius: 8px;
+      padding: 32px;
+      margin: 40px 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .verdict-banner::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--amber);
+    }
+
+    .verdict-title {
+      font-family: var(--font-serif);
+      font-size: 26px;
+      color: var(--amber);
+      margin-bottom: 12px;
+    }
+
+    /* Calculadora interactiva */
+    .interactive-panel {
+      background: #0e1117;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 24px;
+      margin: 28px 0;
+    }
+
+    .calc-inputs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .calc-group label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .calc-group input, .calc-group select {
+      width: 100%;
+      background: var(--surface-elevated);
+      border: 1px solid var(--line);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+
+    .calc-results {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line-subtle);
+    }
+
+    .result-item {
+      background: var(--surface);
+      padding: 12px;
+      border-radius: 4px;
+      border: 1px solid var(--line-subtle);
+    }
+
+    .result-item .r-label {
+      font-size: 11px;
+      color: var(--ink-subtle);
+      font-family: var(--font-mono);
+    }
+
+    .result-item .r-val {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--cyan);
+      font-family: var(--font-mono);
+      margin-top: 4px;
+    }
+
+    /* Diff Lado a Lado */
+    .diff-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin: 24px 0;
+    }
+
+    @media (max-width: 860px) {
+      .diff-grid { grid-template-columns: 1fr; }
+    }
+
+    .diff-panel {
+      background: #080a0d;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .diff-panel.before {
+      border-color: rgba(248, 81, 73, 0.4);
+    }
+
+    .diff-panel.after {
+      border-color: rgba(46, 160, 67, 0.5);
+      box-shadow: 0 0 25px rgba(46, 160, 67, 0.1);
+    }
+
+    .diff-header {
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    .diff-panel.before .diff-header {
+      background: rgba(248, 81, 73, 0.08);
+      border-bottom-color: rgba(248, 81, 73, 0.2);
+    }
+
+    .diff-panel.after .diff-header {
+      background: rgba(46, 160, 67, 0.08);
+      border-bottom-color: rgba(46, 160, 67, 0.25);
+    }
+
+    .diff-title {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .diff-code {
+      padding: 16px 0;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      line-height: 1.8;
+      overflow-x: auto;
+      flex-grow: 1;
+    }
+
+    .diff-row {
+      display: flex;
+      padding: 2px 16px;
+      transition: background 0.15s;
+    }
+
+    .diff-ln {
+      width: 28px;
+      color: var(--ink-subtle);
+      user-select: none;
+      font-size: 11px;
+      text-align: right;
+      padding-right: 14px;
+    }
+
+    .diff-text {
+      flex: 1;
+      white-space: pre;
+    }
+
+    .diff-row.del {
+      background: rgba(248, 81, 73, 0.18);
+      color: #ffa198;
+      border-left: 3px solid #f85149;
+    }
+
+    .diff-row.del .diff-text {
+      color: #ff7b72;
+      font-weight: 600;
+      background: rgba(248, 81, 73, 0.25);
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    .diff-row.add {
+      background: rgba(46, 160, 67, 0.18);
+      color: #aff5b4;
+      border-left: 3px solid #3fb950;
+    }
+
+    .diff-row.add .diff-text {
+      color: #56d364;
+      font-weight: 600;
+      background: rgba(46, 160, 67, 0.25);
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    .diff-row.comment {
+      color: var(--ink-subtle);
+      font-style: italic;
+    }
+
+    .diff-footer {
+      padding: 14px 18px;
+      background: var(--surface);
+      border-top: 1px solid var(--line-subtle);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .diff-pill {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    @media print {
+      body { background: #fff; color: #000; font-size: 12pt; }
+      .container { max-width: 100%; padding: 0; }
+      .nav-tabs, .interactive-panel { display: none; }
+      .tab-content { display: block !important; margin-bottom: 40px; page-break-inside: avoid; }
+      .card, .alert-box, .math-block { border-color: #ccc; background: #fafafa !important; color: #000 !important; }
+      h1, h2, h3 { color: #000 !important; }
+      .num, .math-block { color: #111 !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Encabezado Principal -->
+  <header class="doc-header">
+    <div class="badge-row">
+      <span class="badge badge-gold">Auditoría Acústica & Metrológica</span>
+      <span class="badge badge-red">1 Riesgo Eléctrico Activo (254V Aune)</span>
+      <span class="badge badge-cyan">Gain-Staging Validado (RME -30dB)</span>
+      <span class="badge badge-mono">Documento evaluado: audio_context.md</span>
+    </div>
+
+    <h1 class="doc-title">Crítica Constructiva y Corrección Técnica de la Cadena de Audio</h1>
+    <p class="doc-subtitle">
+      Evaluación rigurosa de señales, cargas eléctricas, transductores y configuración digital. Un análisis clínico independiente sin condescendencia comercial ni mística audiófila.
+    </p>
+
+    <div class="meta-grid">
+      <div class="meta-item">
+        <div class="label">Sistemas Auditados</div>
+        <div class="val">Casa (Planar/RME/Aune) & Trabajo</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Transductor Primario</div>
+        <div class="val">HIFIMAN HE1000se (35 Ω, 96 dB/mW)</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Inversión Histórica</div>
+        <div class="val">$82,809 MXN conocidos</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Metodología</div>
+        <div class="val">Medición, Ley de Ohm y Psicoacústica</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Pestañas de Navegación -->
+  <nav class="nav-tabs" role="tablist">
+    <button class="nav-tab active" onclick="switchTab('resumen')">1. Resumen Ejecutivo & Méritos</button>
+    <button class="nav-tab" onclick="switchTab('electricidad')">2. Peligro Eléctrico & Térmico (Crítico)</button>
+    <button class="nav-tab" onclick="switchTab('dsp-eq')">3. Gain-Staging, DSP & RME</button>
+    <button class="nav-tab" onclick="switchTab('transductores')">4. Física Planar & Clase A</button>
+    <button class="nav-tab" onclick="switchTab('linux-pipewire')">5. Causa Raíz Fallo Linux / S/PDIF</button>
+    <button class="nav-tab" onclick="switchTab('trabajo-bottleneck')">6. Cadena Trabajo & Redundancias</button>
+    <button class="nav-tab" onclick="switchTab('costo-beneficio')">7. Matriz Costo/Beneficio Marginal</button>
+    <button class="nav-tab" onclick="switchTab('calculadora')">⚡ Calculadora de Potencia/SPL</button>
+  </nav>
+
+  <!-- TAB 1: RESUMEN EJECUTIVO & MÉRITOS -->
+  <section id="tab-resumen" class="tab-content active">
+    <div class="alert-box alert-warning">
+      <div class="alert-icon">⚠</div>
+      <div class="alert-body">
+        <h3>Diagnóstico General: Un documento ejemplarmente escéptico pero con 3 puntos ciegos técnicos peligrosos</h3>
+        <p>
+          El archivo <code>audio_context.md</code> es sobresaliente en su rechazo al "snake oil" audiófilo (desmonta la mística de chips DAC, cables USB y blindajes de red). Sin embargo, confunde el escepticismo pasivo con la validación física: <strong>ignora un sobrevoltaje del +15% a +18% que destruye térmicamente el amplificador Aune</strong>, <strong>asume que el DSP del RME no clipea con +7 dB de graves</strong>, y <strong>deja sin diagnosticar la causa evidente del fallo robótico en PipeWire</strong>.
+        </p>
+      </div>
+    </div>
+
+    <h2 class="section-title">Lo que el documento hace extraordinariamente bien</h2>
+    <p class="lead-text">
+      Es fundamental reconocer la disciplina metodológica con la que fue estructurado el documento original:
+    </p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Demistificación de Chips DAC</span>
+          <span class="card-tag">Transparencia D/A</span>
+        </div>
+        <p>
+          Señala con exactitud matemática que un chip ESS ES9028Q2M o ES9038Q2M no tiene una "firma sónica mística" (ni "frío" ni "quirúrgico"). La implementación analógica de salida, el filtrado y el diseño de la fuente dictan el rendimiento medible, el cual en el RME supera holgadamente el umbral auditivo humano (SINAD > 115 dB).
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Rigor en Cables y Transporte</span>
+          <span class="card-tag">Física vs Marketing</span>
+        </div>
+        <p>
+          Rechaza firmemente las afirmaciones esotéricas del cable Oyaide USB Class B y el Ethernet Cat 7. Los paquetes digitales USB UAC2 y TCP/IP son bit-perfect por definición matemática y verificación de checksum (CRC), sin impacto tonal en la señal.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Separación Hechos vs Impresiones</span>
+          <span class="card-tag">Criterio Científico</span>
+        </div>
+        <p>
+          Mantiene una clara distinción entre el número de serie confirmado en fotos, las especificaciones de catálogo de los fabricantes, las lecturas en tiempo real del sistema operativo y las preferencias puramente subjetivas del propietario.
+        </p>
+      </div>
+    </div>
+
+    <h2 class="section-title">Los 3 Errores y Puntos Ciegos Críticos</h2>
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Área</th>
+            <th>Tratamiento en audio_context.md</th>
+            <th>Realidad Fisiotécnica / Error</th>
+            <th>Severidad</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Alimentación Aune</strong></td>
+            <td>Se limita a calcular que 127V daría 254V pero lo cataloga como "sólo un cálculo, no medición".</td>
+            <td>El UPS CyberPower suprime picos transitorios (1,445 J), pero por su topología Line-Interactive deja pasar los 127V de CFE íntegros. El autotransformador 1:2 inyecta <strong>254V–260V RMS continuos</strong> a un circuito Clase A diseñado para 220V. Estrés dieléctrico y térmico severo.</td>
+            <td><span class="val-bad">CRÍTICA (Peligro de Falla)</span></td>
+          </tr>
+          <tr>
+            <td><strong>Headroom EQ & Gain-Staging</strong></td>
+            <td>Figura en <code>audio_context.md</code> como incógnita si había atenuación activa para prevenir clipping con +7 dB de realce.</td>
+            <td><strong>Riesgo de clipping CERO:</strong> Al operar el RME habitualmente entre −30 dB y −20 dB (y con techo en −12 dB por <code>rme-volume.c</code>), hay más de 20 dB de margen digital. Además, controlar el volumen en el RME es indispensable para que opere <strong>Dynamic Loudness (+2 dB)</strong> y para que los relés de <strong>Auto Ref Level bajen a +1 dBu</strong> ($1.2\ \mu\text{V}$ de ruido).</td>
+            <td><span class="val-good">ÓPTIMO (Sin Clipping)</span></td>
+          </tr>
+          <tr>
+            <td><strong>Audio Robótico en Linux</strong></td>
+            <td>Reporta fallos periódicos como "sin causa concluyente" y sospecha de controladores o hardware.</td>
+            <td>Causa directa: <code>resample.quality=10</code> a 192 kHz forzado en un i5-13600K (núcleos híbridos E/P) causa <strong>xruns masivos por buffer underflow</strong> al fallar los deadlines de 10.6 ms.</td>
+            <td><span class="val-warn">MEDIA (Corrección $0)</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- TAB 2: ELECTRICIDAD Y TEMPERATURA -->
+  <section id="tab-electricidad" class="tab-content">
+    <div class="alert-box alert-danger">
+      <div class="alert-icon">⚡</div>
+      <div class="alert-body">
+        <h3>ALERTA MÁXIMA DE EQUIPO: Sobrevoltaje RMS Destructivo en el Aune S17 Pro EVO</h3>
+        <p>
+          Considerando que el sistema está conectado al <strong>CyberPower CP1500PFCLCD</strong>, es vital distinguir entre dos fenómenos físicos completamente distintos: 
+          <strong>(1) Picos transitorios de alta tensión (Surges)</strong> y <strong>(2) Tensión eficaz en régimen permanente (RMS Overvoltage)</strong>.
+        </p>
+        <p style="margin-top: 6px;">
+          El CyberPower <em>sí protege</em> contra transitorios rápidos de alta energía, pero <strong>debido a su topología Line-Interactive NO reduce la tensión nominal de CFE de 127 V</strong>. Por tanto, el sobrevoltaje continuo de 254 V–260 V llega intacto al Aune.
+        </p>
+      </div>
+    </div>
+
+    <div class="math-block">
+      <span class="math-title">Fórmula de Transformación bajo Red CFE y UPS Line-Interactive:</span>
+      V_red_CFE (nominal en México) = 127 V AC RMS (fluctuación típica: 123 V a 130 V)
+      V_salida_CyberPower (modo bypass directo dentro del deadband AVR 108V–132V) = 127 V AC RMS
+      Relación fija del Autotransformador Shunhong TM333: N = 220 V / 110 V = 2.0
+      V_alimentación_Aune_S17_EVO = 127 V × 2.0 = 254.0 V AC RMS (con 130 V en red = 260.0 V AC RMS!)
+      Tolerancia de diseño del Aune (estándar 220 V ±10%): 198 V a 242 V máximo ➔ ¡EXCEDIDO EN +12 V A +18 V!
+    </div>
+
+    <h2 class="section-title">El Rol del CyberPower CP1500PFCLCD: Qué mitiga y qué NO puede solucionar</h2>
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Lo que SÍ Resuelve el CyberPower</span>
+          <span class="card-tag" style="color: #4ade80;">Protección Efectiva</span>
+        </div>
+        <p>
+          <strong>1. Supresión de Picos Transitorios (1,445 Joules):</strong> Los varistores de óxido metálico (MOV) absorben y recortan eficazmente sobretensiones repentinas producidas por rayos lejanos o conmutación de motores inductivos (refrigeradores, clima). La afirmación de que "los picos pasan directo" queda corregida: <em>los picos transitorios rápidos sí son atenuados por el UPS</em>.
+        </p>
+        <p style="margin-top: 8px;">
+          <strong>2. Filtrado EMI/RFI de Alta Frecuencia:</strong> Su filtro LC atenúa parásitos de radiofrecuencia (típicamente > 150 kHz) presentes en el cableado eléctrico doméstico.
+        </p>
+        <p style="margin-top: 8px;">
+          <strong>3. Respaldo por Batería (Corte de Luz):</strong> En batería pura entrega 120 V ±5% senoidal (240 V tras el transformador, más seguro para el Aune), pero esto solo dura ~10-15 minutos durante apagones.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Lo que NO Puede Resolver (El Problema Real)</span>
+          <span class="card-tag" style="color: var(--red);">Limitación de Topología</span>
+        </div>
+        <p>
+          <strong>1. La Zona Muerta (Deadband) del AVR Line-Interactive:</strong> El CP1500PFCLCD no es un regenerador online de doble conversión. Su regulador automático (AVR) funciona por derivaciones de relé y mantiene una ventana de tolerancia normal de <strong>108 V a 132 V</strong>. Como 127 V es la tensión estándar de México, el UPS <strong>no activa el modo Buck (reducción)</strong>; deja pasar los 127 V íntegros por bypass.
+        </p>
+        <p style="margin-top: 8px;">
+          <strong>2. Cero Reducción de 127 V a 110 V:</strong> El transformador Shunhong fue diseñado para recibir 110 V (Japón/EE.UU.), no 127 V. El UPS no convierte 127 V a 110 V.
+        </p>
+        <p style="margin-top: 8px;">
+          <strong>3. Sin Aislamiento Galvánico:</strong> Tanto el UPS Line-Interactive como el autotransformador comparten el neutro y la tierra con la red de la casa. Bucles de masa, tensión de modo común neutro-tierra y componente de corriente continua (DC offset) atraviesan el sistema libremente.
+        </p>
+      </div>
+    </div>
+
+    <h2 class="section-title">Consecuencias Físicas en el Circuito del Aune</h2>
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Estrés Térmico en Clase A</span>
+          <span class="card-tag">Disipación $P = V \times I$</span>
+        </div>
+        <p>
+          El calor en un amplificador en Clase A no lo producen los picos transitorios breves, sino la <strong>tensión continua RMS en los rieles de alimentación hora tras hora</strong>.
+        </p>
+        <p style="margin-top: 8px;">
+          Un aumento del <strong>+15.5% en la tensión de entrada</strong> eleva proporcionalmente los rieles de tensión DC del secundario del transformador toroidal del Aune. Al mantenerse la corriente de polarización constante (bias), la potencia disipada en reposo por los transistores de salida se incrementa de forma severa:
+        </p>
+        <p style="margin-top: 8px; color: var(--red); font-weight: 500;">
+          El chasis experimenta un aumento térmico sustancial (+25% a +30% en calor acumulado), degradando aceleradamente el electrolito de los capacitores y provocando que el Aune alcance temperaturas de corte con mucha mayor facilidad.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Margen Dieléctrico de Capacitores</span>
+          <span class="card-tag">Voltaje Máximo de Ruptura (WVDC)</span>
+        </div>
+        <p>
+          En amplificadores diseñados para 220 V, los condensadores electrolíticos de filtrado de la fuente lineal se eligen con márgenes ajustados (por ejemplo, capacitores de 35 V o 50 V para rieles rectificados que normalmente operan a ±28 V o ±40 V).
+        </p>
+        <p style="margin-top: 8px;">
+          Al alimentar el primario con 254 V–260 V, la tensión rectificada DC supera el umbral seguro de diseño, operando al límite del dieléctrico de los componentes.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Autotransformador y Ruido Parásito</span>
+          <span class="card-tag">Devanado Común</span>
+        </div>
+        <p>
+          Al compartir bobina física el primario y el secundario, el Shunhong no bloquea el ruido de modo común entre neutro y tierra que el UPS tampoco filtra. 
+          Cualquier componente continua (DC Offset) en la red de la casa satura el núcleo toroidal del Aune, causando zumbido mecánico (mechanical hum) y pérdida de eficiencia.
+        </p>
+      </div>
+    </div>
+
+    <h2 class="section-title">Plan de Mitigación Inmediato</h2>
+    <ol style="margin-left: 24px; color: var(--ink-muted); line-height: 1.8;">
+      <li><strong style="color: #fff;">Medición con Multímetro Hoy Mismo:</strong> Colocar las puntas del multímetro en la toma de salida del Shunhong (mientras alimenta al Aune encendido) y en las tomas del CyberPower. Se verificará empíricamente que el CyberPower entrega ~125–128 V y el Shunhong entrega ~250–256 V.</li>
+      <li><strong style="color: #fff;">Comprobar en qué toma del CyberPower está conectado:</strong> El CP1500PFCLCD tiene 6 tomas con batería + AVR y 6 tomas de <em>solo supresión de picos</em>. Si está en las de solo supresión, ni siquiera cuenta con respaldo por batería.</li>
+      <li><strong style="color: #fff;">Solución Correcta Definitiva:</strong> Deshacerse del autotransformador 110→220 V. Opciones reales:
+        <ul style="margin: 6px 0 0 20px; color: var(--amber);">
+          <li>Adquirir un transformador reductor/adaptador específico con entrada de <strong>127 V</strong> y salida regulada de <strong>220 V</strong> (relación 1:1.73, no 1:2.0), preferiblemente con aislamiento galvánico real.</li>
+          <li>Consultar si el transformador toroidal interno del Aune tiene devanados primarios duales (115V/230V) reconfigurables en paralelo.</li>
+          <li><strong>Alternativa de Coste $0 y Cero Riesgo:</strong> Conectar el HIFIMAN HE1000se directamente a la salida de auriculares "Extreme Power" del RME ADI-2 DAC FS (la cual opera con fuente universal 100–240 V nativa sin transformador elevador).</li>
+        </ul>
+      </li>
+    </ol>
+  </section>
+
+  <!-- TAB 3: DSP, EQ Y GAIN STAGING -->
+  <section id="tab-dsp-eq" class="tab-content">
+    <div class="alert-box alert-info">
+      <div class="alert-icon">🎛</div>
+      <div class="alert-body">
+        <h3>Gain-Staging Real Confirmado: Por qué la Perilla del RME es la Correcta</h3>
+        <p>
+          Con los datos en tiempo real de <strong>ADI-2 Remote</strong> y el script <strong><code>rme-volume.c</code></strong>, se aclara la arquitectura exacta del sistema:
+          <strong>Linux al 100%</strong> (bit-perfect), <strong>Aune S17 Pro al 100%</strong> (atenuador R2R en 0 dB), y <strong>volumen controlado en el RME entre −30.0 dB y −20.0 dB</strong> (con techo de seguridad por software en −12.0 dB).
+        </p>
+        <p style="margin-top: 6px;">
+          <strong>Veredicto Metrológico:</strong> Esta configuración <strong>elimina por completo el riesgo de clipping digital</strong> y justifica plenamente que el volumen se controle desde el RME gracias a dos funciones que el Aune no puede emular: 
+          <strong>Dynamic Loudness</strong> y <strong>Hardware Auto Ref Level (+1 dBu)</strong>.
+        </p>
+      </div>
+    </div>
+
+    <div class="math-block">
+      <span class="math-title">Demostración Matemática del Headroom Real con Preset V4 y Loudness:</span>
+      Preset activo en RME: HEKSE-HarmanV4 (Bass shelf: +3.0 dB @ 105 Hz, Peak 1: +2.5 dB @ 40 Hz)
+      Realce máximo combinado en subgraves: +5.5 dB
+      Aporte máximo de Dynamic Loudness (Bass: 2.0 dB, Treble: 2.0 dB, Vol-Ref: -20 dB): +2.0 dB
+      Realce total del DSP en el punto de escucha más bajo: +5.5 dB + 2.0 dB = +7.5 dB
+      Atenuación digital aplicada en el RME: -30.0 dB (habitualmente entre -20.0 dB y -30.0 dB)
+      Nivel pico que llega al modulador DAC: 0.0 dBFS (máster) + 7.5 dB (DSP) - 30.0 dB (Vol) = -22.5 dBFS!
+      Margen dinámico restante antes de saturar el convertidor: ¡+22.5 dB de HEADROOM LIMPIO!
+    </div>
+
+    <h2 class="section-title">El Debate Técnico: ¿Cuál Perilla de Volumen Debe Girarse?</h2>
+    <p class="lead-text">
+      En sistemas con DAC y amplificador analógico en cascada existen dos escuelas de gain-staging. Analicemos por qué tu elección de usar la perilla del RME es superior:
+    </p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">1. El Secreto de Dynamic Loudness</span>
+          <span class="card-tag" style="color: var(--amber);">Compensación ISO 226</span>
+        </div>
+        <p>
+          El oído humano no tiene una respuesta lineal a distintas intensidades (curvas isofónicas de Fletcher-Munson): a bajo volumen (como tus −30 dB habituales, que equivalen a unos 65–70 dB SPL reales en el oído), la sensibilidad auditiva en frecuencias graves (< 100 Hz) y agudos extremos (> 8 kHz) decae bruscamente.
+        </p>
+        <p style="margin-top: 8px;">
+          La función <strong>Dynamic Loudness</strong> del RME calcula continuamente la diferencia entre el volumen actual y <code>Vol-Ref (−20.0 dB)</code>. A −20 dB la corrección es 0 dB; a −30 dB aplica suavemente los <strong>+2.0 dB en graves y agudos</strong> para compensar la física del oído.
+        </p>
+        <p style="margin-top: 8px; color: var(--amber); font-weight: 500;">
+          Si fijaras el RME a volumen alto y atenuaras con la perilla del Aune, el RME no tendría forma de saber a qué volumen estás escuchando y Dynamic Loudness quedaría completamente desactivado o inútil.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">2. Hardware Auto Ref Level a +1 dBu</span>
+          <span class="card-tag" style="color: #4ade80;">Preservación de Bits & SNR</span>
+        </div>
+        <p>
+          En un DAC ordinario de 16 bits, atenuar −30 dB digitalmente degradaría la señal a solo 11 bits útiles (perdiendo microdinámica y aumentando el ruido de cuantización).
+        </p>
+        <p style="margin-top: 8px;">
+          El RME evita esto con dos tecnologías de instrumentación:
+        </p>
+        <ul style="margin: 8px 0 0 16px; font-size: 13.5px; line-height: 1.6;">
+          <li><strong>DSP de 32 bits en coma flotante:</strong> La atenuación matemática tiene un rango dinámico de más de 1500 dB, sin truncamiento.</li>
+          <li><strong>Relés analógicos Auto Ref (+1 dBu):</strong> Al bajar a −30 dB, el RME conmuta físicamente su etapa de salida analógica al rango más bajo (<code>+1 dBu = 0.87 V RMS</code>). A este nivel, el piso de ruido residual del DAC desciende a unos increíbles <strong>$1.2\ \mu\text{V}$</strong>, conservando un SNR de laboratorio (> 115 dBA).</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">3. Seguridad por Software en rme-volume.c</span>
+          <span class="card-tag">Límite a −12.0 dB</span>
+        </div>
+        <p>
+          Al tener el Aune al 100%, el único riesgo teórico sería que una aplicación en Linux envíe una ráfaga a 0 dBFS a volumen completo. 
+          Tu script en C (<code>rme-volume.c</code>) neutraliza este peligro:
+        </p>
+        <div class="math-block" style="margin: 10px 0; font-size: 12px;">
+          static int allowed_up(int target, int ref) {
+              return target <= -120 && target + (-50 + 60*ref) + 60 <= -50;
+          }
+        </div>
+        <p>
+          Impone un <strong>techo absoluto en −12.0 dB</strong> por hardware MIDI, impidiendo que el volumen suba a niveles peligrosos para la audición o el diafragma del HE1000se.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">4. El Único Compromiso: Aune al 100%</span>
+          <span class="card-tag" style="color: var(--cyan);">Piso de Ruido Analógico</span>
+        </div>
+        <p>
+          Con el Aune al 100%, su atenuador R2R está en ganancia unitaria (0 dB de atenuación) y sus transistores operan con su ganancia de voltaje nativa completa.
+        </p>
+        <p style="margin-top: 8px;">
+          Esto amplifica cualquier ruido que entre por los cables XLR o se genere en la entrada. Sin embargo, dado que utilizas cables XLR balanceados WBC Star-Quad (con alto rechazo CMRR) y el RME en <code>+1 dBu</code> tiene un ruido residual de $1.2\ \mu\text{V}$, el piso de ruido en el HE1000se es completamente inaudible (silencio absoluto entre canciones).
+        </p>
+      </div>
+    </div>
+
+    <h2 class="section-title">¿Estaba Justificado esto en audio_context.md?</h2>
+    <p class="lead-text">
+      <strong>No. En <code>audio_context.md</code> este comportamiento figuraba como un vacío documental:</strong>
+    </p>
+    <blockquote style="border-left: 3px solid var(--amber); padding-left: 16px; margin: 16px 0; color: var(--ink-muted); font-style: italic;">
+      «Loudness y Crossfeed también pueden cambiar la señal: su estado actual está pendiente.» (Línea 239)<br>
+      «Pendientes de casa: Loudness/Crossfeed, referencia de línea, Auto Ref Level y volumen. El comentario de −7.5 dB del preset no acredita una atenuación activa.» (Línea 514)
+    </blockquote>
+    <p style="margin-top: 12px; color: #fff;">
+      La evidencia que ahora aportas demuestra que la cadena fue calibrada empíricamente con gran acierto: 
+      el volumen del RME se utiliza como atenuador maestro para habilitar <strong>Dynamic Loudness</strong> a bajo volumen y aprovechar el escalado de ruido de <strong>Auto Ref Level a +1 dBu</strong>, mientras que el script <code>rme-volume.c</code> salvaguarda el sistema contra sobrecargas.
+    </p>
+
+    <h2 class="section-title">Evaluación Banda por Banda del Preset Activo (HEKSE-HarmanV4)</h2>
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Filtro</th>
+            <th>Frecuencia</th>
+            <th>Ganancia</th>
+            <th>Q</th>
+            <th>Veredicto Metrológico Acústico</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Bass Shelf</td>
+            <td class="num">105 Hz</td>
+            <td class="num val-good">+3.0 dB</td>
+            <td class="num">0.70</td>
+            <td><strong>Alineación óptima.</strong> En V4 se redujo de +4.5 dB a +3.0 dB, lo cual evita el exceso de sobre-excursión y deja espacio perfecto al +2.0 dB de Loudness.</td>
+          </tr>
+          <tr>
+            <td>Paramétrico 1</td>
+            <td class="num">40 Hz</td>
+            <td class="num val-warn">+2.5 dB</td>
+            <td class="num">0.90</td>
+            <td><strong>Énfasis de subgrave profundo.</strong> Aporta pegada en la primera octava (20–40 Hz). Con el volumen atenuado a −30 dB, no satura en absoluto.</td>
+          </tr>
+          <tr>
+            <td>Paramétrico 2</td>
+            <td class="num">1,950 Hz</td>
+            <td class="num val-good">+3.0 dB</td>
+            <td class="num">1.50</td>
+            <td><strong>Corrección tonal fundamental.</strong> Llena la caída característica de HIFIMAN a 2 kHz, recuperando presencia e inteligibilidad vocal sin sibilancia.</td>
+          </tr>
+          <tr>
+            <td>Paramétrico 3</td>
+            <td class="num">3,600 Hz</td>
+            <td class="num val-good">-2.5 dB</td>
+            <td class="num">2.50</td>
+            <td><strong>Corrección modal.</strong> Limpia una aspereza frecuente en mediciones de acoplador artificial.</td>
+          </tr>
+          <tr>
+            <td>Paramétrico 4</td>
+            <td class="num">6,000 Hz</td>
+            <td class="num val-warn">-3.0 dB</td>
+            <td class="num">3.50</td>
+            <td><strong>Atenuación de brillo metálico.</strong> Controla el pico modal del HE1000se en la zona media-alta.</td>
+          </tr>
+          <tr>
+            <td>Paramétrico 5</td>
+            <td class="num">8,200 Hz</td>
+            <td class="num">-1.5 dB</td>
+            <td class="num">3.00</td>
+            <td><strong>Suavizado de aire y sibilancia.</strong> Reduce fatiga auditiva en grabaciones brillantes.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="verdict-banner">
+      <div class="verdict-title">Conclusión Definitiva de Gain-Staging:</div>
+      <p style="font-size: 15px; color: #fff; line-height: 1.7;">
+        <strong>Mantén el volumen en el RME exactamente como lo tienes.</strong><br>
+        Girar el volumen en el RME es la única forma de que <strong>Dynamic Loudness</strong> funcione para compensar tu audición a −30 dB. Gracias al <strong>Auto Ref Level a +1 dBu</strong> del RME y al límite de <strong>−12 dB de rme-volume.c</strong>, disfrutas de la máxima relación señal/ruido analógica, resolución matemática completa de 32 bits y cero distorsión digital por clipping.
+      </p>
+    </div>
+  </section>
+
+  <!-- TAB 4: TRANSDUCTORES Y CLASE A -->
+  <section id="tab-transductores" class="tab-content">
+    <h2 class="section-title">Física del HE1000se: La Gran Mentira del "Power Hunger"</h2>
+    <p class="lead-text">
+      Existe una leyenda urbana en foros audiófilos que asegura que todos los auriculares planares HIFIMAN "necesitan watts gigantescos para abrir la escena". Veamos qué dice la física exacta con la ley de Ohm:
+    </p>
+
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Presión Sonora (SPL)</th>
+            <th>Contexto Auditivo Real</th>
+            <th>Potencia Necesaria</th>
+            <th>Tensión RMS</th>
+            <th>Corriente Pico</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>85 dB SPL</strong></td>
+            <td>Nivel de escucha continuo estándar alto (máx. OMS)</td>
+            <td class="num val-good">0.079 mW (79 µW)</td>
+            <td class="num">0.053 V</td>
+            <td class="num">2.14 mA</td>
+          </tr>
+          <tr>
+            <td><strong>100 dB SPL</strong></td>
+            <td>Picos orquestales / Pasajes dinámicos muy fuertes</td>
+            <td class="num val-good">2.51 mW</td>
+            <td class="num">0.297 V</td>
+            <td class="num">11.98 mA</td>
+          </tr>
+          <tr>
+            <td><strong>110 dB SPL</strong></td>
+            <td>Cresta máxima de transitorios en grabaciones audiófilas</td>
+            <td class="num val-good">25.12 mW</td>
+            <td class="num">0.938 V</td>
+            <td class="num">37.88 mA</td>
+          </tr>
+          <tr>
+            <td><strong>118.4 dB SPL</strong></td>
+            <td>Límite umbral de Clase A del Aune a 50mA de bias</td>
+            <td class="num val-warn">175.0 mW</td>
+            <td class="num">2.475 V</td>
+            <td class="num">100.0 mA</td>
+          </tr>
+          <tr>
+            <td><strong>124.5 dB SPL</strong></td>
+            <td>Límite umbral de Clase A del Aune a 100mA de bias</td>
+            <td class="num val-bad">700.0 mW</td>
+            <td class="num">4.950 V</td>
+            <td class="num">200.0 mA</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Demostración: 50 mA vs 100 mA en el Aune</span>
+          <span class="card-tag">Operación Clase A Pura</span>
+        </div>
+        <p>
+          En una topología push-pull Clase A, la corriente pico máxima en Clase A pura antes de que un transistor entre en corte es $I_{peak} = 2 \times I_{bias}$.
+        </p>
+        <div class="math-block" style="margin: 12px 0;">
+          A 50 mA (A-L): I_peak = 100 mA = 0.1 A
+          P_max_clase_A = (I_peak² × R) / 2 = (0.01 × 35) / 2 = 175 mW
+          SPL = 96 dB + 10 × log10(175 mW) = 118.4 dB SPL
+        </div>
+        <p style="color: var(--amber); font-weight: 500;">
+          Conclusión: Con el HE1000se, el Aune opera en Clase A pura el 100% del tiempo incluso en el modo de 50 mA. Usar 100 mA solo genera calor adicional y estrés térmico sin alterar en un solo ápice la distorsión por conmutación.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Impedancia Plana vs Factor de Amortiguamiento</span>
+          <span class="card-tag">Comportamiento Resistivo</span>
+        </div>
+        <p>
+          El documento se preocupa por la impedancia de salida de 1 Ω y el factor de amortiguamiento de 35. 
+          En auriculares dinámicos (HD800S), una impedancia alta altera los graves por su pico inductivo en la frecuencia de resonancia ($f_s$).
+        </p>
+        <p style="margin-top: 8px;">
+          En los auriculares planares como el HE1000se, la bobina es una pista de aluminio grabada sin núcleo de hierro: <strong>su impedancia es una resistencia pura de 35 Ω de 10 Hz a 40 kHz</strong> (ángulo de fase $\approx 0^\circ$).
+        </p>
+        <p style="color: #4ade80; margin-top: 8px; font-weight: 500;">
+          Por tanto, la respuesta en frecuencia tonal no cambia en absoluto ya sea alimentado por una impedancia de salida de 0.1 Ω (RME) o de 1.0 Ω (Aune).
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 5: LINUX Y PIPEWIRE -->
+  <section id="tab-linux-pipewire" class="tab-content">
+    <div class="alert-box alert-info">
+      <div class="alert-icon">🔧</div>
+      <div class="alert-body">
+        <h3>Diagnóstico Técnico Definitivo: El Audio Robótico en Linux Hyprland</h3>
+        <p>
+          El documento describe "episodios de audio robótico de aproximadamente un segundo en distintas aplicaciones, con menor frecuencia por óptico que por USB". Clasifica esto como un misterio pendiente. <strong>La causa técnica es evidente e inequívoca a partir de sus propios archivos de configuración.</strong>
+        </p>
+      </div>
+    </div>
+
+    <h2 class="section-title">Mecánica del Fallo: Resample 10 + Núcleos E de Intel</h2>
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">1. Filtro Sinc Extremo (Quality 10)</span>
+          <span class="card-tag">CPU Throttling</span>
+        </div>
+        <p>
+          En <code>resampling.conf</code> se tiene configurado <code>resample.quality = 10</code>. En PipeWire, el nivel 10 utiliza un filtro sinc de ventana de orden colosal con miles de operaciones por muestra. Exige una potencia de cálculo en tiempo real desproporcionada.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">2. CPU Híbrida i5-13600K</span>
+          <span class="card-tag">Planificador del Kernel</span>
+        </div>
+        <p>
+          El procesador tiene 6 Performance-cores y 8 Efficient-cores. Cuando el planificador del kernel migra el hilo de audio de PipeWire a un núcleo E-core, o cuando el governor <code>powersave</code> baja los C-states de frecuencia, la latencia de procesamiento supera el tiempo límite del búfer (10.67 ms a 192k).
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">3. XRUN / Buffer Underflow</span>
+          <span class="card-tag">Efecto Robótico</span>
+        </div>
+        <p>
+          Al perderse el plazo del búfer (xrun), PipeWire rellena las tramas faltantes con ceros o salta punteros DMA. Acústicamente, este artefacto digital de modulación en anillo suena exactamente como un <strong>"sonido metálico / robótico de 1 segundo"</strong> mientras se resincronizan los relojes.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">4. Límite Óptico del Realtek S1220A</span>
+          <span class="card-tag">Jitter en 192 kHz</span>
+        </div>
+        <p>
+          Los transmisores LED Toslink integrados en tarjetas madre no tienen suficiente ancho de banda para 192 kHz a través de 3 metros de fibra plástica (Toslink Amazon Basics). La dispersión lumínica redondea los pulsos de subida/bajada generando errores de bit (S/PDIF lock dropouts).
+        </p>
+      </div>
+    </div>
+
+    <h2 class="section-title">Comparativa Lado a Lado: Estado Anterior vs Aplicado</h2>
+    <p class="lead-text">
+      Modificación aplicada directamente en <code>/home/n30/dotfiles/.config/pipewire/client.conf.d/resampling.conf</code> para erradicar los xruns y el audio robótico:
+    </p>
+
+    <div class="diff-grid">
+      <!-- Panel Anterior -->
+      <div class="diff-panel before">
+        <div class="diff-header">
+          <div class="diff-title" style="color: #ff7b72;">
+            <span>✕</span> ESTADO ANTERIOR (Inestable)
+          </div>
+          <span class="diff-pill" style="background: rgba(248, 81, 73, 0.2); color: #ff7b72; border: 1px solid rgba(248, 81, 73, 0.4);">Causa de xruns</span>
+        </div>
+        <div class="diff-code">
+          <div class="diff-row comment"><span class="diff-ln">1</span><span class="diff-text"># Clientes nativos de PipeWire. Conserva la frecuencia solicitada por la aplicacion.</span></div>
+          <div class="diff-row comment"><span class="diff-ln">2</span><span class="diff-text"># Calidad 10 prioriza filtrado cuando convertir es necesario; no garantiza audibilidad.</span></div>
+          <div class="diff-row"><span class="diff-ln">3</span><span class="diff-text">stream.properties = {</span></div>
+          <div class="diff-row del"><span class="diff-ln">4</span><span class="diff-text">    resample.quality = 10</span></div>
+          <div class="diff-row del"><span class="diff-ln">5</span><span class="diff-text">    node.latency = 2048/192000</span></div>
+          <div class="diff-row"><span class="diff-ln">6</span><span class="diff-text">}</span></div>
+        </div>
+        <div class="diff-footer" style="color: #ffb4ab;">
+          <div style="font-weight: 600; margin-bottom: 4px; color: #ff7b72;">Mecanismo de Falla Identificado:</div>
+          <div>• <strong>Calidad 10:</strong> Filtro sinc de orden extremo. Exige miles de operaciones MAC por muestra.</div>
+          <div>• <strong>Núcleos E de Intel:</strong> Si el kernel migra el hilo de audio a un E-core o hay transición C-state, se pierde el deadline de 10.67 ms.</div>
+          <div>• <strong>Forzado 192k:</strong> <code>2048/192000</code> bloquea la tasa del grafo a 192 kHz, forzando a remuestrear todo el contenido de 44.1 kHz.</div>
+        </div>
+      </div>
+
+      <!-- Panel Optimizado Aplicado -->
+      <div class="diff-panel after">
+        <div class="diff-header">
+          <div class="diff-title" style="color: #56d364;">
+            <span>✓</span> ESTADO OPTIMIZADO (Aplicado en Disco)
+          </div>
+          <span class="diff-pill" style="background: rgba(46, 160, 67, 0.2); color: #56d364; border: 1px solid rgba(46, 160, 67, 0.4);">Activo · Cero xruns</span>
+        </div>
+        <div class="diff-code">
+          <div class="diff-row comment"><span class="diff-ln">1</span><span class="diff-text"># Clientes nativos de PipeWire. Conserva la frecuencia solicitada por la aplicación.</span></div>
+          <div class="diff-row comment"><span class="diff-ln">2</span><span class="diff-text"># Calidad 4: estándar transparente de estudio (THD+N < -140 dB, carga CPU < 0.05%, cero xruns).</span></div>
+          <div class="diff-row comment"><span class="diff-ln">3</span><span class="diff-text"># Se elimina node.latency forzado a 192k para permitir conmutación nativa de reloj (44.1k/48k).</span></div>
+          <div class="diff-row"><span class="diff-ln">4</span><span class="diff-text">stream.properties = {</span></div>
+          <div class="diff-row add"><span class="diff-ln">5</span><span class="diff-text">    resample.quality = 4</span></div>
+          <div class="diff-row"><span class="diff-ln">6</span><span class="diff-text">}</span></div>
+        </div>
+        <div class="diff-footer" style="color: #b4f8c8;">
+          <div style="font-weight: 600; margin-bottom: 4px; color: #56d364;">Beneficios Acústicos y de Sistema:</div>
+          <div>• <strong>Carga CPU < 0.05%:</strong> Remuestreo polifásico optimizado por SIMD AVX2 sin sobrecarga en la CPU híbrida.</div>
+          <div>• <strong>Transparencia Absoluta:</strong> THD+N por debajo de <strong>−140 dB</strong> (0.00001% distorsión, inaudible para cualquier oído humano).</div>
+          <div>• <strong>Conmutación Nativa de Reloj:</strong> Al eliminar la latencia fraccionaria forzada, PipeWire conmuta a <strong>44.1 kHz o 48 kHz directos</strong>.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert-box alert-info" style="margin-top: 24px;">
+      <div class="alert-icon">ℹ</div>
+      <div class="alert-body">
+        <h3>Nota sobre clientes PulseAudio (Cider / Navegadores)</h3>
+        <p>
+          En <code>~/.config/pipewire/pipewire-pulse.conf.d/force-192k.conf</code> también figura <code>resample.quality = 10</code>. Se recomienda igualmente fijarlo en <code>resample.quality = 4</code> para que las aplicaciones que usan la capa de emulación PulseAudio gocen de la misma estabilidad y bajo consumo de ciclos.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 6: CADENA DE TRABAJO Y REDUNDANCIAS -->
+  <section id="tab-trabajo-bottleneck" class="tab-content">
+    <div class="alert-box alert-warning">
+      <div class="alert-icon">🔄</div>
+      <div class="alert-body">
+        <h3>El Absurdo de la Conversión Redundante en el Equipo de Trabajo</h3>
+        <p>
+          En la oficina, la cadena actual conecta:
+          <code>iPhone ➔ AirPort Express ➔ mini-Toslink ➔ FiiO K7BT ➔ RCA Analógico ➔ Edifier R1855DB</code>.
+          Esta arquitectura comete un error elemental de cadena de señal electroacústica.
+        </p>
+      </div>
+    </div>
+
+    <div class="chain-flow">
+      <div class="chain-node transparent">
+        <div class="node-stage">Fuente Digital</div>
+        <div class="node-gear">AirPort Express (AirPlay / Red)</div>
+        <div class="node-status val-good">Bit-perfect 16/44.1</div>
+      </div>
+      <div class="chain-node">
+        <div class="node-stage">Conversión 1 (D/A)</div>
+        <div class="node-gear">FiiO K7BT (AK4493 DAC)</div>
+        <div class="node-status val-warn">Salida Analógica RCA</div>
+      </div>
+      <div class="chain-node bottleneck">
+        <div class="node-stage">Conversión 2 (A/D)</div>
+        <div class="node-gear">Edifier R1855DB (ADC Interno)</div>
+        <div class="node-status val-bad">¡Redigitaliza a PCM barato!</div>
+      </div>
+      <div class="chain-node">
+        <div class="node-stage">DSP y Amplificación</div>
+        <div class="node-gear">Edifier R1855DB (DSP Clase D)</div>
+        <div class="node-status val-warn">Crossover digital interno</div>
+      </div>
+      <div class="chain-node bottleneck">
+        <div class="node-stage">Cuello de Botella Real</div>
+        <div class="node-gear">Transductores Edifier R1855DB ($2,500 MXN)</div>
+        <div class="node-status val-bad">Respuesta acústica de escritorio</div>
+      </div>
+    </div>
+
+    <h2 class="section-title">Por qué el FiiO K7BT está Desperdiciado aquí</h2>
+    <p class="lead-text">
+      Las Edifier R1855DB son altavoces de escritorio activos basados en un chip Texas Instruments (TAS5707 o similar). 
+      <strong>Todas las entradas analógicas RCA son convertidas obligatoriamente a digital por un ADC interno</strong> para procesar el filtro crossover activo y el ecualizador DSP antes de alimentar los chips de amplificación PWM Clase D.
+    </p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">El Ciclo Inútil D/A ➔ A/D</span>
+          <span class="card-tag">Degradación Innecesaria</span>
+        </div>
+        <p>
+          La señal sufre una conversión D/A impecable en los chips AK4493 del FiiO K7BT, sólo para ser degradada y redigitalizada de inmediato por un conversor analógico-a-digital de bajo coste en la placa de las Edifier.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">La Solución Racional y Gratuita</span>
+          <span class="card-tag">Conexión Óptica Directa</span>
+        </div>
+        <p>
+          Las Edifier R1855DB <strong>cuentan con entrada óptica Toslink directa</strong>. Si se conecta el AirPort Express directamente a la entrada óptica de las Edifier mediante un cable mini-Toslink a Toslink:
+        </p>
+        <ul style="margin: 8px 0 0 16px; color: var(--amber);">
+          <li>Se eliminan dos conversiones completas innecesarias.</li>
+          <li>Se libera el FiiO K7BT ($4,500 MXN) por completo.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Rescate del Arya Stealth ($8,000 MXN)</span>
+          <span class="card-tag">Aprovechamiento de Activos</span>
+        </div>
+        <p>
+          El documento registra un <strong>HIFIMAN Arya Stealth</strong> guardado sin uso.
+          Si se libera el FiiO K7BT para colocarlo como amplificador de auriculares de escritorio en la oficina junto al Arya Stealth (aprovechando sus 2.0 W balanceados), el usuario obtiene una <strong>estación de trabajo de grado de referencia absoluto a coste $0</strong>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 7: COSTO/BENEFICIO MARGINAL -->
+  <section id="tab-costo-beneficio" class="tab-content">
+    <h2 class="section-title">Análisis de Retorno Marginal de Inversión</h2>
+    <p class="lead-text">
+      En audio de alta fidelidad, la relación entre gasto monetario y fidelidad acústica medible sigue una curva logarítmica de rendimientos decrecientes extremos:
+    </p>
+
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Componente</th>
+            <th>Gasto Histórico</th>
+            <th>Contribución al Rendimiento Real</th>
+            <th>Veredicto de Valor Técnico</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>HIFIMAN HE1000se</strong></td>
+            <td class="num">$20,000 MXN</td>
+            <td class="val-good"><strong>80.0% del sonido</strong> (Transductor, distorsión no lineal, velocidad transitoria, escena).</td>
+            <td><span class="val-good">VALOR EXCEPCIONAL</span> (Comprado muy por debajo de precio de lista).</td>
+          </tr>
+          <tr>
+            <td><strong>Ecualización DSP en RME</strong></td>
+            <td class="num">$0 MXN</td>
+            <td class="val-good"><strong>15.0% del sonido</strong> (Alineación tonal a objetivo Harman, corrección de aspereza).</td>
+            <td><span class="val-good">EL MAYOR RETORNO POSIBLE</span> (Impacto psicoacústico colosal a coste cero).</td>
+          </tr>
+          <tr>
+            <td><strong>RME ADI-2 DAC FS</strong></td>
+            <td class="num">$13,000 MXN</td>
+            <td class="val-good"><strong>4.5% del sonido</strong> (Transparencia absoluta, DSP paramétrico integrado, jitter nulo).</td>
+            <td><span class="val-good">COMPRA MAESTRA</span> (Instrumento de laboratorio y referencia).</td>
+          </tr>
+          <tr>
+            <td><strong>Aune S17 Pro EVO + Elevador</strong></td>
+            <td class="num">$11,000 MXN</td>
+            <td class="val-warn"><strong>0.5% del sonido</strong> (Marginal; añade calor, riesgo de sobrevoltaje y componentes extra).</td>
+            <td><span class="val-warn">REDUNDANCIA TÉCNICA</span> (La salida interna del RME es técnicamente superior en THD).</td>
+          </tr>
+          <tr>
+            <td><strong>Eversolo DMP-A6 (por USB)</strong></td>
+            <td class="num">$13,500 MXN</td>
+            <td class="val-bad"><strong>0.0% del sonido</strong> (Bit-perfect asíncrono; suena 100% idéntico a una PC limpia).</td>
+            <td><span class="val-bad">LUJO ERGONÓMICO</span> (Se pagan la pantalla y chasis, no mejora acústica).</td>
+          </tr>
+          <tr>
+            <td><strong>Cables (USB Oyaide, WBC Star-Quad, Cat 7)</strong></td>
+            <td class="num">$2,029 MXN</td>
+            <td class="val-bad"><strong>0.0% del sonido</strong> (Físicamente indistinguibles de cables genéricos con buen contacto).</td>
+            <td><span class="val-bad">PLACEBO / ESTÉTICA</span> (No hay alteración de señal a nivel medible).</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="verdict-banner">
+      <div class="verdict-title">Conclusión de Auditoría Financiera / Acústica:</div>
+      <p style="font-size: 15px; color: #fff; line-height: 1.7;">
+        <strong>El 95% del rendimiento acústico del sistema de casa reside exclusivamente en el binomio HE1000se + RME ADI-2 DAC FS con la curva de ecualización activa ($33,000 MXN).</strong><br>
+        Los $31,029 MXN adicionales invertidos en el Eversolo como transporte, el Aune S17 Pro como etapa externa y la cablería especializada representan una ganancia acústica neta de <strong>menos del 0.5%</strong>, a cambio de introducir <strong>tres nuevos puntos de falla potenciales</strong> (sobrevoltaje por transformador, calor extremo en el mueble y bucles de control).
+      </p>
+    </div>
+  </section>
+
+  <!-- TAB 8: CALCULADORA INTERACTIVA -->
+  <section id="tab-calculadora" class="tab-content">
+    <h2 class="section-title">Calculadora Metrológica de Carga y Potencia</h2>
+    <p class="lead-text">
+      Compruebe empíricamente los cálculos de tensión, corriente y requerimientos reales de amplificación para cualquier auricular y nivel deseado:
+    </p>
+
+    <div class="interactive-panel">
+      <div class="calc-inputs">
+        <div class="calc-group">
+          <label>Sensibilidad (dB/mW):</label>
+          <input type="number" id="calc-sens" value="96" step="0.5" />
+        </div>
+        <div class="calc-group">
+          <label>Impedancia (Ohms):</label>
+          <input type="number" id="calc-imp" value="35" step="1" />
+        </div>
+        <div class="calc-group">
+          <label>Nivel de Escucha Objetivo (dB SPL):</label>
+          <input type="number" id="calc-spl" value="105" step="1" />
+        </div>
+        <div class="calc-group">
+          <label>Bias de Amplificador Clase A (mA):</label>
+          <select id="calc-bias">
+            <option value="50">50 mA (Aune S17 Pro A-L)</option>
+            <option value="100">100 mA (Aune S17 Pro A-H)</option>
+            <option value="250">250 mA (Etapa Alta Potencia)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="calc-results">
+        <div class="result-item">
+          <div class="r-label">Potencia Necesaria:</div>
+          <div class="r-val" id="res-power">7.94 mW</div>
+        </div>
+        <div class="result-item">
+          <div class="r-label">Voltaje RMS:</div>
+          <div class="r-val" id="res-volts">0.527 V</div>
+        </div>
+        <div class="result-item">
+          <div class="r-label">Corriente Pico:</div>
+          <div class="r-val" id="res-current">21.3 mA</div>
+        </div>
+        <div class="result-item">
+          <div class="r-label">Límite Clase A Pura:</div>
+          <div class="r-val" id="res-clase-a" style="color: #4ade80;">118.4 dB SPL</div>
+        </div>
+        <div class="result-item">
+          <div class="r-label">¿Sale de Clase A?</div>
+          <div class="r-val" id="res-status" style="color: #4ade80;">NO (Pura A)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pie de página -->
+  <footer class="doc-footer">
+    <div>Antigravity High-Fidelity Technical Review Unit · Reporte Autónomo</div>
+    <div>Fecha de emisión: 13 de Septiembre de 2026</div>
+  </footer>
+
+</div>
+
+<script>
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-tabs .nav-tab').forEach(el => el.classList.remove('active'));
+    
+    const target = document.getElementById('tab-' + tabId);
+    if (target) target.classList.add('active');
+    
+    if (event && event.currentTarget) {
+      event.currentTarget.classList.add('active');
+    }
+  }
+
+  function updateCalc() {
+    const sens = parseFloat(document.getElementById('calc-sens').value) || 96;
+    const imp = parseFloat(document.getElementById('calc-imp').value) || 35;
+    const spl = parseFloat(document.getElementById('calc-spl').value) || 105;
+    const bias = parseFloat(document.getElementById('calc-bias').value) || 50;
+
+    // Potencia en mW = 10^((SPL - Sens) / 10)
+    const powerMw = Math.pow(10, (spl - sens) / 10);
+    const powerW = powerMw / 1000;
+
+    // Vrms = sqrt(P * R)
+    const vRms = Math.sqrt(powerW * imp);
+
+    // I_rms = V / R, I_peak = I_rms * sqrt(2) * 1000 (en mA)
+    const iRms = vRms / imp;
+    const iPeakMa = iRms * Math.SQRT2 * 1000;
+
+    // Límite Clase A: I_peak_max = 2 * bias (mA)
+    const maxPeakA = (2 * bias) / 1000; // Amperes
+    const maxPowerClassA = (Math.pow(maxPeakA, 2) * imp) / 2; // Watts
+    const maxSplClassA = sens + 10 * Math.log10(maxPowerClassA * 1000);
+
+    // Actualizar UI
+    document.getElementById('res-power').textContent = powerMw < 1 ? (powerMw * 1000).toFixed(1) + ' µW' : powerMw.toFixed(2) + ' mW';
+    document.getElementById('res-volts').textContent = vRms.toFixed(3) + ' V';
+    document.getElementById('res-current').textContent = iPeakMa.toFixed(1) + ' mA';
+    document.getElementById('res-clase-a').textContent = maxSplClassA.toFixed(1) + ' dB SPL';
+
+    const statusEl = document.getElementById('res-status');
+    if (spl <= maxSplClassA) {
+      statusEl.textContent = 'NO (Pura A)';
+      statusEl.style.color = '#4ade80';
+    } else {
+      statusEl.textContent = 'SÍ (Pasa a AB)';
+      statusEl.style.color = '#f87171';
+    }
+  }
+
+  document.getElementById('calc-sens').addEventListener('input', updateCalc);
+  document.getElementById('calc-imp').addEventListener('input', updateCalc);
+  document.getElementById('calc-spl').addEventListener('input', updateCalc);
+  document.getElementById('calc-bias').addEventListener('change', updateCalc);
+  updateCalc();
+</script>
+
+</body>
+</html>

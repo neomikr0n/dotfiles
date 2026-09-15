@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Informe de revisión — dsh-chrome-open.sh</title>
+<style>
+  :root {
+    --bg: #0A0A0A; --panel: #16181D; --panel2: #1E2126;
+    --orange: #FF4E00; --red-orange: #FF3300; --amber: #FFB300;
+    --yellow: #FFC821; --text: #F5F1EA; --muted: #9AA0A8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    line-height: 1.6; min-height: 100vh;
+  }
+  code, pre { font-family: "JetBrains Mono", "Fira Code", ui-monospace, monospace; }
+
+  /* ---------- Cabecera con ondas ---------- */
+  header.hero {
+    position: relative; overflow: hidden;
+    background: var(--bg); padding: 72px 32px 120px;
+  }
+  .waves { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hero-inner { position: relative; max-width: 980px; margin: 0 auto; }
+  .hero .kicker {
+    display: inline-block; font-size: 12px; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--yellow); margin-bottom: 10px;
+    font-weight: 700;
+  }
+  .hero h1 { font-size: clamp(28px, 4vw, 44px); font-weight: 800; line-height: 1.15; }
+  .hero h1 .accent { color: var(--orange); }
+  .hero .meta { margin-top: 14px; color: var(--muted); font-size: 14px; }
+  .hero .meta code {
+    background: rgba(255,255,255,.08); padding: 2px 8px; border-radius: 6px;
+    color: var(--amber); font-size: 13px;
+  }
+  .score-ring-wrap { margin-top: 34px; display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+  .score-ring {
+    position: relative; width: 132px; height: 132px; flex: none;
+    border-radius: 50%; background: rgba(10,10,10,.72);
+    box-shadow: 0 4px 24px rgba(0,0,0,.45); backdrop-filter: blur(2px);
+  }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring .track { stroke: rgba(255,255,255,.12); }
+  .score-ring .bar {
+    stroke: #FF4E00; stroke-linecap: round;
+    filter: drop-shadow(0 0 8px #FF4E0066);
+  }
+  .score-num {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .score-num b { font-size: 34px; color: #FF4E00; }
+  .score-num span { font-size: 10px; letter-spacing: 2px; color: var(--muted); }
+  .chips { display: flex; gap: 12px; flex-wrap: wrap; }
+  .chip {
+    background: var(--panel); border: 1px solid color-mix(in srgb, var(--chip) 45%, transparent);
+    border-radius: 12px; padding: 10px 18px; min-width: 84px; text-align: center;
+  }
+  .chip-num { font-size: 24px; font-weight: 800; color: var(--chip); display: block; }
+  .chip-label { font-size: 10px; letter-spacing: 1.5px; color: var(--muted); }
+
+  /* ---------- Layout ---------- */
+  main { max-width: 980px; margin: -70px auto 0; padding: 0 24px 80px; position: relative; }
+  section { margin-top: 52px; }
+  section h2 {
+    font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px;
+    margin-bottom: 6px;
+  }
+  .dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex: none;
+    box-shadow: 0 0 10px currentColor; }
+  .section-sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+  .card-panel {
+    background: var(--panel); border: 1px solid rgba(255,255,255,.07);
+    border-radius: 16px; padding: 24px 26px;
+  }
+  .empty { color: var(--muted); font-style: italic; }
+
+  /* ---------- Hallazgos ---------- */
+  .finding {
+    background: var(--panel); border: 1px solid rgba(255,255,255,.07);
+    border-left: 4px solid var(--sev);
+    border-radius: 14px; padding: 20px 22px; margin-bottom: 18px;
+  }
+  .finding header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .sev-badge {
+    color: #0A0A0A; font-size: 10.5px; font-weight: 800; letter-spacing: 1.5px;
+    padding: 3px 10px; border-radius: 999px;
+  }
+  .line-badge, .cat-badge, .src-badge {
+    font-size: 11px; color: var(--muted); background: var(--panel2);
+    border: 1px solid rgba(255,255,255,.08); border-radius: 999px; padding: 2px 10px;
+  }
+  .src-badge { color: var(--amber); }
+  .finding h3 { font-size: 17px; margin-bottom: 6px; }
+  .finding p { color: #C9CDD3; font-size: 14.5px; margin-bottom: 8px; }
+  .finding .rec { color: var(--text); }
+  .finding .rec strong { color: var(--yellow); }
+  .code-pair { display: grid; gap: 10px; margin-top: 14px; }
+  @media (min-width: 800px) { .code-pair { grid-template-columns: 1fr 1fr; } }
+  .code-wrap {
+    background: #0D0E10; border-radius: 10px; overflow: auto;
+    border: 1px solid rgba(255,255,255,.06); position: relative;
+  }
+  .code-label {
+    position: absolute; top: 8px; right: 10px; font-size: 9px; letter-spacing: 2px;
+    font-weight: 800; padding: 2px 8px; border-radius: 999px;
+  }
+  .code-bad .code-label { background: #FF3300; color: #0A0A0A; }
+  .code-good .code-label { background: #FFB300; color: #0A0A0A; }
+  .code-bad { border-top: 2px solid #FF330055; }
+  .code-good { border-top: 2px solid #FFB30055; }
+  pre { padding: 30px 16px 14px; font-size: 13px; line-height: 1.55; overflow-x: auto; }
+  .c-comment { color: #6E7681; font-style: italic; }
+  .c-string { color: #FFC821; }
+  .c-var { color: #FF4E00; font-weight: 600; }
+  .c-kw { color: #FF3300; font-weight: 700; }
+
+  /* ---------- Sugerencias creativas ---------- */
+  .grid { display: grid; gap: 16px; }
+  @media (min-width: 800px) { .grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); } }
+  .creative-card {
+    background: linear-gradient(160deg, rgba(255,178,0,.10), rgba(255,78,0,.05));
+    border: 1px solid #FFB30044; border-radius: 14px; padding: 18px 20px;
+  }
+  .creative-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .bulb { color: var(--yellow); font-size: 18px; }
+  .creative-card h3 { font-size: 15.5px; }
+  .effort {
+    margin-left: auto; font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--yellow); border: 1px solid #FFB30066; border-radius: 999px; padding: 1px 9px;
+  }
+  .creative-card p { font-size: 14px; color: #C9CDD3; }
+
+  /* ---------- Puntos ciegos ---------- */
+  .blind-card {
+    background: linear-gradient(160deg, rgba(255,51,0,.09), rgba(255,78,0,.04));
+    border: 1px solid #FF330055; border-radius: 14px; padding: 18px 20px;
+  }
+  .blind-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+  .eye { color: var(--red-orange); font-size: 18px; }
+  .blind-card h3 { font-size: 15.5px; }
+  .blind-card p { font-size: 14px; color: #C9CDD3; margin-bottom: 6px; }
+  .risk-label { color: var(--red-orange); }
+  .mit-label { color: var(--amber); }
+
+  /* ---------- Checklist ---------- */
+  .checklist { list-style: none; }
+  .checklist li {
+    background: var(--panel); border: 1px solid rgba(255,255,255,.07);
+    border-radius: 10px; padding: 12px 16px; margin-bottom: 10px;
+    display: flex; gap: 12px; align-items: baseline; font-size: 14.5px;
+  }
+  .checklist li.done { opacity: .55; text-decoration: line-through; }
+  .check { color: var(--orange); font-weight: 800; flex: none; }
+
+  footer {
+    max-width: 980px; margin: 0 auto; padding: 0 24px 48px;
+    color: var(--muted); font-size: 12.5px; text-align: center;
+  }
+  footer .brand { color: var(--orange); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  
+<svg class="waves" viewBox="0 0 1440 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FF4E00"/><stop offset="1" stop-color="#FFB300"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#FF3300"/><stop offset="1" stop-color="#FF4E00"/>
+    </linearGradient>
+    <linearGradient id="g3" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFC821"/><stop offset="1" stop-color="#FFB300"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#g2)" opacity="0.55" d="M0,300 C240,120 420,420 720,260 C960,120 1180,380 1440,180 L1440,420 L0,420 Z"/>
+  <path fill="url(#g1)" d="M0,180 C260,340 520,40 780,160 C1040,280 1200,60 1440,220 L1440,420 L0,420 Z"/>
+  <path fill="url(#g3)" opacity="0.9" d="M0,360 C300,240 560,420 860,320 C1120,235 1260,360 1440,300 L1440,420 L0,420 Z"/>
+</svg>
+  <div class="hero-inner">
+    <span class="kicker">Informe de revisión de script</span>
+    <h1>dsh-chrome-open.sh <span class="accent">/ análisis y mejoras</span></h1>
+    <p class="meta"><code>/home/n30/dotfiles/share/scripts/dsh-chrome-open.sh</code> · 12 líneas · shell: bash</p>
+    <div class="score-ring-wrap">
+      <div class="score-ring">
+        <svg width="132" height="132" viewBox="0 0 120 120">
+          <circle class="track" cx="60" cy="60" r="52" fill="none" stroke-width="9"/>
+          <circle class="bar" cx="60" cy="60" r="52" fill="none" stroke-width="9"
+            stroke-dasharray="326.7" stroke-dashoffset="94.8"/>
+        </svg>
+        <div class="score-num"><b>71</b><span>/ 100</span></div>
+      </div>
+      <div class="chips"><div class="chip" style="--chip: #FF3300"><span class="chip-num">0</span><span class="chip-label">CRÍTICA</span></div><div class="chip" style="--chip: #FF4E00"><span class="chip-num">2</span><span class="chip-label">ALTA</span></div><div class="chip" style="--chip: #FFB300"><span class="chip-num">3</span><span class="chip-label">MEDIA</span></div><div class="chip" style="--chip: #FFC821"><span class="chip-num">1</span><span class="chip-label">BAJA</span></div><div class="chip" style="--chip: #7A828C"><span class="chip-num">0</span><span class="chip-label">INFO</span></div></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section id="resumen">
+    <h2><span class="dot" style="background: #FF4E00"></span>Resumen ejecutivo</h2>
+    <div class="card-panel">
+      <p>Script mínimo y legible que arranca dsh web si no está corriendo y abre Chrome en modo app con el token del log. Shellcheck no reporta nada, pero el flujo depende de supuestos frágiles: un sleep ciego en lugar de confirmar que el servidor levantó, y un token leído de un log fijo en /tmp que puede estar vacío u obsoleto, abriendo Chrome en silencio a una página de error.</p>
+    </div>
+  </section>
+
+  <section id="hallazgos">
+    <h2><span class="dot" style="background: #FF3300"></span>Hallazgos por severidad</h2>
+    <p class="section-sub">Ordenados de mayor a menor gravedad. Cada hallazgo incluye cómo corregirlo.</p>
+    
+        <article class="finding" style="--sev: #FF4E00">
+          <header>
+            <span class="sev-badge" style="background: #FF4E00">ALTA</span>
+            <span class="line-badge">línea 9</span><span class="src-badge">agente</span>
+            <span class="cat-badge">robustez</span>
+          </header>
+          <h3>Token sin validar: puede estar vacío u obsoleto</h3>
+          <p>Si dsh web ya estaba corriendo, el bloque de arranque se salta y el grep lee un log que puede no existir, estar vacío o contener el token de una sesión anterior (dsh puede rotarlo al reiniciar). El script abre igualmente Chrome con token vacío o caducado y el usuario ve una página de error sin ninguna pista de qué falló.</p>
+          <p class="rec"><strong>Cómo mejorar:</strong> Extraer el token con un bucle de reintento corto y abortar con mensaje claro a stderr si tras el timeout sigue vacío. Nunca abrir Chrome con un token que no se haya podido confirmar.</p>
+          <div class="code-pair"><div class="code-wrap code-bad"><span class="code-label">ANTES</span><pre><code>TOKEN=<span class="c-var">$</span>(grep -oP <span class="c-string">&#x27;token=\K[\w-]+&#x27;</span> /tmp/dsh-web.log | head -1)</code></pre></div><div class="code-wrap code-good"><span class="code-label">DESPUÉS</span><pre><code>TOKEN=<span class="c-string">&quot;&quot;</span>
+<span class="c-kw">for</span> _ <span class="c-kw">in</span> {1..20}; <span class="c-kw">do</span>
+    TOKEN=<span class="c-var">$</span>(grep -oP <span class="c-string">&#x27;token=\K[\w-]+&#x27;</span> <span class="c-string">&quot;$LOG&quot;</span> | head -1)
+    [[ -n <span class="c-var">$TOKEN</span> ]] &amp;&amp; <span class="c-kw">break</span>
+    sleep 0.5
+<span class="c-kw">done</span>
+<span class="c-kw">if</span> [[ -z <span class="c-var">$TOKEN</span> ]]; <span class="c-kw">then</span>
+    echo <span class="c-string">&quot;No se pudo obtener el token de $LOG&quot;</span> &gt;&amp;2
+    <span class="c-kw">exit</span> 1
+<span class="c-kw">fi</span></code></pre></div></div>
+        </article>
+
+        <article class="finding" style="--sev: #FF4E00">
+          <header>
+            <span class="sev-badge" style="background: #FF4E00">ALTA</span>
+            <span class="line-badge">línea 5</span><span class="src-badge">agente</span>
+            <span class="cat-badge">robustez</span>
+          </header>
+          <h3>sleep 3 ciego: no confirma que dsh web realmente arrancó</h3>
+          <p>Si dsh tarda más de 3 segundos en levantar o falla al arrancar (solo queda registrado en el log), el script continúa y abre Chrome contra un puerto muerto. El resultado es una ventana app de Chrome con error de conexión, sin diagnóstico.</p>
+          <p class="rec"><strong>Cómo mejorar:</strong> Sustituir el sleep fijo por un polling de salud: sondear http://127.0.0.1:3080/ con curl hasta que responda, con un timeout total (p. ej. 10 s) y abortar con el log si nunca responde.</p>
+          <div class="code-pair"><div class="code-wrap code-bad"><span class="code-label">ANTES</span><pre><code>dsh web --no-open &gt; /tmp/dsh-web.log 2&gt;&amp;1 &amp;
+sleep 3</code></pre></div><div class="code-wrap code-good"><span class="code-label">DESPUÉS</span><pre><code>dsh web --no-open &gt; <span class="c-string">&quot;$LOG&quot;</span> 2&gt;&amp;1 &amp;
+<span class="c-kw">for</span> _ <span class="c-kw">in</span> {1..20}; <span class="c-kw">do</span>
+    curl -sf -o /dev/null http://127.0.0.1:3080/ &amp;&amp; <span class="c-kw">break</span>
+    sleep 0.5
+<span class="c-kw">done</span>
+<span class="c-kw">if</span> ! curl -sf -o /dev/null http://127.0.0.1:3080/; <span class="c-kw">then</span>
+    echo <span class="c-string">&quot;dsh web no respondió a tiempo; revisa $LOG&quot;</span> &gt;&amp;2
+    <span class="c-kw">exit</span> 1
+<span class="c-kw">fi</span></code></pre></div></div>
+        </article>
+
+        <article class="finding" style="--sev: #FFB300">
+          <header>
+            <span class="sev-badge" style="background: #FFB300">MEDIA</span>
+            <span class="line-badge">línea 4</span><span class="src-badge">agente</span>
+            <span class="cat-badge">robustez</span>
+          </header>
+          <h3>Log con ruta fija en /tmp compartido por todas las ejecuciones</h3>
+          <p>/tmp/dsh-web.log es un nombre fijo: dos ejecuciones simultáneas escriben y leen el mismo archivo (carrera), una sesión vieja deja un token caducado que la siguiente ejecución lee creyendo que es válido, y el token — una credencial de sesión — queda en un archivo world-readable del directorio compartido /tmp.</p>
+          <p class="rec"><strong>Cómo mejorar:</strong> Usar ${XDG_RUNTIME_DIR:-/tmp} (runtime del usuario, 0700) y un nombre por instancia (p. ej. sufijo $$), con trap EXIT para limpiar el log temporal si ya no se necesita.</p>
+          <div class="code-pair"><div class="code-wrap code-bad"><span class="code-label">ANTES</span><pre><code>dsh web --no-open &gt; /tmp/dsh-web.log 2&gt;&amp;1 &amp;</code></pre></div><div class="code-wrap code-good"><span class="code-label">DESPUÉS</span><pre><code>LOG=<span class="c-string">&quot;${XDG_RUNTIME_DIR:-/tmp}/dsh-web-$$.log&quot;</span>
+dsh web --no-open &gt; <span class="c-string">&quot;$LOG&quot;</span> 2&gt;&amp;1 &amp;
+<span class="c-kw">trap</span> <span class="c-string">&#x27;rm -f &quot;$LOG&quot;&#x27;</span> EXIT</code></pre></div></div>
+        </article>
+
+        <article class="finding" style="--sev: #FFB300">
+          <header>
+            <span class="sev-badge" style="background: #FFB300">MEDIA</span>
+            <span class="line-badge">línea 3</span><span class="src-badge">agente</span>
+            <span class="cat-badge">robustez</span>
+          </header>
+          <h3>Sin verificación de dependencias (lsof, dsh, google-chrome-stable)</h3>
+          <p>El script asume que lsof, dsh y google-chrome-stable están en el PATH. En un entorno con PATH distinto (lanzador de teclas, systemd, Wayland session script) cualquiera puede faltar: lsof ausente hace que el if entre siempre en el arranque (duplicando instancias), y dsh o chrome ausentes producen errores crípticos.</p>
+          <p class="rec"><strong>Cómo mejorar:</strong> Comprobar las tres dependencias al inicio con command -v y salir con un mensaje específico si falta alguna.</p>
+          <div class="code-pair"><div class="code-wrap code-bad"><span class="code-label">ANTES</span><pre><code><span class="c-kw">if</span> ! lsof -i :3080 &gt;/dev/null 2&gt;&amp;1; <span class="c-kw">then</span></code></pre></div><div class="code-wrap code-good"><span class="code-label">DESPUÉS</span><pre><code><span class="c-kw">for</span> cmd <span class="c-kw">in</span> lsof dsh google-chrome-stable; <span class="c-kw">do</span>
+    command -v <span class="c-string">&quot;$cmd&quot;</span> &gt;/dev/null 2&gt;&amp;1 || { echo <span class="c-string">&quot;Falta $cmd en PATH&quot;</span> &gt;&amp;2; <span class="c-kw">exit</span> 1; }
+<span class="c-kw">done</span>
+<span class="c-kw">if</span> ! lsof -i :3080 &gt;/dev/null 2&gt;&amp;1; <span class="c-kw">then</span></code></pre></div></div>
+        </article>
+
+        <article class="finding" style="--sev: #FFB300">
+          <header>
+            <span class="sev-badge" style="background: #FFB300">MEDIA</span>
+            <span class="line-badge">línea 3</span><span class="src-badge">agente</span>
+            <span class="cat-badge">robustez</span>
+          </header>
+          <h3>lsof :3080 no garantiza que quien escucha sea dsh</h3>
+          <p>La comprobación es &#x27;¿alguien usa el puerto 3080?&#x27;, no &#x27;¿está corriendo dsh web?&#x27;. Si otro servicio ocupó el puerto, el script lo asume por dsh y además envía el token por URL a ese servicio desconocido, filtrando una credencial a un tercero.</p>
+          <p class="rec"><strong>Cómo mejorar:</strong> Comprobar el proceso, no solo el puerto: verificar que existe un proceso &#x27;dsh web&#x27; (pgrep -af) o que el PID que escucha en :3080 corresponde a dsh antes de reutilizar la instancia.</p>
+          <div class="code-pair"><div class="code-wrap code-bad"><span class="code-label">ANTES</span><pre><code><span class="c-kw">if</span> ! lsof -i :3080 &gt;/dev/null 2&gt;&amp;1; <span class="c-kw">then</span></code></pre></div><div class="code-wrap code-good"><span class="code-label">DESPUÉS</span><pre><code><span class="c-kw">if</span> ! pgrep -af <span class="c-string">&#x27;dsh web&#x27;</span> &gt;/dev/null 2&gt;&amp;1; <span class="c-kw">then</span>
+    dsh web --no-open &gt; <span class="c-string">&quot;$LOG&quot;</span> 2&gt;&amp;1 &amp;
+    ...
+<span class="c-kw">fi</span></code></pre></div></div>
+        </article>
+
+        <article class="finding" style="--sev: #FFC821">
+          <header>
+            <span class="sev-badge" style="background: #FFC821">BAJA</span>
+            <span class="line-badge">línea 1</span><span class="src-badge">agente</span>
+            <span class="cat-badge">calidad</span>
+          </header>
+          <h3>Cabecera mínima: sin set -euo pipefail y shebang no portable</h3>
+          <p>El script no activa set -euo pipefail, así que un fallo de dsh o del grep pasa desapercibido y la ejecución continúa con estado inconsistente. El shebang /bin/bash enlaza a la ruta de Bash del sistema en vez de resolverlo vía PATH (#/usr/bin/env bash), que es lo habitual en dotfiles que pueden moverse entre máquinas.</p>
+          <p class="rec"><strong>Cómo mejorar:</strong> Usar #!/usr/bin/env bash y añadir set -euo pipefail como segunda línea. Con las validaciones ya propuestas, los errores abortarán el script en lugar de propagarse en silencio.</p>
+          <div class="code-pair"><div class="code-wrap code-bad"><span class="code-label">ANTES</span><pre><code><span class="c-comment">#!/bin/bash</span>
+# Si dsh web no está corrien<span class="c-kw">do</span>, lo arranca</code></pre></div><div class="code-wrap code-good"><span class="code-label">DESPUÉS</span><pre><code><span class="c-comment">#!/usr/bin/env bash</span>
+<span class="c-kw">set</span> -euo pipefail
+# Si dsh web no está corrien<span class="c-kw">do</span>, lo arranca</code></pre></div></div>
+        </article>
+  </section>
+
+  
+  <section id="creativas">
+    <h2><span class="dot" style="background: #FFC821"></span>Sugerencias creativas</h2>
+    <p class="section-sub">Ideas no obvias para llevar el script al siguiente nivel.</p>
+    <div class="grid">
+      <article class="creative-card">
+        <div class="creative-head">
+          <span class="bulb">✦</span>
+          <h3>Polling de salud en vez de sleep fijo</h3>
+          <span class="effort">esfuerzo: bajo</span>
+        </div>
+        <p>Un bucle &#x27;hasta que curl responde o expira el timeout&#x27; convierte el arranque en determinista: arranca en cuanto el servidor está listo (normalmente &lt;1 s, más rápido que el sleep actual) y falla con diagnóstico en vez de abrir Chrome a un puerto muerto.</p>
+      </article>
+      <article class="creative-card">
+        <div class="creative-head">
+          <span class="bulb">✦</span>
+          <h3>Flag --print-url para keybindings</h3>
+          <span class="effort">esfuerzo: bajo</span>
+        </div>
+        <p>Con getopts, un modo que solo imprime la URL (sin abrir Chrome) permite usar el script desde keybindings de Hypr/DankMaterialShell, pasarlo a otras apps, o depurar el token sin lanzar ventanas. Par de flags útiles: --port y --browser para parametrizar los valores hoy hardcodeados.</p>
+      </article>
+      <article class="creative-card">
+        <div class="creative-head">
+          <span class="bulb">✦</span>
+          <h3>Validar el token contra el servidor antes de abrir Chrome</h3>
+          <span class="effort">esfuerzo: medio</span>
+        </div>
+        <p>Un curl con el token que compruebe el código HTTP distingue token válido de caducado. Si es inválido, el script puede reiniciar dsh web y regenerar el token: convierte el caso &#x27;log viejo&#x27; en auto-reparación en vez de fallo silencioso.</p>
+      </article>
+      <article class="creative-card">
+        <div class="creative-head">
+          <span class="bulb">✦</span>
+          <h3>Función log_msg + notificación de escritorio</h3>
+          <span class="effort">esfuerzo: bajo</span>
+        </div>
+        <p>Como este script vive en un entorno de escritorio (DankMaterialShell), un log_msg que escriba a stderr con nivel y además envíe notify-send en los fallos haría el error visible en pantalla en lugar de solo en /tmp. Beneficio inmediato: el usuario sabe por qué Chrome no abrió la app.</p>
+      </article>
+      <article class="creative-card">
+        <div class="creative-head">
+          <span class="bulb">✦</span>
+          <h3>Ciclo de vida explícito de dsh web</h3>
+          <span class="effort">esfuerzo: medio</span>
+        </div>
+        <p>Decidir si dsh web debe vivir mientras Chrome esté abierto: con un trap EXIT que mate al proceso hijo si fue arrancado por este script, la instancia no queda huérfana tras cerrar el navegador. Alternativa: modo --keep para dejarlo corriendo como servicio de sesión.</p>
+      </article></div>
+  </section>
+  
+  <section id="puntos-ciegos">
+    <h2><span class="dot" style="background: #FF3300"></span>Puntos ciegos</h2>
+    <p class="section-sub">Riesgos que ni shellcheck ni una lectura rápida detectan.</p>
+    <div class="grid">
+      <article class="blind-card">
+        <div class="blind-head">
+          <span class="eye">◉</span>
+          <h3>Carrera entre dos instancias del script</h3>
+        </div>
+        <p><strong class="risk-label">Riesgo:</strong> Si el keybinding se dispara dos veces seguido (doble pulsación, launchers repetidos), ambas ejecuciones comprueban el puerto a la vez, ambas arrancan dsh web y ambas escriben el mismo /tmp/dsh-web.log: una truncó el log justo cuando la otra hacía grep, y pueden quedar dos procesos dsh peleándose por el puerto.</p>
+        <p><strong class="mit-label">Mitigación:</strong> Log por instancia ($$ o mktemp) y lock exclusivo con flock en un fd (exec 9&gt;lock; flock -n 9 || exit 0) para que la segunda ejecución simplemente salga o espere.</p>
+      </article>
+      <article class="blind-card">
+        <div class="blind-head">
+          <span class="eye">◉</span>
+          <h3>Token obsoleto cuando dsh ya estaba corriendo</h3>
+        </div>
+        <p><strong class="risk-label">Riesgo:</strong> Es el caso más probable en el uso diario: dsh web ya corre de una sesión anterior, el bloque de arranque se salta, y el token del log viejo puede haber sido rotado. Chrome abre una página de error y nada en el sistema indica por qué. Si el log ni siquiera existe, grep escribe su error por stderr rompiendo la estética del launcher.</p>
+        <p><strong class="mit-label">Mitigación:</strong> Validar el token con curl antes de abrir Chrome y, si falla, reiniciar dsh web para regenerarlo (o al menos notificar el fallo con notify-send). Suprimir stderr del grep (2&gt;/dev/null) y tratar log ausente como error controlado.</p>
+      </article>
+      <article class="blind-card">
+        <div class="blind-head">
+          <span class="eye">◉</span>
+          <h3>Puerto 3080 ocupado por otro servicio</h3>
+        </div>
+        <p><strong class="risk-label">Riesgo:</strong> Cualquier otro proceso que escuche en 3080 hace creer al script que dsh está activo. Además de abrir la app equivocada, el token viaja en la URL a ese servicio tercero: es una fuga real de credencial, no solo un fallo funcional.</p>
+        <p><strong class="mit-label">Mitigación:</strong> Verificar la identidad del proceso que escucha (pgrep -af &#x27;dsh web&#x27; o cruzar el PID de lsof con /proc/PID/cmdline) y, si no es dsh, abortar con error en vez de reutilizar el puerto.</p>
+      </article>
+      <article class="blind-card">
+        <div class="blind-head">
+          <span class="eye">◉</span>
+          <h3>Supuestos sobre el formato del log de dsh</h3>
+        </div>
+        <p><strong class="risk-label">Riesgo:</strong> El regex &#x27;token=\K[\w-]+&#x27; depende de que dsh escriba el token en ese formato exacto y en la primera línea donde aparece. Una actualización de dsh que cambie el formato, o un log con varias sesiones acumuladas, rompe la extracción en silencio (head -1 puede quedarse con el token de una sesión vieja si el log no se trunca).</p>
+        <p><strong class="mit-label">Mitigación:</strong> Comprobar que el token extraído es no vacío y, si el formato cambia, fallar con mensaje que apunte al log. Preferir truncar/rotar el log en cada arranque y documentar de qué línea de dsh se espera el token.</p>
+      </article>
+      <article class="blind-card">
+        <div class="blind-head">
+          <span class="eye">◉</span>
+          <h3>dsh web queda huérfano si el script se interrumpe</h3>
+        </div>
+        <p><strong class="risk-label">Riesgo:</strong> El proceso dsh se lanza en background sin trap ni registro de PID. Si el script muere a mitad (Ctrl-C, kill del launcher), dsh sigue corriendo adjunto a la sesión; y como el log quedó en /tmp con nombre fijo, la siguiente ejecución hereda un log que puede no corresponder al proceso vivo actual.</p>
+        <p><strong class="mit-label">Mitigación:</strong> Guardar el PID hijo ($!) junto al log por instancia y usar trap EXIT para decidir el ciclo de vida: matarlo si el script murió antes de abrir Chrome, o dejarlo con --keep si el usuario quiere la sesión persistente.</p>
+      </article></div>
+  </section>
+  
+  <section id="checklist">
+    <h2><span class="dot" style="background: #FF4E00"></span>Checklist rápida</h2>
+    <ul class="checklist"><li class="done"><span class="check">✓</span>Ejecutar shellcheck (resultado: 0 hallazgos)</li><li class=""><span class="check">☐</span>Validar que TOKEN no está vacío antes de abrir Chrome</li><li class=""><span class="check">☐</span>Sustituir sleep 3 por polling de salud con curl y timeout</li><li class=""><span class="check">☐</span>Mover el log a XDG_RUNTIME_DIR con nombre por instancia y trap de limpieza</li><li class=""><span class="check">☐</span>Añadir command -v para lsof, dsh y google-chrome-stable</li><li class=""><span class="check">☐</span>Verificar que el proceso en :3080 es dsh y no otro servicio</li><li class=""><span class="check">☐</span>Añadir set -euo pipefail y shebang /usr/bin/env bash</li></ul>
+  </section>
+</main>
+
+<footer>
+  Generado por <span class="brand">script-reviewer</span> · análisis con shellcheck + revisión del agente
+</footer>
+</body>
+</html>

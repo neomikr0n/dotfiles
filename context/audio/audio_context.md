@@ -1,8 +1,8 @@
 # Sistema de audio
 
-Inventario, conexiones, funcionamiento y configuración de casa y trabajo. **Revisión: 12 de septiembre de 2026.** Importes en pesos mexicanos.
+Inventario, conexiones, funcionamiento y configuración de audio casa y trabajo. **Revisión: 12 de septiembre de 2026.** 
 
-Este informe describe un sistema con el que su propietario está muy satisfecho. Reúne el inventario declarado, especificaciones de fabricantes, archivos locales y observaciones de la PC. Las especificaciones describen modelos; no son mediciones de estas unidades. La configuración guardada del RME tampoco equivale a una lectura de su pantalla. Las experiencias de escucha y las críticas de terceros aparecen identificadas como tales.
+Este informe describe un sistema con el que su propietario está muy satisfecho. Reúne el inventario declarado, especificaciones de fabricantes, archivos locales y observaciones de la PC. Importes en pesos mexicanos.
 
 ## 1. Inventario y costo histórico
 

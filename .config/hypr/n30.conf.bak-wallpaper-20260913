@@ -22,8 +22,6 @@ env = QT_STYLE_OVERRIDE,kvantum
 env = SDL_VIDEODRIVER,wayland
 env = CLUTTER_BACKEND,wayland
 env = ELECTRON_OZONE_PLATFORM_HINT,auto
-env = XCURSOR_THEME,Bibata-Modern-Amber
-env = HYPRCURSOR_THEME,Bibata-Modern-Amber
 env = XCURSOR_SIZE,24
 env = HYPRCURSOR_SIZE,24
 
@@ -92,9 +90,9 @@ $soundsDir = ~/dotfiles/share/sounds/
 $scriptsDir = ~/dotfiles/share/scripts/
 
 # --- WALLPAPER ENGINE ---
-$w_cleanup = pkill -TERM -x mpvpaper; pkill -CONT -x mpvpaper; pkill -TERM -x gslapper; pkill -CONT -x gslapper
+$w_cleanup = pkill -x mpvpaper; pkill -x gslapper
 exec = $w_cleanup; sleep 1; nohup mpvpaper \
-  -o "--hwdec=vaapi --loop-file=inf --gamma=-5 --contrast=88 --saturation=79 --brightness=1 --mute=yes --video-unscaled=no --panscan=1" \
+  -o "--hwdec=vaapi --vo=gpu --gpu-context=wayland --loop --gamma=-5 --contrast=88 --saturation=79 --brightness=1 --mute=yes --video-unscaled=no --panscan=1" \
   $(hyprctl monitors -j | jq -r '.[0].name') \
   ~/dotfiles/share/wallpapers/yellowmatrix.mp4 > /dev/null 2>&1 & disown
 
