@@ -263,10 +263,8 @@ launch_log="${cache_root}/launch.log"
 printf -v launch_command '%q ' \
     "$script_path" --run-patched "$patched_asar" "$launch_log"
 
-# Hyprland >= 0.55: hyprctl dispatch evalúa una expresión Lua (la sintaxis
-# hyprlang antigua "[workspace N silent] cmd" ya no funciona por este camino).
-hyprctl dispatch \
-    "hl.dsp.exec_cmd(\"${launch_command% }\", { workspace = \"${CHATGPT_WORKSPACE} silent\" })" \
+hyprctl dispatch exec \
+    "[workspace ${CHATGPT_WORKSPACE} silent] ${launch_command% }" \
     >/dev/null
 
 for _ in {1..80}; do

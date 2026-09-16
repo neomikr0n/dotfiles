@@ -12,6 +12,7 @@
   "animationSpeed": 4,
   "customAnimationDuration": 200,
   "barElevationEnabled": false,
+  "blurEnabled": true,
   "controlCenterWidgets": [
     {
       "id": "volumeSlider",
@@ -106,6 +107,7 @@
   "notepadFontSize": 13,
   "notepadTransparencyOverride": 0.92,
   "notepadLastCustomTransparency": 0.92,
+  "useSystemSoundTheme": true,
   "acMonitorTimeout": 180,
   "fadeToLockEnabled": false,
   "matugenTemplateNeovim": true,
@@ -141,7 +143,7 @@
       "id": "default",
       "name": "Main Bar",
       "enabled": true,
-      "position": 0,
+      "position": 2,
       "screenPreferences": [
         "all"
       ],
@@ -251,8 +253,7 @@
       "popupGapsManual": 4,
       "maximizeDetection": true,
       "shadowIntensity": 0,
-      "attachToScreenEdge": false,
-      "island": true
+      "attachToScreenEdge": false
     }
   ],
   "desktopClockCustomColor": {

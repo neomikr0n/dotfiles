@@ -488,6 +488,36 @@ Verificación final: `luac` OK, carga simple `config ok`, **doble carga
 simulando reload `config ok`**, reload real OK, `hyprctl configerrors` vacío,
 140 binds (Shift_R ×2, SUPER_L ×1).
 
+### Login del 15/09 (15:14): autostart incompleto — causa raíz y fixes
+
+Síntoma: solo abrieron genymotion, zen, CoreCtrl, cider y btop. Diagnóstico con
+log de sesión (`..._1789506844_770639221`) y timeline de procesos:
+
+1. **CAUSA RAÍZ — bug de la API Lua 0.56: los timers `type="oneshot"` nunca
+   disparan.** El único timer `repeat` sí lo hizo (zen a +1s exacto por el flag
+   de red); los 5 oneshot (editor 3s, dolphin 5s, zapzap +2s, steam +4s y su
+   move) jamás se ejecutaron. Cero errores Lua en el log: el handler corrió
+   completo. FIX: scheduler propio `after(ms, fn)` construido sobre `repeat`
+   (cuenta ticks de 100ms, dispara y se autodesactiva). NO volver a usar
+   oneshot en esta config.
+2. **ksnip y megasync no están instalados** — sus `exec_cmd` fallan en silencio
+   (copyq sí corre; es app de bandeja y no se ve). FIX: líneas comentadas con
+   nota para descomentar si se reinstalan.
+3. **chatgpt-open roto por sintaxis vieja**: línea 266 usaba
+   `hyprctl dispatch exec "[workspace N silent] ..."` — en 0.56 `hyprctl
+   dispatch` evalúa Lua y la sintaxis antigua ya no vale; con `set -e` el
+   script moría sin lanzar la app. FIX: dispatch a
+   `hl.dsp.exec_cmd("...", { workspace = "N silent" })` (probado en vivo:
+   mascota abierta en ws2). Backup del script original:
+   `chatgpt-open.bak-20260915`.
+
+Extras del diagnóstico: el SEGV de las 15:14:03 era el Hyprland del GREETER de
+dms (UID 941), no el de la sesión; el flag `hypr-online` se creó a los ~1s (la
+red subió al instante) y el proceso de ping salió limpio.
+
+Respaldos de este día: `hyprland.lua.bak-20260915` y
+`chatgpt-open.bak-20260915`.
+
 ### Rollback
 
 ```bash
