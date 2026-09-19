@@ -139,33 +139,13 @@ local function gameModeStart()
     hl.exec_cmd(os.getenv("HOME") .. "/dotfiles/share/scripts/auto-game-mode.sh")
 end
 
--- Astra — 2026-09-16: las esperas externas sobreviven a un reload de Lua.
--- Los dispatchers se envían al vencer la espera, conservando su workspace.
-local function shellQuote(value)
-    return "'" .. value:gsub("'", "'\"'\"'") .. "'"
-end
-local function dispatchCommand(command, workspace)
-    return "hyprctl dispatch " .. shellQuote(string.format(
-        "hl.dsp.exec_cmd(%q, { workspace = %q })", command, workspace))
-end
-local function delayedCommand(seconds, command)
-    hl.exec_cmd("bash -c " .. shellQuote("sleep " .. seconds .. "; " .. command))
-end
-
--- hyprland.start es el evento de inicio; no usar _G como marca persistente:
--- Hyprland 0.56.2 recrea la VM al recargar la configuración.
-hl.on("hyprland.start", function()
-    -- Marca por instancia, fuera de la VM, para no duplicar apps si se reemite
-    -- el evento. El siguiente login usa otra HYPRLAND_INSTANCE_SIGNATURE.
-    local runtime = assert(os.getenv("XDG_RUNTIME_DIR"), "Falta XDG_RUNTIME_DIR")
-    local instance = assert(os.getenv("HYPRLAND_INSTANCE_SIGNATURE"), "Falta la instancia Hyprland")
-    local marker = runtime .. "/hypr/" .. instance .. "/n30-autostart-astra.done"
-    local previous = io.open(marker, "r")
-    if previous then previous:close(); return end
-    local started = assert(io.open(marker, "w"))
-    started:write("Astra 2026-09-16\n")
-    started:close()
-
+-- EN LA CONFIG LUA "hyprland.start" se dispara TAMBIÉN en cada reload,
+-- y re-ejecutaría todos los exec/timers (copyq duplicado comprobado el 17:23).
+-- Guarda con global: el estado de la VM de Lua persiste entre reloads,
+-- así que esto replica el verdadero "exec-once" (una vez por SESIÓN).
+if not _G.__n30_autostart_done then
+    _G.__n30_autostart_done = true
+    hl.on("hyprland.start", function()
     -- Sesión / entorno (se ejecutan UNA vez; antes estaban duplicados en ambos .conf)
     hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=Hyprland")
     hl.exec_cmd("systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
@@ -187,27 +167,51 @@ hl.on("hyprland.start", function()
     hl.exec_cmd(music, { workspace = "special silent" })
     hl.exec_cmd(term .. " -e -o font_size=10 btop", { workspace = "special silent" })
     hl.exec_cmd("copyq",  { workspace = "5 silent" })
-    -- ksnip no está instalado (Astra, 2026-09-16).
-    -- hl.exec_cmd("ksnip", { workspace = "5 silent" })
+    hl.exec_cmd("ksnip",  { workspace = "5 silent" })
     hl.exec_cmd("corectrl", { workspace = "5 silent" })
-    -- megasync no está instalado (Astra, 2026-09-16).
-    -- hl.exec_cmd("megasync", { workspace = "6 silent" })
+    hl.exec_cmd("megasync", { workspace = "6 silent" })
 
-    -- Apps locales: sin timers Lua que una recarga pueda cancelar.
-    delayedCommand(3, dispatchCommand(editor, "1 silent"))
-    delayedCommand(5, dispatchCommand(files, "3 silent"))
+    -- Apps sin dependencia de red: secuencia fija
+    hl.timer(function() hl.exec_cmd(editor, { workspace = "1 silent" }) end, { timeout = 3000, type = "oneshot" })
+    hl.timer(function() hl.exec_cmd(files,  { workspace = "3 silent" }) end, { timeout = 5000, type = "oneshot" })
 
-    -- ICMP es una señal de conectividad, no garantiza acceso a cada servicio.
-    -- timeout limita la espera TOTAL a 60s; si no hay red, se lanzan igualmente.
-    -- Sin flag compartido hypr-online ni poll Lua: no quedan flags obsoletos.
-    local networkStart =
-        "timeout 60s bash -c 'until ping -c1 -W2 1.1.1.1 >/dev/null 2>&1; do sleep 1; done'; "
-        .. dispatchCommand(browser, "2 silent") .. "; sleep 2; "
-        .. dispatchCommand("env QT_QUICK_BACKEND=software " .. whatsapp, "1 silent") .. "; sleep 2; "
-        .. dispatchCommand("steam", "1 silent") .. "; sleep 5; "
-        .. "hyprctl dispatch " .. shellQuote(
-            'hl.dsp.window.move({ workspace = 1, follow = false, window = "class:steam" })')
-    hl.exec_cmd("bash -c " .. shellQuote(networkStart))
+    -- Apps que necesitan internet (zen, zapzap, steam): antes eran sleeps fijos y
+    -- si la red tardaba en subir, las apps pedían re-login/QR. Ahora esperan
+    -- conectividad REAL:
+    --   * un único proceso en background hace ping y toca un flag al conectar
+    --   * un timer de 1s lee el flag con io.open (lectura de archivo, no bloquea)
+    --   * al conectar, lanza escalonado (zen -> +2s zapzap -> +4s steam)
+    --   * sin internet a los 60s, lanza igual (gracia para sesión offline)
+    -- (bucle acotado a 120 intentos: si nunca hay red, el proceso se muere solo;
+    --  el lado Lua lanza igual a los 60s por su cuenta)
+    local onlineFlag = (os.getenv("XDG_RUNTIME_DIR") or "/run/user/1000") .. "/hypr-online"
+    hl.exec_cmd("bash -c 'rm -f " .. onlineFlag
+        .. "; for i in $(seq 1 120); do ping -c1 -W2 1.1.1.1 >/dev/null 2>&1 && { touch " .. onlineFlag .. "; exit 0; }; sleep 1; done'")
+
+    local launched = false
+    local waited = 0
+    local poll = hl.timer(function()
+        if launched then return end
+        local f = io.open(onlineFlag, "r")
+        if f then
+            f:close()
+        else
+            waited = waited + 1
+            if waited < 60 then return end
+        end
+        launched = true
+        pcall(function() poll:set_enabled(false) end)
+        hl.exec_cmd(browser, { workspace = "2 silent" })
+        hl.timer(function()
+            hl.exec_cmd("env QT_QUICK_BACKEND=software " .. whatsapp, { workspace = "1 silent" })
+        end, { timeout = 2000, type = "oneshot" })
+        hl.timer(function()
+            hl.exec_cmd("steam", { workspace = "1 silent" })
+            hl.timer(function()
+                hl.dispatch(hl.dsp.window.move({ workspace = 1, follow = false, window = "class:steam" }))
+            end, { timeout = 5000, type = "oneshot" })
+        end, { timeout = 4000, type = "oneshot" })
+    end, { timeout = 1000, type = "repeat" })
 
     hl.exec_cmd("bash -c \"sleep 10; rclone mount 'koofr:/koofr/Autosync' /home/n30/Autosync/ --vfs-cache-mode full &\"")
     hl.exec_cmd("ddccontrol -r 0x10 -w 100 dev:/dev/i2c-8")
@@ -219,6 +223,7 @@ hl.on("hyprland.start", function()
 
     hl.dispatch(hl.dsp.focus({ workspace = 2 }))
 end)
+end
 
 hl.on("config.reloaded", function()
     wallpaperStart()
@@ -329,11 +334,9 @@ hl.bind(mainMod .. " + Home", hl.dsp.focus({ window = "first" }))
 hl.bind(mainMod .. " + End", hl.dsp.focus({ window = "last" }))
 
 -- === Monitor Navigation ===
--- QUÉ HACE: mueve el FOCO (la ventana activa), no la ventana, a otro monitor.
--- Solo tiene sentido con 2+ monitores; con un único monitor no hace nada.
--- SUPER+CTRL+↑/↓ se ELIMINARON (2026-09-18): chocaban con "Move to Workspace",
--- que usa exactamente esas teclas. Ahora ↑/↓ mueven la ventana al workspace.
--- left/right los ocupaba el cambio de workspace con sonido (n30.conf).
+-- left/right los ocupaba el cambio de workspace con sonido (n30.conf); up/down y HJKL siguen aquí
+hl.bind(mainMod .. " + CTRL + up", hl.dsp.focus({ monitor = "u" }))
+hl.bind(mainMod .. " + CTRL + down", hl.dsp.focus({ monitor = "d" }))
 hl.bind(mainMod .. " + CTRL + H", hl.dsp.focus({ monitor = "l" }))
 hl.bind(mainMod .. " + CTRL + J", hl.dsp.focus({ monitor = "d" }))
 hl.bind(mainMod .. " + CTRL + K", hl.dsp.focus({ monitor = "u" }))
@@ -369,10 +372,6 @@ hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
 -- mouse_up era zoom-out en n30.conf; ver sección zoom
 
 -- === Move to Workspace ===
--- QUÉ HACE: mueve la VENTANA ACTIVA al workspace contiguo y te lleva con ella.
--- Equivale a `movetoworkspace` del .conf: si se omite `follow`, Hyprland usa
--- silent = false (verificado en LuaBindingsDispatchers.cpp de v0.56.2).
--- SUPER+CTRL+↑/↓ pertenecen a esta sección desde 2026-09-18 (ver "Monitor Navigation").
 hl.bind(mainMod .. " + CTRL + down", hl.dsp.window.move({ workspace = "e+1" }))
 hl.bind(mainMod .. " + CTRL + up", hl.dsp.window.move({ workspace = "e-1" }))
 hl.bind(mainMod .. " + CTRL + U", hl.dsp.window.move({ workspace = "e+1" }))
@@ -454,53 +453,6 @@ hl.bind(mainMod .. " + CTRL + ALT + A", hl.dsp.exec_cmd("pkill -9 -i -f \"ArkAsc
 -- hyprlang expandía $mainMod_L -> "SUPER_L" (sustitución por prefijo).
 -- Aquí se escribe explícito: Super (como mod) + Super_L (tecla), al soltar.
 hl.bind(mainMod .. " + SUPER_L", hl.dsp.workspace.toggle_special("special"), { release = true })
-
--- ==================
--- MACRO: STALKER 2 — guardado rápido (F5) con el botón lateral inferior
--- ==================
--- Mouse: Logitech Lift Vertical (receptor Bolt, WPID B031).
--- El botón lateral INFERIOR emite BTN_SIDE = evdev 275 (verificado con evtest:
--- press+release limpios, sin otros códigos).
--- Hyprland sintetiza un F5 real hacia la ventana activa: sin ydotool, sin
--- demonios y sin procesos externos.
--- NO toca el Fn-lock del MX Mechanical: la tecla Fn es de nivel firmware/EC y
--- nunca llega al SO, así que un F5 sintético la hace innecesaria y el bloqueo
--- del teclado se queda tal cual está.
-local STALKER_TITLE = "S.T.A.L.K.E.R." -- texto literal, no patrón Lua
-
--- El juego corre bajo gamescope (class=gamescope + título con el nombre del
--- juego). Si algún día se lanzara sin gamescope, la clase sería
--- steam_app_1643320. Se aceptan ambas.
--- Devuelve el selector de ventana del juego, o nil si la ventana activa no es
--- STALKER 2. `send_shortcut` resuelve el selector con la API de ventanas, así
--- que hay que pasarle una CADENA (no un objeto de ventana).
-local function selectorStalker2(w)
-    if not w then return nil end
-    if w.class == "gamescope" then
-        if tostring(w.title):find(STALKER_TITLE, 1, true) then
-            return "class:^(gamescope)$"
-        end
-        return nil
-    end
-    if w.class == "steam_app_1643320" then
-        return "class:^(steam_app_1643320)$"
-    end
-    return nil
-end
-
-hl.bind("mouse:275", function()
-    local sel = selectorStalker2(hl.get_active_window())
-    if not sel then return end
-    -- `mods` es OBLIGATORIO en send_shortcut: es una CADENA que se pasa a
-    -- stringToModMask(); "" = sin modificadores. Omitirlo aborta el dispatcher
-    -- con «hl.send_shortcut: 'mods' is required» y NO se envía ninguna tecla
-    -- (verificado en src/config/lua/bindings/LuaBindingsDispatchers.cpp, v0.56.2:
-    -- requireTableFieldStr se evalúa al CONSTRUIR el dispatcher, no al disparar).
-    hl.dispatch(hl.dsp.send_shortcut({ mods = "", key = "F5", window = sel }))
-end, {
-    non_consuming = true, -- el botón sigue funcionando como "Atrás" fuera del juego
-    description   = "STALKER 2: guardado rápido (F5)",
-})
 
 -- (los binds rotos con CTRLx sí se eliminaron: modificador inválido real)
 
@@ -617,11 +569,7 @@ hl.window_rule({
     size = { 333, 333 },
     min_size = { 320, 320 },
     max_size = { 320, 320 },
-    -- x corregido (2026-09-18): era 3332, que con 333 px de ancho acababa en 3665
-    -- y se salía 225 px por el borde derecho del DP-2 (3440 px).
-    -- Nuevo valor = 3440 - 320 (ancho efectivo, lo fija max_size) - 24 (margen).
-    -- y se deja en 1016: cabe (1016 + 320 = 1336 < 1440).
-    move = { 3096, 1016 },
+    move = { 3332, 1016 },
     suppress_event = "x11configurerequest",
     no_initial_focus = true,
     border_size = 0,

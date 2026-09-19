@@ -1,0 +1,14 @@
+{
+  "--dsw-static-neutral-bluish-950": "#000000",
+  "--dsw-static-neutral-bluish-900": "#0a0a0c",
+  "--dsw-static-neutral-bluish-875": "#111114",
+  "--dsw-static-neutral-bluish-850": "#18181c",
+  "--dsw-static-neutral-bluish-800": "#202026",
+  "--dsw-static-neutral-bluish-750": "#2a2a31",
+  "--dsw-static-neutral-bluish-700": "#36363f",
+  "--dsw-alias-label-dimmed": "#4c4e56",
+  "--dsw-alias-bg-multi-select": "#18181c",
+  "--dsw-alias-markdown-inline-code": "#141418",
+  "--dsw-linear-gradient-think": "linear-gradient(180deg, #000 20.19%, #0000 100%)",
+  "--dsw-linear-think-select": "linear-gradient(180deg, #111114 20.19%, #11111400 100%)"
+}

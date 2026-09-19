@@ -98,6 +98,47 @@ echo
 
 
 # ============================================================
+# HYPRLAND ≥ 0.56 - DISPATCHERS EN LUA
+#
+# hyprctl dispatch YA NO acepta la sintaxis clásica
+# ("dispatch swapwindow l"). Desde 0.56 el argumento se evalúa
+# como expresión Lua, de modo que la forma antigua produce:
+#
+#   error: [string "return hl.dispatch(swapwindow l)"]:1:
+#          ')' expected near 'l'
+#
+# Equivalencias usadas en este script:
+#
+#   dispatch focuswindow address:A
+#       -> hl.dsp.focus({ window = "address:A" })
+#
+#   dispatch swapwindow l
+#       -> hl.dsp.window.swap({ direction = "l" })
+#          (actúa sobre la ventana ACTIVA)
+#
+#   dispatch resizewindowpixel exact W H,address:A
+#       -> hl.dsp.window.resize({ x = W, y = H, window = "address:A" })
+#          (sin "relative" el tamaño es exacto en píxeles)
+#
+# Las funciones siguientes concentran el escapado de comillas
+# para no repetirlo en cada llamada.
+# ============================================================
+
+lua_focus() {
+    printf 'hl.dsp.focus({ window = "address:%s" })' "$1"
+}
+
+lua_swap_left() {
+    printf 'hl.dsp.window.swap({ direction = "l" })'
+}
+
+lua_resize() {
+    printf 'hl.dsp.window.resize({ x = %s, y = %s, window = "address:%s" })' \
+        "$1" "$2" "$3"
+}
+
+
+# ============================================================
 # FUNCIONES BÁSICAS
 # ============================================================
 
@@ -276,12 +317,12 @@ move_pixel_window_left() {
             break
         fi
 
-        # swapwindow actúa sobre la ventana activa. El batch enfoca por
-        # address y hace el intercambio como una sola operación, evitando
+        # hl.dsp.window.swap actúa sobre la ventana activa. El batch enfoca
+        # por address y hace el intercambio como una sola operación, evitando
         # que el cursor o el foco previo elijan otra ventana.
         result="$(
             hyprctl --batch \
-                "dispatch focuswindow address:${address}; dispatch swapwindow l" \
+                "dispatch $(lua_focus "$address"); dispatch $(lua_swap_left)" \
                 2>&1
         )"
 
@@ -299,7 +340,7 @@ move_pixel_window_left() {
 
     # Restaurar la ventana que estaba enfocada al comenzar este ajuste.
     if [[ -n "$active_address" && "$active_address" != "$address" ]]; then
-        hyprctl dispatch focuswindow "address:${active_address}" \
+        hyprctl dispatch "$(lua_focus "$active_address")" \
             >/dev/null 2>&1 || true
     fi
 }
@@ -344,8 +385,7 @@ resize_pixel_window() {
     echo "   Objetivo: ${GENY_WIDTH}x${height}"
 
     result="$(
-        hyprctl dispatch resizewindowpixel \
-            "exact ${GENY_WIDTH} ${height},address:${address}" \
+        hyprctl dispatch "$(lua_resize "$GENY_WIDTH" "$height" "$address")" \
             2>&1
     )"
 

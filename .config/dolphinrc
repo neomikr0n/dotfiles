@@ -1,6 +1,9 @@
 [Baloo KEditCommentDialog]
 3440x1440 screen: Window-Maximized=true
 
+[DetailsMode]
+PreviewSize=176
+
 [General]
 AutoExpandFolders=true
 EditableUrl=true
