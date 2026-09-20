@@ -59,7 +59,7 @@ Módem/router ── LAN Ethernet Amazon Basics, 9.1 m ── Eversolo DMP-A6
                                            USB Audio Out │ Oyaide Class B, 1 m
                                                          ↓
 PC Linux ── Toslink Amazon Basics, 3 m ───────────→ RME ADI-2 DAC FS
-                                                         │ DSP/EQ → DAC
+   (entrada óptica)                                      │ DSP/EQ → DAC
                                            XLR L/R       │ WBC-PRO-Quad
                                            3.048 m c/u   ↓
                                                    Aune S17 Pro EVO
@@ -72,6 +72,8 @@ Ubicación exacta respecto al UPS y las tomas: por confirmar.
 ```
 
 **Actualización del propietario del 12/09/2026:** Eversolo–RME utiliza USB Oyaide; PC–RME utiliza Toslink Amazon Basics; el Eversolo recibe la red por **LAN cableada**, no se documenta Wi-Fi como su enlace actual. Ambos reproductores pueden permanecer conectados a entradas distintas del RME. La comparación anterior, en la que se alternaba el mismo óptico y se apagaba la PC al escuchar Eversolo, es un antecedente y no describe este cableado actualizado. El estado encendido/apagado de la PC durante las nuevas escuchas USB no se ha actualizado.
+
+**Nota del 20/09/2026:** el PC–RME por Toslink no es un detalle de inventario, es **la ruta por la que suena la PC**. El enrutamiento de PipeWire debe apuntar a la salida S/PDIF de la placa madre (`iec958-stereo`); mandar los flujos al nodo USB del RME produce silencio. Detalle en `/home/n30/dotfiles/context/audio/enrutamiento_audio_al_rme.md` §8.8.
 
 La fuente obtiene y decodifica la grabación. PipeWire, cuando se usa la PC, organiza los flujos y puede mezclar, ajustar volumen y remuestrear. Toslink transporta PCM digital. El RME aplica el procesamiento elegido y convierte a señal analógica. El Aune recibe esa señal de línea y proporciona tensión y corriente al audífono. El HE1000se convierte la energía eléctrica en presión acústica.
 
@@ -174,7 +176,7 @@ Fuente: [tabla comparativa oficial de ESS](https://www.esstech.com/products-over
 
 **Comparación sonora y consecuencias para esta cadena:** no se ha realizado una escucha controlada RME ESS frente a A6 analógico en esta instalación. No puede asignarse una firma «fría», «brillante», «cálida» o «musical» a estos aparatos por la marca de su chip. La arquitectura posterior del ES9038Q2M y la presencia de dos chips en el A6 tampoco demuestran mayor detalle audible. Para comparar habría que conservar grabación, EQ equivalente, Aune y HE1000se e igualar el nivel analógico. Una preferencia personal repetible puede justificar una elección, aunque las cifras de chips no la predigan.
 
-En la ruta actual **Eversolo → USB → RME → XLR → Aune**, la conversión la hace el ES9028Q2M del RME; los ES9038Q2M del Eversolo no intervienen en la conversión a analógico. La preferencia por el Eversolo frente a la PC como fuente no compara esos dos DAC internos. Identificar el ESS elimina una incertidumbre del inventario, pero no modifica el sonido ni la configuración actuales.
+En la ruta **Eversolo → USB → RME → XLR → Aune** (la del Eversolo, distinta de la del PC, que va por óptico), la conversión la hace el ES9028Q2M del RME; los ES9038Q2M del Eversolo no intervienen en la conversión a analógico. La preferencia por el Eversolo frente a la PC como fuente no compara esos dos DAC internos. Identificar el ESS elimina una incertidumbre del inventario, pero no modifica el sonido ni la configuración actuales.
 
 
 ### Acoplamiento RME–Aune
@@ -248,25 +250,60 @@ El aislamiento corresponde al enlace óptico: una conexión USB adicional, otras
 
 S/PDIF transporta datos junto con información temporal. El receptor recupera el reloj y gestiona su sincronización. El RME incorpora SteadyClock FS para reducir la influencia del jitter, la variación temporal de los instantes del reloj. El fabricante ha publicado una prueba con jitter inyectado sin degradación apreciable en su ensayo; corresponde a aquella unidad, firmware y método, no a una medición de esta instalación. [Prueba de RME](https://forum.rme-audio.de/viewtopic.php?id=33497).
 
+**Observación del propietario (20-sep-2026) — el dato más relevante de este apartado.** Con el
+RME conectado **por USB**, se producía una **distorsión «robótica» de aproximadamente un
+segundo, varias veces por hora**. Con el RME alimentado **por el cable óptico**, ese mismo
+evento ocurre **como mucho un par de veces al día** (el día del cambio, ninguna). Es una
+**observación de escucha** — no una medición de laboratorio — y es la evidencia más directa
+disponible sobre qué transporte funciona mejor en esta instalación concreta. Se registra como
+tal, sin extrapolarla a otras máquinas.
+
+**Estado del enlace en el momento de esa observación:** `Sync Source = SPDIF`,
+`SPDIF Sync = Sync`, `SPDIF Rate = 48000 Hz`, `System Rate = 48000 Hz`,
+`Current Frequency ≈ 47999 Hz` estable (sin oscilación en 18 s de muestreo).
+
+**Lo que NO se puede afirmar con los datos disponibles.** Este documento no asigna una causa a
+la distorsión observada. Los mecanismos candidatos son varios y no excluyentes: pérdida de
+paquetes en el bus USB por carga del sistema o gestión de energía, comportamiento del receptor
+ante una interrupción, y deriva o pérdida momentánea del enganche de reloj en la entrada
+digital. **No hay registro de errores capturado durante un evento**, así que atribuirlo a un
+mecanismo concreto sería especulación. Lo que sí es firme es **el hecho**: en la escucha del
+propietario, el enlace óptico falla menos que el USB.
+
 Un cable óptico necesita suficiente margen de transmisión y conectores correctamente asentados. Sus fallos pueden causar errores o pérdida de sincronía. El cable activo en PC–RME es ahora el **Amazon Basics Toslink de 3 m, $169**. El enlace proporcionado termina en `/dp/B0` y no contiene un ASIN completo: no se asignan material de fibra, radio mínimo de curvatura o garantía de tasa de un modelo parecido. La ficha provisional reúne lo que sí está confirmado. No hay una medición de errores o margen óptico de este ejemplar. [Ficha Toslink](/home/n30/dotfiles/context/audio/fichas/ficha_toslink.pdf).
 
 ### Formatos y límites de la ruta
 
 Una tasa de 48 kHz significa 48,000 muestras por segundo y canal; no expresa el bitrate comprimido de Apple Music. La profundidad de bits describe la representación de cada muestra. Remuestrear a 192 kHz no recupera información que una fuente no contenía.
 
-El DMP-A6 original admite por óptico/coaxial PCM hasta **24 bits/192 kHz**. Su salida USB admite PCM hasta 32 bits/768 kHz y DSD512; el formato común lo limita también el receptor. El manual disponible del RME documenta PCM hasta 768 kHz y DSD256 por USB. **La conexión actual Eversolo–RME es USB**, no óptica. El DAC interno y las salidas analógicas del Eversolo quedan fuera de esta ruta digital; no se suman sus prestaciones de conversión a las del RME. [Manual original del Eversolo](</home/n30/dotfiles/context/audio/manuales/Manual EVERSOLO-DMP-A6-v1.0.pdf>), [manual RME](/home/n30/dotfiles/context/audio/manuales/MANUAL-RMEadi2dac_e.pdf).
+El DMP-A6 original admite por óptico/coaxial PCM hasta **24 bits/192 kHz**. Su salida USB admite PCM hasta 32 bits/768 kHz y DSD512; el formato común lo limita también el receptor. El manual disponible del RME documenta PCM hasta 768 kHz y DSD256 por USB. El DAC interno y las salidas analógicas del Eversolo quedan fuera de esta ruta digital; no se suman sus prestaciones de conversión a las del RME. [Manual original del Eversolo](</home/n30/dotfiles/context/audio/manuales/Manual EVERSOLO-DMP-A6-v1.0.pdf>), [manual RME](/home/n30/dotfiles/context/audio/manuales/MANUAL-RMEadi2dac_e.pdf).
 
-La ventaja funcional es reproducir sin mantener encendida la PC y conservar ésta en la entrada óptica. Apple Music ejecutado en el Eversolo y AirPlay desde un teléfono siguen siendo rutas distintas: **LAN confirma el medio de red, no cuál de esas aplicaciones/protocolos se usa ni el formato recibido**. Falta verificar la pantalla de reproducción y los ajustes de salida/volumen del streamer.
+> **Aclaración (20-sep-2026) — dos enlaces distintos que se estaban confundiendo.**
+> El **PC → RME va por cable óptico** (PC–RME está en la entrada óptica del RME). El **Eversolo → RME va por USB** (cable Oyaide USB A–B). Son dos fuentes distintas, en dos entradas distintas del mismo RME, y el RME elige entre ellas solo con `Source = Auto` — véase §8.8 del documento de enrutamiento.
+> Lo que **no** está verificado: si al conectar el Eversolo al óptico se desenchufa el cable del PC o si el PC–RME cambia de entrada. **La entrada que ocupa cada fuente hoy no se ha comprobado en el menú del RME**, solo se conoce la del PC (óptica).
+
+La ventaja funcional es reproducir sin mantener encendida la PC y **que el RME conmute solo** cuando el Eversolo empieza a sonar. `Source = Auto` es el **ajuste de fábrica** del ADI-2 (§12.1 del manual) y en ese modo «**In Auto Mode any detected SPDIF Signal will have priority over USB playback**»: la entrada activa se decide automáticamente, no hay que cambiar nada a mano. La selección del reloj tampoco es manual — §14.1.2: «**a selection is neither possible nor necessary**». Apple Music ejecutado en el Eversolo y AirPlay desde un teléfono siguen siendo rutas distintas: **LAN confirma el medio de red, no cuál de esas aplicaciones/protocolos se usa ni el formato recibido**. Falta verificar la pantalla de reproducción y los ajustes de salida/volumen del streamer.
 
 El cable es **Oyaide Neo d+ Class B de 1 m, USB tipo A–B**, identificado por la compra **B003TN74S6**. Se conecta desde **USB Audio Out** del Eversolo a **USB 2.0 tipo B** del RME; no desde la entrada USB-C del Eversolo. Oyaide publica compatibilidad USB 2.0 High-Speed, doble pantalla y conductores OFC plateados. Class B es su denominación comercial, no un estándar de calidad sonora. Su ficha contiene referencias discrepantes a PVC/TPE para la cubierta: no se asigna una de ellas como inspección del ejemplar. [Compra exacta](https://www.amazon.com.mx/dp/B003TN74S6), [fabricante Oyaide](https://shop.oyaide.com/products/p-4433.html), [ficha ilustrada USB](/home/n30/dotfiles/context/audio/fichas/ficha_oyaide_usb.pdf).
 
-USB establece un enlace eléctrico; este cable no ofrece aislamiento galvánico. La tasa nominal del bus, 480 Mb/s, no expresa resolución musical. Los fallos previos desde PC por USB no demuestran que se repitan desde Eversolo. La EQ debe comprobarse con el formato activo: el manual RME documenta limitaciones de DSP a tasas muy altas y DSD Direct no conserva la misma ruta de EQ de PCM. No hay razón documentada para activar remuestreo máximo sólo por disponer de USB.
+USB establece un enlace eléctrico; este cable no ofrece aislamiento galvánico. La tasa nominal del bus, 480 Mb/s, no expresa resolución musical. **Los fallos medidos desde la PC por USB (distorsión «robótica» varias veces por hora) no demuestran que se repitan desde el Eversolo**, pero tampoco hay razón para suponer que no: el mismo tipo de enlace puede tener el mismo comportamiento en otra fuente. **Un cable óptico adicional PC↔Eversolo, o conectar el Eversolo al óptico en lugar de la PC, sería la prueba directa** — y hoy no se ha hecho. La EQ debe comprobarse con el formato activo: el manual RME documenta limitaciones de DSP a tasas muy altas y DSD Direct no conserva la misma ruta de EQ de PCM. No hay razón documentada para activar remuestreo máximo sólo por disponer de USB.
+
+### Ajustes del RME recomendados para esta configuración
+
+| Ajuste | Valor recomendado | Por qué | Fuente |
+|---|---|---|---|
+| `Source` (entrada activa) | **`Auto`** — no forzar `Optical` | Es el ajuste de fábrica y hace exactamente lo que el propietario quiere: si el Eversolo emite SPDIF, entra solo; si no, usa el USB. Forzarlo a `Optical` **rompería** la conmutación automática. | Manual v1.8 §12.1, «Default: Auto» |
+| `Sync Source` (reloj) | **No se configura** — dejarlo como está | El manual dice que la fuente de reloj «is automatically determined and set by the unit, **a selection is neither possible nor necessary**». El valor `SPDIF` que aparece en pantalla es una **lectura**, no un ajuste. | Manual v1.8 §14.1.2 |
+| `SPDIF Sync` = `Sync` | **Correcto** | El RME está enganchado al reloj que llega por el cable. Es el estado esperado con entrada óptica activa. | Lectura medida del panel |
+| Entrada física del PC | **Óptica** (ya está así) | Es la ruta por la que suena la PC hoy. Cambiarla silencia el audio. | Medido: `iec958-stereo` `RUNNING`, nodo USB `IDLE` con 0 enlaces |
+
+**Nada de esto hay que tocarlo.** La configuración actual del propietario ya es la correcta para su objetivo declarado.
 
 ### Red LAN del Eversolo
 
 El módem/router está conectado al Eversolo con **Amazon Basics B089MG7CY3**, **9.1 m**, plano, blanco, comercializado como **Cat 7 STP / 600 MHz**, conectores RJ45 y 15 sujetadores. El costo declarado es **$160**. La publicación indica conductor 32 AWG y sección exterior de 2.3 × 7.3 mm. No se efectuó certificación de categoría o blindaje. [Compra exacta](https://www.amazon.com.mx/dp/B089MG7CY3).
 
-El puerto del DMP-A6 es **10/100/1000 Mb/s**; no se ha leído su velocidad negociada real. Los 600 MHz describen el ancho de banda eléctrico anunciado del cable y no equivalen a 600 Mb/s ni a una frecuencia de audio. Como referencia calculada, PCM estéreo 24/192 ocupa **9.216 Mb/s** antes de protocolos. El enlace LAN evita depender del Wi-Fi entre router y streamer, pero no demuestra más detalle audible ni elimina fallos del servicio o firmware. La red entrega contenido al Eversolo y un enlace distinto, USB, entrega audio al RME. [Manual Eversolo](</home/n30/dotfiles/context/audio/manuales/Manual EVERSOLO-DMP-A6-v1.0.pdf>), [ficha ilustrada Ethernet](/home/n30/dotfiles/context/audio/fichas/ficha_ethernet.pdf).
+El puerto del DMP-A6 es **10/100/1000 Mb/s**; no se ha leído su velocidad negociada real. Los 600 MHz describen el ancho de banda eléctrico anunciado del cable y no equivalen a 600 Mb/s ni a una frecuencia de audio. Como referencia calculada, PCM estéreo 24/192 ocupa **9.216 Mb/s** antes de protocolos. El enlace LAN evita depender del Wi-Fi entre router y streamer, pero no demuestra más detalle audible ni elimina fallos del servicio o firmware. La red entrega contenido al Eversolo y **otro enlace distinto —el USB, o el óptico si se prefiere— entrega audio al RME**. [Manual Eversolo](</home/n30/dotfiles/context/audio/manuales/Manual EVERSOLO-DMP-A6-v1.0.pdf>), [ficha ilustrada Ethernet](/home/n30/dotfiles/context/audio/fichas/ficha_ethernet.pdf).
 
 ## 7. PC: hardware y estado de audio observado
 

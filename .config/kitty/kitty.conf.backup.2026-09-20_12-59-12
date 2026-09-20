@@ -1,6 +1,4 @@
 # Font Configuration
-# Restaurada el 2026-09-20: se perdio al reescribir kitty.conf con el tema matrix.
-font_family JetBrainsMono Nerd Font
 font_size 12.0
 
 # Window Configuration
@@ -26,12 +24,6 @@ map ctrl+t new_tab
 map ctrl+plus change_font_size all +1.0
 map ctrl+minus change_font_size all -1.0
 map ctrl+0 change_font_size all 0
-
-# Copiar al portapapeles TODA la salida del ultimo comando ejecutado.
-# --type=clipboard no abre ninguna ventana: copia y ya. Requiere
-# shell_integration (activada mas abajo en este mismo archivo).
-# Restaurado el 2026-09-20: se perdio al reescribir kitty.conf con el tema matrix.
-map ctrl+shift+a launch --type=clipboard --stdin-source=@last_cmd_output
 
 # Tab configuration
 tab_bar_style powerline

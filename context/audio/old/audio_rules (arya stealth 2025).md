@@ -190,6 +190,13 @@ Es el guardián silencioso que permite que el RME y el Aune operen al 100% de su
 *   **Rol:** El "Cerebro" y "Árbitro de la Verdad".
 *   **Análisis de Contribución:**
     *   **SteadyClock FS (El Asesino del Jitter):** La mayoría de los DACs dependen de la calidad del reloj de la fuente (tu PC). El RME ignora eso. Su reloj interno regenera la señal con precisión de *femtosegundos* (Rechazo >99.9%). Esto se traduce en una imagen estéreo "clavada" y una separación de instrumentos quirúrgica. [Ref: Jitter Theory](https://www.audiosciencereview.com/forum/index.php?threads/jitter-theory-and-digital-audio.444/)
+
+        > **[SUPERADO 20-sep-2026.]** Este párrafo apunta en la dirección correcta (SteadyClock FS **sí** reduce
+        > la influencia del reloj de la fuente), pero el «rechazo >99.9 %» **no es un dato del fabricante** y
+        > no se sostiene. Lo que el manual del ADI-2 (v1.8) dice literalmente, §31.3, es que la conversión D/A
+        > «always operates on highest sonic level, **being completely independent from the quality of the
+        > incoming clock signal**», y que el circuito «locks in **fractions of a second** to the input
+        > signal». La cifra de femtosegundos no aparece en el manual. Fuente: `manuales/MANUAL-RMEadi2dac_e.pdf`.
     *   **Transparencia Absoluta ("Wire with Gain"):** A diferencia de DACs "musicales" que colorean el sonido (añaden distorsión eufónica), el RME busca la fidelidad matemática. Lo que entra es lo que sale. Esto es CRÍTICO para el HE1000se, que es un microscopio. Si el DAC coloreara, perderías la referencia real de la grabación.
     *   **DSP por Hardware (El verdadero MVP):** Aquí es donde el RME supera a DACs de $50,000. Su EQ Paramétrico de 5 bandas no añade latencia ni distorsión de fase perceptible. Te permite corregir la tonalidad de los audífonos (como el perfil Harman para los Arya) *antes* de que la señal se convierta a analógico. Esto tiene más impacto en el sonido final que cualquier cable o amplificador.
     *   **Salida IEM (Silencio Absoluto):** Con un piso de ruido de -121 dBu, garantiza que incluso con los IEMs más sensibles, el fondo sea negro absoluto.

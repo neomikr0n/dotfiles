@@ -1,5 +1,9 @@
 # Sistema de audio
 
+> **[SUPERADO 20-sep-2026]** Documento histórico. La configuración que describe ha cambiado:
+> ver `enrutamiento_audio_al_rme.md` (§8.8 la cadena real, §8.9 el reloj) y
+> `audio_context.md`. Lo que sigue es el registro de lo que se creía el 12-sep.
+
 Inventario, conexiones, funcionamiento y configuración de casa y trabajo. **Revisión: 12 de septiembre de 2026.** Importes en pesos mexicanos.
 
 Este informe describe un sistema con el que su propietario está muy satisfecho. Reúne el inventario declarado, especificaciones de fabricantes, archivos locales y observaciones de la PC. Las especificaciones describen modelos; no son mediciones de estas unidades. La configuración guardada del RME tampoco equivale a una lectura de su pantalla. Las experiencias de escucha y las críticas de terceros aparecen identificadas como tales.

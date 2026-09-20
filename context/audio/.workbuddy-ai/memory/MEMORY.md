@@ -1,150 +1,108 @@
 # MEMORY.md — Notas duraderas del proyecto de audio
 
-## Convención de trabajo de este proyecto
+## Convención
+Cada dato con **fuente y confianza** (medido / fabricante / declarado / inferencia). No rellenar
+huecos con suposiciones; si dos fuentes discrepan, dar ambas. No atribuir firmas sonoras a marcas o
+chips. Importes en MXN. **El usuario pide ejecución, no instrucciones.** No inventar precios, fechas
+ni tiendas. **Si el usuario describe algo que contradice una medición, su descripción manda:
+preguntar qué cables hay. El manual del fabricante manda sobre mis deducciones.**
 
-El informe principal `audio_context.md` sigue un estilo estricto y el propietario lo
-espera también en las respuestas:
+## PC
+Sin Bluetooth ni Wi-Fi; sólo ethernet `enp8s0` (I225-V, 1000 Mb, 192.168.1.23). `bluez` 5.87 +
+plugins de códec de PipeWire + `libfdk-aac` → basta un dongle USB BT. Placa ASUS PRIME Z690-A,
+4 ranuras M.2 **Key M** (no E-key). Router ZTE ZXHN F679L (Wi-Fi 5 AC1200). GPU RX 9070 XT
+→ `whisper.cpp` con Vulkan. i5-13600K, 31 GB.
 
-- Cada dato lleva su fuente y su **nivel de confianza**. Lo medido, lo publicado por el
-  fabricante y lo declarado por el propietario se distinguen explícitamente.
-- **No se rellena un hueco con una suposición.** Si un dato no aparece, se dice.
-- Cuando dos fuentes discrepan, se dan ambas cifras y se señala la discrepancia.
-- Se evita atribuir firmas sonoras («cálido», «brillante») a marcas o chips.
-- Importes en pesos mexicanos (MXN).
+## LA CADENA REAL
+`apps → placa madre iec958-stereo (S/PDIF) → CABLE ÓPTICO → RME` · `USB = SÓLO CONTROL`
+**El audio va por el cable óptico; el USB sólo lleva comandos.** El sink correcto es
+**`iec958-stereo`**, no `…RME…pro-output-0`: mandar los flujos al USB da **silencio** (medido: ese
+sink queda `IDLE`, 0 enlaces). **Regla: preguntar qué cable hay antes de llamar «problema» a un
+enlace.**
+**Reloj (manual ADI-2 v1.8):** `Source = Auto` es el **ajuste de fábrica** (§12.1): «any detected
+SPDIF signal will have priority over USB playback». **`Sync Source` NO se configura:** «a selection
+is neither possible nor necessary» (§14.1.2). **SteadyClock FS (§31.3)** regenera el reloj; la
+conversión D/A es «completely independent from the quality of the incoming clock signal» → **«el
+jitter es el de la placa madre» está mal enfocado.** No hay que tocar nada: `Auto`+`SPDIF` es lo
+correcto para que el Eversolo entre solo.
+**Dato del propietario (escucha, no medición):** por **USB** oía distorsión «robótica» de ~1 s
+**varias veces por hora**; por **óptico**, un par al día o ninguna. **Causa NO identificada** →
+**mantener el óptico.**
 
-## Hechos de hardware verificados
+## PipeWire
+- `99-rme-fix.conf` **no fuerza 192 kHz**: `clock.rate=48000`, `allowed-rates=[44100 48000 88200
+  96000 192000]`, quantum 1024 (512/2048), sin force-rate.
+- **Remuestreo: las dos rutas en calidad 10** (`client.conf.d/resampling.conf` subido de 4 a 10;
+  `pipewire-pulse.conf.d/force-192k.conf` ya estaba en 10 — **no fuerza la frecuencia**). Rango
+  **0–14**, por defecto 4. A 10 el error queda bajo el piso de ruido del RME.
+- **El grafo NO sigue la fuente: todo corre a 48 kHz** (`clock.force-rate 44100` sí conmuta el RME,
+  pero el grafo no lo hace solo). → **La cadena no es bit-perfect.**
+- **`RUNNING` en `/proc/asound` NO prueba que suene.** `alsa-hardware.conf` pone en el RME
+  `session.suspend-on-idle=false` y `node.pause-on-idle=false`: el PCM queda `RUNNING` aunque no le
+  llegue ni una muestra. Comprobar **estado del nodo en PipeWire** + si está `corked`.
+- **Los puertos del RME en `pro-audio` son `playback_AUX0/AUX1`, no `FL/FR`. El RME no tiene
+  control de volumen de salida por hardware**, sólo estado de lectura.
+- **Trampa recurrente: destinos guardados por aplicación** en
+  `~/.local/state/wireplumber/stream-properties`. Mover una app en el panel **no es temporal**: queda
+  grabado y vuelve ahí siempre. **Limpiar: parar `wireplumber` primero**, quitar la clave `target`
+  con Python, reiniciar. Copias en `~/.local/state/wireplumber/backup-2026-09-20/`.
+- **EasyEffects: la trampa ya se activó (20-sep).** Se llevó las apps a `easyeffects_sink`, pero su
+  `outputDevice` apuntaba a un **nodo inexistente** y con `useDefaultOutputDevice=false` no cayó al
+  defecto → **silencio total**. Arreglado; copia en `easyeffectsrc.bak-2026-09-20`.
+  **Ojo: `[EffectsPipelines] bypass=true` → el PEQ no actúa.** **Regla: si desaparece el audio y el
+  sink por defecto es correcto, mirar EasyEffects primero.**
+- `qemu` usa el RME como **captura**. Sin bypass por ALSA directo (no hay `~/.asoundrc`).
 
-### PC de casa: sin adaptador Bluetooth (verificado 2026-09-19)
+## Mapa de salidas
+Seis sinks. **Navi pro-output-3/7/8/9** = una sola GPU con cuatro conectores; perfil `pro-audio`, que
+expone cada salida en crudo. **Sólo pro-7 tiene algo conectado**: **monitor LG ULTRAGEAR+ por
+DisplayPort** (`card2/eld#0.1`, `monitor_present=1`; los otros dan 0). **`iec958-stereo`** = S/PDIF de
+la placa madre → **alimenta el cable óptico: es la correcta**. **`…RME…pro-output-0`** = el RME por USB
+(sólo control). Las tres Navi sin monitor sobran, pero no se borran sin cambiar el perfil.
 
-- `/sys/class/bluetooth` no existe; nada relevante en `lsusb` ni `lspci`;
-  módulo `btusb` no cargado. **No hay adaptador Bluetooth.**
-- Sí está instalada la pila completa: `bluez` 5.87, `bluez-utils`, y **todos** los
-  plugins de códec de PipeWire en `/usr/lib/spa-0.2/bluez5/` (aac, ldac, aptx,
-  faststream, opus, sbc) más `libfdk-aac` 2.0.3.
-- Consecuencia: **bastaría un dongle USB Bluetooth** para tener AAC y LDAC en la PC.
-  No hace falta instalar nada más de software.
+## Fuentes de música
+- **Cider 4.0.9.1** = Electron del web de Apple Music. **Medido** en su caché (caja `esds`):
+  **AAC-LC, 256 kbps, 44,1 kHz**. Entrega a PipeWire a **48 000 Hz** (Chromium remuestrea dentro de
+  la app). Apple no tiene cliente Linux.
+- **Spotify (1.2.96.518): 160 kbps, no sin pérdida.** Escala en el binario (`spotify.audiophile`):
+  `HIGH=3`=160, `VERY_HIGH=4`=320 Ogg Vorbis, `LOSSLESS=5`. **160 kbps es el techo del plan gratis.**
+- **El sin pérdida NO se desbloquea sin Premium:** el bucket lo elige el servidor. Alternativa gratis
+  real: **archivos propios por el DMP-A6 → RME**.
+- **Verificar el códec:** DevTools en Cider (Network, `.m3u8`) o caudal de red (AAC 256 ≈ 32 KB/s);
+  la caché de Spotify está **cifrada**. Guía: skill `pipewire-grafo-y-codec-streaming`.
+- **TIDAL:** offline roto (v2.215.0) también en iOS y Android → del cliente. **Para offline, Apple
+  Music.** Detalle: `tidal_descargas_offline_bug.md`.
+- **Lossless en Arch + offline de 15.000: ningún servicio cumple las tres** (Spotify tope **10.000
+  descargas**; Qobuz sin tope pero **sin cliente Linux** y **QBZ retirado 20-sep-2026**; TIDAL, único
+  con cliente Linux oficial, offline roto). Detalle: `comparativa_lossless_offline_15k.md`.
+- **Qobuz web player (`play.qobuz.com`):** hasta **FLAC 24/192** pero **remuestreado por el
+  navegador** (Web Audio fuerza una frecuencia de reloj: 48 kHz en Windows/Linux, 44,1 en macOS).
+  **No es bit-perfect ni permite offline.** Detalle: `qobuz_webplayer_lossless.md`.
 
-## Límites de los audífonos Bluetooth de Apple
+## Cuello de botella
+**No está en la electrónica.** Orden: (1) grabación y máster, (2) formato de entrega, (3) audición,
+(4) almohadillas y sellado, (5) PEQ de 5 bandas, (6) software. **El DAC y el amplificador no limitan**
+(~14 dB de margen con el Aune). **El PEQ está saturado:** `HEKSE-HarmanV4` usa las 5 bandas + shelf de
+graves y una Harman necesita 7–10 filtros. **Único límite real, y se rompe gratis con EasyEffects.**
+Los `.adieqpr` **sólo guardan EQ**.
+**Transporte:** aquí el óptico falla mucho menos que el USB (escucha del propietario). Efecto
+audible real, por encima de cualquier diferencia de DAC o amplificador.
 
-- **AirPods Max (cualquier generación, incluidos los AirPods Max 2 de 2026):**
-  por Bluetooth sólo aceptan **AAC y SBC**. No hay LDAC ni aptX.
-- **No tienen entrada analógica.** Su DAC y amplificador son internos, así que un DAC
-  externo (RME, Eversolo, K7BT) no puede insertarse en la cadena.
-- **Sin pérdida sólo por cable USB-C** (24 bits / 48 kHz). AirPods Max 2: chip H2,
-  Bluetooth 5.3, anunciados el 16-mar-2026.
+## RME serie ADI-2 EX (estado 20-sep-2026)
+Anunciada 3-jun-2026. Sólo el **ADI-2 Pro EX** tiene página, precio **CHF 1699** y venta real
+(€1.992,87). **DAC EX y 2/4 Pro EX: 404, sin precio oficial y sin disponibilidad en México**
+(«late Q3 2026»). Único precio del 2/4 Pro EX: preventa de revendedor $2,499 USD (Reverb, Tidepool
+Audio) — **no es de RME**. Thomann retiró el DAC FS. México (`solidelectronics.mx`), **todo sin
+existencias** salvo Babyface Pro FS $20,900: DAC FS $27,600 · 2/4 Pro SE $51,100 · Pro FS R BE
+$42,600 · ADI-2 FS $20,200. Ningún «EX» listado. Automatización `078e7794-bd6a-45c0-bfba-ce1f160564bc`.
 
-## Códecs Bluetooth en Linux (PC de casa)
-
-- PipeWire soporta de fábrica: **SBC, SBC-XQ, aptX, LDAC y AAC**. Plugins presentes en
-  `/usr/lib/spa-0.2/bluez5/`.
-- **aptX Adaptive NO está soportado** en Linux (implementación propietaria de Qualcomm).
-  Un dongle Bluetooth normal degrada cualquier auricular aptX Adaptive a aptX HD.
-- **Solución:** un **dongle transmisor USB** (Sennheiser BTD 700, Creative BT-W6) que
-  codifica en hardware y es USB class-compliant. La PC lo ve como una tarjeta de sonido
-  USB y las limitaciones de códecs del sistema dejan de importar.
-- Consecuencia práctica: los inalámbricos audiófilos de gama alta usan aptX Adaptive y
-  **no LDAC**, así que el dongle transmisor es la ruta inalámbrica correcta, no un
-  dongle Bluetooth genérico.
-
-## Auriculares inalámbricos audiófilos: entrada analógica
-
-**Corrección a la nota anterior sobre Apple:** la ausencia de entrada analógica es
-específica de los AirPods. Los inalámbricos audiófilos (Focal Bathys MG, DALI IO-12,
-Sennheiser HDB 630) **sí tienen entrada de 3.5 mm**, así que el RME ADI-2 DAC FS **sí
-puede insertarse en la cadena** por analógico. Tampoco es obligatorio: todos tienen modo
-USB-DAC interno.
-
-Códecs verificados en fichas oficiales (sep-2026):
-
-| Modelo | Códecs | ¿LDAC? | Cable |
-|---|---|---|---|
-| Focal Bathys MG | SBC, AAC, aptX, aptX Adaptive | **No** | USB-DAC 24/192, jack |
-| DALI IO-12 | SBC, AAC, aptX, aptX HD, aptX Adaptive | **No** | USB 24/96, jack |
-| Sennheiser HDB 630 | aptX Adaptive, aptX HD, AAC, SBC | **No** | USB-C o jack, 24/96 |
-| Mark Levinson No. 5909 | **LDAC**, aptX Adaptive, AAC | **Sí** | USB-C, jack |
-
-Precios verificados en México (JMI Audio, 19-sep-2026): DALI IO-12 $35,802 MXN;
-Sennheiser HDB 630 $10,999 MXN **con dongle BTD 700 incluido**.
-Referencia USD: No. 5909 $999 · IO-12 $1,750 · HDB 630 $499.95 · BTD 700 $59.95.
-
-## Equipos Topping y bocinas Sony pasivas (no documentados en audio_context.md)
-
-El propietario tiene tres equipos Topping arrumbados y unas bocinas Sony pasivas
-antiguas. Verificado en manuales y fichas oficiales (19-sep-2026):
-
-| Equipo | Qué es | ¿Mueve bocinas pasivas? |
-|---|---|---|
-| **Topping TP30** | Amplificador clase T Tripath TA2024 + DAC USB + amp de audífonos. **Bornes de bocina de 5 vías.** Fuente 12 V / 5 A | **Sí, es el único** |
-| Topping D30 | Sólo DAC: USB (32–192 kHz, DSD64/128), coaxial, óptica → salida RCA | No |
-| Topping A30 | Sólo amplificador de audífonos: RCA in, **salida de línea RCA**, 6.35/3.5 mm. 1551 mW a 32 Ω | No (sin bornes) |
-
-Cadena correcta para las Sony: fuente → TP30 → bocinas. Advertencias: el TP30 necesita su
-fuente original de 12 V / 5 A; bocinas de 4 a 8 Ω; nunca conectar las salidas de bocina a
-una entrada de línea.
-
-## Topping DX9 frente al RME ADI-2 DAC FS (evaluado 19-sep-2026)
-
-**Ojo: hay dos DX9 distintos.** El **DX9 original** (2024, AK4499EQ, $1,299) **no tiene
-PEQ**. Sólo el **DX9 Discrete / DX9D** ($1,299) trae PEQ de 10 bandas y crossfeed por
-convolución. Confundirlos invalida cualquier comparación.
-
-Datos del DX9 Discrete (manual oficial `dl.topping.audio/um/DX9_Discrete.pdf`):
-
-- Línea: XLR 5.2 Vrms / RCA 2.5 Vrms. SNR 131 dB (XLR). Modo PRE (con volumen) o DAC.
-- Auriculares: 4-pin XLR + 4.4 mm + 6.35 mm, 7080 mW ×2 @32 Ω, salida <0.1 Ω.
-- Entradas: USB, 2× óptica, 2× coaxial, AES, IIS, Bluetooth (LDAC, aptX Adaptive).
-- USB 768/32 y DSD512 nativo. PSU interna. Trigger 12 V. 2750 g.
-- **PEQ: se edita sólo con Topping Tune en PC**; el equipo guarda 5 perfiles y los usa
-  sin conexión. **No tiene loudness** (verificado: no aparece en el manual).
-
-Datos del RME (manual local `MANUAL-RMEadi2dac_e.pdf`): Extreme Power **1.5 W @ 32 Ω**;
-niveles conmutables **-5/+1/+7/+13 dBu**; **PEQ de 5 bandas editable en el equipo**;
-**loudness dinámico**; crossfeed; salida IEM a -3 dBu; **interfaz USB full-duplex** que
-graba el SPDIF.
-
-**Conclusión registrada:** el DX9 Discrete es un cambio lateral, no una mejora. Gana en
-PEQ de 10 bandas, potencia, Bluetooth y entradas; pierde loudness, edición del PEQ sin PC
-y la función de interfaz USB. Los presets `.adieqpr` del propietario no se transfieren.
-
-## Eversolo DMP-A8 Gen 2 frente al RME (evaluado 19-sep-2026)
-
-**Es un error de categoría plantearlo como sustituto del RME.** El A8 Gen 2 es
-streamer + DAC + preamplificador; el RME es DAC + amplificador de audífonos. El
-solapamiento real del A8 Gen 2 es con el **DMP-A6**, no con el RME.
-
-Dos datos duros, verificados en el manual oficial:
-
-- **No tiene salida de audífonos.** La lista completa de E/S no incluye 6.35, 4.4
-  ni 3.5 mm. Sí tiene salida de subwoofer con crossover 40–500 Hz.
-- **El Bluetooth es sólo de entrada.** El manual lo etiqueta «Bluetooth Audio
-  Input» (BT 5.4, SBC/AAC/aptX/aptX LL/aptX HD/LDAC). **No puede enviar audio a
-  audífonos Bluetooth.**
-
-Arquitectura: AK4191EQ + AK4499EXEQ, DSD512 y PCM 768/32, pantalla de 8.6",
-8 GB DDR5 + 64 GB eMMC, volumen analógico por **red R-2R**, preamp balanceado con
-+10 dB, entradas analógicas XLR/RCA, salidas XLR 4.2 V / RCA 2.1 V, THD+N
-−121 dB, rango dinámico >132 dB (XLR), HDMI ARC/eARC, Wi-Fi 6, SFP, M.2 NVMe.
-
-Precio: **$1,980 USD** (Audio Solutions) · **€1,980** (deCineOn, «Disponible»).
-**No se encontró precio en México del Gen 2.** JMI Audio lista el A8 de **primera
-generación** a **$49,500 MXN** (se distingue por la pantalla de 6.0", 4 GB DDR4 y
-XMOS XU316). El A8 de primera generación está descontinuado.
-
-**Veredicto:** no vale la pena como sustituto del RME (cambio lateral de ~$34,000
-MXN que quita el PEQ en el equipo y la salida de audífonos). Como sustituto del
-DMP-A6 tiene sentido sólo si se arma un sistema de bocinas. Entregable:
-`analisis_rme_vs_eversolo_a8_gen2.md`.
-
-## Equipos del inventario que NO transmiten Bluetooth
-
-Verificado en manuales locales o fichas oficiales:
-
-| Equipo | Bluetooth | Evidencia |
-|---|---|---|
-| Eversolo DMP-A6 | **Sólo receptor** (QCC5125) | Manual local, líneas 116 y 889–894 |
-| FiiO K7BT | **Sólo receptor** (QCC5124) | Ficha FiiO |
-| RME ADI-2 DAC FS | No tiene Bluetooth | Manual local |
-| Aune S17 Pro EVO | No tiene Bluetooth | Manual local |
-| AirPort Express 2.ª gen | No; es receptor AirPlay | Apple |
-
-Ninguno sirve para enviar audio a unos auriculares Bluetooth.
+## Dónde está cada cosa
+- **Fichas de equipos** → `referencia-equipos.md`.
+- **Entregables** (raíz): `enrutamiento_audio_al_rme.md` (§8.9 reloj/`Sync Source`, §8.8 cadena real,
+  §8 mapa de salidas, §4 excepciones) · `verificacion_grafo_pipewire.md` · `cuello_de_botella_cadena.md`
+  (§1.1-bis transporte) · `audio_context.md` (§6) · `fuente_remuestreo_y_perdida.md` ·
+  `analisis_rme_dac_fs_vs_adi-2-4_pro_ex.md` · `analisis_rme_vs_eversolo_a8_gen2.md` ·
+  `cable_y_almohadillas_he1000se.md` · `tidal_descargas_offline_bug.md` ·
+  `comparativa_lossless_offline_15k.md` · `qobuz_webplayer_lossless.md` · `fichas/`.
+- **Manuales:** `manuales/MANUAL-RMEadi2dac_e.pdf` (v1.8, §§12.1/14.1.2/31.3) ·
+  `manuales/Manual EVERSOLO-DMP-A6-v1.0.pdf`. **Diarios:** `2026-09-*.md`.

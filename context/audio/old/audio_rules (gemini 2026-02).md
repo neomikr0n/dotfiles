@@ -1,4 +1,9 @@
-# 💎 AUDIO: "SISTEMA HE1000SE" (COMPLETADO)
+# Audio rules
+
+> **[SUPERADO 20-sep-2026]** Documento histórico de feb-2026. Contiene afirmaciones sobre el
+> jitter y el reloj que el manual del ADI-2 DAC v1.8 **no respalda tal cual** (el §31.3 dice que
+> la conversión D/A es independiente de la calidad del reloj entrante). Ver
+> `enrutamiento_audio_al_rme.md` §8.9 antes de tomar nada de aquí como vigente.
 
 <!-- 
 # 📚 Contexto y Manuales Oficiales

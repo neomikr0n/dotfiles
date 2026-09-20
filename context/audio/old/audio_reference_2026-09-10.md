@@ -212,7 +212,27 @@ Configuración declarada: PipeWire fijo a 192 kHz. Las fuentes a otra tasa se re
 
 La elección de 192 kHz y SD Slow se conserva como ajuste declarado, sin una conclusión de superioridad audible. Evaluar tasas y filtros con la misma fuente, nivel y EQ, registrando además estabilidad y latencia. El resultado de toda la ruta incluye el remuestreador, no solo el filtro del DAC.
 
-El reloj debe corresponder al modo de entrada conforme al manual del RME. No imponer INT a la reproducción S/PDIF/Toslink. Comprobar estado de sincronización y tasa; la presencia de SteadyClock FS no elimina esta dependencia. Los cambios de referencia analógica de Auto Ref son distintos de los cambios de tasa digital: no atribuir todos los clics al muestreo.
+El reloj debe corresponder al modo de entrada conforme al manual del RME. No imponer INT a la reproducción S/PDIF/Toslink. Comprobar estado de sincronización y tasa; la presencia de SteadyClock FS no elimina esta dependencia.
+
+> **[ACTUALIZADO 20-sep-2026 — leer esto antes de usar el párrafo de arriba.]** La frase anterior
+> es **imprecisa** y hay que matizarla con el manual del ADI-2 DAC v1.8:
+>
+> - **El reloj no se configura, y no depende del usuario.** Manual §14.1.2: «The clock source is
+>   automatically determined and set by the unit, **a selection is neither possible nor
+>   necessary**». Con USB usa el reloj **interno**; con SPDIF, el **externo**. La frase «no imponer
+>   INT» es correcta como advertencia, pero **no hay ningún ajuste que se pueda imponer**.
+> - **«La presencia de SteadyClock FS no elimina esta dependencia» es engañoso.** El manual §31.3
+>   afirma lo contrario con todas las letras: la conversión D/A opera «**completely independent
+>   from the quality of the incoming clock signal**». El reloj entrante **sí importa** para que el
+>   receptor enganche (y ahí el §14.1.2 y el §31.1 «Lock and SyncCheck» son pertinentes), pero
+>   **no para la calidad de la conversión**. Son dos cosas distintas: *sincronizar* y *sonar*.
+> - **`Source = Auto`** (manual §12.1) es el ajuste de fábrica, y en ese modo «any detected SPDIF
+>   signal will have priority over USB playback». Es la configuración correcta para esta
+>   instalación, no un ajuste a revisar.
+>
+> Nota: `default.clock.rate = 192000` que aparece más abajo en la tabla **también está obsoleto**:
+> el archivo real fija `48000` (ver `enrutamiento_audio_al_rme.md` §5).
+> Detalle completo: `enrutamiento_audio_al_rme.md` §8.9. Los cambios de referencia analógica de Auto Ref son distintos de los cambios de tasa digital: no atribuir todos los clics al muestreo.
 
 ## 7. Linux: registro y pruebas de estabilidad
 
