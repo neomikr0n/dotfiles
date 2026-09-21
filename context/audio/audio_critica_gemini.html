@@ -803,9 +803,9 @@
           </tr>
           <tr>
             <td><strong>Audio Robótico en Linux</strong></td>
-            <td>Reporta fallos periódicos como "sin causa concluyente" y sospecha de controladores o hardware.</td>
-            <td>Causa directa: <code>resample.quality=10</code> a 192 kHz forzado en un i5-13600K (núcleos híbridos E/P) causa <strong>xruns masivos por buffer underflow</strong> al fallar los deadlines de 10.6 ms.</td>
-            <td><span class="val-warn">MEDIA (Corrección $0)</span></td>
+            <td>Lo reporta como "sin causa concluyente" y sospecha de controladores o hardware. <strong>Esa duda era correcta.</strong></td>
+            <td><s>Atribuido a <code>resample.quality=10</code> a 192 kHz forzado → xruns por deadline de 10.6 ms.</s> <strong>DESCARTADO (20-sep-2026).</strong> El fallo bajó al cambiar el <strong>transporte</strong> (USB → óptico), no el remuestreo; las dos rutas quedaron en quality&nbsp;10 sin que reapareciera. <strong>Mecanismo: sin identificar.</strong></td>
+            <td><span class="val-warn">SIN RESOLVER (corrección: usar óptico)</span></td>
           </tr>
         </tbody>
       </table>
@@ -1208,17 +1208,30 @@
 
   <!-- TAB 5: LINUX Y PIPEWIRE -->
   <section id="tab-linux-pipewire" class="tab-content">
-    <div class="alert-box alert-info">
-      <div class="alert-icon">🔧</div>
+    <div class="alert-box alert-warning" style="border-color:rgba(255,168,4,.5)">
+      <div class="alert-icon">⚠️</div>
       <div class="alert-body">
-        <h3>Diagnóstico Técnico Definitivo: El Audio Robótico en Linux Hyprland</h3>
+        <h3>Corrección (20 sep 2026): este «diagnóstico definitivo» era erróneo</h3>
         <p>
-          El documento describe "episodios de audio robótico de aproximadamente un segundo en distintas aplicaciones, con menor frecuencia por óptico que por USB". Clasifica esto como un misterio pendiente. <strong>La causa técnica es evidente e inequívoca a partir de sus propios archivos de configuración.</strong>
+          Esta sección afirmaba que «<strong>la causa técnica es evidente e inequívoca</strong>» y la atribuía al
+          remuestreo a <code>quality=10</code> perdiendo el deadline en los E-cores. <strong>Eso no es lo que ocurrió.</strong>
+        </p>
+        <p>
+          El fallo «robótico» se redujo <strong>al cambiar el transporte</strong> —de USB a cable óptico—, no al tocar el
+          resampling: las dos rutas de PipeWire quedaron en <code>quality=10</code> y el problema <strong>no reapareció</strong>.
+          En calidad 10 el error de remuestreo queda por debajo del piso de ruido del RME (rango 0–14, por defecto 4).
+          Además, el bloque <code>node.latency=2048/192000</code> <strong>ya no existe</strong> y nunca forzó la frecuencia del
+          grafo. El texto de abajo se conserva como registro de una hipótesis <em>descartada</em>, no como diagnóstico.
+        </p>
+        <p>
+          <strong>Lo que sí queda firme</strong> —y obra en el registro del propietario—: el fallo era mucho más frecuente por
+          USB (varias veces por hora) que por óptico (un par al día, si acaso). <strong>El mecanismo concreto sigue sin
+          identificarse</strong>: no hay registro de errores capturado durante un evento.
         </p>
       </div>
     </div>
 
-    <h2 class="section-title">Mecánica del Fallo: Resample 10 + Núcleos E de Intel</h2>
+    <h2 class="section-title">[DESCARTADO] Mecánica propuesta: Resample 10 + Núcleos E de Intel</h2>
     <div class="card-grid">
       <div class="card">
         <div class="card-header">
@@ -1319,9 +1332,12 @@
     <div class="alert-box alert-info" style="margin-top: 24px;">
       <div class="alert-icon">ℹ</div>
       <div class="alert-body">
-        <h3>Nota sobre clientes PulseAudio (Cider / Navegadores)</h3>
+        <h3>Nota sobre clientes PulseAudio (Cider / Navegadores) — <em>revisada</em></h3>
         <p>
-          En <code>~/.config/pipewire/pipewire-pulse.conf.d/force-192k.conf</code> también figura <code>resample.quality = 10</code>. Se recomienda igualmente fijarlo en <code>resample.quality = 4</code> para que las aplicaciones que usan la capa de emulación PulseAudio gocen de la misma estabilidad y bajo consumo de ciclos.
+          En <code>~/.config/pipewire/pipewire-pulse.conf.d/force-192k.conf</code> figura <code>resample.quality = 10</code>.
+          <strong>La recomendación anterior de bajarlo a 4 se retira</strong>: partía de la premisa —descartada— de que la
+          calidad alta causaba los xruns. Se deja en <code>10</code>, que es donde está, porque a 10 el error de remuestreo
+          queda bajo el piso de ruido del RME. El nombre del archivo es histórico: <strong>no fuerza 192 kHz</strong>.
         </p>
       </div>
     </div>

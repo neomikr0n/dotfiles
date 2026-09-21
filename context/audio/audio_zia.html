@@ -445,12 +445,17 @@ html.static .bfill{transition:none!important}
         line-interactive <em>no reduce</em>— el Aune de 220 V recibiría <strong>≈ 254 V RMS continuos</strong>, fuera de
         la ventana típica 198–242 V. El calor de un amplificador Clase A se dispara. <a href="#energia">Análisis y plan de mitigación →</a></p>
       </div>
-      <div class="card reveal d3">
-        <span class="ico">🔧</span><span class="ctag">Corrección aplicada · 12 sep</span>
-        <h3>Audio «robótico»: causa raíz encontrada</h3>
-        <p>El remuestreador a <code>quality=10</code> con <code>node.latency=2048/192000</code> forzaba deadlines de
-        10.67 ms sobre los E-cores del i5-13600K → <em>xruns</em> de ~1 s. Ya está aplicado <code>resample.quality=4</code>
-        (transparente, &lt;0.05 % CPU) y la latencia forzada se eliminó. <a href="#pipewire">Demo interactiva del fallo →</a></p>
+      <div class="card reveal d3" style="border-color:rgba(255,168,4,.45)">
+        <span class="ico">⚠️</span><span class="ctag" style="color:var(--amber)">Corregido · 20 sep 2026</span>
+        <h3>Audio «robótico»: la causa raíz NO era el remuestreo</h3>
+        <p><b>Esta tarjeta afirmaba</b> que el fallo venía de <code>quality=10</code> con
+        <code>node.latency=2048/192000</code> forzando deadlines de 10.67 ms sobre los E-cores → <em>xruns</em> de ~1 s,
+        y que aplicar <code>resample.quality=4</code> lo resolvía. <b>Eso es falso.</b></p>
+        <p><b>Lo que ocurrió de verdad:</b> el artefacto se redujo <b>al cambiar el transporte</b> —de USB a cable
+        óptico—, no al tocar el remuestreo. Y las dos rutas de PipeWire quedaron en <code>quality=10</code> sin que el
+        fallo reapareciera. En quality 10 el error de remuestreo queda <b>por debajo del piso de ruido del RME</b>.
+        En esta instalación el transporte importa mucho más que el resampling.
+        <a href="#pipewire">Ver la revisión completa →</a></p>
       </div>
     </div>
 
@@ -1215,8 +1220,10 @@ Margen limpio antes de saturar el convertidor:           <b class="good">+22.5 d
       <h2 class="stitle">Óptica, USB y red: <em>tres caminos, un reloj</em>.</h2>
       <p class="lead">
         El Eversolo recibe música por <strong>LAN cableada</strong> y entrega audio por <strong>USB</strong>; la PC lo hace
-        por <strong>Toslink</strong>. Ambos llegan al RME, cuyo SteadyClock FS reduce la influencia del jitter — la
-        variación temporal de los instantes de reloj que todo transporte S/PDIF arrastra con los datos.
+        por <strong>Toslink</strong>. Ambos llegan al RME, cuyo SteadyClock FS no se limita a atenuar el reloj que
+        llega con los datos: lo <strong>regenera por completo</strong>. El manual (v1.8, §31.3) lo dice literalmente —
+        «refreshes and cleans up <em>any</em> clock signal» y la conversión D/A es «completely independent from the
+        quality of the incoming clock signal». <strong>El reloj de la fuente deja de ser un factor.</strong>
       </p>
     </div>
 
@@ -1300,13 +1307,33 @@ Margen limpio antes de saturar el convertidor:           <b class="good">+22.5 d
         fijo/variable y normalización <span class="chip c-pend">pendiente</span>.</p>
       </div>
       <div class="card reveal d1">
-        <span class="ctag">Jitter y reloj</span>
+        <span class="ctag">Reloj: por qué no es el problema</span>
         <p>S/PDIF transporta datos <em>junto con</em> la información temporal; el receptor recupera el reloj y gestiona la
-        sincronía. El <strong>SteadyClock FS</strong> del RME reduce la influencia del jitter — RME publicó una prueba con
-        jitter inyectado sin degradación apreciable en <em>su</em> ensayo, con aquella unidad y firmware: no es una
-        medición de esta instalación.</p>
-        <p class="note">Un cable óptico necesita margen y conectores asentados; sus fallos causan errores o pérdida de
-        sincronía. No hay medición de errores del ejemplar Amazon Basics.</p>
+        sincronía. Pero aquí conviene ser preciso, porque es un punto que se cita mal muy a menudo: el
+        <strong>SteadyClock FS</strong> del RME <strong>no se limita a reducir la influencia del jitter</strong>.
+        Sustituye el reloj de entrada por uno propio de bajo ruido de fase. El manual del ADI-2 (v1.8), §31.3, dice que su
+        supresión de jitter «refreshes and cleans up <em>any</em> clock signal» y que la conversión D/A «always operates
+        on highest sonic level, <strong>being completely independent from the quality of the incoming clock
+        signal</strong>».</p>
+        <p class="note"><strong>Consecuencia:</strong> «el jitter es el de la placa madre» es una afirmación que el
+        manual del fabricante <em>desmiente</em>. No hay un coste audible por usar óptico en lugar de USB en este DAC.
+        Y el <code>Sync Source</code> <strong>no se configura</strong>: §14.1.2 dice que la fuente de reloj «is
+        automatically determined and set by the unit, a selection is neither possible nor necessary»; el panel muestra
+        una <em>lectura</em>, no un ajuste.</p>
+      </div>
+
+      <div class="card reveal d2">
+        <span class="ctag">El transporte sí importa — y está medido</span>
+        <p>Si el reloj no es el factor, <strong>¿qué lo es?</strong> En esta instalación la respuesta está en los fallos,
+        no en el reloj. Con el RME alimentado <strong>por USB</strong> se producía una <strong>distorsión «robótica» de
+        ~1 segundo, varias veces por hora</strong>. Con el <strong>cable óptico</strong>, ese evento baja a
+        <strong>un par de veces al día como mucho</strong>.</p>
+        <p class="note">Es una <strong>observación de escucha del propietario</strong>, no una medición de laboratorio, y
+        así se registra. <strong>La causa no se ha identificado</strong> y aquí no se inventa: los candidatos
+        (pérdida de paquetes por carga del bus USB, gestión de energía del puerto, comportamiento del receptor ante una
+        interrupción, pérdida momentánea del enganche de reloj) son hipótesis sin verificar. No hay registro de errores
+        capturado durante un evento. <strong>Pero el hecho es firme</strong>, y pesa mucho más que cualquier diferencia
+        de PEQ, DAC o amplificador en esta cadena.</p>
       </div>
     </div>
 
@@ -1396,8 +1423,8 @@ context.properties = {
 
     <div class="demo reveal" style="margin-top:30px">
       <div class="demo-head">
-        <span class="dt">Simulador del fallo «robótico» · xruns</span>
-        <span class="ds">Quality 10 = filtro sinc colosal que puede perder el deadline si el planificador manda el hilo a un E-core; el underflow suena a modulación en anillo metálica de ~1 s. Quality 4 es transparente y barato. Inyecta la carga y compara.</span>
+        <span class="dt">Simulador de xruns · por qué el remuestreo NO es la causa</span>
+        <span class="ds"><b>Corrección del 20/09/2026:</b> esta sección presentaba el remuestreo a quality 10 como la explicación del fallo «robótico». <b>No lo es.</b> Las dos rutas quedaron en quality 10 y el fallo <b>no desapareció por eso</b>: bajó al cambiar el transporte a óptico. El simulador ilustra cómo se comporta un underflow, pero la causa medida es otra — ver la tarjeta «El transporte sí importa».</span>
       </div>
       <div class="demo-stage">
         <canvas id="xrun" height="230"></canvas>
@@ -1421,24 +1448,33 @@ context.properties = {
 stream.properties = {
     resample.quality = <b class="good">4</b>
 }</div>
-        <div class="code reveal d1" style="border-left-color:#ff8a77"><span class="ct">force-192k.conf · clientes PulseAudio (Cider, navegador) · PENDIENTE</span>
-<i># El nombre es histórico: ya no fuerza 192 kHz…</i>
-<i># …pero la calidad sigue alta para la capa de compatibilidad.</i>
+        <div class="code reveal d1" style="border-left-color:var(--good)"><span class="ct">force-192k.conf · clientes PulseAudio (Cider, navegador) · RESUELTO 20/09</span>
+<i># El nombre es histórico: NUNCA forzó 192 kHz (no hay default.clock.force-rate).</i>
+<i># Ya estaba en 10. Aplicar 4 aquí era una recomendación mía basada en una</i>
+<i># premisa falsa (que el quality alto causaba los xruns). Se deja en 10:</i>
+<i># a 10 el error de remuestreo queda bajo el piso de ruido del RME.</i>
 stream.properties = {
-    resample.quality = <b class="bad">10</b>   <i>← aplicar 4 también aquí</i>
+    resample.quality = <b class="good">10</b>   <i>← sin cambio; NO aplicar 4</i>
 }</div>
       </div>
       <div>
         <div class="card reveal" style="margin-bottom:18px">
-          <span class="ctag">Mecánica del fallo · 4 pasos</span>
+          <span class="ctag">Mecánica del fallo · revisada el 20/09/2026</span>
+          <p><b>Lo que esta tarjeta decía —y que hay que corregir:</b> atribuía el artefacto a un XRUN provocado por
+          <code>resample.quality = 10</code> perdiendo el deadline en un E-core, y presentaba como confirmación que «el
+          fallo era menos frecuente por óptico que por USB».</p>
+          <p><b>Por qué no se sostiene:</b> el fallo «robótico» aparece y desaparece al cambiar <em>el transporte</em>,
+          no el remuestreo. Y el resampling quedó en quality 10 en las dos rutas sin que el problema reapareciera; en
+          calidad 10 el error de remuestreo está por debajo del piso de ruido del RME. La coincidencia del punto 4 se
+          estaba usando como prueba a favor cuando en realidad <b>apuntaba a la causa correcta</b>: el enlace.</p>
           <ul>
-            <li><strong>Filtro sinc extremo:</strong> quality 10 cuesta miles de operaciones por muestra en tiempo real.</li>
-            <li><strong>CPU híbrida:</strong> el i5-13600K mezcla 6 P-cores y 8 E-cores; si el kernel migra el hilo o baja
-            la frecuencia, el deadline de 10.67 ms se pierde.</li>
-            <li><strong>XRUN:</strong> PipeWire rellena huecos con ceros o salta punteros DMA → artefacto metálico de ~1 s
-            mientras los relojes se resincronizan.</li>
-            <li><strong>Óptica a 192 kHz:</strong> el LED Toslink de la placa puede quedarse sin margen a 3 m de fibra
-            plástica — coherentemente, el fallo era <em>menos frecuente por óptico que por USB</em>.</li>
+            <li><strong>Descartado como causa principal:</strong> XRUN por carga de resampling.</li>
+            <li><strong>Lo que sí es firme:</strong> el fallo es mucho más raro por óptico que por USB (observación de
+            escucha del propietario, no medición).</li>
+            <li><strong>Sin identificar:</strong> el mecanismo concreto. Candidatos no excluyentes — pérdida de paquetes
+            por carga del bus USB, gestión de energía del puerto, comportamiento del receptor ante una interrupción, o
+            pérdida momentánea del enganche de reloj. <b>No hay registro de errores capturado durante un evento</b>, así
+            que no se afirma ninguno.</li>
           </ul>
         </div>
         <div class="card reveal d1">
@@ -2421,7 +2457,7 @@ reg($('#scope'),t=>{
     log(load?'· carga activada: governor baja frecuencias, planificador migra el hilo':'· carga desactivada','#c2baad'); };
   $('#xgo').onclick=()=>{ glitchT=(performance.now()-t0)*.001; count++; $('#xCount').textContent=count;
     $('#xLed').className='led bad'; setTimeout(()=>$('#xLed').className='led ok',1100);
-    log(q===10?'✕ xrun inyectado manualmente · artefacto robótico ~1 s':'✓ xrun simulado · con quality=4 el buffer lo recupera sin artefacto', q===10?'#ff8a77':'#8fd98f'); };
+    log(q===10?'✕ xrun inyectado manualmente · artefacto ~1 s (simulado; NO es la causa del fallo real de este sistema)':'✓ xrun simulado · el buffer lo recupera sin artefacto (ilustrativo)', q===10?'#ff8a77':'#8fd98f'); };
   log('· inicia con quality=10 y activa la carga — luego cambia a 4 y compara','#8b8375');
 })();
 

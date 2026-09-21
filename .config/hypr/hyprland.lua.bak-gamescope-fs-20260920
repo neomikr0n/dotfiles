@@ -675,25 +675,6 @@ hl.window_rule({
     min_size = { 1, 1 },
 })
 
--- Juegos lanzados bajo gamescope (STALKER 2 y cualquier otro).
--- POR QUÉ: la regla "steam-games" de arriba solo cubre class=steam_app.*, pero
--- cuando el juego va envuelto en gamescope la clase es "gamescope" y el nombre
--- del juego queda en el title. Esos juegos se quedaban SIN fullscreen, así que
--- al desagruparlos (Super+G) el puntero alcanzaba las esquinas y disparaba el
--- shell. Verificado 2026-09-20: la ventana medía 3436x1436 pero con fs=0.
-hl.window_rule({
-    name = "gamescope-games",
-    match = { class = "^(gamescope)$" },
-    float = true,
-    fullscreen = true,
-    border_size = 0,
-    opacity = "1.0 override 1.0 override",
-    immediate = true,
-    no_blur = true,
-    no_shadow = true,
-    no_initial_focus = true,
-})
-
 -- Awakened PoE Trade
 hl.window_rule({
     name = "awakened-poe-trade",

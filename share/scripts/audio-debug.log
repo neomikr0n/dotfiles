@@ -1,0 +1,815 @@
+════════════════════════════════════════════════════════════
+MARCA  2026-09-20 16:25:48.896
+DESCRIPCIÓN: verificación con traducción
+────────────────────────────────────────────────────────────
+[PCM card1 — placa madre / S/PDIF → óptico → RME]
+  pcm0p/sub0:
+    closed
+  pcm1p/sub0:
+    state: RUNNING
+    owner_pid   : 231125
+    trigger_time: 22831.259838722
+    tstamp      : 23092.133057158
+    delay       : 1051
+    avail       : 31717
+    avail_max   : 32175
+    -----
+    hw_ptr      : 12519909
+    appl_ptr    : 12520960
+[PCM card0 — RME por USB]
+  pcm0p/sub0: 
+[Reloj del RME]
+  AES Rate = 0 (sin señal AES — normal, no hay nada conectado)
+  AES Sync = 0 (No Lock)
+  SPDIF Rate = 48000
+  SPDIF Sync = 2 (Sync)  ← correcto
+  SPDIF Interface = 1 (Óptico)  ← el cable real
+  Sync Source = 2 (SPDIF)  ← enganchado al cable óptico
+  System Rate = 48000
+  Current Frequency = 47999
+[Sink por defecto]
+  alsa_output.pci-0000_00_1f.3.iec958-stereo
+[Sinks y su estado]
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-3
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-7
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-8
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-9
+   suspended  alsa_output.usb-RME_ADI-2_DAC__51100523__7BF05DF3F61F3C8-0
+   running    alsa_output.pci-0000_00_1f.3.iec958-stereo
+[Streams de audio y su destino]
+   S.T.A.L.K.E.R. 2                 → alsa_output.pci-0000_00_1f.3.iec958-ster
+[xruns de PipeWire en los últimos 60 s]
+   líneas con xrun: 0
+[Errores de audio del kernel en los últimos 60 s]
+   (vacío = sin errores)
+[Carga del sistema]
+   15.18 11.29 9.93 23/3355 437155
+   CPU más activa:
+     %CPU COMMAND
+      676 GameThread
+     63.0 Isolated Web Co
+     25.2 electron
+[gamescope — últimos 60 s]
+   líneas con error: 0
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+MARCA  2026-09-20 16:27:25.704
+DESCRIPCIÓN: prueba final
+────────────────────────────────────────────────────────────
+[PCM card1 — placa madre / S/PDIF → óptico → RME]
+  pcm0p/sub0:
+    closed
+  pcm1p/sub0:
+    state: RUNNING
+    owner_pid   : 231125
+    trigger_time: 22831.259838722
+    tstamp      : 23188.939077146
+    delay       : 914
+    avail       : 31854
+    avail_max   : 32252
+    -----
+    hw_ptr      : 17165934
+    appl_ptr    : 17166848
+[PCM card0 — RME por USB]
+  pcm0p/sub0: 
+[Reloj del RME]
+  AES Rate = 0 (sin señal AES — normal, no hay nada conectado)
+  AES Sync = 0 (No Lock)
+  SPDIF Rate = 48000
+  SPDIF Sync = 2 (Sync)  ← correcto
+  SPDIF Interface = 1 (Óptico)  ← el cable real
+  Sync Source = 2 (SPDIF)  ← enganchado al cable óptico
+  System Rate = 48000
+  Current Frequency = 47999
+[Sink por defecto]
+  alsa_output.pci-0000_00_1f.3.iec958-stereo
+[Sinks y su estado]
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-3
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-7
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-8
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-9
+   suspended  alsa_output.usb-RME_ADI-2_DAC__51100523__7BF05DF3F61F3C8-0
+   running    alsa_output.pci-0000_00_1f.3.iec958-stereo
+[Streams de audio y su destino]
+   S.T.A.L.K.E.R. 2                 → alsa_output.pci-0000_00_1f.3.iec958-ster
+[xruns de PipeWire en los últimos 60 s]
+   líneas con xrun: 0
+[Errores de audio del kernel en los últimos 60 s]
+   (vacío = sin errores)
+[Carga del sistema]
+   14.29 12.26 10.42 10/3403 449668
+   CPU más activa:
+     %CPU COMMAND
+      712 GameThread
+     25.4 electron
+     21.0 Isolated Web Co
+[gamescope — últimos 60 s]
+   líneas con error: 0
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+MARCA  2026-09-20 16:42:11.061
+DESCRIPCIÓN: corte seco mientras jugaba
+────────────────────────────────────────────────────────────
+[PCM card1 — placa madre / S/PDIF → óptico → RME]
+  pcm0p/sub0:
+    closed
+  pcm1p/sub0:
+    state: RUNNING
+    owner_pid   : 231125
+    trigger_time: 22831.259838722
+    tstamp      : 24074.297729620
+    delay       : 473
+    avail       : 32295
+    avail_max   : 32300
+    -----
+    hw_ptr      : 59606567
+    appl_ptr    : 59607040
+[PCM card0 — RME por USB]
+  pcm0p/sub0: 
+[Reloj del RME]
+  AES Rate = 0 (sin señal AES — normal, no hay nada conectado)
+  AES Sync = 0 (No Lock)
+  SPDIF Rate = 48000
+  SPDIF Sync = 2 (Sync)  ← correcto
+  SPDIF Interface = 1 (Óptico)  ← el cable real
+  Sync Source = 2 (SPDIF)  ← enganchado al cable óptico
+  System Rate = 48000
+  Current Frequency = 47999
+[Sink por defecto]
+  alsa_output.pci-0000_00_1f.3.iec958-stereo
+[Sinks y su estado]
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-3
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-7
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-8
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-9
+   suspended  alsa_output.usb-RME_ADI-2_DAC__51100523__7BF05DF3F61F3C8-0
+   running    alsa_output.pci-0000_00_1f.3.iec958-stereo
+[Streams de audio y su destino]
+   S.T.A.L.K.E.R. 2                 → alsa_output.pci-0000_00_1f.3.iec958-ster
+[xruns de PipeWire en los últimos 60 s]
+   líneas con xrun: 0
+[Errores de audio del kernel en los últimos 60 s]
+   (vacío = sin errores)
+[Carga del sistema]
+   7.12 9.22 10.33 3/3291 561505
+   CPU más activa:
+     %CPU COMMAND
+      709 GameThread
+     25.2 electron
+     16.1 zen-bin
+[gamescope — últimos 60 s]
+   líneas con error: 0
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+MARCA  2026-09-20 16:58:49.463
+DESCRIPCIÓN: audio robotico
+────────────────────────────────────────────────────────────
+[PCM card1 — placa madre / S/PDIF → óptico → RME]
+  pcm0p/sub0:
+    closed
+  pcm1p/sub0:
+    state: RUNNING
+    owner_pid   : 231125
+    trigger_time: 22831.259838722
+    tstamp      : 25072.700862257
+    delay       : 862
+    avail       : 31906
+    avail_max   : 32270
+    -----
+    hw_ptr      : 107479202
+    appl_ptr    : 107480064
+[PCM card0 — RME por USB]
+  pcm0p/sub0: 
+[Reloj del RME]
+  AES Rate = 0 (sin señal AES — normal, no hay nada conectado)
+  AES Sync = 0 (No Lock)
+  SPDIF Rate = 48000
+  SPDIF Sync = 2 (Sync)  ← correcto
+  SPDIF Interface = 1 (Óptico)  ← el cable real
+  Sync Source = 2 (SPDIF)  ← enganchado al cable óptico
+  System Rate = 48000
+  Current Frequency = 47999
+[Sink por defecto]
+  alsa_output.pci-0000_00_1f.3.iec958-stereo
+[Sinks y su estado]
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-3
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-7
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-8
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-9
+   suspended  alsa_output.usb-RME_ADI-2_DAC__51100523__7BF05DF3F61F3C8-0
+   running    alsa_output.pci-0000_00_1f.3.iec958-stereo
+[Streams de audio y su destino]
+   S.T.A.L.K.E.R. 2                 → alsa_output.pci-0000_00_1f.3.iec958-ster
+[xruns de PipeWire en los últimos 60 s]
+   líneas con xrun: 0
+[Errores de audio del kernel en los últimos 60 s]
+   (vacío = sin errores)
+[Carga del sistema]
+   7.08 8.87 9.66 8/3273 688185
+   CPU más activa:
+     %CPU COMMAND
+      689 GameThread
+     24.8 electron
+     15.8 zen-bin
+[gamescope — últimos 60 s]
+   líneas con error: 0
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+MARCA  2026-09-20 17:15:31.283
+DESCRIPCIÓN: audio robotico
+────────────────────────────────────────────────────────────
+[PCM card1 — placa madre / S/PDIF → óptico → RME]
+  pcm0p/sub0:
+    closed
+  pcm1p/sub0:
+    state: RUNNING
+    owner_pid   : 231125
+    trigger_time: 22831.259838722
+    tstamp      : 26074.522271776
+    delay       : 668
+    avail       : 32100
+    avail_max   : 32279
+    -----
+    hw_ptr      : 155493220
+    appl_ptr    : 155493888
+[PCM card0 — RME por USB]
+  pcm0p/sub0: 
+[Reloj del RME]
+  AES Rate = 0 (sin señal AES — normal, no hay nada conectado)
+  AES Sync = 0 (No Lock)
+  SPDIF Rate = 48000
+  SPDIF Sync = 2 (Sync)  ← correcto
+  SPDIF Interface = 1 (Óptico)  ← el cable real
+  Sync Source = 2 (SPDIF)  ← enganchado al cable óptico
+  System Rate = 48000
+  Current Frequency = 47999
+[Sink por defecto]
+  alsa_output.pci-0000_00_1f.3.iec958-stereo
+[Sinks y su estado]
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-3
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-7
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-8
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-9
+   suspended  alsa_output.usb-RME_ADI-2_DAC__51100523__7BF05DF3F61F3C8-0
+   running    alsa_output.pci-0000_00_1f.3.iec958-stereo
+[Streams de audio y su destino]
+   S.T.A.L.K.E.R. 2                 → alsa_output.pci-0000_00_1f.3.iec958-ster
+[xruns de PipeWire en los últimos 60 s]
+   líneas con xrun: 0
+[Errores de audio del kernel en los últimos 60 s]
+   (vacío = sin errores)
+[Carga del sistema]
+   10.06 10.80 10.93 6/3368 811670
+   CPU más activa:
+     %CPU COMMAND
+      723 GameThread
+     25.1 electron
+     15.5 zen-bin
+[gamescope — últimos 60 s]
+   líneas con error: 0
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+MARCA  2026-09-20 18:02:22.249
+DESCRIPCIÓN: audio robotico
+────────────────────────────────────────────────────────────
+[PCM card1 — placa madre / S/PDIF → óptico → RME]
+  pcm0p/sub0:
+    closed
+  pcm1p/sub0:
+    state: RUNNING
+    owner_pid   : 231125
+    trigger_time: 28660.621866239
+    tstamp      : 28885.486433242
+    delay       : 898
+    avail       : 31870
+    avail_max   : 32296
+    -----
+    hw_ptr      : 10765438
+    appl_ptr    : 10766336
+[PCM card0 — RME por USB]
+  pcm0p/sub0: 
+[Reloj del RME]
+  AES Rate = 0 (sin señal AES — normal, no hay nada conectado)
+  AES Sync = 0 (No Lock)
+  SPDIF Rate = 48000
+  SPDIF Sync = 2 (Sync)  ← correcto
+  SPDIF Interface = 1 (Óptico)  ← el cable real
+  Sync Source = 2 (SPDIF)  ← enganchado al cable óptico
+  System Rate = 48000
+  Current Frequency = 47999
+[Sink por defecto]
+  alsa_output.pci-0000_00_1f.3.iec958-stereo
+[Sinks y su estado]
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-3
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-7
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-8
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-9
+   suspended  alsa_output.usb-RME_ADI-2_DAC__51100523__7BF05DF3F61F3C8-0
+   running    alsa_output.pci-0000_00_1f.3.iec958-stereo
+[Streams de audio y su destino]
+   S.T.A.L.K.E.R. 2                 → alsa_output.pci-0000_00_1f.3.iec958-ster
+[xruns de PipeWire en los últimos 60 s]
+   líneas con xrun: 0
+[Errores de audio del kernel en los últimos 60 s]
+   (vacío = sin errores)
+[Carga del sistema]
+   11.33 11.62 10.50 6/3351 1179937
+   CPU más activa:
+     %CPU COMMAND
+      712 GameThread
+     23.2 electron
+     14.9 zen-bin
+[gamescope — últimos 60 s]
+   líneas con error: 0
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+MARCA  2026-09-20 18:06:26.295
+DESCRIPCIÓN: audio robotico
+────────────────────────────────────────────────────────────
+[PCM card1 — placa madre / S/PDIF → óptico → RME]
+  pcm0p/sub0:
+    closed
+  pcm1p/sub0:
+    state: RUNNING
+    owner_pid   : 231125
+    trigger_time: 29113.226834977
+    tstamp      : 29129.533817570
+    delay       : 829
+    avail       : 31939
+    avail_max   : 32276
+    -----
+    hw_ptr      : 764099
+    appl_ptr    : 764928
+[PCM card0 — RME por USB]
+  pcm0p/sub0: 
+[Reloj del RME]
+  AES Rate = 0 (sin señal AES — normal, no hay nada conectado)
+  AES Sync = 0 (No Lock)
+  SPDIF Rate = 48000
+  SPDIF Sync = 2 (Sync)  ← correcto
+  SPDIF Interface = 1 (Óptico)  ← el cable real
+  Sync Source = 2 (SPDIF)  ← enganchado al cable óptico
+  System Rate = 48000
+  Current Frequency = 47999
+[Sink por defecto]
+  alsa_output.pci-0000_00_1f.3.iec958-stereo
+[Sinks y su estado]
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-3
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-7
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-8
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-9
+   suspended  alsa_output.usb-RME_ADI-2_DAC__51100523__7BF05DF3F61F3C8-0
+   running    alsa_output.pci-0000_00_1f.3.iec958-stereo
+[Streams de audio y su destino]
+   S.T.A.L.K.E.R. 2                 → alsa_output.pci-0000_00_1f.3.iec958-ster
+   Zen                              → alsa_output.pci-0000_00_1f.3.iec958-ster
+[xruns de PipeWire en los últimos 60 s]
+   líneas con xrun: 0
+[Errores de audio del kernel en los últimos 60 s]
+   (vacío = sin errores)
+[Carga del sistema]
+   16.97 14.12 11.77 9/3428 1211953
+   CPU más activa:
+     %CPU COMMAND
+      714 GameThread
+     23.6 electron
+     15.0 zen-bin
+[gamescope — últimos 60 s]
+   líneas con error: 0
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+MARCA  2026-09-20 18:06:58.119
+DESCRIPCIÓN: audio robotico
+────────────────────────────────────────────────────────────
+[PCM card1 — placa madre / S/PDIF → óptico → RME]
+  pcm0p/sub0:
+    closed
+  pcm1p/sub0:
+    state: RUNNING
+    owner_pid   : 231125
+    trigger_time: 29113.226834977
+    tstamp      : 29161.358994111
+    delay       : 979
+    avail       : 31789
+    avail_max   : 32285
+    -----
+    hw_ptr      : 2282541
+    appl_ptr    : 2283520
+[PCM card0 — RME por USB]
+  pcm0p/sub0: 
+[Reloj del RME]
+  AES Rate = 0 (sin señal AES — normal, no hay nada conectado)
+  AES Sync = 0 (No Lock)
+  SPDIF Rate = 48000
+  SPDIF Sync = 2 (Sync)  ← correcto
+  SPDIF Interface = 1 (Óptico)  ← el cable real
+  Sync Source = 2 (SPDIF)  ← enganchado al cable óptico
+  System Rate = 48000
+  Current Frequency = 47999
+[Sink por defecto]
+  alsa_output.pci-0000_00_1f.3.iec958-stereo
+[Sinks y su estado]
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-3
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-7
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-8
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-9
+   suspended  alsa_output.usb-RME_ADI-2_DAC__51100523__7BF05DF3F61F3C8-0
+   running    alsa_output.pci-0000_00_1f.3.iec958-stereo
+[Streams de audio y su destino]
+   S.T.A.L.K.E.R. 2                 → alsa_output.pci-0000_00_1f.3.iec958-ster
+   Zen                              → alsa_output.pci-0000_00_1f.3.iec958-ster
+[xruns de PipeWire en los últimos 60 s]
+   líneas con xrun: 0
+[Errores de audio del kernel en los últimos 60 s]
+   (vacío = sin errores)
+[Carga del sistema]
+   15.07 13.94 11.80 15/3392 1216155
+   CPU más activa:
+     %CPU COMMAND
+      714 GameThread
+     23.6 electron
+     15.0 zen-bin
+[gamescope — últimos 60 s]
+   líneas con error: 0
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+MARCA  2026-09-20 18:14:20.946
+DESCRIPCIÓN: audio robotico
+────────────────────────────────────────────────────────────
+[PCM card1 — placa madre / S/PDIF → óptico → RME]
+  pcm0p/sub0:
+    closed
+  pcm1p/sub0:
+    state: RUNNING
+    owner_pid   : 231125
+    trigger_time: 29113.226834977
+    tstamp      : 29604.183641279
+    delay       : 745
+    avail       : 32023
+    avail_max   : 32305
+    -----
+    hw_ptr      : 23525655
+    appl_ptr    : 23526400
+[PCM card0 — RME por USB]
+  pcm0p/sub0: 
+[Reloj del RME]
+  AES Rate = 0 (sin señal AES — normal, no hay nada conectado)
+  AES Sync = 0 (No Lock)
+  SPDIF Rate = 48000
+  SPDIF Sync = 2 (Sync)  ← correcto
+  SPDIF Interface = 1 (Óptico)  ← el cable real
+  Sync Source = 2 (SPDIF)  ← enganchado al cable óptico
+  System Rate = 48000
+  Current Frequency = 47999
+[Sink por defecto]
+  alsa_output.pci-0000_00_1f.3.iec958-stereo
+[Sinks y su estado]
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-3
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-7
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-8
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-9
+   suspended  alsa_output.usb-RME_ADI-2_DAC__51100523__7BF05DF3F61F3C8-0
+   running    alsa_output.pci-0000_00_1f.3.iec958-stereo
+[Streams de audio y su destino]
+   S.T.A.L.K.E.R. 2                 → alsa_output.pci-0000_00_1f.3.iec958-ster
+[xruns de PipeWire en los últimos 60 s]
+   líneas con xrun: 0
+[Errores de audio del kernel en los últimos 60 s]
+   (vacío = sin errores)
+[Carga del sistema]
+   12.97 13.18 12.30 2/3401 1273047
+   CPU más activa:
+     %CPU COMMAND
+      719 GameThread
+     24.5 electron
+     15.2 zen-bin
+[gamescope — últimos 60 s]
+   líneas con error: 0
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+MARCA  2026-09-20 18:18:07.154
+DESCRIPCIÓN: audio robotico
+────────────────────────────────────────────────────────────
+[PCM card1 — placa madre / S/PDIF → óptico → RME]
+  pcm0p/sub0:
+    closed
+  pcm1p/sub0:
+    state: RUNNING
+    owner_pid   : 231125
+    trigger_time: 29113.226834977
+    tstamp      : 29830.393017593
+    delay       : 550
+    avail       : 32218
+    avail_max   : 32249
+    -----
+    hw_ptr      : 34363354
+    appl_ptr    : 34363904
+[PCM card0 — RME por USB]
+  pcm0p/sub0: 
+[Reloj del RME]
+  AES Rate = 0 (sin señal AES — normal, no hay nada conectado)
+  AES Sync = 0 (No Lock)
+  SPDIF Rate = 48000
+  SPDIF Sync = 2 (Sync)  ← correcto
+  SPDIF Interface = 1 (Óptico)  ← el cable real
+  Sync Source = 2 (SPDIF)  ← enganchado al cable óptico
+  System Rate = 48000
+  Current Frequency = 47999
+[Sink por defecto]
+  alsa_output.pci-0000_00_1f.3.iec958-stereo
+[Sinks y su estado]
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-3
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-7
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-8
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-9
+   suspended  alsa_output.usb-RME_ADI-2_DAC__51100523__7BF05DF3F61F3C8-0
+   running    alsa_output.pci-0000_00_1f.3.iec958-stereo
+[Streams de audio y su destino]
+   S.T.A.L.K.E.R. 2                 → alsa_output.pci-0000_00_1f.3.iec958-ster
+[xruns de PipeWire en los últimos 60 s]
+   líneas con xrun: 0
+[Errores de audio del kernel en los últimos 60 s]
+   (vacío = sin errores)
+[Carga del sistema]
+   12.34 12.64 12.25 2/3344 1304862
+   CPU más activa:
+     %CPU COMMAND
+      721 GameThread
+     24.6 electron
+     15.3 zen-bin
+[gamescope — últimos 60 s]
+   líneas con error: 0
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+MARCA  2026-09-20 18:22:41.768
+DESCRIPCIÓN: audio robotico
+────────────────────────────────────────────────────────────
+[PCM card1 — placa madre / S/PDIF → óptico → RME]
+  pcm0p/sub0:
+    closed
+  pcm1p/sub0:
+    state: RUNNING
+    owner_pid   : 231125
+    trigger_time: 29113.226834977
+    tstamp      : 30105.009208313
+    delay       : 862
+    avail       : 31906
+    avail_max   : 32257
+    -----
+    hw_ptr      : 47508642
+    appl_ptr    : 47509504
+[PCM card0 — RME por USB]
+  pcm0p/sub0: 
+[Reloj del RME]
+  AES Rate = 0 (sin señal AES — normal, no hay nada conectado)
+  AES Sync = 0 (No Lock)
+  SPDIF Rate = 48000
+  SPDIF Sync = 2 (Sync)  ← correcto
+  SPDIF Interface = 1 (Óptico)  ← el cable real
+  Sync Source = 2 (SPDIF)  ← enganchado al cable óptico
+  System Rate = 48000
+  Current Frequency = 47999
+[Sink por defecto]
+  alsa_output.pci-0000_00_1f.3.iec958-stereo
+[Sinks y su estado]
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-3
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-7
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-8
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-9
+   suspended  alsa_output.usb-RME_ADI-2_DAC__51100523__7BF05DF3F61F3C8-0
+   running    alsa_output.pci-0000_00_1f.3.iec958-stereo
+[Streams de audio y su destino]
+   S.T.A.L.K.E.R. 2                 → alsa_output.pci-0000_00_1f.3.iec958-ster
+[xruns de PipeWire en los últimos 60 s]
+   líneas con xrun: 0
+[Errores de audio del kernel en los últimos 60 s]
+   (vacío = sin errores)
+[Carga del sistema]
+   13.21 12.99 12.54 4/3399 1345616
+   CPU más activa:
+     %CPU COMMAND
+      722 GameThread
+     25.2 electron
+     15.4 zen-bin
+[gamescope — últimos 60 s]
+   líneas con error: 0
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+MARCA  2026-09-20 18:36:59.178
+DESCRIPCIÓN: audio robotico
+RESUMEN: estado=? delay=? delta=? xruns_pw=? trigger=? edad_sesion=?s psi_cpu10=?
+────────────────────────────────────────────────────────────
+[PCM card1 — placa madre / S/PDIF → óptico → RME]
+/home/n30/.local/bin/marca-audio: línea 97: /usr/bin/sed: La lista de argumentos es demasiado larga
+  :
+/home/n30/.local/bin/marca-audio: línea 98: /usr/bin/sed: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 97: /usr/bin/sed: La lista de argumentos es demasiado larga
+  :
+/home/n30/.local/bin/marca-audio: línea 98: /usr/bin/sed: La lista de argumentos es demasiado larga
+  ⟶ delta (appl_ptr − hw_ptr) = no calculable
+  ⟶ edad de la sesión según el RELOJ DE AUDIO (tstamp − trigger_time) = ? s
+      OJO: trigger_time y tstamp viven en el reloj de audio; su resta NO es
+      tiempo de pared. Para la edad de pared, cruzar con el vigilante.
+[PCM card0 — RME por USB]
+/home/n30/.local/bin/marca-audio: línea 108: /usr/bin/sed: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 108: /usr/bin/sed: La lista de argumentos es demasiado larga
+  : 
+[Reloj del RME]
+/home/n30/.local/bin/marca-audio: línea 122: /usr/bin/sed: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 123: /usr/bin/sed: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 122: /usr/bin/sed: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 123: /usr/bin/sed: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 122: /usr/bin/sed: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 123: /usr/bin/sed: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 122: /usr/bin/sed: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 123: /usr/bin/sed: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 122: /usr/bin/sed: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 123: /usr/bin/sed: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 122: /usr/bin/sed: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 123: /usr/bin/sed: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 122: /usr/bin/sed: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 123: /usr/bin/sed: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 122: /usr/bin/sed: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 123: /usr/bin/sed: La lista de argumentos es demasiado larga
+[Sink por defecto]
+  
+  (debe ser alsa_output.pci-0000_00_1f.3.iec958-stereo — Audio Interno IEC958)
+[Sinks y su estado]
+[Streams de audio y su destino]
+[xruns de PipeWire en los últimos 60 s]
+/home/n30/.local/bin/marca-audio: línea 188: /usr/bin/grep: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 188: /usr/bin/sed: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 189: /usr/bin/grep: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 189: /usr/bin/tail: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 189: /usr/bin/sed: La lista de argumentos es demasiado larga
+   (nivel de log actual: ?)
+[Errores de audio del kernel en los últimos 60 s]
+/home/n30/.local/bin/marca-audio: línea 196: /usr/bin/grep: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 196: /usr/bin/tail: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 196: /usr/bin/sed: La lista de argumentos es demasiado larga
+   (vacío = sin errores)
+[Carga del sistema]
+/home/n30/.local/bin/marca-audio: línea 200: /usr/bin/cut: La lista de argumentos es demasiado larga
+   loadavg (1/5/15, sobre  núcleos): 
+   pressure CPU some: avg10=?% avg60=?%   ← instantánea real
+   CPU más activa (media de vida del proceso, NO del instante):
+/home/n30/.local/bin/marca-audio: línea 203: /usr/bin/head: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 203: /usr/bin/sed: La lista de argumentos es demasiado larga
+[gamescope — últimos 60 s]
+/home/n30/.local/bin/marca-audio: línea 207: /usr/bin/grep: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 207: /usr/bin/grep: La lista de argumentos es demasiado larga
+/home/n30/.local/bin/marca-audio: línea 207: /usr/bin/sed: La lista de argumentos es demasiado larga
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
++ echo ════════════════════════════════════════════════════════════
+════════════════════════════════════════════════════════════
++ echo
+
++ echo ════════════════════════════════════════════════════════════
+════════════════════════════════════════════════════════════
++ echo
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+MARCA  2026-09-20 18:39:39.732
+DESCRIPCIÓN: audio robotico
+RESUMEN: estado=RUNNING delay=756 delta=692 xruns_pw=? trigger=29113.226834977 edad_sesion=2009.89s psi_cpu10=7.40
+────────────────────────────────────────────────────────────
+[PCM card1 — placa madre / S/PDIF → óptico → RME]
+  (subdevice analizado para el resumen: /proc/asound/card1/pcm1p/sub0/status)
+  pcm0p/sub0:
+    (closed) ← subdevice NO abierto, sin datos
+  pcm1p/sub0:
+    state: RUNNING
+    owner_pid   : 231125
+    trigger_time: 29113.226834977
+    tstamp      : 31123.155495277
+    delay       : 524
+    avail       : 32244
+    avail_max   : 32244
+    -----
+    hw_ptr      : 96301556
+    appl_ptr    : 96302080
+  ⟶ delta (appl_ptr − hw_ptr) = 692
+  ⟶ edad de la sesión según el RELOJ DE AUDIO (tstamp − trigger_time) = 2009.89 s
+      OJO: trigger_time y tstamp viven en el reloj de audio; su resta NO es
+      tiempo de pared. Para la edad de pared, cruzar con el vigilante.
+[PCM card0 — RME por USB]
+  pcm0p/sub0: 
+[Reloj del RME]
+  AES Rate = 0 (sin señal AES — normal, no hay nada conectado)
+  AES Sync = 0 (No Lock)
+  SPDIF Rate = 48000
+  SPDIF Sync = 2 (Sync)  ← correcto
+  SPDIF Interface = 1 (Óptico)  ← el cable real
+  Sync Source = 2 (SPDIF)  ← enganchado al cable óptico
+  System Rate = 48000
+  Current Frequency = 47999
+[Sink por defecto]
+  alsa_output.pci-0000_00_1f.3.iec958-stereo
+  (debe ser alsa_output.pci-0000_00_1f.3.iec958-stereo — Audio Interno IEC958)
+[Sinks y su estado]
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-3
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-7
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-8
+   suspended  alsa_output.pci-0000_03_00.1.pro-output-9
+   suspended  alsa_output.usb-RME_ADI-2_DAC__51100523__7BF05DF3F61F3C8-0
+   running    alsa_output.pci-0000_00_1f.3.iec958-stereo
+[Streams de audio y su destino]
+   S.T.A.L.K.E.R. 2                 → alsa_output.pci-0000_00_1f.3.iec958-ster
+   Zen                              → alsa_output.pci-0000_00_1f.3.iec958-ster
+[xruns de PipeWire en los últimos 60 s]
+   líneas con xrun: 0
+   (nivel de log actual: 2)
+[Errores de audio del kernel en los últimos 60 s]
+   (vacío = sin errores)
+[Carga del sistema]
+   loadavg (1/5/15, sobre 20 núcleos): 14.10 14.67 13.66
+   pressure CPU some: avg10=7.40% avg60=7.13%   ← instantánea real
+   CPU más activa (media de vida del proceso, NO del instante):
+     %CPU COMMAND
+      732 GameThread
+     25.9 electron
+     15.9 zen-bin
+[gamescope — últimos 60 s]
+   líneas con error: 0
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+
+════════════════════════════════════════════════════════════
+

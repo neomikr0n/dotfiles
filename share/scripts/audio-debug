@@ -1,0 +1,295 @@
+#!/usr/bin/env bash
+# ═══════════════════════════════════════════════════════════════════════════
+# audio-debug — captura el estado del audio en el instante en que se oye un fallo
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# PARA QUÉ SIRVE
+#   Cuando se oye un corte seco / chispa / glitch, se corre este script y deja
+#   en una bitácora TODO el estado del sistema en ese momento: PCM de la placa
+#   madre, PCM del RME, reloj del RME, ruta del audio, xruns, errores del
+#   kernel y carga. Sirve para responder «¿qué estaba pasando mientras sonaba
+#   mal?» sin tener que reconstruirlo después de memoria.
+#
+# CÓMO USARLO
+#   audio-debug "corte seco mientras jugaba"
+#   (la descripción es libre; sin ella se guarda «sin descripción»)
+#   Al terminar imprime una línea resumen y avisa si algo se sale de lo sano.
+#
+# DÓNDE QUEDA LO QUE CAPTURA
+#   · share/scripts/audio-debug.md   ← bitácora de hallazgos (se lee)
+#   · share/scripts/audio-debug.log  ← capturas en bruto (se parsea)
+#   Los dos viven junto al script. La bitácora la mantengo aparte, con las
+#   conclusiones; el log crudo es la prueba por si hay que rehacer el análisis.
+#   (Hasta el 20-sep-2026 el log estaba en ~/.local/state/audio-debug/marcas.log;
+#    se movió aquí para tener script, bitácora y capturas en el mismo sitio.)
+#
+# POR QUÉ ESTÁ ESCRITO ASÍ — TRES TRAMPAS QUE HAY QUE RESPETAR
+#
+#   1) NO meter la salida de `pw-dump` en una variable exportada.
+#      `pw-dump` devuelve ~5,7 MB y ARG_MAX son 2 MB. Al exportar algo mayor
+#      que ARG_MAX, TODOS los procesos hijos siguientes heredan ese entorno y
+#      el kernel les rechaza la ejecución (E2BIG). El síntoma engaña: mueren
+#      `head`, `sed`, `cat`, `nproc` con «La lista de argumentos es demasiado
+#      larga», y el culpable no son ellos sino su entorno. Por eso aquí se
+#      escribe a un FICHERO TEMPORAL, que no pasa por el entorno.
+#
+#   2) En card1 hay DOS subdevices de reproducción y el PRIMERO está cerrado.
+#      `pcm0p/sub0/status` contiene solo la palabra «closed»: ningún campo.
+#      Si se toma el primero y se hace `break`, todas las variables salen
+#      vacías sin dar error. Hay que seleccionar por CONTENIDO (que tenga
+#      `state`), no por posición del glob.
+#
+#   3) Los campos de /proc/asound alinean los dos puntos con espacios
+#      (`delay       : 775`), pero `trigger_time:` no los lleva. Un patrón
+#      `s/^delay: //p` NUNCA casa. Hay que usar `s/^NOMBRE *: *//p` siempre.
+#
+# QUÉ MIRAR EN LA SALIDA — CRITERIOS VÁLIDOS (verificados)
+#   · Señal inequívoca de fallo:            state: XRUN
+#   · `hw_ptr` NO sirve como prueba:        es RELATIVO a la sesión PCM
+#   · `avail_max` NO cuenta xruns
+#   · `delay` NUNCA es alarma:              es la misma distancia que `delta`
+#   · Un journal limpio SOLO vale si log.level >= 2 (aquí se comprueba solo)
+#   · `trigger_time` identifica la sesión:  si cambia, el PCM se reabrió
+#     y NO se pueden restar dos lecturas de punteros entre sesiones distintas
+#
+# LÍMITE IMPORTANTE — LO QUE ESTE SCRIPT NO PUEDE HACER
+#   Tarda ~0,5 s, pero entre oír el fallo y ejecutarlo pasan 2–5 s (oído,
+#   cambiar de ventana, teclear). Esa brecha es tiempo de reacción HUMANO.
+#   Como el fallo dura <1 s, todo lo que captura es el estado POSTERIOR, nunca
+#   el instante del fallo. Ninguna versión más rápida cambiaría eso: para
+#   cubrir el «durante» hace falta registro CONTINUO (`vigilar.sh`).
+#
+# HISTORIAL
+#   v1 — versión inicial. Captura completa pero sin resumen ni delta.
+#   v2 — 20-sep-2026. Una sola llamada a `pw-dump` (antes dos), `trigger_time`
+#        y `delta` en el encabezado, línea RESUMEN grepeable, carga instantánea
+#        por /proc/pressure/cpu (antes `ps -eo pcpu`, que da media de vida del
+#        proceso), aviso si log.level < 2, y selección correcta del subdevice.
+#        Tiempo medido: 0,61 s → 0,53 s.
+#
+# ═══════════════════════════════════════════════════════════════════════════
+
+# ── DÓNDE VA LA SALIDA ────────────────────────────────────────────────────
+#   · share/scripts/audio-debug.md   ← bitácora de hallazgos (la escribo yo a
+#     mano con lo que voy encontrando; el script NO la toca).
+#   · share/scripts/audio-debug.log  ← capturas en bruto, una por ejecución.
+# Ambos se localizan a partir de la ubicación del propio script, así que todo
+# el conjunto se puede mover de sitio sin tocar una línea.
+SCRIPTS_DIR=$(cd "$(dirname "$(readlink -f "$0")")" && pwd)
+BITACORA="$SCRIPTS_DIR/audio-debug.md"
+LOG="$SCRIPTS_DIR/audio-debug.log"
+
+T=$(date '+%F %T.%3N')
+DESC="${1:-sin descripción}"
+
+# ── Trampa 1: fichero temporal, NO variable exportada (ver cabecera) ───────
+PD_FILE=$(mktemp -t audio-debug-pd.XXXXXX.json) || PD_FILE=/tmp/.audio-debug-pd.json
+pw-dump > "$PD_FILE" 2>/dev/null
+trap 'rm -f "$PD_FILE"' EXIT
+
+# ── Trampa 2: seleccionar el subdevice que REALMENTE tiene datos ───────────
+# card1 = placa madre (S/PDIF por cable óptico hasta el RME).
+# De los subdevices abiertos, preferir el que está RUNNING.
+SESS1=""; ST1=""; DLY1=""; TST1=""; HW1=""; APL1=""; AVAIL_MAX1=""
+PCM1=""
+for SUB in /proc/asound/card1/pcm*p/sub*/status; do
+  [ -r "$SUB" ] || continue
+  grep -q '^state *:' "$SUB" 2>/dev/null || continue   # salta el que dice «closed»
+  PCM1="$SUB"
+  [ "$(sed -n 's/^state *: *//p' "$SUB")" = "RUNNING" ] && break
+done
+
+# ── Trampa 3: patrones con espacios opcionales en LOS DOS lados de los dos puntos ──
+if [ -n "$PCM1" ]; then
+  SESS1=$(sed -n 's/^owner_pid *: *//p'   "$PCM1")
+  ST1=$(sed -n 's/^state *: *//p'         "$PCM1")
+  DLY1=$(sed -n 's/^delay *: *//p'        "$PCM1")
+  TST1=$(sed -n 's/^tstamp *: *//p'       "$PCM1")
+  HW1=$(sed -n 's/^hw_ptr *: *//p'        "$PCM1")
+  APL1=$(sed -n 's/^appl_ptr *: *//p'     "$PCM1")
+  AVAIL_MAX1=$(sed -n 's/^avail_max *: *//p' "$PCM1")
+fi
+TRIG1=""
+[ -n "$PCM1" ] && TRIG1=$(sed -n 's/^trigger_time *: *//p' "$PCM1")
+
+# delta = appl_ptr − hw_ptr. Positiva = la aplicación va por delante del
+# puntero de hardware, que es lo normal cuando el búfer lleva datos.
+# En estado sano sale idéntica a `delay`: son la MISMA distancia medida desde
+# los dos extremos del búfer. Por eso `delay` no puede ser una alarma.
+DELTA1=""
+if [ -n "$HW1" ] && [ -n "$APL1" ]; then
+  DELTA1=$(awk -v a="$APL1" -v h="$HW1" 'BEGIN{ printf "%d", a-h }')
+fi
+
+# Edad de la sesión según el RELOJ DE AUDIO (tstamp − trigger_time).
+# OJO: esto NO es tiempo de pared — ambos campos viven en el reloj de audio.
+# Para la edad de pared hay que cruzar con el vigilante.
+EDAD_AUDIO=""
+if [ -n "$TST1" ] && [ -n "$TRIG1" ]; then
+  EDAD_AUDIO=$(awk -v a="$TST1" -v b="$TRIG1" 'BEGIN{ printf "%.2f", a-b }')
+fi
+
+# ── Carga INSTANTÁNEA ─────────────────────────────────────────────────────
+# /proc/pressure/cpu tiene dos líneas («some» y «full»); en CPU la segunda vale
+# 0.00, así que hay que atar el patrón a la línea «some» o la lectura sale mal.
+# avg10 es una ventana de 10 s: mide el momento, no la media de vida del proceso.
+PSI_LINE=$(sed -n 's/^some //p' /proc/pressure/cpu 2>/dev/null | head -1)
+PSI_CPU10=$(printf '%s' "$PSI_LINE" | sed -n 's/.*avg10=\([0-9.]*\).*/\1/p')
+PSI_CPU60=$(printf '%s' "$PSI_LINE" | sed -n 's/.*avg60=\([0-9.]*\).*/\1/p')
+LOAD=$(cat /proc/loadavg)
+NCPU=$(nproc)
+
+# ── Nivel de log de PipeWire ──────────────────────────────────────────────
+# Sin >= 2 un journal limpio NO prueba nada: los xruns no se habrían escrito.
+PWLEVEL=$(pw-cli info 0 2>/dev/null | sed -n 's/.*log\.level *= *"\?\([0-9]*\)"\?.*/\1/p' | head -1)
+
+# xruns en la ventana, contados UNA vez y reutilizados en el resumen y en su
+# sección, para que el número no pueda diferir entre ambos.
+XRUNS_PW=$(journalctl --user -u pipewire --since "-60s" --no-pager 2>/dev/null | grep -icE "xrun")
+[ -n "$XRUNS_PW" ] || XRUNS_PW=0
+
+{
+  echo "════════════════════════════════════════════════════════════"
+  echo "MARCA  $T"
+  echo "DESCRIPCIÓN: $DESC"
+
+  # RESUMEN de una línea: lo primero que hay que leer, para que una marca se
+  # entienda de un vistazo y se pueda comparar con `grep '^RESUMEN'`.
+  echo "RESUMEN: estado=${ST1:-?} delay=${DLY1:-?} delta=${DELTA1:-?} xruns_pw=${XRUNS_PW}" \
+       "trigger=${TRIG1:-?} edad_audio=${EDAD_AUDIO:-?}s psi_cpu10=${PSI_CPU10:-?}"
+  echo "────────────────────────────────────────────────────────────"
+
+  echo "[PCM card1 — placa madre / S/PDIF → óptico → RME]"
+  echo "  (subdevice analizado para el resumen: ${PCM1:-NINGUNO ABIERTO})"
+  for SUB in /proc/asound/card1/pcm*p/sub*/status; do
+    [ -r "$SUB" ] || continue
+    echo "  $(echo "$SUB" | sed 's|.*card1/||; s|/status||'):"
+    if grep -q '^state *:' "$SUB" 2>/dev/null; then
+      sed -n 's/^/    /p' "$SUB"
+    else
+      # El subdevice cerrado se imprime igual, pero marcado: deja de parecer un fallo.
+      echo "    ($(head -1 "$SUB")) ← subdevice NO abierto, sin datos"
+    fi
+  done
+  echo "  ⟶ delta (appl_ptr − hw_ptr) = ${DELTA1:-no calculable}"
+  echo "  ⟶ edad de la sesión según el RELOJ DE AUDIO (tstamp − trigger_time) = ${EDAD_AUDIO:-?} s"
+  echo "      OJO: no es tiempo de pared. Para eso, cruzar con el vigilante."
+
+  echo "[PCM card0 — RME por USB]"
+  echo "  (el USB es SOLO CONTROL: que esté 'closed' es lo correcto, no un fallo)"
+  for SUB in /proc/asound/card0/pcm*p/sub*/status; do
+    [ -r "$SUB" ] || continue
+    NOM=$(echo "$SUB" | sed 's|.*card0/||; s|/status||')
+    if grep -q '^state *:' "$SUB" 2>/dev/null; then
+      echo "  $NOM: $(sed -n 's/^state *: *//p' "$SUB")"
+    else
+      echo "  $NOM: $(head -1 "$SUB")"
+    fi
+  done
+
+  echo "[Reloj del RME]"
+  # El nombre va en la PRIMERA línea con formato numid=N,iface=MIXER,name='X'
+  # (no con el prefijo «name:» como en otras salidas de amixer).
+  # Recordatorio: «Sync Source» es una LECTURA, no un ajuste (manual §14.1.2),
+  # y «Source = Auto» es el ajuste de fábrica (§12.1). Marcar SPDIF es correcto.
+  for n in 3 4 5 6 7 9 10 11; do
+    RAW=$(amixer -c 0 cget numid=$n 2>/dev/null)
+    N=$(printf '%s\n' "$RAW" | sed -n "s/^numid=[0-9]*,iface=[A-Z]*,name='\(.*\)'$/\1/p")
+    V=$(printf '%s\n' "$RAW" | sed -n 's/^  : values=//p')
+    case "$N|$V" in
+      "Sync Source|0") V="0 (Internal)" ;;
+      "Sync Source|1") V="1 (AES)" ;;
+      "Sync Source|2") V="2 (SPDIF)  ← enganchado al cable óptico" ;;
+      "Sync Source|3") V="3 (Internal)" ;;
+      "SPDIF Sync|0")  V="0 (No Lock)  ← NO hay señal" ;;
+      "SPDIF Sync|1")  V="1 (Lock)" ;;
+      "SPDIF Sync|2")  V="2 (Sync)  ← correcto" ;;
+      "AES Sync|0")    V="0 (No Lock)" ;;
+      "SPDIF Interface|0") V="0 (Coaxial)" ;;
+      "SPDIF Interface|1") V="1 (Óptico)  ← el cable real" ;;
+      "AES Rate|0")    V="0 (sin señal AES — normal, no hay nada conectado)" ;;
+    esac
+    [ -n "$N" ] && echo "  $N = $V"
+  done
+
+  echo "[Sink por defecto]"
+  echo "  $(pactl get-default-sink 2>/dev/null)"
+  echo "  (debe ser alsa_output.pci-0000_00_1f.3.iec958-stereo — Audio Interno IEC958)"
+
+  echo "[Sinks y su estado]"
+  python3 - "$PD_FILE" <<'PY' 2>/dev/null
+import json,sys
+try:
+    d=json.load(open(sys.argv[1]))
+except Exception:
+    print('   (pw-dump no devolvió JSON)'); raise SystemExit
+for o in d:
+    p=o.get('info',{}).get('props',{}) if isinstance(o.get('info'),dict) else {}
+    if p.get('media.class')=='Audio/Sink':
+        print('  ', o['info'].get('state','?').ljust(10), p.get('node.name','')[:58])
+PY
+
+  echo "[Streams de audio y su destino]"
+  python3 - "$PD_FILE" <<'PY' 2>/dev/null
+import json,sys
+try:
+    d=json.load(open(sys.argv[1]))
+except Exception:
+    print('   (pw-dump no devolvió JSON)'); raise SystemExit
+byid={o['id']:o for o in d}
+def nm(i):
+    p=byid.get(i,{}).get('info',{}).get('props',{})
+    return p.get('node.name') or p.get('application.name') or str(i)
+sn={}
+for o in d:
+    p=o.get('info',{}).get('props',{}) if isinstance(o.get('info'),dict) else {}
+    if p.get('media.class')=='Stream/Output/Audio':
+        sn[o['id']]=p.get('node.name') or p.get('application.name') or str(o['id'])
+seen=set()
+for l in d:
+    if l.get('type')!='PipeWire:Interface:Link': continue
+    li=l['info']
+    if li.get('output-node-id') in sn and li.get('state')=='active':
+        k=(sn[li['output-node-id']], nm(li.get('input-node-id')))
+        if k not in seen:
+            seen.add(k); print('   %-32s → %s' % (k[0][:32], k[1][:40]))
+PY
+
+  echo "[xruns de PipeWire en los últimos 60 s]"
+  echo "   líneas con xrun: $XRUNS_PW$([ "$XRUNS_PW" = "0" ] && echo '  ← 0 = sin xrun en la ventana')"
+  journalctl --user -u pipewire --since "-60s" --no-pager 2>/dev/null | grep -iE "xrun|underrun" | tail -5 | sed 's/^/   /'
+  echo "   (nivel de log actual: ${PWLEVEL:-?})"
+  if [ -n "$PWLEVEL" ] && [ "$PWLEVEL" -lt 2 ] 2>/dev/null; then
+    echo "   ⚠ log.level=$PWLEVEL < 2 → un journal limpio NO prueba ausencia de xrun"
+  fi
+
+  echo "[Errores de audio del kernel en los últimos 60 s]"
+  journalctl -k --since "-60s" --no-pager 2>/dev/null | grep -iE "usb|xhci|hda|snd|reset|overrun|underrun" | tail -8 | sed 's/^/   /'
+  echo "   (vacío = sin errores)"
+
+  echo "[Carga del sistema]"
+  echo "   loadavg (1/5/15, sobre $NCPU núcleos): $(echo "$LOAD" | cut -d' ' -f1-3)"
+  echo "   pressure CPU some: avg10=${PSI_CPU10:-?}% avg60=${PSI_CPU60:-?}%   ← instantánea real"
+  echo "   CPU más activa (media de vida del proceso, NO del instante):"
+  ps -eo pcpu,comm --sort=-pcpu 2>/dev/null | head -4 | sed 's/^/     /'
+
+  echo "[gamescope — últimos 60 s]"
+  journalctl --since "-60s" --no-pager 2>/dev/null \
+    | grep -i "gamescope" | grep -icE "error|released" | sed 's/^/   líneas con error: /'
+
+  echo "════════════════════════════════════════════════════════════"
+  echo
+} >> "$LOG" 2>&1
+
+# ── Al terminal: lo mínimo, y aviso SOLO si hay señal inequívoca ───────────
+# Se retiró a propósito un aviso basado en `delay`: saltaba en estado sano
+# (delay=866 con delta=781 es normal) porque `delay` y `delta` son la MISMA
+# distancia. Un aviso que suena siempre entrena a ignorarlo y tapa el bueno.
+echo "✔ Marca guardada: $T"
+echo "  estado=${ST1:-?}  delay=${DLY1:-?}  delta=${DELTA1:-?}  trigger=${TRIG1:-?}  psi_cpu10=${PSI_CPU10:-?}%"
+[ -n "$ST1" ] && [ "$ST1" != "RUNNING" ] \
+  && echo "  ⚠ ESTADO ANÓMALO: $ST1 — ¡esto sí es señal inequívoca!"
+[ -n "$PSI_CPU10" ] && awk -v p="$PSI_CPU10" 'BEGIN{ if(p+0 > 50) exit 0; exit 1 }' \
+  && echo "  ⚠ CPU muy saturada en el instante de la marca (${PSI_CPU10}%)"
+echo "  → captura: $LOG"
+echo "  → bitácora: $BITACORA"
