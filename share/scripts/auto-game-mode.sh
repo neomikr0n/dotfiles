@@ -2,7 +2,11 @@
 # AutoGame para Hyprland/Steam. Python estándar: JSON, /proc y recuperación segura.
 # Uso: auto-game-mode.sh [--check | --status | --restore]
 # Opcionales: AUTO_GAME_INTERVAL=5 AUTO_GAME_EXIT_DELAY=15 AUTO_GAME_NOTIFY=1
-# Pausa mpvpaper/gslapper: ahorra CPU/GPU; conserva RAM/VRAM y el fondo exacto.
+# Fondo de vídeo: skwd-paper-v2 se pausa con su propia CLI, que sustituye el
+# renderizador de vídeo por skwd-wall-still con el fotograma congelado (CPU 0,
+# imagen exacta). mpvpaper/gslapper, si aún existieran, se pausan con SIGSTOP.
+# NO usar SIGSTOP con skwd-wall-vk: skwd no lo refleja en su estado y, si el
+# fondo se reaplica (recarga de Hyprland), quedan dos renderizadores a la vez.
 # No modifica perfiles de energía, afinidad, audio, DMS ni servicios de seguridad.
 exec python3 - "$@" <<'PYTHON'
 import argparse
@@ -19,6 +23,8 @@ import threading
 import time
 
 OPTIONS = ('animations:enabled', 'decoration:blur:enabled', 'decoration:shadow:enabled')
+SKWD = 'skwd-paper-v2'
+# Motores que se pausan por señal. skwd-wall-vk queda fuera a propósito.
 WALLPAPERS = {'mpvpaper', 'gslapper'}
 # Wallpaper Engine is a desktop utility, not a game.
 NON_GAME_APPIDS = {b'431960'}
@@ -54,11 +60,65 @@ def query(*args):
 
 def option(name):
     result = query('getoption', name)
-    return result.get('int') if isinstance(result, dict) else None
+    if not isinstance(result, dict):
+        return None
+    value = result.get('int')
+    if value is None and isinstance(result.get('bool'), bool):
+        # Hyprland 0.56 devuelve "bool" en las opciones booleanas, no "int".
+        value = int(result['bool'])
+    return value
+
+
+def lua_literal(name, value):
+    """Literal Lua anidado para hl.config: decoration:blur:enabled -> 0."""
+    text = 'true' if int(value) else 'false'
+    for key in reversed(name.split(':')):
+        text = '{ ' + key + ' = ' + text + ' }'
+    return text
 
 
 def set_option(name, value):
+    # Con la configuración en Lua, `hyprctl keyword` se rechaza ("keyword can't
+    # work with non-legacy parsers"); `eval` con hl.config sí aplica el cambio.
+    # El keyword se conserva como respaldo para configuraciones clásicas.
+    if hypr('eval', 'hl.config(' + lua_literal(name, value) + ')') == 'ok':
+        return True
     return hypr('keyword', name, str(value)) == 'ok'
+
+
+def skwd_cli(*args, timeout=3):
+    """Ejecuta skwd-paper-v2 y devuelve su campo "result", o None si no sirve.
+
+    La CLI resuelve su sesión por XDG_RUNTIME_DIR: con otro valor atendería a
+    una sesión vacía y devolvería un "ok" que no hace nada. Por eso se hereda
+    el entorno de este script, que ya exige XDG_RUNTIME_DIR.
+    """
+    binary = shutil.which(SKWD)
+    if not binary:
+        return None
+    try:
+        result = subprocess.run([binary, *args], capture_output=True, text=True, timeout=timeout)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if result.returncode != 0:
+        return None
+    try:
+        payload = json.loads(result.stdout)
+    except ValueError:
+        return None
+    return payload.get('result') if isinstance(payload, dict) else None
+
+
+def skwd_state():
+    """(pausado, número de fondos) o (None, None) si skwd no responde."""
+    result = skwd_cli('status')
+    if not isinstance(result, dict):
+        return None, None
+    paused = result.get('paused')
+    assignments = result.get('assignments')
+    if not isinstance(paused, bool) or not isinstance(assignments, list):
+        return None, None
+    return paused, len(assignments)
 
 
 def processes():
@@ -114,9 +174,11 @@ def game_reasons(clients):
 class Manager:
     def __init__(self, folder):
         self.path = folder / 'state.json'
-        self.state = {'session': SESSION, 'options': {}, 'paused': []}
+        self.state = {'session': SESSION, 'options': {}, 'paused': [], 'skwd': False}
         if self.path.exists():
             self.state = json.loads(self.path.read_text())
+        # Los diarios escritos antes de usar skwd no traen la clave.
+        self.state.setdefault('skwd', False)
 
     def save(self):
         temporary = self.path.with_suffix('.tmp')
@@ -157,8 +219,38 @@ class Manager:
             except (ProcessLookupError, PermissionError, FileNotFoundError):
                 continue
 
+    def pause_skwd(self):
+        """Congela el fondo de skwd. Sólo reclama la pausa si la causó él."""
+        paused, count = skwd_state()
+        if paused is None:
+            return False  # skwd no responde: no se toca nada
+        if not count:
+            return False  # sin fondo de skwd aplicado no hay nada que congelar
+        if paused:
+            # Ya estaba en pausa: si no la pedimos nosotros, no se reclama.
+            return bool(self.state['skwd'])
+        if skwd_cli('pause') is None:
+            return False
+        self.state['skwd'] = True
+        self.save()  # Registrar antes de seguir, para recuperar tras una caída.
+        return True
+
+    def resume_skwd(self):
+        """Reanuda sólo la pausa que registró este script."""
+        if not self.state['skwd']:
+            return True
+        paused, _ = skwd_state()
+        if paused is False:
+            # Otro actor lo reanudó, o la sesión es nueva: no queda nada pendiente.
+            self.state['skwd'] = False
+            return True
+        if paused is None or skwd_cli('resume') is None:
+            return False
+        self.state['skwd'] = False
+        return True
+
     def activate(self):
-        self.state = {'session': SESSION, 'options': {}, 'paused': []}
+        self.state = {'session': SESSION, 'options': {}, 'paused': [], 'skwd': False}
         self.save()
         # Respetar el modo manual ML4W ya activado. No apropiarse de su flag.
         manual = Path.home() / '.config/ml4w/settings/gamemode-enabled'
@@ -172,7 +264,8 @@ class Manager:
                 if not set_option(name, 0):
                     log('No se pudo desactivar ' + name)
         self.pause_wallpapers()
-        log('Modo juego ON: fondo pausado y efectos reducidos.')
+        frozen = self.pause_skwd()
+        log('Modo juego ON: ' + ('fondo de vídeo congelado, ' if frozen else '') + 'efectos reducidos.')
         self.notify('Modo juego activado')
 
     def restore(self):
@@ -195,7 +288,8 @@ class Manager:
                 if current is None or (current == 0 and not set_option(name, previous)):
                     remaining[name] = previous
         self.state['options'] = remaining
-        if remaining or pending:
+        skwd_pending = not self.resume_skwd()
+        if remaining or pending or skwd_pending:
             self.save()
             log('Restauración pendiente; se conserva el estado para reintentar.')
             return False
@@ -231,8 +325,10 @@ def main():
         if not isinstance(clients, list):
             log('No se puede consultar Hyprland.')
             return 1
+        paused, count = skwd_state()
         print(json.dumps({'games': game_reasons(clients),
-                          'effects': {name: option(name) for name in OPTIONS}}, indent=2))
+                          'effects': {name: option(name) for name in OPTIONS},
+                          'skwd': {'paused': paused, 'assignments': count}}, indent=2))
         return 0
     if args.status:
         path = folder / 'state.json'
@@ -298,6 +394,11 @@ def main():
                         manager.activate()
                     else:
                         manager.pause_wallpapers()
+                        # Una recarga de Hyprland ejecuta wallpaperStart(), que
+                        # reaplica el fondo: eso reinicia `skwd-paper-v2 serve` y
+                        # la pausa vive en ese proceso, así que se pierde. Medido
+                        # el 2026-09-21: vuelve a congelarse 3 s después.
+                        manager.pause_skwd()
                 elif active:
                     if missing_since is None:
                         missing_since = time.monotonic()

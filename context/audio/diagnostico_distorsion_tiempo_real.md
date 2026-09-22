@@ -1,5 +1,27 @@
 # Diagnóstico en vivo de la distorsión «robótica» — 20-sep-2026, 16:04
 
+> ## ⚠ CORRECCIÓN DE ALCANCE — 21-sep-2026 (leer antes que nada)
+>
+> **Este documento afirma en varios sitios que el software está descartado. Esa conclusión se
+> RETIRA.** Se sostenía en que el vigilante no registró nada durante los eventos, y eso es un salto
+> lógico: **«mi instrumento no lo vio» no es «no ocurrió»**.
+>
+> El vigilante **muestrea** (~234 ms por vuelta) y **solo escribe para seis formas de fallo**
+> concretas; además **omite los PCM cerrados**. Un fallo cuya firma no sea una de esas seis —por
+> ejemplo un error de bit en el enlace óptico— es **invisible por construcción**. Ver §11 para el
+> detalle, y la cabecera de `vigilar.sh` para la lista de puntos ciegos.
+>
+> **Y hay un segundo motivo, independiente:** el síntoma aparece en **dos transportes distintos**
+> (USB y óptico) **con la misma pila de software** (§5, §11.3). Eso hace del software un **factor
+> común**, no un descartado.
+>
+> **Estado correcto: el software NO está descartado.** Es una hipótesis viva, y la prueba que la
+> discrimina está pendiente (§11.5). Los pasajes afectados de §6.7, §8 y §9 llevan nota.
+>
+> **También se retira la prescripción sobre el vocabulario** (§3.1, §6.6): el propietario describió
+> el síntoma como «robótico» en **10 de 11** capturas, y «corte seco» fue un término **mío**, usado
+> una vez. No son necesariamente el mismo síntoma, y eso queda como cuestión abierta (§11.4).
+
 **Evento reportado por el propietario:** distorsión de **menos de un segundo**, escuchada a las
 ~16:03, con **S.T.A.L.K.E.R. 2 abierto**. Es el segundo evento del día.
 
@@ -336,19 +358,45 @@ había vuelto solo a 48 kHz, resolviendo la anomalía de §4).
 **Lo que hay que hacer, en una frase:** cuando oigas la distorsión, abre una terminal y escribe
 `marca-audio "lo que sea que hayas oído"`. No hace falta parar el juego ni hacer nada más.
 
-> **Sobre cómo llamarla.** «Distorsión robótica» es una descripción que ya condiciona: sugiere un
+> ~~**Sobre cómo llamarla.** «Distorsión robótica» es una descripción que ya condiciona: sugiere un
 > mecanismo concreto (artefactos digitales, algo «robótico») antes de tener ninguno identificado.
 > Es la etiqueta que llevó a atribuir el fallo al remuestreo durante meses. **Conviene describir lo
 > que se oye, no lo que se cree que es.** Por ejemplo: *«corte seco»*, *«chispa breve»*,
 > *«el sonido se rompe un instante»*, *«clic con caída»*. El campo de descripción del comando
-> sirve justo para eso: describir, no diagnosticar.
+> sirve justo para eso: describir, no diagnosticar.~~
+>
+> **RETIRADO (21-sep-2026).** Esta prescripción estaba mal por dos motivos:
+>
+> **1. Confundía dos cosas distintas.** El problema real no era la palabra «robótica» sino usarla
+> como **afirmación causal** («es robótico, luego son artefactos digitales, luego es el remuestreo»).
+> Eso sí hay que evitarlo. Pero **describir lo que se oye con la palabra que a uno le sale es el dato
+> primario**, y «robótica» es una descripción sensorial perfectamente válida.
+>
+> **2. Y sobre todo: yo elegí el término por el propietario.** El recuento real del log (§A1 de la
+> bitácora) es: **«audio robotico» en 10 capturas de evento, «corte seco» en 1.** Y «corte seco» fue
+> **una sugerencia mía**, usada una sola vez, y aclarada por él en el mismo momento: *«era algo
+> robotico de menos de un segundo pero lo puse como corte seco»*. Las diez capturas siguientes
+> volvieron a su palabra. **Presentar después eso como «la nomenclatura corregida» era circular: me
+> citaba a mí mismo.**
+>
+> **3. Y lo más importante: «corte seco» y «robótico» pueden no ser el mismo síntoma.** Colapsarlos
+> en un solo término **borra información** que no se puede recuperar. Es una cuestión abierta
+> (§11.4), no resuelta.
+>
+> **Lo que queda en pie:** el campo de descripción del comando sirve para **describir lo que se oye,
+> con las palabras de quien lo oye, sin normalizarlas**. Si algún día se quiere afinar, la pregunta
+> correcta no es «¿cómo debería llamarlo?» sino **«¿esto que acabo de oír es lo mismo que lo de
+> ayer?»** — porque esa respuesta es la que separa un fenómeno de dos.
 
 Con eso se sabrá, por primera vez, **si el evento coincide con un underrun medible** o **si ocurre
 sin dejar rastro en el PCM**. Ambas respuestas son informativas:
 
 - **Si coincide con un underrun** → el software se quedó sin datos. Se investiga planificación.
-- **Si NO deja rastro** → el flujo de datos está intacto y el problema está **después**: en el
-  enlace óptico, en la recepción del RME, o en el propio aparato. Sería igualmente concluyente.
+- **Si NO deja rastro** → ~~el flujo de datos está intacto y el problema está después: en el enlace
+  óptico, en la recepción del RME, o en el propio aparato. Sería igualmente concluyente.~~
+  **MATIZADO (21-sep-2026):** «no deja rastro» **no** equivale a «el flujo está intacto». Equivale a
+  «no se vio ninguna de las seis formas que el vigilante sabe buscar, a ~234 ms de resolución»
+  (§11.1–§11.2). **No es igualmente concluyente.**
 
 ---
 
@@ -441,7 +489,7 @@ recomendación de describir, no de diagnosticar. **Correcto: la descripción es 
 |---|---|---|
 | Estado del PCM `card1/pcm1p` | **`RUNNING`** | sin `XRUN` |
 | `delay` | **473** frames (9,9 ms) | buffer sano |
-| `xruns` de PipeWire, 60 s previos | **0** | sin fallo de software |
+| `xruns` de PipeWire, 60 s previos | **0** | 0 registrados — **el valor depende del control positivo, §11.2.6** |
 | Errores de audio del kernel, 60 s | **ninguno** | sin fallo de USB/HDA |
 | `SPDIF Sync` | **`Sync`** | enganche estable |
 | `Sync Source` | **`SPDIF`** | correcto |
@@ -507,19 +555,30 @@ histórico que no se reinicia de forma fiable. **No confundirlo con evidencia de
 
 ### 6.7.5 Qué significa todo esto
 
-Este resultado **descarta la hipótesis del software con una solidez que no se tenía antes**:
+> **CORREGIDO 21-sep-2026.** Este apartado decía «este resultado **descarta la hipótesis del software
+> con una solidez que no se tenía antes**». **Esa frase se retira**: era un salto lógico de alcance,
+> no de datos. Los cuatro puntos de abajo son correctos **como lo que son** —el estado observado en
+> la ventana, con los instrumentos disponibles—, pero **no autorizan a descartar el software.**
+> El razonamiento completo, y por qué, está en §11.
 
-1. **El flujo de datos de la placa madre nunca se interrumpió.** Ni un xrun, ni un cambio de estado,
-   ni un evento de kernel, en 28 minutos que cubren el evento. Si el software se hubiera quedado sin
-   datos, sería visible.
-2. **El PCM está entregando audio sano, verificado contando frames.** 48 960 Hz medidos ≈ 48 000 Hz
-   nominales.
-3. **El RME sigue enganchado al cable óptico**, `Sync Source = SPDIF`, `SPDIF Sync = Sync`, y **no
-   perdió el enganche** en ningún momento (el vigilante lo habría registrado como cambio de estado).
-4. **El USB de control está limpio:** `ctlerr=0`, sin errores, sin resets.
+Lo que este evento sí permite afirmar:
 
-**Por lo tanto, el fallo ocurre DESPUÉS del PCM de la placa madre.** La señal sale correcta, con el
-formato correcto, sin interrupción, y algo pasa en el trayecto:
+1. **En la ventana vigilada no se observó ninguna de las seis formas de fallo que el vigilante sabe
+   buscar** (XRUN, cambio de `state:`, cambio de `trigger_time`, `delta < 200`, subdispositivo
+   nuevo, evento de kernel), con una resolución de ~234 ms. Es un dato real. **Pero un fallo cuya
+   firma no sea una de esas seis es invisible para este instrumento por construcción** (§11.2).
+2. **El PCM estaba entregando audio sano en los muestreos.** La tasa medida con el contador
+   continuo es estable (§6.14, §6.15.3). **Ojo: eso es un dato sobre el agregado, no sobre el
+   instante del fallo.**
+3. **El RME estaba enganchado al cable óptico** en todos los muestreos: `Sync Source = SPDIF`,
+   `SPDIF Sync = Sync`. **No se observó pérdida de enganche.** (Un error de bit puede no perder el
+   enganche: ver §11.2.)
+4. **El USB de control estaba limpio:** `ctlerr=0`, sin errores, sin resets.
+
+**Lo que NO se sigue de esto:** que el fallo ocurra después del PCM de la placa madre. Se sigue
+solamente que **en esa ventana no se vio ninguna de las seis formas buscadas**. La atribución a la
+capa física sigue siendo **hipótesis**, y está debilitada por el dato de §5 (el síntoma también
+aparece por USB).
 
 ```
 placa madre (PC)  →  [¿AQUÍ?]  →  RME
@@ -533,26 +592,39 @@ placa madre (PC)  →  [¿AQUÍ?]  →  RME
 
 | # | Candidato | Cómo se comprueba | Coste |
 |---|---|---|---|
+| 0 | **La pila de software** (apps → PipeWire → ALSA) | Escuchar sin carga; y el control positivo del instrumento | 0 |
 | 1 | **El cable óptico** (margen, conector sucio o flojo) | Cambiarlo por otro | bajo |
 | 2 | **La salida S/PDIF de la placa madre** (el transmisor) | Probar otra fuente por el mismo cable | 0 |
 | 3 | **La recepción óptica del RME** | Probar el mismo PC por **coaxial** | bajo |
-| 4 | **El propio RME** (SteadyClock, PLL) | Probar otro DAC por el mismo cable | 0 |
+| 4 | **El propio RME** (etapa interna posterior al receptor, D/A) | Probar otro DAC por el mismo cable | 0 |
 | 5 | **Carga eléctrica/EMI** (GPU bajo carga, PSU) | Reproducir con carga sintética, sin juego | 0 |
 
-**El candidato 1 es el más probable y el más barato.** El propietario ya tiene la ficha del Toslink en
-`fichas/ficha_toslink.pdf`.
+**El candidato 0 vuelve a la lista**, en primer lugar por coste, tras retirarse la conclusión de que
+el software estaba descartado (§11).
+
+**El candidato 1 sigue siendo el más probable por eliminación**, pero esa eliminación es **débil**
+(§11.3) y el candidato 1 **no puede explicar por sí solo** un síntoma que también aparece por USB.
 
 ### 6.7.6 Lo que este evento NO permite concluir
 
 - **No se ha medido el cable.** No hay dato de margen óptico, atenuación ni tasa de error del
-  ejemplar. La hipótesis del cable es **razonable pero no verificada**.
+  ejemplar. La hipótesis del cable es **razonable pero no verificada**. El propietario tiene la ficha
+  del Toslink en `fichas/ficha_toslink.pdf`.
 - **No hay captura de la señal óptica.** Nada en este sistema puede decir si el flujo de luz llegó
   con errores. Haría falta un receptor S/PDIF independiente (otro DAC, o una interfaz con entrada
   óptica) para comparar.
-- **El evento no dejó rastro en ningún registro del sistema.** Eso es en sí mismo el hallazgo: **el
-  fallo es invisible para el software**, lo cual apunta a hardware o a la capa física.
+- ~~**El evento no dejó rastro en ningún registro del sistema.** Eso es en sí mismo el hallazgo: **el
+  fallo es invisible para el software**, lo cual apunta a hardware o a la capa física.~~
+  **RETIRADO (21-sep-2026).** Este razonamiento es incorrecto y era el núcleo del error: **el
+  evento no dejó rastro en los registros que se consultaron**, que es distinto. «Invisible para el
+  software» afirmaba algo sobre el software; lo observado es que **los instrumentos disponibles no
+  tienen una forma de fallo que corresponda a este**. Y «apunta a hardware o a la capa física» era
+  una conclusión sacada de un silencio, que es precisamente lo que no se puede hacer (§11.1).
+  **Corrección en una frase: un instrumento que muestrea no puede establecer la ausencia de fallos
+  cuya firma no sabe ver.**
 - **Un solo evento no es una serie.** Este resultado es fuerte para *este* evento. Repetir la captura
-  dos o tres veces más, con el mismo resultado limpio, lo convertiría en conclusivo.
+  dos o tres veces más, con el mismo resultado limpio, lo convertiría en conclusivo **sobre lo que
+  el instrumento ve** — no sobre el software (§11.1).
 
 ## 6.8 SEGUNDO EVENTO CAPTURADO — 20-sep-2026, 16:58:49
 
@@ -615,7 +687,7 @@ hw=121595227    ← +12 232
 ### 6.8.3 Qué cambia con el segundo evento
 **El resultado deja de ser anecdótico.** Con un solo evento se podía argumentar que el vigilante se
 perdió algo, o que fue una coincidencia. Con dos eventos separados por **16,6 minutos**, con la
-**misma sesión PCM**, el **mismo reloj enganchado** y **cero rastro en los dos casos**, el argumento
+**misma sesión PCM**, el **mismo reloj enganchado** y **ninguna de las seis formas de rastro** en los dos casos, el argumento
 se sostiene mucho mejor:
 
 > **Durante dos fallos audibles, el PCM de la placa madre entregó audio sin una sola interrupción,
@@ -649,13 +721,27 @@ los cuatro hechos a la vez:
 
 1. El fallo es **audible pero de menos de un segundo** (un cable marginal produce errores de bit
    esporádicos, no cortes largos).
-2. **No deja rastro en el software** — el PCM entrega los datos correctamente; el daño ocurre al
-   convertirlos en luz y volver a convertirlos.
+2. ~~**No deja rastro en el software** — el PCM entrega los datos correctamente; el daño ocurre al
+   convertirlos en luz y volver a convertirlos.~~
+   **CORREGIDO (21-sep-2026). Este «hecho» era circular.** No es un hecho observado: es **lo que la
+   hipótesis predice**. Un cable marginal *tiene* que dejar cero rastro en el PCM, porque un error de
+   bit no cambia el estado de ALSA. Usarlo a la vez como **hecho que apoya** la hipótesis y como
+   **predicción de** la hipótesis es argumentar en círculo.
+   **Y tiene una consecuencia grave: hace la hipótesis NO FALSABLE con este instrumento.** Si el
+   vigilante no ve nada, se cuenta como confirmación; y si viera algo, se diría que no era el cable.
+   **Una hipótesis que ningún resultado puede refutar no aporta información.** Para que sirva, hay
+   que someterla a una prueba que pueda fallar: cambiar el cable y ver si el síntoma cambia (§11.5).
 3. **El reloj sigue enganchado** (`Sync`) durante el fallo — exactamente lo que el manual §31.3
    describe para el SteadyClock: **regenera el reloj aunque los datos lleguen degradados**. El reloj
    y los datos son canales independientes.
+   *(Nota: este punto es legítimo como descripción del mecanismo del manual. Lo que no se puede es
+   contarlo además como evidencia observada, porque el enganche no se midió durante el fallo — se
+   midió 2–5 s después.)*
 4. **Ocurre bajo carga** (juego abierto) — más consumo eléctrico, más perturbación, más probabilidad
    de que un enlace marginal falle.
+   *(Nota añadida el 21-sep-2026: **la correlación con la carga no discrimina.** Es igual de
+   compatible con una causa de planificación (software) que con una causa física. Se puede usar para
+   decir «algo depende de la carga», no para elegir entre cable y software.)*
 
 **Sigue siendo una hipótesis, no un hallazgo.** Pero ahora tiene dos observaciones que la sostienen,
 y ninguna que la contradiga. **La prueba que la resolvería es cambiar el cable.**
@@ -927,9 +1013,13 @@ datos lleguen con errores.
 **Eso último es la pieza que encaja:** el manual (§31.3) dice que el SteadyClock **mantiene el
 enganche aunque el flujo llegue degradado**. Es decir, **el RME puede seguir marcando `Sync` mientras
 recibe datos corruptos** — la señal de reloj es independiente de la integridad de los datos. Un cable
-marginal produce justo eso: enganche estable + artefactos audibles esporádicos + cero rastro en el
-software. **Hipótesis, no conclusión** — pero es la primera hipótesis que explica los tres hechos a
-la vez.
+marginal produce justo eso: enganche estable + artefactos audibles esporádicos + **ninguna de las
+seis formas de rastro que el vigilante sabe buscar** (§11.2). **Hipótesis, no conclusión.**
+> **Nota del 21-sep-2026:** esta hipótesis **explica** los hechos, pero eso no es lo mismo que
+> estar **apoyada** por ellos. El «sin rastro» no cuenta como apoyo porque **es lo que la propia
+> hipótesis predice** (§6.8.x, corrección del punto 2). Una hipótesis que predice el silencio no
+> puede confirmarse con silencio. Solo una prueba que pueda fallar —cambiar el cable— la pone a
+> prueba de verdad.
 
 > **Actualización tras el segundo evento (§6.8):** esta hipótesis **se refuerza**. El segundo evento
 > reproduce el primero punto por punto y añade un cuarto hecho que encaja: ocurre **bajo carga**
@@ -1061,9 +1151,11 @@ registre también el `trigger_time` y avise cuando cambie, en vez de solo el `st
 
 **No añade:**
 - **Ninguna pista sobre la causa.** Los cinco eventos siguen siendo indistinguibles de la operación
-  normal desde el software.
+  normal **en los campos medidos y a esa resolución** — que es una afirmación más débil de lo que
+  parecía (§11.1).
 - **Nada sobre la periodicidad** — al contrario, la entierra.
-- **Nada que descarte el cable, la placa o el RME.** El abanico de tres candidatos sigue intacto.
+- **Nada que descarte el cable, la placa o el RME.** El abanico de candidatos sigue intacto — y
+  **el software sigue dentro de él** (§11.3).
 
 ---
 
@@ -1172,12 +1264,19 @@ activa. Será el primer evento del día con un vigilante que **ve los reinicios 
 - Un **quinto intervalo** (475 s) que refuerza la ausencia de período.
 
 **No añade:**
-- **Nada sobre la causa.** Sigue habiendo tres candidatos sin aislar.
-- **Nada nuevo sobre el software** — ya estaba descartado, y este lo vuelve a confirmar.
+- **Nada sobre la causa.** Sigue habiendo candidatos sin aislar.
+- ~~**Nada nuevo sobre el software** — ya estaba descartado, y este lo vuelve a confirmar.~~
+  **RETIRADO (21-sep-2026):** el software **no estaba descartado**, y este evento no lo descarta
+  (§11). Lo único que añade es **una repetición más del mismo resultado limpio**, que es un dato
+  sobre lo que el instrumento ve, no sobre el software.
 - **No hay ningún evento fuera del juego todavía.** Sigue siendo la prueba que falta.
 
-**La prueba 1 ya está hecha** (§6.7): se capturó un evento y **el PCM no falló**. Eso reordena la
-lista entera: las pruebas de software bajan de prioridad y suben las de la capa física.
+~~**La prueba 1 ya está hecha** (§6.7): se capturó un evento y **el PCM no falló**. Eso reordena la
+lista entera: las pruebas de software bajan de prioridad y suben las de la capa física.~~
+**RETIRADO (21-sep-2026).** «El PCM no falló» era la lectura sobreinterpretada de §11.1: lo observado
+es que **no apareció ninguna de las seis formas que el vigilante busca**. La lista de pruebas **no se
+reordena así**: el control positivo del instrumento pasa al primer lugar, y **las pruebas de software
+no bajan de prioridad** (§11.5).
 
 Todas son reversibles y no requieren comprar nada, salvo la 6:
 
@@ -1306,7 +1405,8 @@ lecturas, no separables con seis puntos**, y conviene decirlo en vez de elegir l
 
 **Añade:**
 - **Primer evento con cobertura de vigilancia demostrada por latidos** que abarcan la ventana, con
-  cadencia verificada (234,7 ms × 1278 iteraciones). **El «cero rastro» pasa a ser observación.**
+  cadencia verificada (234,7 ms × 1278 iteraciones). **El «cero rastro» pasa a ser observación**
+**directa — de lo que el instrumento mira, no de todo** (§11.2).
 - **La convergencia de la sesión C** a −0,1248 %, a 0,0019 puntos de la sesión A: **dos sesiones
   distintas, hora y media aparte, miden lo mismo.**
 - Un **sexto intervalo** (226 s) que refuerza la ausencia de período.
@@ -1360,7 +1460,7 @@ los dos eventos nuevos:
 **1285 iteraciones entre #5 y #6 en 300,0 s = 233,5 ms por vuelta** (objetivo 200 ms). Y en los tres
 latidos: **`cambios=0`, `sesiones=0`, `xruns=0`, `delta_bajo=0`**.
 
-Con esto, **el «cero rastro en el PCM de la placa madre» está demostrado por observación directa en
+Con esto, **la ausencia de las seis formas de rastro buscadas está demostrada por observación directa en
 TRES eventos** (7.º, 8.º y 9.º), no en uno. El `sesiones=0` confirma además que la sesión C **nunca
 se reinició** en 2000 s de reloj de audio.
 
@@ -1617,9 +1717,15 @@ debilitaría:
 - Que el PCM **no** fuera donde hay que mirar. Esto es lo más serio: el resultado descarta el PCM de
   la placa madre, **pero eso no prueba que la causa esté en el cable**. Solo acota el problema.
 
-**Conclusión metodológica:** este resultado **no identifica la causa**. Lo que hace es **eliminar una
+**Conclusión metodológica:** este resultado **no identifica la causa**. ~~Lo que hace es **eliminar una
 familia entera de causas** (todo el software y el camino hasta el PCM de la placa madre) con una
-confianza bastante alta. Eso es progreso real, pero es progreso por eliminación.
+confianza bastante alta. Eso es progreso real, pero es progreso por eliminación.~~
+**RETIRADO (21-sep-2026).** No elimina esa familia de causas. Lo que hace es **acotar el conjunto de
+formas de fallo que el instrumento puede ver**: no se observó ninguna de las seis que el vigilante
+busca, a ~234 ms de resolución (§11.1–§11.2). **Eso no es eliminar el software**, y decir que era
+«progreso por eliminación» le daba a la eliminación una solidez que no tiene. El progreso real de
+esta sección es otro: **tener un instrumento que registra, y saber exactamente qué puede y qué no
+puede ver** (§11.2).
 
 ---
 
@@ -1627,31 +1733,43 @@ confianza bastante alta. Eso es progreso real, pero es progreso por eliminación
 
 - **La causa no está identificada.** Este documento no la atribuye a: el remuestreo (ya descartado),
   el reloj de la placa madre (el manual §31.3 lo desmiente), ni el jitter.
-- **Tras el evento del 16:42, el software queda descartado** con bastante confianza (§6.7). Pero eso
-  **acota** el problema, no lo resuelve: la causa está en la capa física o en el RME, y **no se ha
-  aislado cuál de los tres elementos** (cable, transmisor de la placa, receptor del RME) falla.
+- ~~**Tras el evento del 16:42, el software queda descartado** con bastante confianza (§6.7).~~
+  **RETIRADO (21-sep-2026). El software NO está descartado** (§11). La conclusión se apoyaba en el
+  silencio del vigilante, y un instrumento que muestrea **no puede establecer la ausencia de fallos
+  cuya firma no sabe ver** (§11.1–§11.2). Además, el síntoma aparece en dos transportes con la misma
+  pila de software, lo que lo convierte en **factor común** y no en descartado (§11.3).
+  **Lo que sigue en pie:** los tres elementos de la capa física (cable, transmisor, receptor) siguen
+  sin aislarse, y **el cable tampoco puede ser la causa única** si el síntoma también aparece por USB.
 - **No se ha medido el enlace óptico.** No hay dato de margen, atenuación ni tasa de error del
   ejemplar Amazon Basics. La hipótesis del cable es la más plausible (§6.7.7) y **sigue sin verificar**.
-- **Cinco eventos ya son seis, pero no cierran el caso.** Repiten el mismo resultado limpio, lo
-  que hace **muy** improbable que el fallo deje rastro en el PCM de la placa madre. Lo que no hacen es
-  decir *dónde* está el fallo.
-- **El fallo por audio normal (música) no se ha caracterizado.** **Los seis** eventos ocurrieron con
+- **Nueve eventos no cierran el caso.** Repiten el mismo resultado limpio, lo que hace **muy**
+  improbable que el fallo deje **una de las seis formas de rastro que el vigilante busca** en el PCM
+  de la placa madre. **Lo que no hacen es descartar un fallo de otra firma**, ni decir *dónde* está.
+- **El fallo por audio normal (música) no se ha caracterizado.** **Los nueve** eventos ocurrieron con
   un juego abierto. Si ocurriera también en escucha pasiva, importaría — y sigue siendo la prueba que
   más información daría por unidad de esfuerzo.
 - **La marca se toma DESPUÉS del fallo, nunca durante.** El mejor tiempo de reacción del día fue de
   **~2 s** (§6.13.1), y los peores de ~5 s. Como el fallo dura menos de un segundo, **todo lo que
   este documento mide es el estado posterior, no el momento del fallo**. Esa brecha **no se puede
-  cerrar con `marca-audio`**: haría falta instrumentación que registre de forma **continua** durante
-  el fallo. **El vigilante es ese instrumento**, y por eso importa que cubra la ventana (§6.13.5).
-- **El vigilante NO ve los cambios de sesión PCM.** Compara solo el campo `state:`, así que un paso
-  `RUNNING → RUNNING` con sesión nueva es invisible. **Medido:** entre los latidos #9 (18:01:57) y #10
-  (18:06:57) ocurrieron **dos sesiones nuevas y dos fallos**, y el vigilante informó `cambios=0`. Es
-  una limitación **de cobertura**, no de funcionamiento (§6.12.5). **Arreglo pendiente:** registrar
-  el `trigger_time` y avisar cuando cambie.
+  cerrar con `audio-debug`**: haría falta instrumentación que registre de forma **continua** durante
+  el fallo. **El vigilante se acerca, pero no lo es**: muestrea cada ~234 ms y solo escribe para seis
+  formas de fallo (§11.2).
+- **El vigilante tiene CINCO puntos ciegos, no uno** (§11.2): muestrea en vez de observar; **omite los
+  PCM cerrados**; solo ve seis formas de fallo; `prev_state` es una variable compartida entre
+  subdispositivos; y la comprobación de `delta` es de un instante. El de la sesión PCM se arregló en
+  la v4, pero **los otros cuatro siguen ahí**, y el más importante es el tercero: **un fallo cuya
+  firma no sea una de las seis es invisible por construcción, no por ausencia.**
+- **No hay control positivo del instrumento.** Desde el 1-sep hay **0 xruns** en el journal de
+  PipeWire, así que **no existe ni un ejemplo de cómo se ve un xrun en ese log**. Todo el argumento
+  «0 xruns ⇒ no hubo xrun» descansa en una suposición **sin verificar** (§11.2.6). Es la prueba que
+  va primero, y es barata.
 - **`Current Frequency` se resolvió** (§4: volvió solo a 47 999) y **ya no es una incógnita abierta**.
 - **La tasa de la sesión C (47 712 Hz) no se puede interpretar.** Es un tramo de 31,8 s, y en la
   sesión A un tramo corto comparable también salió desviado — hacia arriba. **Los tramos cortos no son
   comparables con los largos** (§6.12.4).
+- **¿«Corte seco» y «robótico» son el mismo síntoma? No se sabe** (§11.4). El propietario describió
+  el fenómeno como «robótico» en **10 de 11** capturas; «corte seco» fue un término **mío**, usado
+  una vez. **Tratar las once capturas como un solo fenómeno es una suposición**, no un hecho.
 
 ---
 
@@ -1659,17 +1777,29 @@ confianza bastante alta. Eso es progreso real, pero es progreso por eliminación
 
 1. **La cadena está bien montada** y el reloj del RME está enganchado correctamente (`SPDIF`/`Sync`).
 2. **Cero errores de audio en el journal**: ni USB, ni HDA, ni underruns registrados.
-3. **PipeWire lleva ~4 h con 0 xruns.** Ni uno. `log.level=2` confirmado → se habrían visto.
+3. **PipeWire lleva horas con 0 xruns.** Ni uno. `log.level=2` confirmado. ~~→ se habrían visto.~~
+   **MATIZADO (21-sep-2026):** «se habrían visto» **no está verificado**. Hay 0 xruns desde el 1-sep,
+   así que **no existe un solo ejemplo de cómo se ve un xrun en ese log**. Sin un control positivo,
+   el valor de este cero es **desconocido** (§11.2.6). Es la prueba que va primero.
 4. **NUEVE EVENTOS CAPTURADOS (16:42:11, 16:58:49, 17:15:31, 18:02:22, 18:06:26, 18:14:20,
-   18:18:07, 18:36:59, 18:39:39).** El propietario ejecutó `marca-audio` al oírlos. **Trece de trece
+   18:18:07, 18:36:59, 18:39:39).** El propietario ejecutó el instrumento al oírlos. **Trece de trece
    campos idénticos** en los nueve, todos con `RUNNING`, `delay` sano, 0 xruns, 0 errores de kernel y
    reloj enganchado (§6.7 – §6.15). Los dos últimos, además, con el **journal totalmente vacío** en
    su ventana.
-5. **El 7.º, el 8.º y el 9.º son los primeros con cobertura de vigilancia DEMOSTRADA.** El vigilante
-   muestreó **1278 veces en 300 s (cada 234,7 ms)** en una ventana que contiene el fallo de las
+   **Nota de vocabulario (§11.4):** la descripción del propietario fue **«audio robotico» en 10 de las
+   11 capturas** y «corte seco» en 1. **No consta que sean el mismo síntoma**, así que tratarlos como
+   un solo fenómeno es una suposición.
+5. **El 7.º, el 8.º y el 9.º caen dentro de ventanas vigiladas sin interrupción.** El vigilante
+   muestreó **1278 veces en 300 s (cada 234,7 ms)** en la ventana que contiene el fallo de las
    18:18:07, y otras **1285 veces (233,5 ms)** en la que contiene los de 18:36:59 y 18:39:39, **sin
-   registrar nada**: ni cambio de estado, ni de sesión, ni xrun (§6.14.1, §6.15.2). **El «cero rastro
-   en el PCM de la placa madre» es TRES VECES una observación directa, no una inferencia.**
+   registrar nada**: ni cambio de estado, ni de sesión, ni xrun (§6.14.1, §6.15.2).
+   ~~**El «cero rastro en el PCM de la placa madre» es TRES VECES una observación directa, no una
+   inferencia.**~~ **MATIZADO (21-sep-2026).** Lo observado directamente es: **«no ocurrió ninguna de
+   las seis formas de fallo que el vigilante sabe buscar, a ~234 ms de resolución, en los
+   subdispositivos abiertos que muestreó»**. Eso **no es** lo mismo que «el fallo no deja rastro»,
+   porque **un fallo de otra firma es invisible por construcción** — y esa es justamente la
+   hipótesis principal (§11.2). El dato es real y útil; la frase anterior le atribuía más de lo que
+   sostiene.
 6. **Verificado contando frames — con una corrección importante sobre la convergencia.** Dos sesiones
    PCM distintas, separadas por hora y media, miden lo mismo: sesión A (2982 s) **−0,1267 %** ·
    sesión C (701 s, 4 marcas) **−0,1248 %**. **Diferencia: 0,0019 puntos.** Pero **al medir la sesión
@@ -1685,13 +1815,22 @@ confianza bastante alta. Eso es progreso real, pero es progreso por eliminación
    verificación de las 16:25 y 16:27; los de aquí son entre los NUEVE EVENTOS reales.)*
 8. **Hay TRES sesiones PCM, no una.** La sesión A cubre E1–E3, la B cubre E4, la C cubre E5–E9
    (§6.12.3, §6.15.1). **La sesión C sobrevive a CUATRO eventos consecutivos sin reiniciarse.**
-9. **Conclusión: el fallo ocurre DESPUÉS del PCM de la placa madre.** Quedan tres candidatos —
-   el cable óptico, el transmisor S/PDIF de la placa, la recepción del RME.
+9. ~~**Conclusión: el fallo ocurre DESPUÉS del PCM de la placa madre.** Quedan tres candidatos —
+   el cable óptico, el transmisor S/PDIF de la placa, la recepción del RME.~~
+   **REBAJADO A HIPÓTESIS (21-sep-2026).** No es una conclusión: es la hipótesis que encabeza la
+   lista, y lo es **por eliminación débil, no por evidencia directa** (§11.3). Quedan **cuatro**
+   candidatos, porque **el software vuelve a la lista**:
+   **la pila de software** · el cable óptico · el transmisor S/PDIF de la placa · la recepción del RME.
+   Y hay un motivo positivo para sospechar del software: **el síntoma aparece en dos transportes
+   distintos (USB y óptico) con la misma pila de software** (§11.3). Eso **descarta el cable como
+   causa única**.
 10. **El sink por defecto estaba mal y se ha corregido** (§6.5), y **`Current Frequency` se resolvió
     solo** (§4). Ambas incógnitas anteriores quedan cerradas.
-11. **Siete afirmaciones propias resultaron falsas** y se documentan en §10 sin borrarlas. La última
-    es la lectura optimista de la convergencia (§6.15.3). **Las siete comparten la misma forma:** la
-    lectura parecía confirmar la hipótesis cómoda, y el dato la desmintió.
+11. **Ocho afirmaciones propias resultaron falsas** y se documentan en §10 sin borrarlas. La octava
+    (§11) es de una familia distinta a las siete primeras: **no es un error de contabilidad ni de
+    muestreo, es un error de ALCANCE DEL INSTRUMENTO** — confundir «mi instrumento no lo vio» con
+    «no ocurrió». **Es la más peligrosa de las ocho, porque produce conclusiones que parecen las más
+    sólidas: no se apoya en un dato dudoso, sino en un silencio.**
 12. **La tasa de fallo bajo juego ronda 1 cada ~10 minutos** (8 intervalos entre los 9 eventos en
     84,1 min), **muy** superior a las «un par al día» que se percibían. **Sin periodicidad
     demostrada.** Y con un rango de **32 s a 47 min**, la dispersión es tan amplia que **la media
@@ -1718,7 +1857,7 @@ hay material a mano.
 
 ## 10. Advertencia sobre la solidez de este documento
 
-**SIETE** de las afirmaciones que este informe dio por buenas **resultaron ser errores míos**,
+**OCHO** de las afirmaciones que este informe dio por buenas **resultaron ser errores míos**,
 detectados al revisar el trabajo:
 
 - La «firma normal» `delta ≈ 970–1020` (§2.1) — era un artefacto de muestreo.
@@ -1737,17 +1876,33 @@ detectados al revisar el trabajo:
   sesiones —que se destacó como prueba fuerte— se obtuvo **comparando dos ventanas elegidas**, y la
   dispersión real entre ventanas largas es **0,0375 puntos, el triple**. **El número no era falso; la
   interpretación, demasiado fuerte.**
+- **«La cobertura del vigilante descarta el software»** (§6.7.5, §6.7.6, §8, §9). **Es la octava y la
+  más grave.** Se apoyaba en que el vigilante no registró nada, y eso **no autoriza** esa conclusión:
+  el vigilante **muestrea** y **solo ve seis formas de fallo**, así que un fallo de otra firma es
+  **invisible por construcción** (§11.1–§11.2). Además, el síntoma aparece en dos transportes con la
+  misma pila de software, lo que convierte al software en **factor común** (§11.3).
+  **Se retira la conclusión, no el dato.**
 
-**Las siete tenían la misma forma:** la lectura **parecía confirmar** una hipótesis plausible, y en
-las siete **el sesgo iba en la dirección cómoda o interesante**. Varias las propuse **yo mismo en
-esta misma sesión**. La cuarta es la más instructiva porque **yo mismo la propuse y yo mismo la
-advertí**: §6.10.2 ya decía «n=2 intervalos es débil» y «hace falta un cuarto evento». **La
+**Las siete primeras tenían la misma forma:** la lectura **parecía confirmar** una hipótesis
+plausible, y en las siete **el sesgo iba en la dirección cómoda o interesante**. Varias las propuse
+**yo mismo en esta misma sesión**. La cuarta es la más instructiva porque **yo mismo la propuse y yo
+mismo la advertí**: §6.10.2 ya decía «n=2 intervalos es débil» y «hace falta un cuarto evento». **La
 advertencia funcionó** — pero solo porque se escribió antes de tener el dato que la refutaría.
 
 **En las siete sobrevivió el dato de la medición, no la interpretación.** Esa es la razón de
 mantener las dos cosas separadas en este documento.
 
-**La causa ya no se atribuye al software**: el evento del 16:42 lo descarta con datos (§6.7).
+**La octava es de otra familia, y por eso se separa.** Las siete primeras son **errores de
+contabilidad o de muestreo**: tratar como continuo, como completo o como promedio algo que se
+reinicia, que se muestrea o que se dispersa. **La octava es un error de ALCANCE DEL INSTRUMENTO:**
+confundir «mi instrumento no lo vio» con «no ocurrió». **Es la más peligrosa de las ocho**, porque
+**no se apoya en un dato dudoso sino en un silencio**, y por tanto produce conclusiones que parecen
+las más firmes del documento. El silencio de un instrumento es el tipo de evidencia que más fácil se
+sobreinterpreta.
+
+**Estado de la atribución de causa, tras la corrección:** ~~la causa ya no se atribuye al software~~
+**la causa NO está atribuida.** El software vuelve a la lista de candidatos (§11.3), el cable no
+puede ser la causa única (§11.3), y la prueba que discrimina está pendiente y es barata (§11.5).
 
 ---
 
@@ -1777,3 +1932,186 @@ porque el patrón es revelador: **en las siete la lectura parecía confirmar una
 en los cinco el sesgo iba en la dirección que resultaba cómoda o plausible. **Es exactamente el tipo
 de error que este proyecto intenta evitar, y la razón por la que el evento del 16:42 se documenta
 con tanta cautela sobre lo que *no* prueba.**
+
+---
+
+## 11. Corrección de alcance — 21-sep-2026: «el software está descartado» se retira
+
+**Esta sección existe porque la conclusión central del documento estaba mal, y el error no era de
+datos sino de razonamiento.** Se detectó al revisar el propio trabajo, a partir de una objeción del
+propietario que resultó correcta y que además destapó un segundo problema que no estaba en su
+objeción.
+
+### 11.1 El error, en una frase
+
+**«Mi instrumento no lo vio» no es «no ocurrió».**
+
+El documento afirmaba (§6.7.5, §6.7.6, §8, §9):
+
+> «El vigilante no registró nada → el fallo no deja rastro en el software → **la causa está descartada
+> en el software**».
+
+**Los dos primeros pasos son correctos. El tercero es un salto.** Para que la ausencia de rastro
+signifique algo, el instrumento tendría que ser **capaz de ver** un fallo del tipo que se quiere
+descartar. Y **no lo es** (§11.2). Un silencio solo es evidencia cuando se puede enumerar qué habría
+hecho ruido.
+
+**La formulación correcta de lo observado:**
+
+> «No ocurrió ninguna de las seis formas de fallo que el vigilante sabe buscar, con una resolución de
+> ~234 ms, en los subdispositivos abiertos que muestreó.»
+
+Eso es un dato real, útil y reproducible. **No es «el fallo no deja rastro».**
+
+### 11.2 Los cinco puntos ciegos del vigilante, y la suposición sin verificar
+
+**Verificado leyendo `vigilar.sh` línea por línea.** La cabecera del propio script ya los documenta.
+
+**1. Muestrea, no observa continuamente.** `sleep 0.2` más el coste del bucle dan **~234 ms por
+vuelta** (medido con el contador `iter`: 1278 vueltas en 300 s). **Un fallo más corto que ese
+intervalo puede caer entero entre dos muestras y no verse nunca.**
+
+**2. Omite los PCM cerrados.** Línea 86: `[ -n "$ST" ] || continue`. Si el fichero de estado dice
+`closed`, no tiene línea `state:` y **el subdispositivo se salta sin dejar línea en el log**. Un corte
+en que el PCM se cierre **no queda registrado mientras está cerrado**. Esta es la objeción del
+propietario, y es correcta.
+
+**3. Solo ve seis formas de fallo.** La lista completa de lo que sabe buscar:
+
+| forma | dónde |
+|---|---|
+| `state: XRUN` literal | línea 89 |
+| cambio del campo `state:` | líneas 102–108 |
+| cambio de `trigger_time` (sesión nueva) | líneas 111–116 |
+| `delta < 200` frames | líneas 124–130 |
+| subdispositivo nuevo | líneas 135–137 |
+| evento de kernel de audio/USB | líneas 141–144 |
+
+**Un fallo cuya firma no sea una de esas seis es invisible POR CONSTRUCCIÓN, no por ausencia.** Y
+esto es decisivo, porque **la hipótesis principal del documento es exactamente un fallo de esa
+clase**: un error de bit en el enlace óptico no cambia el estado del PCM, no cambia el `trigger_time`,
+no mueve el `delta` de forma sostenida y no genera evento de kernel. **Bajo la hipótesis del cable,
+el silencio del vigilante es lo que se espera — y por tanto no puede usarse como evidencia ni a favor
+ni en contra.** El documento ya lo decía para el contador de frames («un error de bit no mueve el
+`hw_ptr`»), pero **luego usó el silencio como prueba para descartar el software**. Las dos cosas no
+pueden ser verdad a la vez.
+
+**4. `prev_state` es una sola variable, compartida entre subdispositivos** (líneas 97–121). Con dos
+subdispositivos abiertos a la vez, el bucle compara uno contra otro y **podría reportar una sesión
+nueva falsa**. Hoy no ocurre porque normalmente solo hay uno abierto, pero **es un fallo latente, no
+una garantía**.
+
+**5. La comprobación `delta < 200` es de un instante.** Un vaciado breve del búfer que no coincida
+con una muestra no se ve.
+
+**6. Y la suposición sin verificar: no hay control positivo.** Todo el argumento «0 xruns ⇒ no hubo
+xrun» descansa en que **PipeWire registre los xrun a `log.level=2`**. Eso **no está verificado**:
+
+| dato | valor |
+|---|---|
+| `log.level` de PipeWire | `"2"` (medido, `pw-cli info 0`) |
+| líneas con xrun en el journal **desde el 1-sep-2026** | **0** |
+| ejemplos disponibles de cómo se ve un xrun en ese log | **ninguno** |
+
+**Sin un caso positivo no se puede afirmar que un xrun *se habría* registrado.** Podría registrarse a
+un nivel superior, o no registrarse. **Cómo se cierra:** provocar un xrun a propósito —carga alta con
+un quantum pequeño— y comprobar si aparece. Es barato, y **convierte todos los «0 xruns» del
+documento de un dato de valor desconocido en un dato sólido.**
+
+### 11.3 El segundo problema, que no estaba en la objeción: el software es un factor común
+
+**Este argumento es independiente del anterior, y va en la misma dirección.**
+
+El documento ya recogía (§5) que el propietario **oía el mismo síntoma con el RME por USB como
+transporte de audio**, y con mucha más frecuencia percibida que por óptico.
+
+**Lo que se concluyó entonces:** «el óptico falla menos → el cable óptico es el sospechoso».
+**Lo que ese dato implica de verdad, y se pasó por alto:** los dos transportes **no comparten
+hardware**.
+
+| | camino USB | camino óptico |
+|---|---|---|
+| pila de software (apps → PipeWire → ALSA) | **sí** | **sí** |
+| driver ALSA | `snd_usb_audio` | `snd_hda_intel` |
+| transmisor en el PC | USB (XHCI) | S/PDIF de la placa |
+| cable | USB | **óptico** |
+| receptor en el RME | USB | **óptico** |
+| etapa interna del RME posterior al receptor | **sí** | **sí** |
+| D/A, amplificador, audífonos | **sí** | **sí** |
+
+**Consecuencia:** si el síntoma aparece en los dos caminos, **ni el cable óptico, ni el transmisor
+S/PDIF de la placa, ni el receptor óptico del RME pueden ser la causa suficiente por sí solos.**
+Los elementos comunes son **la pila de software**, **la etapa interna del RME** y **todo lo de
+después**.
+
+**Y esto hace del software un candidato positivo, no un descartado** — justo lo contrario de lo que
+decía la conclusión retirada. El software es lo único, además del propio RME, que está presente en
+los dos fallos.
+
+**Advertencia sobre la comparación de frecuencias.** Los «varias veces por hora» (USB) y el «un par
+al día» (óptico) **no son comparables: no se midieron en la misma condición.** La medición del
+20-sep da **~1 evento cada 10,5 min bajo juego** (§6.15.4) — unas **6 por hora**, del mismo orden que
+lo atribuido al USB. **Puede que la diferencia percibida entre USB y óptico fuera en realidad la
+diferencia entre jugar y no jugar**, y no entre los dos transportes. Es una hipótesis, pero invalida
+usar esa comparación como evidencia del cable.
+
+### 11.4 Cuestión abierta: «corte seco» y «robótico» pueden no ser el mismo síntoma
+
+**Se retira también la prescripción sobre el vocabulario** (§3.1, §6.6). El recuento real del log:
+
+| descripción | capturas de evento |
+|---|---|
+| **«audio robotico»** | **10** |
+| «corte seco» | 1 |
+
+Y el término «corte seco» **lo propuse yo** (20-sep 16:24); el propietario lo usó **una vez**,
+aclarando en el mismo momento que lo que oyó fue *«algo robotico de menos de un segundo»*. Las diez
+capturas siguientes volvieron a su palabra. **Presentar después eso como «la nomenclatura corregida»
+era circular: me citaba a mí mismo.**
+
+**Lo que sí era un problema, y sigue siéndolo:** usar «robótico» como **afirmación causal** («es
+robótico, luego son artefactos digitales, luego es el remuestreo»). Eso hay que evitarlo. **Pero
+describir lo que se oye con la palabra que a uno le sale es el dato primario**, y «robótico» es una
+descripción sensorial perfectamente válida.
+
+**Y lo más importante: pueden no ser el mismo fenómeno.** Colapsarlos en un término **borra
+información que no se puede recuperar**. **Estado: cuestión abierta.** La pregunta útil no es «¿cómo
+debería llamarlo?» sino **«¿esto que acabo de oír es lo mismo que lo de ayer?»** — porque esa
+respuesta es la que separa un fenómeno de dos. **Mientras no se sepa, tratar las once capturas como
+un solo fenómeno es una suposición**, y el análisis de series (§6.15.4) descansa sobre ella.
+
+### 11.5 Qué cambia en la lista de pruebas
+
+**La lista anterior estaba ordenada por coste de comprobación de la capa física.** Con la conclusión
+retirada, cambia el orden y aparece una prueba nueva **que va antes que todas**:
+
+| # | prueba | qué discrimina | coste |
+|---|---|---|---|
+| **0** | **Control positivo del instrumento:** provocar un xrun a propósito y ver si el journal lo registra | **si el «0 xruns» significa algo** (§11.2.6) | bajo |
+| 1 | **Escuchar sin el juego abierto** y capturar el primer evento de ahí | causa dependiente de carga vs. independiente | 0 |
+| 2 | **Cambiar el cable óptico** | el cable | bajo |
+| 3 | **Mismo PC por coaxial** | transmisor de la placa vs. receptor óptico del RME | bajo |
+| 4 | **Otro DAC por el mismo cable** | el receptor del RME | 0 |
+| 5 | **Volver a USB y medir la frecuencia con el instrumento** | si el «USB falla más» es real o era la condición de escucha (§11.3) | bajo |
+
+**La prueba 0 va primero porque es la única que no mide el sistema, sino el instrumento.** Sin ella,
+todos los «0 xruns» de este documento —y son la columna vertebral de varios apartados— tienen un
+valor desconocido. **Es más barato arreglar el instrumento que seguir midiendo con él a ciegas.**
+
+### 11.6 Lo que sobrevive de la conclusión retirada
+
+**Nada de la atribución de causa.** Pero sobrevive lo que era un dato:
+
+- **Las once capturas son reales y sus campos son correctos.** El estado 2–5 s después es sano, y eso
+  sigue siendo cierto y útil: **el fallo es transitorio y se recupera solo.**
+- **El reloj no está averiado.** La tasa medida es estable entre ventanas largas. (Con la salvedad de
+  §11.2.6 sobre el «0 xruns».)
+- **La capa física sigue siendo candidata, y el cable sigue siendo el candidato más barato.** Pero
+  **ya no es «el más probable por eliminación»**, porque la eliminación del software no se sostiene
+  (§11.3).
+
+**La lección que se lleva este documento, y es la más valiosa de las ocho correcciones:** un silencio
+**parece** la evidencia más sólida, porque no depende de ningún número dudoso. Y es justo al revés:
+**un silencio solo vale lo que valga la capacidad del instrumento de romperlo.** Antes de apoyarse en
+él hay que poder responder, con nombres y apellidos, **qué habría aparecido en el log si la hipótesis
+fuera cierta**. Si esa lista no incluye la hipótesis, el silencio no dice nada sobre ella.

@@ -123,28 +123,17 @@ hl.animation({ leaf = "workspaces",      enabled = true, speed = 2,   bezier = "
 hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 2,  bezier = "md3_decel", style = "slidevert" })
 
 -- ==================
--- AUTOSTART 
+-- AUTOSTART (exec-once)
 -- ==================
--- El motor es skwd-paper-v2 (VAAPI -> Vulkan). mpvpaper ya no se usa.
---
--- Se limpia ANTES de arrancar: si sobrevive un renderizador viejo (mpvpaper o un
--- skwd-wall-vk huérfano) queda por encima y tapa al nuevo, el fondo no cambia y
--- parece que «no funciona». El orden de capas manda: bottom > background.
+--[[ local function wallpaperStart()
+    local cleanup = "pkill -TERM -x mpvpaper; pkill -TERM -x gslapper"
+    local mon = "$(hyprctl monitors -j | jq -r '.[0].name')"
+    local opts = "--hwdec=vaapi --loop-file=inf --gamma=-5 --contrast=88 --saturation=79 --brightness=1 --mute=yes --video-unscaled=no --panscan=1"
+    hl.exec_cmd(cleanup .. "; sleep 1; nohup mpvpaper -o \"" .. opts .. "\" " .. mon
+        .. " ~/dotfiles/share/wallpapers/yellowmatrix.mp4 > /dev/null 2>&1 & disown")
+end ]]
 
-local wallpaperFile = os.getenv("HOME") .. "/dotfiles/share/wallpapers/yellowmatrix-deepseek144.mp4"
-
-local function wallpaperStart()
-    local cmd = table.concat({
-        "skwd-paper-v2 stop DP-2",
-        "pkill -TERM -x mpvpaper",
-        "pkill -TERM -x gslapper",
-        "pkill -TERM -x skwd-wall-vk",
-        "sleep 1",
-        "skwd-paper-v2 apply DP-2 " .. wallpaperFile
-            .. " --kind video --engine default --fill-mode fill --mute true --layer bottom",
-    }, "; ")
-    hl.exec_cmd(cmd)
-end
+hl.exec_cmd(skwd-paper-v2 apply DP-2 /home/n30/dotfiles/share/wallpapers/yellowmatrix-deepseek144.mp4 --kind video --engine default --fill-mode fill --mute true)
 
 
 local function gameModeStart()
@@ -190,8 +179,8 @@ hl.on("hyprland.start", function()
     -- Desktop shell
     hl.exec_cmd("dms run")
 
-    -- Fondo de vídeo (skwd-paper-v2). Se llama también en cada recarga:
-    -- wallpaperStart() limpia antes de arrancar, así que no se duplica.
+    -- Wallpaper engine (mpvpaper). Antes era `exec` (no exec-once):
+    -- se ejecutaba en cada reload. Se conserva igual: ver "config.reloaded" abajo.
     wallpaperStart()
     gameModeStart()
 
@@ -461,7 +450,7 @@ hl.bind("CTRL + ALT + D", hl.dsp.pass({ window = "class:^(awakened-poe-trade)$" 
 
 -- === Sistema ===
 hl.bind(mainMod .. " + SHIFT + P", hl.dsp.dpms({ action = "toggle" }))
-hl.bind(mainMod .. " + CTRL + ALT + W", hl.dsp.exec_cmd("skwd-paper-v2 stop"))
+hl.bind(mainMod .. " + CTRL + ALT + W", hl.dsp.exec_cmd("killall mpvpaper"))
 hl.bind(mainMod .. " + CTRL + ALT + A", hl.dsp.exec_cmd("pkill -9 -i -f \"ArkAscended|ShooterGame\""))
 -- === Espacio especial con la tecla Super sola ===
 -- En el .conf era `bindr = $mainMod, $mainMod_L` y funcionaba por accidente:
@@ -533,27 +522,6 @@ hl.window_rule({
     match = { class = "negative:^(zen)$", float = false, focus = false },
     opacity = "0.9 0.9",
 })
-
--- Va DESPUÉS de la regla global porque la última coincidencia gana (ver nota de arriba).
---
--- ¡OJO CON "override"! (verificado 21-sep-2026, doc oficial de window rules)
---   "Opacity is a PRODUCT of all opacities by default... You can put `override`
---    after an opacity value to override it to an exact value rather than a multiplier."
--- decoration:active_opacity = 1.0 e inactive_opacity = 0.9 (líneas 77-78).
--- Con "0.9 0.8" a secas el valor real sería: activa 0.9*1.0 = 0.90 (bien),
---   inactiva 0.8*0.9 = 0.72 (NO los 0.8 pedidos).
--- Por eso va "0.9 override 0.8 override": valor EXACTO, inmune al producto global.
--- Es la misma convención que ya usa "chatgpt-pet" (0.9 override 0.8 override),
--- "zen-opaque" y "steam-games" (1.0 override).
-hl.window_rule({ name = "workbuddy-opacity", match = { class = "^(WorkBuddy AI)$" }, opacity = "0.8 override 0.7 override" })
-
--- OJO con Codex: la app es Codex (sus procesos llevan --user-data-dir=~/.config/Codex),
--- pero la CLASE de ventana es "Chatgpt". El `float = false` la limita a la ventana
--- principal, porque la mascota comparte clase y título y va flotante.
--- Steam: solo el cliente (class "steam"); los juegos son class "steam_app.*" y tienen
--- su propia regla con "1.0 override", así que no se tocan.
-hl.window_rule({ name = "codex-opacity", match = { class = "^(Chatgpt)$", float = false }, opacity = "0.8 override 0.7 override" })
-hl.window_rule({ name = "steam-opacity", match = { class = "^(steam)$" }, opacity = "0.8 override 0.7 override" })
 
 -- Terminales
 hl.window_rule({ name = "wezterm-borderless", match = { class = "^(org\\.wezfurlong\\.wezterm)$" }, tile = true, border_size = 0 })

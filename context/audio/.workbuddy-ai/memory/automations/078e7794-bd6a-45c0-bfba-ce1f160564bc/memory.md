@@ -35,6 +35,28 @@ Resultado: **sigue sin precio oficial y sin disponibilidad en México.**
 - Prensa: phileweb y snrec (09-sep-2026) cubren sólo el ADI-2 Pro EX, lanzamiento en
   Japón 2026-10-02.
 
+### 2026-09-21 — sin novedad
+Resultado: **sigue sin precio oficial y sin disponibilidad en México.**
+
+- `rme-audio.de/converter/adi-2-dac-ex.html` → **sigue 404**.
+- `rme-audio.de/converter/adi-2-4-pro-ex.html` → **sigue 404**.
+- `rme-audio.de/products.html` → sólo «ADI-2 Pro EX» entre los ADI-2; ni DAC EX ni /4 Pro EX.
+- `rme-audio.de/news.html` → la entrada del ADI-2 Pro EX sigue siendo la única de la serie EX.
+- `rme-shop.com/acatalog/RME_converters.html` → Pro EX €1.992,87; DAC FS €816,75 agotado; /4 Pro SE
+  €2.299 agotado. **Ningún modelo EX nuevo.** Sin sección de novedades con el DAC EX.
+- Comunicado 2026-06-03 (musicnetwork.ch) intacto y **sin actualizar**: DAC EX y /4 Pro EX siguen
+  «Available starting in late Q3 2026; pricing to be announced».
+- México: solidelectronics.mx no lista ningún «EX». DAC FS $27,600 y /4 Pro SE $51,100, **ambos sin
+  existencias**. MercadoLibre bloquea la lectura directa; la búsqueda web no devuelve ningún EX.
+- Thomann España: el ADI-2 DAC FS **sigue fuera de catálogo** («ya no se encuentra en nuestro
+  catálogo»), sin sustituto EX listado.
+- Prensa: rme-audio.jp (09-sep-2026) sólo el ADI-2 Pro EX, a la venta en Japón el 2-oct-2026;
+  phileweb y proaudio.tech sin precio del DAC EX. synthax.co.uk no muestra fichas con precio.
+- Único precio del /4 Pro EX sigue siendo el de revendedor (Reverb, preorder), **no oficial**.
+- **Contexto relevante:** hoy es 21-sep-2026, justo el final del Q3 anunciado. La ventana «late Q3»
+  se agota sin que RME haya publicado precio ni página. Es el momento más probable para que aparezca;
+  conviene subir la frecuencia de comprobación en los próximos días.
+
 ## Próxima ejecución — pistas a revisar
 - Reintentar `rme-audio.de/converter/adi-2-dac-ex.html` (indicador más limpio) y
   `rme-audio.de/converter/adi-2-4-pro-ex.html`.

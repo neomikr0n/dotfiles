@@ -18,6 +18,30 @@ class AutoGameTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
+        # Aislar de la sesión real: sin esto, activate() llamaría a la CLI de
+        # skwd y congelaría el fondo de vídeo del usuario durante las pruebas.
+        isolated = patch.object(module, 'skwd_cli', return_value=None)
+        isolated.start()
+        self.addCleanup(isolated.stop)
+
+    def fake_skwd(self, assignments=1, paused=False):
+        """CLI de skwd simulada: nunca toca la sesión real."""
+        state = {'paused': paused, 'assignments': assignments, 'calls': []}
+
+        def cli(*args, timeout=3):
+            state['calls'].append(args[0])
+            if args[0] == 'status':
+                return {'paused': state['paused'],
+                        'assignments': [{} for _ in range(state['assignments'])]}
+            if args[0] == 'pause':
+                state['paused'] = True
+                return {'paused': True}
+            if args[0] == 'resume':
+                state['paused'] = False
+                return {'paused': False}
+            return None
+
+        return state, cli
 
     def fake_process(self, pid, comm, env):
         path = self.root / str(pid)
@@ -127,6 +151,102 @@ class AutoGameTests(unittest.TestCase):
                     break
                 time.sleep(.01)
             self.assertNotEqual(module.identity(path)[1], 'T')
+
+    def test_skwd_pause_is_claimed_and_resumed(self):
+        state, cli = self.fake_skwd()
+        with patch.object(module, 'skwd_cli', side_effect=cli):
+            manager = module.Manager(self.root)
+            self.assertTrue(manager.pause_skwd())
+            self.assertTrue(manager.state['skwd'])
+            self.assertTrue(state['paused'])
+            self.assertTrue(manager.restore())
+            self.assertFalse(state['paused'])
+            self.assertEqual(state['calls'].count('pause'), 1)
+            self.assertEqual(state['calls'].count('resume'), 1)
+            self.assertFalse(manager.path.exists())
+
+    def test_skwd_pause_already_active_is_not_claimed(self):
+        state, cli = self.fake_skwd(paused=True)
+        with patch.object(module, 'skwd_cli', side_effect=cli):
+            manager = module.Manager(self.root)
+            self.assertFalse(manager.pause_skwd())
+            self.assertFalse(manager.state['skwd'])
+            self.assertTrue(module.Manager(self.root).restore())
+            self.assertNotIn('resume', state['calls'])
+
+    def test_skwd_without_assignment_is_not_paused(self):
+        state, cli = self.fake_skwd(assignments=0)
+        with patch.object(module, 'skwd_cli', side_effect=cli):
+            manager = module.Manager(self.root)
+            self.assertFalse(manager.pause_skwd())
+            self.assertFalse(manager.state['skwd'])
+            self.assertNotIn('pause', state['calls'])
+
+    def test_skwd_unreachable_never_claims_nor_resumes(self):
+        manager = module.Manager(self.root)
+        self.assertFalse(manager.pause_skwd())
+        self.assertFalse(manager.state['skwd'])
+        self.assertTrue(manager.resume_skwd())
+
+    def test_skwd_resume_failure_retains_journal(self):
+        state, cli = self.fake_skwd()
+        with patch.object(module, 'skwd_cli', side_effect=cli):
+            manager = module.Manager(self.root)
+            self.assertTrue(manager.pause_skwd())
+            with patch.object(module, 'skwd_cli', return_value=None):
+                self.assertFalse(manager.restore())
+            self.assertTrue(manager.path.exists())
+            self.assertTrue(manager.state['skwd'])
+            self.assertTrue(module.Manager(self.root).restore())
+            self.assertFalse(state['paused'])
+
+    def test_skwd_is_repaused_when_the_wallpaper_returns(self):
+        state, cli = self.fake_skwd()
+        with patch.object(module, 'skwd_cli', side_effect=cli):
+            manager = module.Manager(self.root)
+            self.assertTrue(manager.pause_skwd())
+            state['paused'] = False  # Una recarga reaplica el fondo y lo reanuda.
+            self.assertTrue(manager.pause_skwd())
+            self.assertEqual(state['calls'].count('pause'), 2)
+            self.assertTrue(state['paused'])
+
+    def test_skwd_foreign_resume_is_not_overwritten(self):
+        state, cli = self.fake_skwd()
+        with patch.object(module, 'skwd_cli', side_effect=cli):
+            manager = module.Manager(self.root)
+            self.assertTrue(manager.pause_skwd())
+            state['paused'] = False  # Otro actor lo reanudó durante la partida.
+            self.assertTrue(manager.restore())
+            self.assertNotIn('resume', state['calls'])
+            self.assertFalse(manager.state['skwd'])
+
+    def test_option_reads_bool_and_int_from_hyprland(self):
+        modern = {'option': 'animations:enabled', 'bool': True, 'set': True}
+        with patch.object(module, 'query', return_value=modern):
+            self.assertEqual(module.option('animations:enabled'), 1)
+        with patch.object(module, 'query', return_value=dict(modern, bool=False)):
+            self.assertEqual(module.option('animations:enabled'), 0)
+        with patch.object(module, 'query', return_value={'option': 'x', 'int': 7}):
+            self.assertEqual(module.option('x'), 7)
+        with patch.object(module, 'query', return_value=None):
+            self.assertIsNone(module.option('x'))
+
+    def test_lua_literal_builds_nested_config(self):
+        self.assertEqual(module.lua_literal('animations:enabled', 0),
+                         '{ animations = { enabled = false } }')
+        self.assertEqual(module.lua_literal('decoration:blur:enabled', 1),
+                         '{ decoration = { blur = { enabled = true } } }')
+
+    def test_set_option_prefers_eval_and_falls_back_to_keyword(self):
+        with patch.object(module, 'hypr', return_value='ok') as call:
+            self.assertTrue(module.set_option('animations:enabled', 0))
+            self.assertEqual(call.call_count, 1)
+            self.assertEqual(call.call_args.args[0], 'eval')
+            self.assertEqual(call.call_args.args[1], 'hl.config({ animations = { enabled = false } })')
+        with patch.object(module, 'hypr', side_effect=['fail', 'ok']) as call:
+            self.assertTrue(module.set_option('animations:enabled', 0))
+            self.assertEqual(call.call_count, 2)
+            self.assertEqual(call.call_args_list[1].args[0], 'keyword')
 
     def test_manual_ml4w_mode_is_preserved(self):
         flag = self.root / '.config/ml4w/settings/gamemode-enabled'

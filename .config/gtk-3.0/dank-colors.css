@@ -14,8 +14,8 @@
 @define-color error_bg_color #ff796c;
 @define-color error_fg_color #390001;
 /* Follow material spec (also I think looks nicer) */
-@define-color accent_fg_color #261400;
-@define-color accent_bg_color #da932e;
+@define-color accent_fg_color #231600;
+@define-color accent_bg_color #cf9926;
 /* Use surface instead of background */
 @define-color window_bg_color #131313;
 @define-color window_fg_color #cacaca;
