@@ -600,3 +600,380 @@ Lo correcto sería `on` / `off` explícitos, con el brillo y el filtro atados al
 - Los 4 shaders de usuario → **funcionales** (ES 3.00)
 - `hyprland.lua` → **sin cambios** por este incidente
 - Binds F1/F2 → **siguen rotos**, pendiente de decisión
+
+---
+
+# 10. Brillo al máximo en cada arranque (2026-09-22) — IMPLEMENTADO
+
+## 10.1 Lo que se pidió
+
+Que el brillo del monitor externo quede al máximo en cada inicio del PC, implementado en
+`hyprland.lua`, con cuidado especial de que no pueda dañar el monitor.
+
+## 10.2 Lo que ya había — y por qué no servía
+
+La línea 225 del autostart ya intentaba exactamente eso:
+
+```lua
+hl.exec_cmd("ddccontrol -r 0x10 -w 100 dev:/dev/i2c-8")
+```
+
+**Nunca funcionó.** Comprobado el 2026-09-22:
+
+```
+$ ddccontrol -r 0x10 -w 100 dev:/dev/i2c-8
+Leendo EDID e incializando DDC/CI en el bus dev:/dev/i2c-8...
+Open monitor failed: GDBus.Error:ddccontrol.DDCControl.Error.OpenFailed: Failed to open monitor
+DDC/CI en dev:/dev/i2c-8 es inutilizable (-1).
+$ echo $?
+0
+```
+
+Dos problemas, y el segundo es el grave:
+
+1. La 1.0.3 instalada no consigue abrir el monitor a través de su daemon D-Bus.
+2. **Devuelve código de salida 0 pese a fallar.** Un fallo silencioso: nadie se enteró en
+   meses porque el comando "tenía éxito".
+
+Que el brillo estuviera en 100 no era mérito de esa línea, sino del NVRAM del propio monitor,
+que conserva el último valor entre apagados.
+
+## 10.3 La corrección
+
+Sustituida por una función `brightnessStart()` que usa **`ddcutil` 3.0.1**, que sí funciona
+(verificado: escribe y relee).
+
+```lua
+local function brightnessStart()
+    local script = table.concat({
+        "set -- $(ddcutil getvcp 10 --brief 2>/dev/null)",
+        "cur=$4; max=$5",
+        'case "$max" in ""|*[!0-9]*) exit 0 ;; esac',
+        '[ "$cur" = "$max" ] && exit 0',
+        'ddcutil setvcp 10 "$max"',
+    }, "; ")
+    hl.exec_cmd("timeout 15 sh -c " .. shellQuote(script))
+end
+```
+
+Y en el handler de arranque:
+
+```lua
+    brightnessStart()
+```
+
+## 10.4 Protección del monitor — las siete barreras
+
+El requisito era que **no pueda dañar el monitor**. Estas son las medidas, cada una con su
+motivo:
+
+| # | Medida | Qué evita |
+|---|---|---|
+| 1 | Sólo se escribe el código VCP **0x10** (brillo) | Nunca se toca 0x12 (contraste), 0x14 (preset de color), 0x16/0x18/0x1A (ganancias) ni 0x04/0x05/0x08, que son «restaurar valores de fábrica» y sí serían destructivos |
+| 2 | El valor se lee del monitor, no se fija a mano: se escribe **el máximo que él declara** | Imposible salirse del rango soportado. El LG ULTRAGEAR+ declara `max=100` para VCP 0x10 |
+| 3 | **Se lee antes de escribir**: si ya está en el máximo, no se escribe | El brillo vive en NVRAM y cada escritura gasta un ciclo. Evitarla cuando es innecesaria es lo que de verdad protege el hardware |
+| 4 | Validación numérica del máximo (`case ... *[!0-9]*`) | Si la lectura devuelve `ERR` o basura, se aborta sin escribir. Un valor basura sería el único camino realista a un ajuste incorrecto |
+| 5 | **Una sola escritura por arranque**, sin bucle. No va en `config.reloaded` | Recargar la config no escribe. Sólo `hyprland.start` |
+| 6 | `timeout 15` | ddcutil tarda ~3,5 s por invocación; si el bus I2C se cuelga, no bloquea el autostart |
+| 7 | `ddcutil` verifica releyendo tras escribir (no se usa `--noverify`) | Detecta una escritura que no se aplicó |
+
+Sobre el desgaste de NVRAM, con orden de magnitud: la medida 3 hace que en régimen normal
+**no haya ninguna escritura**. Sólo se escribe si alguien bajó el brillo antes de apagar.
+Incluso en el peor caso serían 1-3 escrituras al día, frente a una resistencia típica de
+10 000-100 000 ciclos.
+
+## 10.5 Verificación
+
+| Prueba | Resultado |
+|---|---|
+| `luac -p`, `luajit`, `lua` cargan el fichero | **OK** |
+| `Hyprland --verify-config` (copia en `/tmp` con shim) | **`config ok`** |
+| `hyprctl configerrors` tras recarga en vivo | **vacío** |
+| Ruta de omisión (brillo ya en 100) | 3,43 s, **no escribe**, valor intacto |
+| Ruta de escritura (brillo bajado a 99) | 6,93 s, **devuelve a 100** |
+| Ejecución vía `/bin/sh -c` (igual que Hyprland) | `rc=0`, valor intacto |
+| Handler de arranque simulado con `exec_cmd` capturado | Envía el comando correcto; **no aparece ningún `ddccontrol`** |
+
+Datos del monitor: **GSM:LG ULTRAGEAR+** (modelo WK95U, MCCS 2.1), en `/dev/i2c-8`,
+conector `card1-DP-2`.
+
+## 10.6 Lo que queda roto — mismo origen
+
+Los binds **F1/F2** siguen usando `ddccontrol`, así que fallan igual:
+
+```lua
+F1 → ddccontrol -r 0x10 -w 10  dev:/dev/i2c-8 && ...
+F2 → ddccontrol -r 0x10 -w 100 dev:/dev/i2c-8 && ...
+```
+
+Es decir: la parte de brillo de esos binds **nunca ha funcionado**. Y arrastran los defectos ya
+documentados en §9.6: ambos llaman al mismo `hyprshade toggle`, el `&` rompe la cadena `&&`, y
+el filtro apunta a una plantilla que necesita `chevron`.
+
+No se han tocado porque no formaban parte de lo pedido. Sustituir `ddccontrol` por `ddcutil`
+ahí es el mismo cambio que aquí, con los mismos guardas.
+
+---
+
+# 11. El slider de brillo de DMS no cambiaba el monitor (2026-09-24) — RESUELTO
+
+## 11.1 Lo que se pidió
+
+> «por qué no funciona los sliders de mi dms para cambiar el brillo de mi monitor, algo moviste
+> en las configuraciones? las teclas de función suben y bajan el slider pero el brillo nunca
+> cambia, como se arregla»
+
+## 11.2 Respuesta directa: no se tocó nada de DMS
+
+`git diff` sobre `hyprland.lua` muestra **cuatro** bloques con cambios. Los míos son dos, ambos de
+brillo y documentados (§10 y §11.4):
+
+| Bloque | Autoría | Contenido |
+|---|---|---|
+| `wallpaperFile`: `yellowmatrix-deepseek144.mp4` → `yellowmatrix-deepseek.mp4` | No mío | Ya estaba sin confirmar antes de esta consulta |
+| `brightnessStart()` + su llamada (§10) | Mío, 2026-09-22 | Brillo al máximo en cada arranque |
+| Espera de `/dev/i2c-8` antes de `dms run` (§11.4) | Mío, 2026-09-24 | Este arreglo |
+| Bind del ratón de STALKER 2 (`non_consuming` eliminado) | No mío | Ya estaba sin confirmar antes de esta consulta |
+
+**Nada bajo `~/.config/DankMaterialShell/` fue editado.** El problema no venía de una edición de
+configuración: venía de una carrera de arranque que dependía del tiempo de encendido, y por eso
+podía aparecer y desaparecer entre reinicios sin que nadie tocara nada.
+
+## 11.3 Causa raíz: carrera de arranque, con cronología medida
+
+DMS sondea los buses DDC **una sola vez** al arrancar y no reintenta salvo que haya un cambio de
+pantalla (hotplug), que en este equipo nunca ocurre. En el arranque analizado el sondeo llegó
+antes de que existieran los nodos `/dev/i2c-*`:
+
+| Hora | Evento | Fuente |
+|---|---|---|
+| 14:49:07 | arranque del sistema | `uptime -s` |
+| 14:49:14 | módulo `i2c_dev` cargado | `journalctl -k` |
+| 14:49:16 | `/dev/i2c-0` (SMBus del chipset, `i2c_i801`) | `journalctl -k` + `stat` |
+| 14:49:37 | arranca Hyprland (PID 1381) | `ps -o lstart` |
+| **14:49:38** | **arranca `dms run` (PID 1461) → sólo existía i2c-0** | `ps -o lstart` |
+| **14:49:39,40** | **aparecen `/dev/i2c-1..9`** (buses DDC de la GPU; **i2c-8 = DP-2**) | `stat -c '%n %y'` |
+
+DMS pierde la carrera por **1,4 s**. Sin ningún dispositivo DDC, su «dispositivo por defecto» cae
+en lo primero que encuentra: los **LEDs de la NIC ethernet** (`leds:igc-0800-led0/1/2`, del driver
+`igc` de `enp8s0`). De ahí el síntoma exacto: el slider se mueve, el OSD cambia de valor, y el
+monitor no hace nada. Las teclas `XF86MonBrightnessUp/Down` llaman a `increment/decrement` con
+dispositivo vacío (= «el de por defecto»), así que movían ese mismo LED.
+
+Prueba de que el daemon nunca re-sondea: llevaba **2,5 h** en marcha, con `/dev/i2c-8` existiendo
+desde 1,4 s después de su arranque, y seguía sin ver el monitor:
+
+```
+$ dms ipc call brightness list
+Available devices:
+leds:igc-0800-led0 (leds)
+leds:igc-0800-led1 (leds)
+leds:igc-0800-led2 (leds)
+```
+
+## 11.4 Hipótesis descartadas, con la evidencia que las descarta
+
+| Hipótesis | Veredicto | Evidencia |
+|---|---|---|
+| Edición mía en la config de DMS | **Descartada** | `git diff`: nada bajo `DankMaterialShell/` tocado |
+| `DMS_NO_DDC` puesta (opt-out) | **Descartada** | Es la única variable DDC del binario; no está en `/proc/1461/environ` |
+| Permisos sobre `/dev/i2c-8` | **Descartada** | Nodo `root:969 crw-rw----`; n30 no está en el gid 969 **pero** tiene ACL `user:n30:rw-` (`getfacl`) |
+| Hardware / DDC roto | **Descartada** | `ddcutil detect --brief` → `card1-DP-2` / `GSM:LG ULTRAGEAR+`; `getvcp 10 --brief` → `VCP 10 C 100 100` |
+| Conflicto entre DMS y `ddcutil` | **Descartada** | DMS **no** enlaza `libddcutil`: usa su propio código i2c (`/dev/i2c-%d`) |
+| El widget está mal configurado | **Descartada** | `settings.json` ya tenía `deviceName: "ddc:i2c-8"` en el `brightnessSlider` |
+
+## 11.5 Corrección aplicada
+
+En `hyprland.lua`, dentro de `hyprland.start`, sustituido `hl.exec_cmd("dms run")`:
+
+```lua
+hl.exec_cmd("i=0; while [ $i -lt 150 ] && [ ! -e /dev/i2c-8 ]; do sleep 0.1; i=$((i+1)); done; exec dms run")
+```
+
+Tope de **15 s**: si el bus nunca aparece, DMS arranca igual (degradado, como antes), así que **no
+puede bloquear la sesión**. Nota de honestidad: aquí se fija el número de bus a mano, lo que
+contradice la regla general de §«no fijar el bus» — pero es inevitable, porque DMS identifica los
+monitores por bus (`ddc:i2c-<N>`). El tope es lo que hace que un cambio de numeración **degrade en
+vez de romper**; si algún día el monitor cambia de bus, hay que actualizar el número en el Lua.
+
+### Verificación
+
+| Comprobación | Resultado |
+|---|---|
+| `luac -p hyprland.lua` | sintaxis OK |
+| `sh -n` del comando | sintaxis OK |
+| `Hyprland --verify-config` (copia en `/tmp` con `hl.exec_cmd` anulado) | `config ok` |
+| `hyprctl reload` + `hyprctl configerrors` | sin errores |
+| Espera con el bus presente | 0 iteraciones, 0,001 s (sin retardo en recargas) |
+| Espera con el bus ausente | agota el tope y continúa (2,021 s con tope corto de prueba) |
+
+### Comprobación de extremo a extremo
+
+Reiniciado el daemon en caliente (autorizado por el usuario). **Atención al método**: en Hyprland
+0.56.2 con parser Lua, `hyprctl dispatch exec "dms run"` **falla** — el argumento se interpreta
+como Lua (`hl.dispatch(exec dms run)` → `')' expected near 'dms'`). Hay que usar:
+
+```bash
+hyprctl eval 'hl.exec_cmd("dms run")'
+```
+
+| Paso | Resultado |
+|---|---|
+| `dms ipc call brightness list` (antes) | sólo `leds:igc-0800-led*` |
+| `dms ipc call brightness list` (después) | **incluye `ddc:i2c-8 (ddc)`** |
+| `dms ipc call brightness status` | `Device: ddc:i2c-8 - Brightness: 100%` — el **por defecto** ya es el monitor |
+| `ddcutil getvcp 10 --brief` antes de escribir | `VCP 10 C 100 100` |
+| `dms ipc call brightness set 80 ""` | «Brightness set to 80% on ddc:i2c-8» |
+| `ddcutil getvcp 10 --brief` después | **`VCP 10 C 80 100`** — baja de verdad |
+| `dms ipc call brightness increment 5 ""` (ruta de las teclas) | 80 → **`VCP 10 C 85 100`** |
+| `dms ipc call brightness set 100 ""` | restaurado → `VCP 10 C 100 100` |
+
+Cinco escrituras en total en NVRAM durante la prueba (bajar, subir, restaurar y las dos de DMS),
+frente a 10 000-100 000 ciclos de resistencia. Aceptable para una verificación de una sola vez.
+
+## 11.6 Firmas del IPC de brillo de DMS 1.6.2 (útiles para futuros binds)
+
+| Función | Firma |
+|---|---|
+| `status` | 0 argumentos; devuelve el dispositivo **por defecto** |
+| `set` | `set(percentage, device)` — **2 obligatorios** |
+| `increment` / `decrement` | `(amount, device)`; `device=""` = por defecto |
+| `list` | dispositivos que ve el daemon |
+
+**No existe función IPC de reescaneo.** Probados `rescan`, `Rescan`, `rescanDevices`, `refresh`
+→ `Function not found`. El literal `brightness.rescan` que aparece en el binario **no** es
+alcanzable ni por IPC ni por CLI (`dms brightness --help` sólo tiene `get`, `list`, `set`).
+Reiniciar el daemon es la única forma de que vuelva a sondear los buses.
+
+## 11.7 Nivel de confianza
+
+- **Causa raíz (carrera de arranque): confirmada.** No es una inferencia: el reinicio del daemon
+  hizo aparecer `ddc:i2c-8` y `ddcutil` verificó que el brillo real cambia. Es una prueba
+  reproducible.
+- **Generalización a «cualquier arranque»: alta, no total.** La carrera depende de cuándo termine
+  udev de crear los nodos. En este arranque perdió por 1,4 s; en otros podría ganarla. El arreglo
+  cubre ambos casos (0 s de espera si el bus ya está).
+- **Efecto del arreglo en el próximo arranque: no verificado todavía.** Se ha verificado la
+  sintaxis, el verificador de Hyprland y la lógica del bucle por separado, pero el handler de
+  `hyprland.start` no se puede disparar sin un inicio de sesión nuevo. Se confirmará en el próximo
+  arranque con `dms ipc call brightness list`.
+
+## 11.8 Pendiente, detectado de paso
+
+Los binds **F1/F2** de §10.6 siguen igual: `ddccontrol` (fallo silencioso, rc=0), `&` que rompe la
+cadena `&&`, ambos llamando al mismo `hyprshade toggle`, y un filtro que necesita `chevron`. Es
+decir, siguen siendo no-ops. Candidatos a migrar a `dms ipc call brightness set <pct> ""` ahora
+que el dispositivo por defecto ya es el monitor.
+
+---
+
+# 12. El mismo fallo afectaba al brillo máximo al arrancar (2026-09-24) — CORREGIDO
+
+## 12.1 La pregunta que lo destapó
+
+> «si quedó configurada para que cada vez que inicio mi pc sea a máximo brillo?»
+
+La respuesta honesta al comprobarlo fue: **el código estaba, pero no era fiable.** El §10 había
+verificado la *lógica* del script (que lee antes de escribir, que no usa `ddccontrol`, que el
+verificador de Hyprland acepta el fichero), pero **no** se había verificado en un arranque real.
+
+## 12.2 El fallo: la barrera nº 4 convertía la carrera en un no-op silencioso
+
+`brightnessStart()` corre en el mismo autostart que `dms run`, es decir en el mismo instante en que
+`/dev/i2c-8` todavía no existe (§11.3). La secuencia real era:
+
+1. `ddcutil getvcp 10 --brief` no encuentra ningún monitor → **stdout vacío**, rc=1.
+2. `set --` no asigna nada → `$4` y `$5` quedan vacíos.
+3. La barrera nº 4 («valida que el máximo leído sea numérico») ve `max` vacío y **aborta sin
+   escribir**.
+
+O sea: la barrera diseñada para *proteger* el monitor era también la que **ocultaba** el fallo. El
+brillo máximo al arrancar nunca se aplicaba, sin un solo mensaje de error. Verificado el
+2026-09-24 simulando un bus sin monitor:
+
+```
+$ out=$(ddcutil --bus 0 getvcp 10 --brief 2>/dev/null); echo "[$out] rc=$?"
+[] rc=1
+$ set -- $out; max=$5; case "$max" in ""|*[!0-9]*) echo "GUARD: aborta sin escribir" ;; esac
+GUARD: aborta sin escribir
+```
+
+Lo único que se interponía entre el usuario y su objetivo era **1,4 s de reloj**, y no había forma
+de saberlo porque el fallo era deliberadamente silencioso.
+
+## 12.3 La corrección
+
+Extraída la espera a un único helper reutilizable, `waitForDdcBus()`, que devuelve el fragmento de
+shell y lo consumen **los dos** sitios que necesitan el bus:
+
+```lua
+local function waitForDdcBus()
+    return "i=0; while [ $i -lt 150 ] && [ ! -e /dev/i2c-8 ]; do sleep 0.1; i=$((i+1)); done; "
+end
+```
+
+```lua
+hl.exec_cmd(waitForDdcBus() .. "exec dms run")                                    -- DMS
+hl.exec_cmd(waitForDdcBus() .. "timeout 15 sh -c " .. shellQuote(script))         -- brillo
+```
+
+La espera va **fuera** del `timeout 15`, para que sus 15 s no se coman el margen de `ddcutil` (que
+necesita hasta 7 s para leer + escribir).
+
+Además, cada rama deja ahora rastro en el journal (`logger -t astra-brillo`), precisamente para
+que un fallo silencioso deje de serlo:
+
+| Rama | Mensaje |
+|---|---|
+| Lectura DDC inválida | `lectura DDC invalida (max=[...]): NO se escribe` |
+| Ya en el máximo | `ya en el maximo (100): no se escribe` |
+| Hay que escribir | `escribiendo maximo 100 (estaba en 90)` |
+
+El journal de este equipo es **persistente** (`/var/log/journal` existe), así que la traza
+sobrevive al reinicio y el próximo arranque se puede auditar con
+`journalctl -t astra-brillo`.
+
+## 12.4 Verificación
+
+Se construyó un arnés con un `hl` de mentira que carga el fichero **real** y ejecuta el handler
+`hyprland.start` capturando las cadenas exactas que se enviarían. Los 20 comandos del autostart se
+volcaron a `/tmp/astra-harness/cmds/`. Los dos relevantes, tal cual salen del fichero:
+
+```
+[06] i=0; while [ $i -lt 150 ] && [ ! -e /dev/i2c-8 ]; do sleep 0.1; i=$((i+1)); done; exec dms run
+[17] i=0; while [ $i -lt 150 ] && [ ! -e /dev/i2c-8 ]; do sleep 0.1; i=$((i+1)); done; timeout 15 sh -c '<script>'
+```
+
+Los tres escenarios, con un `ddcutil` falso para no gastar NVRAM:
+
+| Escenario | Resultado esperado | Resultado real |
+|---|---|---|
+| Sin monitor (`rc=1`, stdout vacío) | registra y **no escribe** | `lectura DDC invalida (max=[]): NO se escribe`, `setvcp` no llamado |
+| Ya en el máximo (`100 100`) | **no escribe** | `ya en el maximo (100): no se escribe`, `setvcp` no llamado |
+| Brillo en 90 (`90 100`) | escribe **el máximo leído**, no un valor fijo | `escribiendo maximo 100 (estaba en 90)`, `setvcp` llamado con `100` |
+
+Y contra el monitor **real** (que está en 100, así que no hubo escritura):
+
+```
+brillo antes:  VCP 10 C 100 100
+ejecutando cmd-17 real -> 3,43 s
+journal:       ya en el maximo (100): no se escribe
+brillo despues: VCP 10 C 100 100     (sin cambios, cero escrituras)
+```
+
+`luac -p` OK · `Hyprland --verify-config` → `config ok` · `hyprctl reload` sin errores.
+
+## 12.5 Nivel de confianza y límite conocido
+
+- **Lógica del script: verificada contra el hardware real.** Los tres caminos se probaron.
+- **Efecto en el próximo arranque: todavía NO verificado.** El handler `hyprland.start` no se puede
+  disparar sin un inicio de sesión nuevo. Pero ahora hay forma de comprobarlo: tras reiniciar,
+  `journalctl -t astra-brillo` dirá exactamente qué pasó, y `ddcutil getvcp 10 --brief` dará el
+  valor real.
+- **Límite conocido: si el monitor está apagado o dormido al arrancar**, DDC no responde y el
+  brillo no se aplica (queda en lo que tenga la NVRAM). El log lo dirá con
+  `lectura DDC invalida`. Si eso ocurre, la solución sería reintentar unas cuantas veces a lo largo
+  del primer minuto — **no implementado a propósito**, a la espera de la evidencia del primer
+  arranque en vez de añadir complejidad por si acaso.
+
+

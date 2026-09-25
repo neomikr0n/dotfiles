@@ -24,6 +24,23 @@ fi
 
 VM_NAME="Google Pixel 6"
 
+# Carpeta de la VM. Genymotion la publica en su settings.json; si no
+# se puede leer, se usa la ruta por defecto.
+GENY_SETTINGS="$HOME/.Genymobile/Genymotion/settings.json"
+
+GENY_VM_ROOT="$(
+    jq -r '."virtual_devices.directory" // empty' "$GENY_SETTINGS" 2>/dev/null
+)"
+
+if [[ -z "$GENY_VM_ROOT" ]]; then
+    GENY_VM_ROOT="$HOME/.Genymobile/Genymotion/deployed"
+fi
+
+# jq devuelve la ruta con barra final; la normalizamos.
+GENY_VM_ROOT="${GENY_VM_ROOT%/}"
+
+GENY_VM_DIR="$GENY_VM_ROOT/$VM_NAME"
+
 # ------------------------------------------------------------
 # Ventana Hyprland
 # ------------------------------------------------------------
@@ -415,6 +432,56 @@ resize_pixel_window() {
 
 
 # ============================================================
+# GENYMOTION - FLAG DE CRASH
+#
+# El player crea el fichero ".flag" dentro de la carpeta de la VM
+# al arrancar, y lo borra al salir limpiamente (CrashFlag::create
+# / CrashFlag::remove en el binario).
+#
+# Si la máquina se apaga con la VM encendida, systemd manda SIGTERM
+# a QEMU (queda en qemu.log) y el player muere sin borrar el flag.
+# En el siguiente arranque el player detecta el flag y entra en su
+# ruta de recuperación de crash, que consulta el estado de la
+# imagen en la nube (GET cloud.genymotion.com/patterns/os-images).
+# Sin sesión válida ese endpoint responde 302 -> login (HTML, no
+# JSON) y el player hace SEGV en WebServiceClient::onCallFinished,
+# llamando a QObject::property() sobre un objeto nulo.
+#
+# El crash ocurre ANTES de CrashFlag::remove, así que el flag nunca
+# se limpia y TODOS los arranques posteriores fallan igual: el
+# emulador no vuelve a abrir hasta apartar el flag a mano.
+#
+# Verificado el 2026-09-24 con coredumpctl + timestamps del fichero.
+#
+# Se RENOMBRA, no se borra: queda como .flag.stale-<fecha> por si
+# hace falta la recuperación nativa.
+# ============================================================
+
+clear_stale_crash_flag() {
+
+    local flag="$GENY_VM_DIR/.flag"
+    local backup
+
+    # Si hay un player vivo, el flag es legítimo (VM en marcha).
+    if pgrep -f "$PLAYER" >/dev/null 2>&1; then
+        return 0
+    fi
+
+    [[ -f "$flag" ]] || return 0
+
+    backup="${flag}.stale-$(date +%Y%m%d-%H%M%S)"
+
+    if mv "$flag" "$backup" 2>/dev/null; then
+        echo "⚠️ La VM no cerró limpiamente la última vez (flag de crash)."
+        echo "   Lo aparto para esquivar el SEGV del player:"
+        echo "   $backup"
+    else
+        echo "⚠️ No pude apartar el flag de crash: $flag"
+    fi
+}
+
+
+# ============================================================
 # ARRANCAR GENYMOTION
 # ============================================================
 
@@ -428,6 +495,8 @@ start_genymotion() {
         echo "✅ El Pixel 6 ya está abierto."
         return 0
     fi
+
+    clear_stale_crash_flag
 
     echo "🚀 Iniciando $VM_NAME..."
 

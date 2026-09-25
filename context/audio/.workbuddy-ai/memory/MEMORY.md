@@ -67,3 +67,34 @@ Las tres van tras la global `0.9 0.9` (la última coincidencia gana): `workbuddy
 la comprobación es visual y del usuario; con la sesión en uso medir píxeles no vale (el workspace
 especial tapa las ventanas).
 
+## Consumo de motores de wallpaper (22-sep-2026)
+Informe `rendimiento_wallpaper_mpvpaper_vs_skwd.md` · skill **`medir-consumo-wallpaper-hyprland`**.
+Misma capa `bottom`: **RAM skwd 57 MB vs mpvpaper 223 MB (3,9×)**, VRAM +162 vs +447 MB, CPU empatada
+(3,2 % vs 1,9 % de un núcleo), GPU +3,17 vs +1,73 W **pero skwd entrega 2,4× fotogramas** y por
+fotograma sale más barato.
+- **`mpvpaper` NO puede con AV1 a 1440p144**: 1.660 fotogramas tirados (H.264 al mismo tamaño/fps: 2).
+  Es la ruta de AV1 de mpv, no la GPU → razón técnica de peso para el cambio.
+- **`gpu_busy_percent` NO ve el decodificador.** El sensor es `average_mm_activity` de
+  `/sys/class/drm/card1/device/gpu_metrics` (binario, v3_0); su base es **0 exacto**.
+- **`mpvpaper` deja de trabajar con el fondo oculto** (tira el 100 %); **`skwd` no** → la comparación de
+  GPU favorece a mpvpaper en uso normal.
+- `skwd` **no arranca en `overlay`** (la capa `dms:fade-to-dpms` ocupa ese nivel). **`grim` se cuelga
+  con mpvpaper corriendo.** La carga de fondo deriva → **línea base adyacente obligatoria**; si la
+  comparación es entre dos ajustes del mismo motor, **intercalar A/B/A/B** (en una sesión la misma
+  config dio 6,78 y 15,09 de `gpu_busy` solo por cambiar la oclusión, no el motor).
+- **A igualdad de fps, `skwd` 30 vs 144 fps** (AV1 1440p): **CPU 3,65× menos** (3,64 % → 1,00 % de un
+  núcleo), **VCN 5,21× menos** (36,4 % → 7,0 %), **4,37 W menos**, **RAM igual** (57 vs 58 MB).
+  `CPU% ≈ 0,305 + 0,0232 × fps` → la CPU **no es lineal** en fps.
+- **Recomendación (22-sep, pendiente de que n30 la aplique):** bajar el wallpaper a **30 fps**
+  (`yellowmatrix-deepseek.mp4`) porque los fotogramas extra **no compran nada visible** — medido:
+  r = 0,9949 entre fotogramas consecutivos, mediana de diferencia **0,000**, y **2318 fotogramas pesan
+  solo +7,8 %** que 483. **No** por el ahorro (4,37 W = ruido). **Descartado el término medio a 60 fps.**
+  Lección: no repetir un pase de RIFE para contenido de movimiento lento sin medir antes cuánto se mueve.
+
+## Ficheros de wallpaper: ojo con los nombres
+**`~/dotfiles/share/wallpapers/yellowmatrix.mp4` ya no existe.** Era el **H.264 4K60, 29,9 MB** que
+reproducía mpvpaper (md5 `5b8b550e2283fe9e21149c098264dac6`); copias idénticas en `~/Descargas/`, en
+`~/.ml4w-hyprland/backup/dotfiles/share/wallpapers/` y como `yellowmatrix-original.mp4`. Activo:
+`yellowmatrix-deepseek144.mp4` (AV1 1440p144, 17 MB). Intermedios míos en
+`~/Vídeos/yellowmatrix-processing/` (H.264 1440p144 35 Mbps, -120fps, -before-rife).
+

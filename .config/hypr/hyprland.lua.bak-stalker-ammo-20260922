@@ -131,7 +131,7 @@ hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 2,  bezier = "
 -- skwd-wall-vk huérfano) queda por encima y tapa al nuevo, el fondo no cambia y
 -- parece que «no funciona». El orden de capas manda: bottom > background.
 
-local wallpaperFile = os.getenv("HOME") .. "/dotfiles/share/wallpapers/yellowmatrix-deepseek.mp4"
+local wallpaperFile = os.getenv("HOME") .. "/dotfiles/share/wallpapers/yellowmatrix-deepseek144.mp4"
 
 local function wallpaperStart()
     local cmd = table.concat({
@@ -164,36 +164,6 @@ local function delayedCommand(seconds, command)
     hl.exec_cmd("bash -c " .. shellQuote("sleep " .. seconds .. "; " .. command))
 end
 
--- Espera (con tope) a que udev cree el bus DDC del monitor externo, /dev/i2c-8.
--- Devuelve el fragmento de shell que hace la espera, para poder prefijarlo a
--- cualquier comando que necesite hablar con el monitor.
---
--- POR QUÉ HACE FALTA: los nodos /dev/i2c-* NO existen todavía cuando corre el
--- autostart de Hyprland. Cronología medida el 2026-09-24 con ps + stat:
---   14:49:37     arranca Hyprland
---   14:49:38     arrancan DMS y este autostart  -> sólo existía /dev/i2c-0
---   14:49:39,40  aparecen /dev/i2c-1..9 (buses DDC de la GPU; i2c-8 = DP-2)
--- Son 1,4 s de carrera, y la pierden DOS cosas distintas:
---   a) el backend DDC de DMS, que sondea los buses UNA sola vez al arrancar y
---      no reintenta salvo hotplug (por eso el slider de brillo gobernaba los
---      LEDs de la NIC ethernet en vez del monitor), y
---   b) la lectura de ddcutil que hace brightnessStart().
--- Sin esta espera, brightnessStart() leía un bus inexistente y el guard de
--- «máximo no numérico» lo convertía en un no-op SILENCIOSO: el brillo máximo
--- al arrancar nunca se aplicaba, sin ningún error visible.
---
--- El tope de 15 s es lo que impide bloquear la sesión: si el bus nunca aparece,
--- el comando que sigue se ejecuta igual y falla solo. Preferimos un fallo visible
--- a una sesión colgada.
---
--- NOTA de honestidad: aquí el número de bus va fijo, lo que contradice la regla
--- general de no fijarlo a mano. Es inevitable, porque DMS identifica los
--- monitores por bus (ddc:i2c-<N>). Si el monitor cambiara de bus, esto degrada
--- (no rompe) gracias al tope, pero hay que actualizar el número aquí.
-local function waitForDdcBus()
-    return "i=0; while [ $i -lt 150 ] && [ ! -e /dev/i2c-8 ]; do sleep 0.1; i=$((i+1)); done; "
-end
-
 -- Astra — 2026-09-22: brillo del monitor externo AL MÁXIMO en cada arranque.
 --
 -- POR QUÉ NO SE USA ddccontrol: la 1.0.3 instalada falla contra su daemon con
@@ -221,12 +191,6 @@ end
 --  6. timeout 15s: ddcutil tarda ~3,5 s por invocación (escaneo de bus). Si el I2C se
 --     cuelga, el timeout lo corta y no bloquea el resto del autostart.
 --  7. ddcutil verifica por defecto releyendo tras escribir; no se usa --noverify.
---  8. ESPERA al bus antes de leer (waitForDdcBus). Sin ella el punto 4 convertía
---     la carrera de arranque en un no-op silencioso: ddcutil no encontraba el
---     monitor, $max quedaba vacío y el guard abortaba sin escribir. Es decir, el
---     brillo máximo al arrancar NO se aplicaba y no había ningún error visible.
---     Añadido el 2026-09-24. Cada caso deja ahora una línea en el journal con
---     «logger -t astra-brillo», para poder confirmarlo tras un reinicio.
 --
 -- Comprobado el 2026-09-22: con el brillo ya en 100 el comando tarda 3,4 s y no escribe;
 -- con el brillo en 99 tarda 6,9 s y lo devuelve a 100.
@@ -234,14 +198,11 @@ local function brightnessStart()
     local script = table.concat({
         "set -- $(ddcutil getvcp 10 --brief 2>/dev/null)",
         "cur=$4; max=$5",
-        'case "$max" in ""|*[!0-9]*) logger -t astra-brillo "lectura DDC invalida (max=[$max]): NO se escribe"; exit 0 ;; esac',
-        '[ "$cur" = "$max" ] && { logger -t astra-brillo "ya en el maximo ($max): no se escribe"; exit 0; }',
-        'logger -t astra-brillo "escribiendo maximo $max (estaba en $cur)"',
+        'case "$max" in ""|*[!0-9]*) exit 0 ;; esac',
+        '[ "$cur" = "$max" ] && exit 0',
         'ddcutil setvcp 10 "$max"',
     }, "; ")
-    -- La espera del bus va FUERA del timeout, para que sus 15 s no se coman el
-    -- margen de ddcutil (que necesita hasta 7 s para leer + escribir).
-    hl.exec_cmd(waitForDdcBus() .. "timeout 15 sh -c " .. shellQuote(script))
+    hl.exec_cmd("timeout 15 sh -c " .. shellQuote(script))
 end
 
 -- hyprland.start es el evento de inicio; no usar _G como marca persistente:
@@ -267,21 +228,8 @@ hl.on("hyprland.start", function()
     -- (antes había dos: una aquí y otra text-only en n30.conf -> historial duplicado)
     hl.exec_cmd("wl-paste --watch cliphist store")
 
-    -- Desktop shell.
-    --
-    -- DMS sondea los buses DDC UNA sola vez al arrancar y no reintenta salvo que
-    -- haya un cambio de pantalla (hotplug), que aquí nunca ocurre. Si arranca
-    -- antes de que exista /dev/i2c-8, su backend DDC se queda sin ningún monitor
-    -- y el slider de brillo del centro de control —más las teclas
-    -- XF86MonBrightnessUp/Down— acaban gobernando los LEDs de la NIC ethernet
-    -- (leds:igc-0800-led*): el slider se mueve y el brillo del monitor no cambia.
-    -- Medido el 2026-09-24: DMS perdía esa carrera por 1,4 s. Detalle y
-    -- cronología completa en waitForDdcBus(), arriba.
-    --
-    -- Descartado en el diagnóstico: DMS_NO_DDC no estaba definida (es la única
-    -- variable DDC del binario y es un opt-out), y /dev/i2c-8 tiene ACL
-    -- user:n30:rw-, así que no era ni un opt-out ni un problema de permisos.
-    hl.exec_cmd(waitForDdcBus() .. "exec dms run")
+    -- Desktop shell
+    hl.exec_cmd("dms run")
 
     -- Fondo de vídeo (skwd-paper-v2). Se llama también en cada recarga:
     -- wallpaperStart() limpia antes de arrancar, así que no se duplica.
@@ -599,40 +547,17 @@ local function selectorStalker2(w)
 end
 
 hl.bind("mouse:275", function()
-    local w = hl.get_active_window()
-    if not w then return end
-
-    local sel = selectorStalker2(w)
-    if sel then
-        -- DENTRO del juego: consumimos el botón físico (el bind ya NO es
-        -- non_consuming), así que STALKER 2 nunca lo recibe y no cambia de
-        -- munición. El F5 lo inyectamos nosotros, así que el juego no necesita
-        -- ver el botón para nada.
-        -- `mods` es OBLIGATORIO en send_shortcut: es una CADENA que se pasa a
-        -- stringToModMask(); "" = sin modificadores. Omitirlo aborta el dispatcher
-        -- con «hl.send_shortcut: 'mods' is required» y NO se envía ninguna tecla
-        -- (verificado en src/config/lua/bindings/LuaBindingsDispatchers.cpp, v0.56.2:
-        -- requireTableFieldStr se evalúa al CONSTRUIR el dispatcher, no al disparar).
-        hl.dispatch(hl.dsp.send_shortcut({ mods = "", key = "F5", window = sel }))
-    else
-        -- FUERA del juego: devolvemos el evento a la ventana activa para que el
-        -- botón siga funcionando como «Atrás». Sin esto, al haber quitado
-        -- non_consuming, Hyprland se tragaría el botón en todas partes.
-        -- OJO: `pass` exige que el selector resuelva; si no hay ventana activa
-        -- lanza «hl.pass: window not found» y saca notificación, de ahí el
-        -- `if not w then return end` de arriba.
-        hl.dispatch(hl.dsp.pass({ window = "activewindow" }))
-    end
+    local sel = selectorStalker2(hl.get_active_window())
+    if not sel then return end
+    -- `mods` es OBLIGATORIO en send_shortcut: es una CADENA que se pasa a
+    -- stringToModMask(); "" = sin modificadores. Omitirlo aborta el dispatcher
+    -- con «hl.send_shortcut: 'mods' is required» y NO se envía ninguna tecla
+    -- (verificado en src/config/lua/bindings/LuaBindingsDispatchers.cpp, v0.56.2:
+    -- requireTableFieldStr se evalúa al CONSTRUIR el dispatcher, no al disparar).
+    hl.dispatch(hl.dsp.send_shortcut({ mods = "", key = "F5", window = sel }))
 end, {
-    -- SIN `non_consuming`: ese flag era la CAUSA del cambio de munición.
-    -- Verificado en KeybindManager.cpp (v0.56.2, línea 835 y 842):
-    --     if (!k->nonConsuming && (!k->autoConsuming || res.success)) found = true;
-    --     ...
-    --     res.passEvent |= !found;
-    -- Con non_consuming = true, `found` se queda en false y el evento se REENVÍA
-    -- a la ventana activa → el juego ve el botón → cambia munición.
-    -- Consumiéndolo, el juego no lo ve.
-    description = "STALKER 2: guardado rápido (F5)",
+    non_consuming = true, -- el botón sigue funcionando como "Atrás" fuera del juego
+    description   = "STALKER 2: guardado rápido (F5)",
 })
 
 -- (los binds rotos con CTRLx sí se eliminaron: modificador inválido real)
