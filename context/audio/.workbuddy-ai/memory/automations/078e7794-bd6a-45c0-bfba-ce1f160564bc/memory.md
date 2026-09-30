@@ -140,6 +140,59 @@ Resultado: **sigue sin precio oficial y sin disponibilidad en México.**
 - **Contexto:** Q3 termina el **30-sep-2026** (en 6 días). La ventana «late Q3» sigue agotándose sin
   precio ni página oficial.
 
+### 2026-09-25 — sin novedad
+Resultado: **sigue sin precio oficial y sin disponibilidad en México.**
+- `rme-audio.de/converter/adi-2-dac-ex.html` → **sigue 404**. `…/adi-2-4-pro-ex.html` → **404**.
+- `rme-audio.de/products.html` → entre los ADI-2 sólo «ADI-2 FS» y «ADI-2 Pro EX». Sin DAC EX ni /4 Pro EX.
+- `rme-audio.de/news.html` → única entrada EX = «RME presents the new ADI-2 Pro EX». Novedades recientes:
+  TotalMix 2.1 beta, TotalMix 2.0, macOS 27. Nada de precios del DAC EX.
+- `rme-shop.com/acatalog/RME_converters.html` → Pro EX €1.992,87; DAC FS €816,75 **agotado**;
+  /4 Pro SE €2.299 **agotado**; Pro FS R BE €1.808,95; ADI-2 FS €647,35. **Ningún EX nuevo.**
+- Comunicado 2026-06-03 (musicnetwork.ch, URL correcta `/en/latest-news/rme-news/rme-introduces-the-next-generation-welcome-to-the-adi-2-ex-series`)
+  **sin actualizar**: DAC EX y /4 Pro EX siguen «Available starting in late Q3 2026; pricing to be announced».
+  Pro EX: «early Q3 2026; CHF 1699». **Confirmado el chip del DAC EX: ESS9039Q2M** (el /4 Pro EX usa
+  ESS9823Pro en el ADC).
+- México: solidelectronics.mx (`?q=ADI-2`) **no lista ningún «EX»**. DAC FS $27.600 (sin existencias);
+  /4 Pro SE $51.100 (sin existencias); ADI2 PRO FSR BE $42.600; ADI-2 FS $20.200; Babyface Pro FS
+  $17.749,97 (rebajado de $20.900, con existencias). MercadoLibre México: **bloquea WebFetch**
+  (pide login) y la búsqueda web sólo devuelve DAC FS / Pro antiguos, ningún EX.
+- Economik (Montreal): la ficha `economik.com/products/adi-2-4-pro-ex` **sigue a $4.349 CAD** y **sigue
+  con el texto y las specs del Pro EX** (dice literalmente «The RME ADI-2 Pro EX is…», SteadyClock **FS**,
+  sin ESS9823Pro, sin RIAA en modo línea) → **sin corregir**; precio no atribuible al /4 Pro EX real. **No oficial.**
+- Thomann: la ficha del Pro EX (`thomann.es/rme_adi-2_pro_ex.htm`) devuelve «artículo desconocido»
+  hoy; sin DAC EX.
+- Prensa: phileweb (09-sep-2026) y av.watch.impress.co.jp (10-sep-2026) cubren **sólo el ADI-2 Pro EX**,
+  a la venta en Japón el **2-oct-2026**; `rme-audio.jp` sólo tiene ficha del Pro EX y del DAC FS.
+  Ninguna fuente con precio del DAC EX.
+- **Contexto:** Q3 termina el **30-sep-2026** (en 5 días). La ventana «late Q3» se agota sin precio ni
+  página oficial. Si el 30-sep no hay nada, el anuncio se habrá incumplido.
+
+### 2026-09-30 — sin novedad; **se agota el plazo del Q3**
+Resultado: **sigue sin precio oficial y sin disponibilidad en México.**
+Hoy es el **último día del Q3 2026**, la ventana que RME anunció («late Q3»). Mañana el
+compromiso queda incumplido si no aparece nada.
+
+- `rme-audio.de/converter/adi-2-dac-ex.html` → **sigue 404**. `…/adi-2-4-pro-ex.html` → **404**.
+- `rme-audio.de/products.html` → entre los ADI-2 sólo «ADI-2 FS» y «ADI-2 Pro EX».
+- `rme-audio.de/news.html` → única entrada EX = «RME presents the new ADI-2 Pro EX».
+- `rme-shop.com/acatalog/RME_converters.html` → Pro EX €1.992,87; DAC FS €816,75 **agotado**;
+  /4 Pro SE €2.299 **agotado**; Pro FS R BE €1.808,95; ADI-2 FS €647,35. **Ningún EX nuevo.**
+- Comunicado 2026-06-03 (musicnetwork.ch) **sin actualizar**: DAC EX y /4 Pro EX siguen
+  «Available starting in late Q3 2026; pricing to be announced». Pro EX: «early Q3 2026; CHF 1699».
+- México: solidelectronics.mx (`?q=ADI-2` y `?q=RME+EX`) **no lista ningún «EX»**. DAC FS $27.600
+  **sin existencias**; /4 Pro SE $51.100 **sin existencias**; ADI2 PRO FSR BE $42.600; ADI-2 FS
+  $20.200. MercadoLibre México **sigue bloqueando WebFetch** (pide login); búsqueda web sin ningún EX.
+- **Novedad menor (no oficial):** el listado de revendedor **Tidepool Audio** (Reverb 100481783 y su
+  propia tienda) sigue en **$2.499 USD preorder** para el «ADI-2/4 Pro EX», pero la **fecha estimada
+  de envío se ha movido otra vez: 3-oct → 10-oct-2026**. El cuerpo sigue describiendo el **Pro EX**
+  (AK5574 + AK4493, SteadyClock **FS**) → **discrepancia título/contenido sin resolver**.
+- **Ficha nueva detectada:** `soundpure.com/p/rme-adi-24-pro-ex-adda-converter/42327` existe (aparece
+  en búsqueda, con specs correctas: ESS9823Pro + ESS9039Q2M), pero **devuelve 403 (CloudFront)** al
+  leerla → **precio no confirmado**. Pendiente de reintentar.
+- Prensa: phileweb (09-sep) y av.watch (10-sep) cubren **sólo el ADI-2 Pro EX**, a la venta en Japón
+  el 2-oct-2026; «価格はオープン» (precio abierto/no fijado). proaudio.tech, synthax.co.uk,
+  synthaxchina.cn, sohu, ycsound, midifan → **sólo ADI-2 Pro EX**. Nada del DAC EX en ninguna fuente.
+
 ## Próxima ejecución — pistas a revisar
 - Reintentar `rme-audio.de/converter/adi-2-dac-ex.html` (indicador más limpio) y
   `rme-audio.de/converter/adi-2-4-pro-ex.html`.
@@ -149,6 +202,10 @@ Resultado: **sigue sin precio oficial y sin disponibilidad en México.**
   (bloquea WebFetch, usar búsqueda web).
 - **Nuevo (23-sep):** vigilar `economik.com/collections/rme/products/adi-2-4-pro-ex` por si
   corrigen las specs y confirman stock; y `reverb.com/item/100481783` por si pasa de preorder a stock.
+- **Nuevo (30-sep):** reintentar `soundpure.com/p/rme-adi-24-pro-ex-adda-converter/42327`
+  (403 CloudFront; sería la primera ficha del /4 Pro EX con specs correctas y precio).
+  **Prioridad alta a partir de octubre:** al agotarse el Q3, cualquier aparición de precio será
+  una corrección de rumbo de RME y merece comprobación diaria durante la primera quincena de octubre.
 
 ## Heurística de precio (para cuando aparezcan)
 El ADI-2 Pro EX subió de €1.808,95 (Pro FS R BE) a €1.992,87: **+10 %**. Si el DAC EX y el

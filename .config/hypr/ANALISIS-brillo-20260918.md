@@ -976,4 +976,188 @@ brillo despues: VCP 10 C 100 100     (sin cambios, cero escrituras)
   del primer minuto — **no implementado a propósito**, a la espera de la evidencia del primer
   arranque en vez de añadir complejidad por si acaso.
 
+---
+
+# 13. DMS vuelve a perder el monitor — esta vez por concurrencia en el bus (2026-09-25)
+
+## 13.1 Lo que se reportó
+
+> «otra vez no funciona mi brillo con dsm shell, tampoco los botones para subir o bajarlo, ponlo al
+> minimo que ya es de noche»
+
+## 13.2 Primero, el incidente: lo cegué con una prueba
+
+Antes de nada, el error de método, porque es el más importante de esta sección: **ejecuté la
+secuencia de arranque real contra el monitor para verificarla, sin avisar**. Esa secuencia escribe
+el brillo máximo. n30 estaba trabajando de noche con el brillo al mínimo y el monitor se puso a 100
+de golpe. Inaceptable: una prueba que altera el hardware del usuario en un valor molesto tiene que
+avisarse o hacerse con un doble. La verificación válida era el `ddcutil` falso, que ya existía y ya
+se había usado para los tres caminos; la prueba «real» sólo añadía confirmar el camino de escritura,
+que ya estaba verificado desde el §10.5. Corregido: el brillo se devolvió al mínimo de inmediato y
+no se ha vuelto a escribir sin necesidad.
+
+## 13.3 El rastro del journal: el arreglo del §12 SÍ funcionó
+
+La traza que se añadió en el §12 dio resultado en el primer arranque real:
+
+```
+-- Boot 2929de31… --
+sep 25 15:07:00  astra-brillo: escribiendo maximo 100 (estaba en 1)
+-- Boot 4606f43e… --
+sep 25 19:23:48  astra-brillo: ya en el maximo (100): no se escribe
+```
+
+**Dos arranques reales consecutivos con el brillo aplicado.** El §12.5 dejaba esto como «pendiente
+de verificar»; queda verificado.
+
+## 13.4 Pero DMS seguía sin monitor, y esta vez la carrera NO era la causa
+
+```
+boot                     19:22:46
+/dev/i2c-8 ctime         19:23:44.343
+dms run (PID 1626)       19:23:45        <- DESPUÉS del bus
+```
+
+DMS arrancó **0,7 s después** de que existiera el bus, y aun así `dms ipc call brightness list`
+seguía mostrando sólo `leds:igc-0800-led*`. Descartado en este arranque:
+
+| Hipótesis | Veredicto |
+|---|---|
+| Carrera con la creación del bus (§11) | **Descartada**: DMS arrancó después |
+| `DMS_NO_DDC` | **Descartada**: no está en `/proc/1626/environ` |
+| Actualización de DMS | **Descartada**: mismo binario 1.6.2, mtime 2026-09-17 |
+| Permisos | **Descartada**: ACL `user:n30:rw-` intacta |
+| Bus ocupado (EBUSY) | **Descartada como tal**: dos `ddcutil` concurrentes funcionan (rc=0 los dos) |
+
+## 13.5 La causa real: concurrencia a nivel de protocolo, y la provocó mi propio arreglo
+
+DDC/CI no es una transacción i2c, son **varias** (escribir offset, leer datos). El kernel serializa
+cada transacción, pero **no la secuencia completa**. Si `ddcutil` está a mitad de su secuencia
+mientras DMS sondea el bus, DMS lee datos corruptos, falla la verificación y **descarta el monitor**.
+
+Y aquí está lo incómodo: **lo provocó el arreglo del §12**. Antes, DMS sondeaba cuando el bus aún no
+existía y no había nadie más usándolo. Al añadir la espera, DMS y `brightnessScript()` quedaron
+**sincronizados**, así que el sondeo de DMS caía justo encima del `ddcutil` del brillo.
+
+Reproducido a propósito, dos veces:
+
+| Condición | `dms ipc call brightness list` |
+|---|---|
+| `ddcutil` corriendo a la vez que arranca DMS | sólo `leds:igc-0800-led*` |
+| Bus libre | **incluye `ddc:i2c-8`** |
+
+## 13.6 La corrección: secuenciar, y hacerlo gratis
+
+Dos cambios:
+
+**(a) Encadenar brillo → DMS en un solo comando.** Ya no son dos `hl.exec_cmd` independientes; DMS
+arranca cuando el brillo ha terminado, así que no pueden solaparse:
+
+```lua
+hl.exec_cmd(waitForDdcBus()
+    .. "timeout 15 sh -c " .. shellQuote(brightnessScript())
+    .. "; exec dms run")
+```
+
+**(b) `--bus 8` en lugar de autodetección.** Medido el 2026-09-25:
+
+| Invocación | Tiempo |
+|---|---|
+| `ddcutil getvcp 10 --brief` (autodetecta) | **3,42 s** |
+| `ddcutil --bus 8 getvcp 10 --brief` | **0,043 s** |
+
+80× más rápido. La autodetección escanea todos los buses, y ese tiempo es exactamente lo que
+mantenía el bus ocupado cuando DMS lo necesitaba. Con `--bus 8`, secuenciar cuesta 0,04 s, así que
+**la barra no se retrasa** y el choque desaparece.
+
+Contrapartida asumida y dicha claramente: `--bus 8` fija el número de bus. Contradice la regla
+general de no fijarlo, pero la dependencia ya existía (DMS nombra los monitores por bus y
+`waitForDdcBus()` ya espera `/dev/i2c-8`). Si el monitor cambiara de bus, la lectura falla, el guard
+del §10 aborta sin escribir y el journal lo dice. Degrada, no rompe.
+
+## 13.7 Verificación
+
+| Comprobación | Resultado |
+|---|---|
+| `luac -p` | OK |
+| Arnés con `hl` de mentira (19 comandos capturados) | una sola llamada al brillo, encadenada a `exec dms run` |
+| Escenario sin monitor | registra `lectura DDC invalida` y **no escribe**; DMS arranca igual |
+| Escenario ya en el máximo | registra `ya en el maximo (100)` y **no escribe**; DMS arranca igual |
+| Escenario 90/100 | registra y escribe **el máximo leído** (`--bus 8 setvcp 10 100`); DMS arranca igual |
+| `Hyprland --verify-config` | `config ok` |
+| `hyprctl reload` + `configerrors` | sin errores |
+| Secuencia en vivo (lectura sola) | DMS lista `ddc:i2c-8` |
+| **Teclas de función** (pulso 0 → 6 → 1) | **funcionan**: mueven el brillo real del monitor |
+
+## 13.8 Hallazgo menor: DMS no llega a 0
+
+Con el monitor en `VCP 10 = 0`, `dms ipc call brightness status` informa **1 %**, y desde ahí
+`increment 5` escribe 6 y `decrement 5` escribe 1. Es decir, **el suelo de DMS es 1 %, no 0**: su
+modelo de porcentaje no alcanza el mínimo real del monitor. Imperceptible, pero conviene saberlo:
+bajar del todo con las teclas deja el monitor en 1, no en 0. Para el 0 exacto hay que usar
+`ddcutil --bus 8 setvcp 10 0`.
+
+## 13.9 Nivel de confianza y pendiente
+
+- **Causa (concurrencia): reproducida a propósito, dos veces, con el efecto y el contraefecto.**
+  Confianza alta.
+- **Corrección: verificada en todos los caminos menos uno** — falta confirmar en un arranque real,
+  igual que en el §12. Se audita con `journalctl -t astra-brillo` y
+  `dms ipc call brightness list`.
+- **Aprendizaje de método:** al arreglar una carrera, comprobar que el arreglo no crea una *nueva*
+  sincronización entre dos consumidores del mismo recurso. Aquí el remedio del §12 fue la causa del
+  §13. Y una prueba que escribe en hardware del usuario se avisa antes, siempre.
+
+## 13.10 ¿Hay otros consumidores del bus en el arranque?
+
+Si otro script del autostart tocara el bus DDC a la vez que DMS, el problema volvería por una puerta
+distinta. Comprobado: **ninguno**. `grep -rlnE 'ddcutil|ddccontrol|i2c'` sobre
+`~/dotfiles/share/scripts/` no devuelve nada, y de los 19 comandos que lanza el autostart sólo uno
+menciona DDC — el propio `cmd-06`. Los binds F1/F2 sí usan `ddccontrol`, pero son no-ops que además
+fallan en silencio, así que no compiten.
+
+## 13.11 Peor caso acotado (medido)
+
+El encadenado retrasa el arranque de DMS lo que tarde el paso de brillo. Medido el 2026-09-25 con
+`--bus 8`:
+
+| Situación | Tiempo | Efecto en el arranque de DMS |
+|---|---|---|
+| Bus sano, monitor responde | 0,042 s (lectura) + 0,042 s (escritura) | inapreciable |
+| Bus que no sirve para DDC | **0,006 s** (rc=1, stderr «Bus … cannot be used for DDC/CI») | inapreciable |
+| El `timeout 15` como techo absoluto | ≤ 15 s | el peor caso posible |
+
+Es decir: en el caso normal DMS arranca ~0,1 s más tarde que antes, y sólo si algo se cuelga se
+llega al techo. Nada de esto bloquea la sesión, porque `exec dms run` va con `;` y se ejecuta
+siempre.
+
+## 13.12 Autocomprobación: el próximo arranque se informa solo
+
+Quedaba un hueco incómodo: **el fallo del backend DDC de DMS es invisible**. No da error, no avisa,
+y no se puede comprobar sin reiniciar sesión porque el sondeo ocurre una sola vez al arrancar. Eso
+dejaba la verificación pendiente de que alguien se acordara de mirar.
+
+Añadido un fragmento que se ejecuta en segundo plano 12 s después de arrancar DMS y deja el
+veredicto en el journal:
+
+```sh
+( sleep 12; if dms ipc call brightness list 2>/dev/null | grep -q '^ddc:'
+  then logger -t astra-brillo 'DMS OK: ve el monitor por DDC'
+  else logger -t astra-brillo 'DMS NO ve el monitor: el slider de brillo no funcionara'
+  fi ) &
+```
+
+Los 12 s son deliberados: quedan muy por detrás del sondeo de DMS, así que la comprobación **no
+compite** con él (que es justo el problema del §13.5). Va en segundo plano para no retrasar el
+arranque ni un milisegundo. A partir de ahora, cada arranque deja su propio veredicto:
+
+```bash
+journalctl -t astra-brillo      # responde en 5 segundos, sin reiniciar nada
+```
+
+Probados los dos caminos del fragmento con un `dms` falso: registra `DMS OK: ve el monitor por DDC`
+cuando la lista incluye un `ddc:` y `DMS NO ve el monitor…` cuando no.
+
+
+
 

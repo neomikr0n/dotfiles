@@ -12,12 +12,8 @@ cursor_trail 1
 #     pipeline declara animation_start cursor-trail-move, asi que no sirve como
 #     shader suelto en esta lista: va en su propia linea con su pipeline.
 # Nombres validos: ls /usr/lib/kitty/kitty/shaders/custom/*
-#   - `crt` quitado el 2026-09-29: mezcla hasta un 12,5% de negro puro en lineas
-#     alternas sobre TODA la pantalla (crt.slang: SCAN=0.50, apply = abs(sin(y)*
-#     0.25*SCAN)), texto incluido -> se veia "deslavado". Ademas devuelve alpha=1
-#     y anula la transparencia (background_opacity 0.75) de esta ventana.
 custom_shaders cursor-trail-blaze
-custom_shaders dim-inactive-windows
+custom_shaders water dim-inactive-windows crt
 
 # Window Configuration
 window_padding_width 12

@@ -230,12 +230,30 @@ find_pixel_window() {
 # IMPORTANTE:
 # Todos los mensajes van a stderr.
 # stdout contiene EXCLUSIVAMENTE la address.
+#
+# $1 (opcional): PID del player. Si el proceso muere antes de que
+# aparezca la ventana, se sale con 2 en vez de agotar el timeout.
 # ============================================================
+
+# Un proceso en estado Z (zombie) ya terminó, aunque /proc siga ahí.
+player_alive() {
+
+    local pid="$1"
+    local state
+
+    [[ -n "$pid" ]] || return 1
+    [[ -d "/proc/$pid" ]] || return 1
+
+    state="$(awk '{print $3}' "/proc/$pid/stat" 2>/dev/null)"
+
+    [[ "$state" != "Z" ]]
+}
 
 wait_for_pixel_window() {
 
     have hyprctl || return 1
 
+    local watch_pid="${1:-}"
     local address=""
     local iterations
 
@@ -253,6 +271,11 @@ wait_for_pixel_window() {
 
             printf '%s\n' "$address"
             return 0
+        fi
+
+        if [[ -n "$watch_pid" ]] && ! player_alive "$watch_pid"; then
+            echo "❌ El player (PID $watch_pid) murió antes de mostrar la ventana." >&2
+            return 2
         fi
 
         sleep 0.2
@@ -472,41 +495,89 @@ clear_stale_crash_flag() {
     backup="${flag}.stale-$(date +%Y%m%d-%H%M%S)"
 
     if mv "$flag" "$backup" 2>/dev/null; then
-        echo "⚠️ La VM no cerró limpiamente la última vez (flag de crash)."
-        echo "   Lo aparto para esquivar el SEGV del player:"
-        echo "   $backup"
+        echo "⚠️ La VM no cerró limpiamente la última vez (flag de crash)." >&2
+        echo "   Lo aparto para esquivar el SEGV del player:" >&2
+        echo "   $backup" >&2
     else
-        echo "⚠️ No pude apartar el flag de crash: $flag"
+        echo "⚠️ No pude apartar el flag de crash: $flag" >&2
     fi
 }
 
 
 # ============================================================
-# ARRANCAR GENYMOTION
+# ARRANCAR GENYMOTION (con reintentos)
+#
+# El player de Genymotion 3.10.0 hace SEGV de forma INTERMITENTE
+# al arrancar: no es un fallo determinista, es una carrera en
+# WebServiceClient::onCallFinished al resolver su consulta a la
+# nube. Medido sobre los logs de ~10 semanas (245 arranques):
+#
+#   ruta "Device is up to date" (caché local)   81 arranques,  0% fallos
+#   ruta "GET patterns/os-images" (red)         37 arranques, 76% fallos
+#   ruta con flag de crash                     123 arranques, 33% fallos
+#
+# Por eso un solo intento no basta: aquí se relanza el player
+# mientras muera sin llegar a mostrar ventana. Cuando un intento
+# consigue completar la consulta, Genymotion deja la lista en
+# cache/osimage/osimages.list y los arranques siguientes usan la
+# ruta local (0% fallos) hasta que esa caché caduque.
+#
+# Devuelve por stdout la address de la ventana; los mensajes van
+# a stderr, igual que en wait_for_pixel_window.
 # ============================================================
+
+GENY_LAUNCH_ATTEMPTS=5
 
 start_genymotion() {
 
+    local attempt
     local address
+    local pid
+    local rc
 
-    address="$(find_pixel_window || true)"
+    for ((attempt=1; attempt<=GENY_LAUNCH_ATTEMPTS; attempt++)); do
 
-    if [[ -n "$address" && "$address" != "null" ]]; then
-        echo "✅ El Pixel 6 ya está abierto."
-        return 0
-    fi
+        address="$(find_pixel_window || true)"
 
-    clear_stale_crash_flag
+        if [[ -n "$address" && "$address" != "null" ]]; then
+            echo "✅ El Pixel 6 ya está abierto." >&2
+            printf '%s\n' "$address"
+            return 0
+        fi
 
-    echo "🚀 Iniciando $VM_NAME..."
+        echo "🚀 Intento ${attempt}/${GENY_LAUNCH_ATTEMPTS}: iniciando $VM_NAME..." >&2
 
-    "$PLAYER" --vm-name "$VM_NAME" >>"$LOG" 2>&1 &
+        clear_stale_crash_flag
 
-    echo "   Launcher PID: $!"
+        "$PLAYER" --vm-name "$VM_NAME" >>"$LOG" 2>&1 &
+        pid=$!
 
-    # NO usamos pgrep player como condición.
-    # Esperaremos a la ventana y a ADB.
-    return 0
+        echo "   Launcher PID: $pid" >&2
+
+        rc=0
+        address="$(wait_for_pixel_window "$pid")" || rc=$?
+
+        if (( rc == 0 )) && [[ -n "$address" ]]; then
+            printf '%s\n' "$address"
+            return 0
+        fi
+
+        # rc=2 -> el player murió: tiene sentido reintentar.
+        # rc=1 -> timeout con el player vivo: relanzar no ayudaría.
+        if (( rc != 2 )); then
+            break
+        fi
+
+        echo "⚠️ El player se cayó al arrancar (SEGV intermitente conocido)." >&2
+
+        if (( attempt < GENY_LAUNCH_ATTEMPTS )); then
+            echo "🔄 Reintentando..." >&2
+            sleep 2
+        fi
+    done
+
+    echo "❌ No pude abrir la ventana de Genymotion en ${GENY_LAUNCH_ATTEMPTS} intentos." >&2
+    return 1
 }
 
 
@@ -907,27 +978,26 @@ launch_jwa() {
 
 main() {
 
+    local pixel_address=""
+
     check_dependencies
+
+    # --------------------------------------------------------
+    # ARRANQUE + VENTANA
+    #
+    # start_genymotion ya espera la ventana y reintenta si el
+    # player muere al arrancar (SEGV intermitente).
+    # --------------------------------------------------------
 
     echo
     echo "[1/7] 🔍 Verificando Genymotion..."
 
-    start_genymotion ||
-        die "No fue posible iniciar Genymotion."
-
-
-    # --------------------------------------------------------
-    # VENTANA / RESIZE
-    # --------------------------------------------------------
+    pixel_address="$(start_genymotion || true)"
 
     echo
-    echo "[2/7] 🪟 Esperando ventana..."
+    echo "[2/7] 🪟 Ventana..."
 
     if have hyprctl; then
-
-        local pixel_address
-
-        pixel_address="$(wait_for_pixel_window || true)"
 
         if [[ -n "$pixel_address" ]]; then
 

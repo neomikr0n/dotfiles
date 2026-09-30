@@ -354,28 +354,14 @@ hl.on("hyprland.start", function()
     -- ICMP es una señal de conectividad, no garantiza acceso a cada servicio.
     -- timeout limita la espera TOTAL a 60s; si no hay red, se lanzan igualmente.
     -- Sin flag compartido hypr-online ni poll Lua: no quedan flags obsoletos.
-    -- (Steam ya NO va en esta cadena: tiene su propio script, steam-open.sh, con
-    --  puerta HTTPS y veredicto en el journal. Aquí se quedan zen y zapzap.)
     local networkStart =
         "timeout 60s bash -c 'until ping -c1 -W2 1.1.1.1 >/dev/null 2>&1; do sleep 1; done'; "
         .. dispatchCommand(browser, "2 silent") .. "; sleep 2; "
-        .. dispatchCommand("env QT_QUICK_BACKEND=software " .. whatsapp, "1 silent")
+        .. dispatchCommand("env QT_QUICK_BACKEND=software " .. whatsapp, "1 silent") .. "; sleep 2; "
+        .. dispatchCommand("steam", "1 silent") .. "; sleep 5; "
+        .. "hyprctl dispatch " .. shellQuote(
+            'hl.dsp.window.move({ workspace = 1, follow = false, window = "class:steam" })')
     hl.exec_cmd("bash -c " .. shellQuote(networkStart))
-
-    -- Steam (2026-09-27): lo lanza un script propio, ligado a internet REAL
-    -- (HTTPS, no solo ICMP) y con red de seguridad + veredicto en el journal.
-    -- Antes esto era `steam` + `sleep 5` + un window.move de UNA sola pasada:
-    -- medido el 2026-09-27, ese refuerzo disparaba a las 08:33:25, justo en el
-    -- hueco entre la ventana del actualizador (destruida a las 08:33:22) y la
-    -- principal (aún inicializando a las 08:33:40) -> no-op silencioso; la
-    -- ventana acababa en el escritorio con FOCO (el 2, que es el que deja
-    -- enfocado la última línea de este handler). Y la ventana de promociones
-    -- ("Special Offers") llega MINUTOS después: ningún sleep fijo la cubriría.
-    -- Van dos capas a propósito, como en el caso DSH: el `workspace` de este
-    -- exec es la capa débil (la ventana la crea un proceso hijo, steamwebhelper)
-    -- y la garantía es la regla de ventana "steam-ws1" (más abajo).
-    -- SOLO en hyprland.start: en config.reloaded cada guardado relanzaría Steam.
-    hl.exec_cmd(scriptsDir .. "steam-open.sh", { workspace = "1 silent" })
 
     hl.exec_cmd("bash -c \"sleep 10; rclone mount 'koofr:/koofr/Autosync' /home/n30/Autosync/ --vfs-cache-mode full &\"")
     -- NOTA: el brillo del monitor externo ya NO se lanza aquí. Se movió arriba, para
@@ -390,19 +376,12 @@ hl.on("hyprland.start", function()
     hl.exec_cmd(scriptsDir .. "genymotion-open.sh")
     hl.exec_cmd("env CHATGPT_PET_WIDTH=320 CHATGPT_PET_HEIGHT=320 " .. scriptsDir .. "chatgpt-open")
 
-    -- DeepSeek Harness (DSH) en el escritorio 1: el script arranca `dsh web` si no
+    -- DeepSeek Harness (DSH) en el escritorio 2: el script arranca `dsh web` si no
     -- escucha en :3080 y abre Chrome en modo app con el token de /tmp/dsh-web.log.
     -- El `workspace` de aquí sólo cubre el caso de Chrome arrancando de cero; la
-    -- garantía del escritorio es la regla de ventana "dsh-web-ws1" (sección de
+    -- garantía del escritorio 2 es la regla de ventana "dsh-web-ws2" (sección de
     -- window rules). Van las dos a propósito: si una falla en silencio, cubre la otra.
-    hl.exec_cmd(scriptsDir .. "dsh-chrome-open.sh", { workspace = "1 silent" })
-
-    -- WorkBuddy AI en el escritorio 2, ambos en cada arranque (pedido el 2026-09-30).
-    -- Mismo doble seguro que DSH: el `workspace` de aquí para el arranque limpio y la
-    -- regla de ventana "workbuddy-ws2" como garantía. Se lanza con el mismo script que
-    -- su .desktop (/opt/workbuddy-international/start.sh), que es quien fija el app_id
-    -- "WorkBuddy AI" exportando CHROME_DESKTOP.
-    hl.exec_cmd("/opt/workbuddy-international/start.sh", { workspace = "2 silent" })
+    hl.exec_cmd(scriptsDir .. "dsh-chrome-open.sh", { workspace = "2 silent" })
 
     hl.dispatch(hl.dsp.focus({ workspace = 2 }))
 end)
@@ -435,13 +414,7 @@ hl.bind("SUPER + W", hl.dsp.exec_cmd("skwd-wall-v2"))
 
 -- === Application Launchers ===
 hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(term))
--- SUPER+Space abre el SELECTOR DE EMOJIS (pedido el 2026-09-30).
--- No es un programa aparte: es DMS Spotlight abierto con el disparador ":e" ya escrito, que
--- es lo que activa el plugin emojiLauncher. Se usa `toggleQuery` y no `openQuery` para que
--- la segunda pulsación CIERRE en vez de no hacer nada. Escribe `:e` y borra para buscar
--- otra cosa si quieres usar Spotlight normal.
--- Historial de esta tecla, para no liarse: abría Spotlight → luego rofi → ahora emojis.
-hl.bind(mainMod .. " + space", hl.dsp.exec_cmd("dms ipc call spotlight toggleQuery ':e'"))
+hl.bind(mainMod .. " + space", hl.dsp.exec_cmd("dms ipc call spotlight toggle"))
 hl.bind(mainMod .. " + Tab", hl.dsp.exec_cmd("dms ipc call hypr toggleOverview"))
 hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("dms ipc call clipboard toggle"))
 hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("dms ipc call processlist focusOrToggle"))
@@ -484,26 +457,12 @@ hl.bind("Caps_Lock", hl.dsp.exec_cmd(scriptsDir .. "swayosd-on-demand --caps-loc
 hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("dms ipc call brightness increment 5 \"\""), { repeating = true, locked = true })
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("dms ipc call brightness decrement 5 \"\""), { repeating = true, locked = true })
 
--- Monitor externo (ddccontrol + filtro de luz azul) — eran bindr (release)
---
--- ARREGLADO el 2026-09-30. Tenían dos defectos, los dos silenciosos:
---   1. El `&` no encadenaba: partía la línea en «(ddccontrol && swayosd) &» y
---      «hyprshade …», así que el filtro se aplicaba sin esperar al brillo.
---   2. Las DOS teclas hacían `toggle` del MISMO filtro. No eran simétricas, eran
---      el mismo botón dos veces: F1 encendía y F2 apagaba (o al revés, según el
---      estado en que estuviera). El filtro acababa alternando con cada pulsación.
--- Ahora cada tecla fija un estado, sin depender del anterior:
---   F1 = noche → brillo 10 % + filtro encendido
---   F2 = día   → brillo 100 % + filtro apagado
--- Nota: `hyprshade on blue-light-filter` apunta a ~/.config/hypr/shaders/
--- blue-light-filter.glsl, que es un .glsl plano. El shader del sistema con ese
--- mismo nombre es una plantilla mustache y falla con «No module named 'chevron'»
--- (hyprshade corre en Python 3.14 y python-chevron sólo está en 3.13).
+-- Monitor externo (ddcutil + blue light filter) — eran bindr (release)
 hl.bind(mainMod .. " + Control_R + F1",
-    hl.dsp.exec_cmd("ddccontrol -r 0x10 -w 10 dev:/dev/i2c-8 && " .. scriptsDir .. "swayosd-on-demand --brightness lower && hyprshade on blue-light-filter"),
+    hl.dsp.exec_cmd("ddccontrol -r 0x10 -w 10 dev:/dev/i2c-8 && " .. scriptsDir .. "swayosd-on-demand --brightness lower & hyprshade toggle blue-light-filter"),
     { release = true })
 hl.bind(mainMod .. " + Control_R + F2",
-    hl.dsp.exec_cmd("ddccontrol -r 0x10 -w 100 dev:/dev/i2c-8 && " .. scriptsDir .. "swayosd-on-demand --brightness raise && hyprshade off"),
+    hl.dsp.exec_cmd("ddccontrol -r 0x10 -w 100 dev:/dev/i2c-8 && " .. scriptsDir .. "swayosd-on-demand --brightness raise & hyprshade toggle blue-light-filter"),
     { release = true })
 
 -- === Window Management ===
@@ -816,24 +775,17 @@ hl.window_rule({ name = "chromium-bar", match = { class = "^Chromium-browser$" }
 hl.window_rule({ name = "pip-float", match = { title = "^(Picture-in-Picture)$" },
     float = true, pin = true, move = { 0, 885 }, size = { 982, 553 } })
 
--- DeepSeek Harness (DSH) SIEMPRE en el escritorio 1, y WorkBuddy AI en el 2.
--- (Cambio pedido el 2026-09-30: antes DSH iba al 2 y WorkBuddy no tenía escritorio
---  asignado. Se intercambian, no se añaden dos reglas nuevas.)
--- La clase de DSH NO es la de Chrome normal: en modo app (--app=http://127.0.0.1:3080)
--- Chrome usa su propio app_id. Medida con `hyprctl clients -j` el 2026-09-27 sobre la
--- ventana en uso: class = "chrome-127.0.0.1__-Default".
--- ESTAS reglas son las que garantizan el escritorio, no el `workspace` del exec del
+-- DeepSeek Harness (DSH) SIEMPRE en el escritorio 2.
+-- La clase NO es la de Chrome normal: en modo app (--app=http://127.0.0.1:3080) Chrome
+-- usa su propio app_id. Medida con `hyprctl clients -j` el 2026-09-27 sobre la ventana
+-- en uso: class = "chrome-127.0.0.1__-Default".
+-- ESTA regla es la que garantiza el escritorio, no el `workspace` del exec del
 -- autostart: si Chrome YA estaba corriendo al lanzar el script, la ventana la crea el
 -- proceso viejo de Chrome y la regla por PID del exec no la alcanza (saldría en el
 -- escritorio que tuviera el foco). Con la regla de ventana da igual quién la cree.
--- Si cambia el puerto o el perfil, la clase de DSH puede cambiar y esto dejaría de
--- casar EN SILENCIO: comprobar con `hyprctl clients -j` que sigue empezando por
--- chrome-127.0.0.1. La de WorkBuddy es "WorkBuddy AI", medida el 2026-09-30; la fija
--- el propio start.sh, que exporta CHROME_DESKTOP="WorkBuddy AI.desktop" (de ahí saca
--- Electron el app_id en Wayland). No choca con la regla de opacidad de más arriba
--- aunque compartan clase: son propiedades distintas, y sólo se pisa la misma propiedad.
-hl.window_rule({ name = "dsh-web-ws1", match = { class = "^(chrome-127\\.0\\.0\\.1.*-Default)$" }, workspace = "1 silent" })
-hl.window_rule({ name = "workbuddy-ws2", match = { class = "^(WorkBuddy AI)$" }, workspace = "2 silent" })
+-- Si cambia el puerto o el perfil, la clase puede cambiar y esto dejaría de casar EN
+-- SILENCIO: comprobar con `hyprctl clients -j` que sigue empezando por chrome-127.0.0.1.
+hl.window_rule({ name = "dsh-web-ws2", match = { class = "^(chrome-127\\.0\\.0\\.1.*-Default)$" }, workspace = "2 silent" })
 
 -- Mensajería / multimedia
 hl.window_rule({ name = "wasistlos", match = { class = "^(wasistlos)$" }, opacity = "0.75 0.65", workspace = "1 silent" })
@@ -868,13 +820,7 @@ hl.window_rule({ name = "rofi-dim", match = { class = "^([Rr]ofi)$" }, opacity =
 hl.window_rule({ name = "satty", match = { class = "^com\\.gabm\\.satty$" },
     float = true, center = true, pin = true, size = { "70%", "70%" } })
 hl.window_rule({ name = "dotfiles-floating", match = { class = "^dotfiles-floating$" }, move = { 2, 738 } })
--- Ventana de promociones/anuncios de Steam ("Special Offers: ...").
--- Se fija por TÍTULO y no por clase porque la clase de esta ventana no está
--- medida (confianza baja: por eso la regla "steam-ws1" cubre la clase y esta el
--- título; entre las dos, el escritorio 1 queda garantizado).
--- Decisión del usuario (2026-09-27): va al escritorio 1 igual que la principal.
-hl.window_rule({ name = "special-offers", match = { title = "^(.*Special Offers:.*)$" },
-    workspace = "1 silent", move = { 937, 60 } })
+hl.window_rule({ name = "special-offers", match = { title = "^(.*Special Offers:.*)$" }, move = { 937, 60 } })
 hl.window_rule({ name = "float-by-title", match = { title = "(Extensi.*|.*Bitwarden.*|Open File)" }, float = true })
 hl.window_rule({ name = "bitwarden-panel", match = { title = "^(.*Bitwarden.*)$" }, size = { 420, 698 }, move = { 2345, 49 } })
 
@@ -918,27 +864,6 @@ hl.window_rule({
     move = { 2720, 520 },
     workspace = "5 silent",
     opacity = "0.55 0.35",
-})
-
--- Steam SIEMPRE en el escritorio 1 (2026-09-27).
--- La clase NO se toca (`^(steam)$` sigue siendo la del cliente); esta regla solo
--- añade el escritorio, así que no compite con steam-client-tiled ni con
--- steam-opacity, que gobiernan tile y opacidad.
--- POR QUÉ HACE FALTA: la ventana la crea un proceso hijo (steamwebhelper), no el
--- PID que lanza el autostart, así que el `workspace` del exec no la alcanza; y
--- aparece decenas de segundos después. Medido el 2026-09-27: el refuerzo
--- `sleep 5` + window.move caía en un no-op silencioso (08:33:25, con el
--- actualizador ya destruido a las 08:33:22 y el cliente inicializando aún a las
--- 08:33:40), y la ventana terminaba en el escritorio con foco.
--- Esta regla se aplica en la CREACIÓN, así que da igual quién cree la ventana y
--- cuándo. Es la misma lección (y el mismo patrón) que "dsh-web-ws2".
--- `title = "negative:^(notificationtoasts)"` EXCLUYE los avisos de Steam: deben
--- seguir apareciendo en el escritorio donde estés, no en el 1.
--- `silent` = no te cambia la vista (decisión del usuario: abrir en silencio).
-hl.window_rule({
-    name  = "steam-ws1",
-    match = { class = "^(steam)$", title = "negative:^(notificationtoasts)" },
-    workspace = "1 silent",
 })
 
 -- Steam

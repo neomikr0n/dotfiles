@@ -5,19 +5,10 @@ font_size 12.0
 
 # MUCH CUSTOM WOW
 cursor_trail 1
-# custom_shaders es de kitty 0.49+. Es UNA lista separada por espacios: cada linea
-# REEMPLAZA la anterior, no la amplia. Con cuatro lineas solo sobrevivia `crt`.
-#   - `blaze` no existe: el shader real se llama `cursor-trail-blaze`.
-#   - `cursor-trail-blaze` necesita cursor_trail (ya puesto arriba) y su propio
-#     pipeline declara animation_start cursor-trail-move, asi que no sirve como
-#     shader suelto en esta lista: va en su propia linea con su pipeline.
-# Nombres validos: ls /usr/lib/kitty/kitty/shaders/custom/*
-#   - `crt` quitado el 2026-09-29: mezcla hasta un 12,5% de negro puro en lineas
-#     alternas sobre TODA la pantalla (crt.slang: SCAN=0.50, apply = abs(sin(y)*
-#     0.25*SCAN)), texto incluido -> se veia "deslavado". Ademas devuelve alpha=1
-#     y anula la transparencia (background_opacity 0.75) de esta ventana.
-custom_shaders cursor-trail-blaze
+custom_shaders blaze
+custom_shaders water
 custom_shaders dim-inactive-windows
+custom_shaders crt
 
 # Window Configuration
 window_padding_width 12

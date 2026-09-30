@@ -7,7 +7,7 @@
 cursor                 #ffd500
 cursor_text_color      #0a0a0a
 
-foreground             #eed47a
+foreground             #ffe98f
 background             #050505
 
 # Transparencia: 0.75 deja ver el wallpaper sin sacrificar contraste
@@ -25,7 +25,7 @@ color3   #ffd500
 color4   #f5a300
 color5   #e8720c
 color6   #d99a1f
-color7   #eed47a
+color7   #ffe98f
 
 color8   #d0a93c
 color9   #ff6a1f
