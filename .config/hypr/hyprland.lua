@@ -484,6 +484,19 @@ hl.bind("Caps_Lock", hl.dsp.exec_cmd(scriptsDir .. "swayosd-on-demand --caps-loc
 hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("dms ipc call brightness increment 5 \"\""), { repeating = true, locked = true })
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("dms ipc call brightness decrement 5 \"\""), { repeating = true, locked = true })
 
+-- === Calculadora (tecla del teclado, pedido el 2026-10-01) ===
+-- La tecla de calculadora del Logitech emite KEY_CALC (código evdev 140). En su keymap
+-- (layout latam) esa tecla está atada a XF86Calculator; medido, no supuesto:
+--   xkbcli compile-keymap --layout latam | grep XF86Calculator
+--     -> <I148> = 148;                     (148 - 8 = 140 = KEY_CALC)
+--     -> key <I148> { [ XF86Calculator ] };
+-- Y el propio kernel lo anuncia: /sys/class/input/event3/device/capabilities/key tiene
+-- el bit 140 puesto (event3 = "Logitech USB Receiver", el teclado principal).
+-- Kalk es la calculadora de KDE Gear 26.08.1 (paquete kalk 26.08.1-1, clase org.kde.kalk).
+-- NO es single-instance: no enlaza KF6DBusAddons, así que cada pulsación abre una ventana
+-- nueva en vez de levantar la que ya esté abierta.
+hl.bind("XF86Calculator", hl.dsp.exec_cmd("kalk"))
+
 -- Monitor externo (ddccontrol + filtro de luz azul) — eran bindr (release)
 --
 -- ARREGLADO el 2026-09-30. Tenían dos defectos, los dos silenciosos:
@@ -835,6 +848,19 @@ hl.window_rule({ name = "pip-float", match = { title = "^(Picture-in-Picture)$" 
 hl.window_rule({ name = "dsh-web-ws1", match = { class = "^(chrome-127\\.0\\.0\\.1.*-Default)$" }, workspace = "1 silent" })
 hl.window_rule({ name = "workbuddy-ws2", match = { class = "^(WorkBuddy AI)$" }, workspace = "2 silent" })
 
+-- El EDITOR al escritorio 1 (pedido el 2026-10-01: al iniciar sesión salía en el 2).
+-- La capa de arriba (delayedCommand -> dispatchCommand -> exec_cmd con workspace) es la
+-- débil por el mismo motivo que en Steam y DSH: `code` es un script bash que hace `exec`
+-- de /usr/share/code/bin/code, que es otro script, y el binario de Electron acaba creando
+-- la ventana desde otro proceso. Esta regla no depende de quién la cree.
+-- OJO CON LA CLASE: el paquete instalado es visual-studio-code-bin y su ventana es
+-- "com.microsoft.VSCode" (medido con `hyprctl clients -j` el 2026-10-01), NO "code".
+-- Esa misma clase era la que faltaba en las reglas de opacidad del editor, que llevaban desde
+-- siempre sin casar con nada; se reapuntaron el 2026-10-01 (ver la sección "Herramientas").
+-- Efecto secundario asumido: cualquier ventana del editor va al 1, también si se abre a mano
+-- desde otro escritorio. Si alguna vez molesta, quitar sólo esta línea.
+hl.window_rule({ name = "editor-ws1", match = { class = "^(com\\.microsoft\\.VSCode)$" }, workspace = "1 silent" })
+
 -- Mensajería / multimedia
 hl.window_rule({ name = "wasistlos", match = { class = "^(wasistlos)$" }, opacity = "0.75 0.65", workspace = "1 silent" })
 hl.window_rule({ name = "whatsapp-for-linux", match = { class = "^whatsapp-for-linux$" }, opacity = "0.70 0.50" })
@@ -859,9 +885,21 @@ hl.window_rule({ name = "qbittorrent-dim-2", match = { class = "^org\\.qbittorre
 hl.window_rule({ name = "megasync-dim", match = { class = "^(nz\\.co\\.mega\\.megasync)$" }, opacity = "0.35 0.35" }) -- fusionada (antes x3)
 hl.window_rule({ name = "megasync-x11-dim", match = { class = "^(MEGAsync)$" }, opacity = "0.80 0.70" })
 hl.window_rule({ name = "luna-dim", match = { class = "^luna$" }, opacity = "0.80 0.80" })
-hl.window_rule({ name = "code-oss-dim", match = { class = "^code-oss$" }, opacity = "0.80 0.70" })
-hl.window_rule({ name = "code-dim", match = { class = "^code$" }, opacity = "0.90 0.75" })
-hl.window_rule({ name = "editor-dim", match = { class = "^(code)$" }, opacity = "0.70 0.70" })
+-- EDITOR — reapuntado a la clase REAL el 2026-10-01 (antes no casaba con nada).
+-- Antes había tres reglas: code-oss-dim (^code-oss$) / code-dim (^code$) / editor-dim (^(code)$).
+-- Ninguna alcanzaba la ventana que n30 usa de verdad, que es "com.microsoft.VSCode": el paquete
+-- es visual-studio-code-bin y saca el app_id del StartupWMClass de com.microsoft.VSCode.desktop.
+-- Además code-dim y editor-dim eran DUPLICADOS (misma clase, distinto valor) y, por el orden,
+-- la que ganaba era editor-dim; se conserva SU valor (0.70 0.70) y code-dim queda comentada por
+-- superseded, para no perder el dato. Si 0.70 resulta demasiado transparente, poner "0.90 0.75".
+-- Nota: sin `override` estas cifras MULTIPLICAN la opacidad, no la fijan (igual que el resto de
+-- reglas -dim de esta sección; sólo workbuddy-opacity usa override).
+hl.window_rule({ name = "editor-dim", match = { class = "^(com\\.microsoft\\.VSCode)$" }, opacity = "0.70 0.70" })
+-- hl.window_rule({ name = "code-dim", match = { class = "^code$" }, opacity = "0.90 0.75" }) -- superseded por editor-dim (misma clase)
+-- code-translucent (instalado, 1.119.0-1): su .desktop es code-oss.desktop con StartupWMClass=Code,
+-- así que su clase puede ser "code-oss" o "Code". Se cubren las dos, pero NO está verificado con
+-- una ventana abierta: el 2026-10-01 no estaba corriendo.
+hl.window_rule({ name = "code-oss-dim", match = { class = "^(code-oss|Code)$" }, opacity = "0.80 0.70" })
 hl.window_rule({ name = "safeeyes", match = { class = "^io\\.github\\.slgobinath\\.SafeEyes$" }, float = true, pin = true,
     move = { 1444, -11 }, border_size = 0, opacity = "0.85 0.85", rounding = 20, size = { 600, 122 } }) -- rounding 40: fuera del máximo (20)
 hl.window_rule({ name = "rofi-dim", match = { class = "^([Rr]ofi)$" }, opacity = "0.9 0.6" })
@@ -884,8 +922,62 @@ hl.window_rule({ name = "dynisland-position", match = { class = "^dynisland$" },
 
 -- Genymotion
 hl.window_rule({ name = "genymotion-dim", match = { title = "^(Genymotion)$" }, opacity = "0.35 0.35" })
+-- Panel GPS a 466x306: cabecera fuera de pantalla y el boton cortado a un CUARTO
+-- (pedido el 2026-10-01, segunda vuelta).
+-- Requisitos, en este orden:
+--   1) que solo se vea el mapa, sin la cabecera;
+--   2) que el boton de "mi ubicacion" (circulo blanco con diana rosa) siga siendo pulsable;
+--   3) apurar el tamaño todo lo posible, aceptando que del boton solo quede un cuarto.
+-- La app lo declara de tamaño FIJO: su WM_NORMAL_HINTS (medido con xprop) trae
+-- min = max = 520x948, y con eso ningún `size` se aplica, porque Hyprland recorta al
+-- mínimo que declara el cliente (CWindow::minSize() lee los hints de X11). Para imponer
+-- un tamaño hay que SUSTITUIR esos límites: min_size y max_size son efectos dinámicos y
+-- pisan los hints del cliente.
+--
+-- LA CLAVE: EL BOTON ESTA CLAVADO EN COORDENADAS DE VENTANA
+--   El disco blanco ocupa x 448..483, y 288..323 (36x36 px) y NO se mueve al cambiar el
+--   tamaño. Barrido medido a 480/490/500/510/520/540 de ancho y 300/310/320/326/330/340 de
+--   alto: el disco siempre en el mismo sitio. La ventana no reflowa el mapa: lo RECORTA.
+--   Por eso el tamaño no es cuestion de gusto, es una resta: la ventana tiene que CONTENER
+--   el trozo de boton que se quiera conservar.
+--
+--   Disco COMPLETO (lo que hubo hasta hoy): ancho >= 484 y alto >= 324, o sea 490x330 con
+--   6 px de aire por lado. Medido: a 480 el disco sale 32x36 (cortado 4 px); a 490, 36x36.
+--   A 390 de ancho el boton NO EXISTE, sea cual sea el alto, porque 390 < 448.
+--
+--   Un CUARTO del disco (lo que hay ahora): se corta a la mitad por la derecha y a la mitad
+--   por abajo, asi que lo que queda es el cuadrante SUPERIOR IZQUIERDO, x 448..465, y
+--   288..305. La ventana es justo su caja:
+--       ancho = 448 + 18 = 466        alto = 288 + 18 = 306
+--   Medido a 466x306: el disco visible sale 18x18 = 324 px = 25,0% exacto de los 1296 del
+--   disco entero. Cualquier cosa por debajo de 466x306 corta MAS de la mitad.
+--   OJO: el clic sigue cayendo dentro del rectangulo del boton tal como lo ve la app
+--   (448..483, 288..323 en SUS coordenadas), asi que deberia responder; NO lo he probado
+--   pulsandolo, para no tocar el GPS del emulador sin permiso.
+--
+-- POR QUÉ EL `move` ES NEGATIVO (esto no es un descuido):
+--   Hyprland NO tiene ningún efecto de recorte (ni crop, ni clip, ni mask: verificado
+--   contra la lista completa de efectos de la wiki el 2026-10-01, no contra el stub, que
+--   declara solo enabled/match/name y no sirve para demostrar ausencias). La única forma
+--   de que la cabecera no se vea es que quede FUERA del monitor, y eso obliga a subir la
+--   ventana con `y` negativa. Consecuencia asumida: la ventana queda pegada al borde
+--   SUPERIOR de la pantalla, no abajo.
+--   La cabecera mide 130 px exactos (medido por salto de brillo con la ventana entera a la
+--   vista: las filas 0..129 son oscuras, ~20 de brillo, y la 130 salta a 220, que ya es
+--   mapa). Con y = -131 quedaba justo fuera; con -130 asomaba una linea por el redondeo.
+--   OJO: la cabecera NO mide lo mismo en todos los tamaños (142 a 948 de alto, 130 hasta
+--   ~350); no reutilizar el numero si se cambia el `size`.
+--   La barra de DMS es vertical y esta en el borde izquierdo (dms:bar, 44x1440 en x=0),
+--   asi que arriba no hay nada que tape la ventana.
+--
+-- POSICION: (655, -190) son las coordenadas que eligio n30 a mano el 2026-10-01, y se
+--   respetan tal cual. Lo que cuestan, para que conste: con -190 la cabecera queda oculta
+--   de sobra (130 < 190), asi que se tiran 60 px de mapa por arriba que no hacian falta;
+--   con -131 se recuperarian. No es un error de la regla, es su eleccion.
+-- Para volver a la ventana entera abajo a la derecha: move = { 2960, 1110 }.
 hl.window_rule({ name = "genymotion-gps", match = { title = "^(GPS - Genymotion)$" },
-    float = true, size = { 480, 330 }, move = { 637, 1094 }, opacity = "0.55 0.15" })
+    float = true, size = { 466, 306 }, move = { 655, -190 }, opacity = "0.55 0.15",
+    min_size = { 466, 306 }, max_size = { 466, 306 } })
 
 -- Mascota de ChatGPT
 hl.window_rule({

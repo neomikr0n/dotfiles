@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="es" data-page-node-id="1mAyYa0tGHZibCVFtorzhf">
+<head data-page-node-id="pyAwINic6EaRJ0zLsOwsXs">
+<meta charset="utf-8" data-page-node-id="McaCTKksF47fdWXtBRW5k5">
+<meta name="viewport" content="width=device-width, initial-scale=1" data-page-node-id="rNXBN4pfukjMMW70DbumDS">
+<title>Resolución de Jurassic World Alive en Genymotion — cadena medida y modo tablet</title>
+<style>
+  :root {
+    --bg: #0A0A0A; --panel: #16181D; --panel2: #1E2126;
+    --orange: #FF4E00; --red-orange: #FF3300; --amber: #FFB300;
+    --yellow: #FFC821; --text: #F5F1EA; --muted: #9AA0A8;
+    --good: #7ED957;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    line-height: 1.6; min-height: 100vh;
+  }
+  code, pre { font-family: "JetBrains Mono", "Fira Code", ui-monospace, monospace; }
+
+  header.hero { position: relative; overflow: hidden; background: var(--bg); padding: 72px 32px 120px; }
+  .waves { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hero-inner { position: relative; max-width: 1000px; margin: 0 auto; }
+  .hero .kicker {
+    display: inline-block; font-size: 12px; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--yellow); margin-bottom: 10px; font-weight: 700;
+  }
+  .hero h1 { font-size: clamp(27px, 4vw, 42px); font-weight: 800; line-height: 1.15; }
+  .hero h1 .accent { color: var(--orange); }
+  .hero .meta { margin-top: 14px; color: var(--muted); font-size: 14px; }
+  .hero .meta code { background: rgba(255,255,255,.08); padding: 2px 8px; border-radius: 6px; color: var(--amber); font-size: 13px; }
+  .chips { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 32px; }
+  .chip {
+    background: var(--panel); border: 1px solid color-mix(in srgb, var(--chip) 45%, transparent);
+    border-radius: 12px; padding: 10px 18px; min-width: 92px; text-align: center;
+  }
+  .chip-num { font-size: 23px; font-weight: 800; color: var(--chip); display: block; }
+  .chip-label { font-size: 10px; letter-spacing: 1.4px; color: var(--muted); }
+
+  main { max-width: 1000px; margin: -70px auto 0; padding: 0 24px 80px; position: relative; }
+  section { margin-top: 54px; }
+  section h2 { font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex: none; box-shadow: 0 0 10px currentColor; }
+  .section-sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+  .card-panel { background: var(--panel); border: 1px solid rgba(255,255,255,.07); border-radius: 16px; padding: 22px 24px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid rgba(255,255,255,.07); vertical-align: top; }
+  th { color: var(--amber); font-size: 11px; letter-spacing: 1.3px; text-transform: uppercase; font-weight: 800; }
+  td code { background: rgba(255,255,255,.06); padding: 1px 6px; border-radius: 5px; color: var(--yellow); font-size: 12.5px; }
+  tr.hl td { background: rgba(255,179,0,.07); }
+  tr.dim td { color: var(--muted); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .finding {
+    background: var(--panel); border: 1px solid rgba(255,255,255,.07);
+    border-left: 4px solid var(--sev); border-radius: 14px; padding: 18px 22px; margin-bottom: 16px;
+  }
+  .finding header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 9px; }
+  .sev-badge { color: #0A0A0A; font-size: 10.5px; font-weight: 800; letter-spacing: 1.4px; padding: 3px 10px; border-radius: 999px; }
+  .src-badge { font-size: 11px; color: var(--muted); background: var(--panel2); border: 1px solid rgba(255,255,255,.08); border-radius: 999px; padding: 2px 10px; }
+  .finding h3 { font-size: 16.5px; margin-bottom: 6px; }
+  .finding p { color: #C9CDD3; font-size: 14.5px; margin-bottom: 7px; }
+  .finding p:last-child { margin-bottom: 0; }
+  .finding strong { color: var(--yellow); }
+
+  .grid { display: grid; gap: 16px; }
+  @media (min-width: 820px) { .grid { grid-template-columns: 1fr 1fr; } }
+  .creative-card {
+    background: linear-gradient(160deg, rgba(255,178,0,.10), rgba(255,78,0,.05));
+    border: 1px solid #FFB30044; border-radius: 14px; padding: 18px 20px;
+  }
+  .creative-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .bulb { color: var(--yellow); font-size: 18px; }
+  .creative-card h3 { font-size: 15.5px; }
+  .effort { margin-left: auto; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--yellow); border: 1px solid #FFB30066; border-radius: 999px; padding: 1px 9px; }
+  .creative-card p { font-size: 14px; color: #C9CDD3; }
+
+  .blind-card {
+    background: linear-gradient(160deg, rgba(255,51,0,.09), rgba(255,78,0,.04));
+    border: 1px solid #FF330055; border-radius: 14px; padding: 18px 20px; margin-bottom: 14px;
+  }
+  .blind-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+  .eye { color: var(--red-orange); font-size: 18px; }
+  .blind-card h3 { font-size: 15.5px; }
+  .blind-card p { font-size: 14px; color: #C9CDD3; }
+
+  pre { background: #0D0E10; border: 1px solid rgba(255,255,255,.06); border-radius: 10px; padding: 14px 16px; font-size: 13px; overflow-x: auto; line-height: 1.55; }
+  .c-comment { color: #6E7681; font-style: italic; }
+  .c-string { color: #FFC821; }
+  .c-var { color: #FF4E00; font-weight: 600; }
+  .c-kw { color: #FF3300; font-weight: 700; }
+
+  footer { max-width: 1000px; margin: 0 auto; padding: 0 24px 48px; color: var(--muted); font-size: 12.5px; text-align: center; }
+  footer .brand { color: var(--orange); font-weight: 700; }
+</style>
+</head>
+<body data-page-node-id="IAiXXFpyMeGkU5QSEX4Pgv">
+
+<header class="hero" data-page-node-id="4HYA0VFX5MvALfetZJHEqX">
+<svg class="waves" viewBox="0 0 1440 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true" data-page-node-id="FeNs60iv6cuEeNen0uuFq2">
+  <defs data-page-node-id="4yF8CTlEh4RMkYmRwO7RCN">
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1" data-page-node-id="8npwbAZyEnlOomcRhZiQpT"><stop offset="0" stop-color="#FF4E00" data-page-node-id="8JMPUrZmKtBJDmPCTGgzpv"/><stop offset="1" stop-color="#FFB300" data-page-node-id="xm56C6bBRwZdBHDN84vZz3"/></linearGradient>
+    <linearGradient id="g2" x1="0" y1="1" x2="1" y2="0" data-page-node-id="JGWYVTYsh3CmIRNyki57dN"><stop offset="0" stop-color="#FF3300" data-page-node-id="Edfkjkxx7uZbGGHSIaBGjS"/><stop offset="1" stop-color="#FF4E00" data-page-node-id="0joGoclBqq4L2eB9zUxMwE"/></linearGradient>
+    <linearGradient id="g3" x1="0" y1="0" x2="1" y2="0" data-page-node-id="P2T1zULxSbcma0wVIRWINj"><stop offset="0" stop-color="#FFC821" data-page-node-id="4FE64vxb367notn8SyQp3w"/><stop offset="1" stop-color="#FFB300" data-page-node-id="SPRHpKR3uJVVYhpamZ03oG"/></linearGradient>
+  </defs>
+  <path fill="url(#g2)" opacity="0.55" d="M0,300 C240,120 420,420 720,260 C960,120 1180,380 1440,180 L1440,420 L0,420 Z" data-page-node-id="dFY4OCHA97HFKjiz5dC8N9"/>
+  <path fill="url(#g1)" d="M0,180 C260,340 520,40 780,160 C1040,280 1200,60 1440,220 L1440,420 L0,420 Z" data-page-node-id="cSRunAL6GDV9ZP2cp4kV50"/>
+  <path fill="url(#g3)" opacity="0.9" d="M0,360 C300,240 560,420 860,320 C1120,235 1260,360 1440,300 L1440,420 L0,420 Z" data-page-node-id="qInIJGMuxZRcoNJKyUNGls"/>
+</svg>
+<div class="hero-inner" data-page-node-id="OLEgL4RTY4hdcAVdHWISaa">
+  <span class="kicker" data-page-node-id="Wvlcl7ZQVbM4ZqEkEOep8o">Investigación medida · Genymotion Desktop 3.10.0 · JWA 3.23.49</span>
+  <h1 data-page-node-id="MfU0zAU2YCJWG0h731PF8C">Resolución de Jurassic World Alive:<br data-page-node-id="O4AptchG682SisNGMoAwCu"><span class="accent" data-page-node-id="h5P4AusSRofg0ZVB9PQVjE">cadena medida y modo tablet</span></h1>
+  <p class="meta" data-page-node-id="awHfvOLy4Ol2R0lBnigy5T">
+    Emulador <code data-page-node-id="TuWL4pyDILvWIeB8GnVrNa">Google Pixel 6</code> · Android 11.0 · monitor <code data-page-node-id="mZMFaKOjFmwnjnUQlr62uQ">DP-2 3440x1440</code> ·
+    todo lo de abajo sale de medir el sistema en marcha, no de fichas técnicas.
+  </p>
+  <div class="chips" data-page-node-id="Dlcgu1n4GKFR93Aktdqyrb">
+    <div class="chip" style="--chip:#FFB300" data-page-node-id="gbfSl5ohFyTTEuk9nC1NKt"><span class="chip-num" data-page-node-id="pEMGsS4cVoTEkGDDVbz4Lf">1080x2160</span><span class="chip-label" data-page-node-id="QkSNNZb73JbHEFnYzoeTQ6">DISPOSITIVO HOY</span></div>
+    <div class="chip" style="--chip:#FF4E00" data-page-node-id="Anx2qrEc3WpM0S05u1oGYp"><span class="chip-num" data-page-node-id="E0Ttj58tfPAKULNKcuDjID">1,50x</span><span class="chip-label" data-page-node-id="eEAY6XH13z5sC1BD5po6YY">SUPERSAMPLING</span></div>
+    <div class="chip" style="--chip:#FFC821" data-page-node-id="KWWNJZ1qtJP1PpFu7OnOFQ"><span class="chip-num" data-page-node-id="zJTn4ka3auhhOx3A6CWIwF">30 fps</span><span class="chip-label" data-page-node-id="25qkKTI7Ch2H4pg1Ey6G1Y">MEDIANA HOY</span></div>
+    <div class="chip" style="--chip:#7ED957" data-page-node-id="ebSrYzp4Tzk9hxVXiHAzA4"><span class="chip-num" data-page-node-id="7GBl1pE8UoNlj9N4uHwn7P">2,00x</span><span class="chip-label" data-page-node-id="Bs3jtVEXvp0m6WrfjwYlAA">ÁREA MÁXIMA</span></div>
+  </div>
+</div>
+</header>
+
+<main data-page-node-id="8vsV1TuWSqu2oHyfi2j5FJ">
+
+<section data-page-node-id="4BosmCecG15BUVZVTNvd2E">
+  <h2 data-page-node-id="AZIz96Ypt0XGAF2ksWyGZc"><span class="dot" style="color:#FFB300" data-page-node-id="GVFfQNfMOjkUqOOepJVhm7"></span>1 · La cadena de resolución actual</h2>
+  <p class="section-sub" data-page-node-id="RMzAFLyiYmb6L6si9MuGCF">Cada eslabón, con el valor medido y de dónde salió. Nada inferido en esta tabla.</p>
+  <div class="card-panel" data-page-node-id="T0DrwlJ5CaYmsZoRJi5Ddc">
+  <table data-page-node-id="torbY5OYDxAx84e17XGYvV">
+    <thead data-page-node-id="Gz0T5MZ5TXMqmHZiIjJlZq"><tr data-page-node-id="3SxNAPG12YIxdPMrQjTg8V"><th data-page-node-id="BoBsoLD9OgfI6DqCsW7qbc">Eslabón</th><th data-page-node-id="nM73lcWFgEA0iMi54QFDr4">Valor medido</th><th data-page-node-id="DaeGbXNUYFUs9qgX1P0Mgk">Fuente</th></tr></thead>
+    <tbody data-page-node-id="U1XXYkH1fhZhTQyC4VjUjh">
+      <tr data-page-node-id="hTz8Wilvg1VpWvDYXcl7AA"><td data-page-node-id="FTfI7xEKE7mVzyOsfJmNU0">Monitor</td><td data-page-node-id="zAM4cf0B956r7LlHhvhZL9"><code data-page-node-id="s8AJwwtQdfh0EwB4mGZ0ey">DP-2</code> LG UltraGear+ 3440x1440, escala 1,00, 144,05 Hz</td><td data-page-node-id="TrTRwYafCtb11IoDIovjBV">hyprctl monitors</td></tr>
+      <tr data-page-node-id="dTwnl92ACI5LJHwebJyZ7w"><td data-page-node-id="tuvqTrTlW8R8LzW3tGvSZa">Tamaño físico del monitor</td><td data-page-node-id="0i33MKcd2RMKejIvqRcK3P">EDID 1040x440 mm → diagonal 44,5" → <strong data-page-node-id="QFGmEV61FJ2zEoa97hBvd8">83,9 ppi</strong></td><td data-page-node-id="SvQjGrdRd4PePZ1QLqEF15">EDID vía Hyprland</td></tr>
+      <tr data-page-node-id="OMGtBuzF7CzFcffSaXUupg"><td data-page-node-id="yJiyQK4vMiFAwihN6tg0rp">Ventana del emulador</td><td data-page-node-id="kk6VXmxDrPQB2Btk17FI7j"><code data-page-node-id="jLG0MrGBbBgtDIEePyiKmc">767x1436</code> en [2,2]</td><td data-page-node-id="DvA3IzaPalvvdhHGSYfaG0">hyprctl clients</td></tr>
+      <tr data-page-node-id="v8wpvKi6DSgENnEcHmFnPJ"><td data-page-node-id="VGyZENXXs9Jl2D5rEPAYFH">Barra de herramientas de Genymotion</td><td data-page-node-id="WHirjEwbNRvJSc7DIBJJoE">49 px, a la derecha</td><td data-page-node-id="8YjjMy0dbNhcXcD8ysNjgN">medición de píxeles de la captura</td></tr>
+      <tr data-page-node-id="HQNSKbvu09bYewntX9rATq"><td data-page-node-id="ncFwp3CeToB8TvqwHUQYm1">Área de contenido de la ventana</td><td data-page-node-id="j4f5jia9RHItC12sk4DsB2"><code data-page-node-id="janXoxB2n4DwMzIRPCfIbv">718x1436</code> (767 − 49)</td><td data-page-node-id="DFyJgxAiOjC8oNhQDJpuju">cálculo sobre lo anterior</td></tr>
+      <tr class="hl" data-page-node-id="oFRUZyxsJ2nLl0jiVJwxQ9"><td data-page-node-id="7gsLZ4KfMsHNkF1qRP7gXs">Zoom que aplica Genymotion</td><td data-page-node-id="cavxO0llizi43s8T7O5NTf"><code data-page-node-id="E8yaXIjR9A2PIxjUGu3ZBG">0,6648</code> (≈ 2/3)</td><td data-page-node-id="yEpIa6KrLSSjT6ttVZP1VS">718/1080 y 1436/2160, coinciden</td></tr>
+      <tr data-page-node-id="uly1kp1KYNj0tIqY117B5P"><td data-page-node-id="9kn4HgbItzc2nkBDa511vm">Resolución del dispositivo</td><td data-page-node-id="HRZUEei9MJpXRddE6Ehggf"><code data-page-node-id="fokVgCgZzx62RchwDcZDGM">1080x2160</code> px</td><td data-page-node-id="uiB91PTTlFVmPWoO4DQbuI"><code data-page-node-id="IQWx6qMdouTkZ3wMo6iCz7">wm size</code></td></tr>
+      <tr class="hl" data-page-node-id="3BvQjQzcY724iFYEx18gVs"><td data-page-node-id="U6xJO8WhJqnuDuCUnRwJZ1">Densidad</td><td data-page-node-id="vb0bxvTZmnqHY9xuQfJomF">física 420 dpi, <strong data-page-node-id="Bc6lTCwplUkWKad5eUTMtY">override 320 dpi</strong></td><td data-page-node-id="hMy0TCeTXxpA5H6VNucv20"><code data-page-node-id="09fdBLu0uDUYHGrk7csiqc">wm density</code> — el override lo impone el script, líneas 722-723</td></tr>
+      <tr data-page-node-id="gfg9gy3AYRgjHOUGPdmwxc"><td data-page-node-id="Xx03sOb03vUwwOG2JDQpWG">Densidad declarada del panel</td><td data-page-node-id="rrxjNIxvXUQFKs7ESckgt2">2414 px de diagonal / 6,4" = <strong data-page-node-id="kZ7Hu5hCXYv9l7HDr7RyVV">377 ppi</strong></td><td data-page-node-id="oewOlrIDltMV2hzZj3pAFC">device.json + cálculo</td></tr>
+      <tr data-page-node-id="7Ht7xuwxjRO6AzyPzt2oAo"><td data-page-node-id="drFDvpaZsb5z6lHFXYkw5n">Supersampling real</td><td data-page-node-id="Ak1J20WE52TPyr5Xad8kcS"><strong data-page-node-id="QyggO4ueDqXUPlwthR8mmy">1,50x</strong> (1080 px de VM en 718 px de pantalla)</td><td data-page-node-id="EAlFRyOm9yNXbLGF2zljQP">cálculo — es la razón de que se vea tan bien</td></tr>
+      <tr data-page-node-id="FaAb3OrKFoQHNhjqCmpEH1"><td data-page-node-id="zlmVhH86wAje7clMRtxyYl">Área que ve la app</td><td data-page-node-id="RZGko4dPSBp2DPjUm1mX6g">1080x2064 px = <strong data-page-node-id="2tlyg3yXgb3Cyo0kE2mVnH">540x1008 dp</strong></td><td data-page-node-id="tDFESHnBRfFBnONfzXLQ5b">dumpsys activity top</td></tr>
+      <tr data-page-node-id="0GocxsG9bt1iO1hLyqVW7y"><td data-page-node-id="EmPyit48BD6fIX5hp4YHBe">Bucket de pantalla</td><td data-page-node-id="CjkFLYSc6SIVWuEqaOczPE"><code data-page-node-id="vdz2zMx0mUjaKIFMJfJHpC">sw540dp w540dp h1008dp 320dpi lrg long port</code></td><td data-page-node-id="lO0927oeMBwTCi6FHNC1YG">dumpsys activity top</td></tr>
+      <tr data-page-node-id="V7hsjcBsCADIQEMZtHtfhu"><td data-page-node-id="IdktToWbAe7bGzIRvYJtlG">Config de la VM</td><td data-page-node-id="PbKIuxkGuBDrFeuWmCHQj8">1080x2160 @ 420 dpi, physical_size 6,4", form_factor <code data-page-node-id="iRJf2Hs0BW2Kjcfe8LBqEk">PHONE</code></td><td data-page-node-id="dAsHLpayRr2LIKwI8vUtlN">shared/config/device.json</td></tr>
+      <tr data-page-node-id="wUCKvBZwvJb52XpYKxntBi"><td data-page-node-id="NznGMzV49SC1qudd5FaDAI">Imagen de sistema</td><td data-page-node-id="NMiTIVOtOOHfdWiVHQk2RZ">Android 11.0 (imagen 3.1.0); <code data-page-node-id="O9oi3UHf8wbjgkDqrPLJO6">supported_form_factors: [PHONE, TABLET]</code></td><td data-page-node-id="BtEacOzJTgvORsc9ltqlGD">device.json</td></tr>
+      <tr data-page-node-id="gInhUKQadk6oR14wZzzOpI"><td data-page-node-id="mDbXIty3kHTHieI31U876L">Motor gráfico</td><td data-page-node-id="EmOQk6oxtIL4dYI1LRWM6O">Unity (<code data-page-node-id="RBFUxmjB0B6AV32jxBaiEQ">libUnityARCore.so</code>), <code data-page-node-id="rirIwh4DMrwFrkv9Tcwgwz">arm64-v8a</code> traducido sobre imagen x86_64</td><td data-page-node-id="mlD12IqFHBlbmCWE36vjDF">/proc/4790/maps + dumpsys package</td></tr>
+      <tr data-page-node-id="2NEBLd1HmFkLKRQzKsY9vz"><td data-page-node-id="LGbTKleYuzg7c4CWsZtWcg">Orientación</td><td data-page-node-id="t7mA1KKSSyWeX0cugmlb1V"><code data-page-node-id="uIq61i6ybPn5CHxkX1IHRj">SCREEN_ORIENTATION_PORTRAIT</code></td><td data-page-node-id="LBfmyKuODZ2du5VGBAjHqy">dumpsys activity</td></tr>
+      <tr data-page-node-id="HRInl3tI0m7n8q7Wu2AIDh"><td data-page-node-id="dxFBwjF5suuoSumVUPDNiO">Juego</td><td data-page-node-id="2EJRHwrtVDduLh1RaykutX">3.23.49 (versionCode 64699), minSdk 25, targetSdk 36</td><td data-page-node-id="xwUYYQ5sV17WX64q0OpGEn">dumpsys package</td></tr>
+      <tr data-page-node-id="qkMjiubOy3qCdNoUFzWDJ3"><td data-page-node-id="E0r4G2yvmaJW10FU9N5H71">Rendimiento hoy</td><td data-page-node-id="iGM0L9sPwngSKAvdGmzhMN">mediana 33,3 ms = <strong data-page-node-id="zKVaaeN2AqR4k0BgBt4BUh">30 fps</strong> (con swipe continuo)</td><td data-page-node-id="cwvZ9fle8EMw39jdRIEz5J">SurfaceFlinger --latency</td></tr>
+      <tr data-page-node-id="G25TYFivIfx0YPWGrVp0Rc"><td data-page-node-id="eGsw5nYU0Zn7NsmlFSJbvn">Carga de GPU hoy</td><td data-page-node-id="6XAslcQXqxxL5oWGqeTehD">~10 %</td><td data-page-node-id="edA52PSpDzXaghcJEuhrHB">radeontop</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section data-page-node-id="TC5xHe3BtfsnPl1zH7KDJa">
+  <h2 data-page-node-id="fVD3FlYuEn8yx3Mx760WFN"><span class="dot" style="color:#FF4E00" data-page-node-id="53hDYGR5PW04GvlyLyOGza"></span>2 · Lo que salió de probarlo en marcha</h2>
+  <p class="section-sub" data-page-node-id="xLml1JH8P5uz2Nj0lO6okm">Siete cosas medidas cambiando la configuración en vivo y comparando capturas del framebuffer.</p>
+
+  <div class="finding" style="--sev:#FF3300" data-page-node-id="pzdgqOvV182feDrN7BeOM9">
+    <header data-page-node-id="kndI4M2OdMjDFb5QzeWlmY"><span class="sev-badge" style="background:#FF3300" data-page-node-id="0ADhlWjQHmbtWk0pNmF1dJ">MEDIDO</span><h3 data-page-node-id="hz3B8ay99snNHoCiFW29Di">La densidad no le hace absolutamente nada al juego</h3></header>
+    <p data-page-node-id="lUROCrt4pAUGb9l7CJmCtt">Comparé 320 dpi (<code data-page-node-id="FROjMVd9nDFQkUqdxIABUI">sw540dp</code>, bucket <strong data-page-node-id="H07EVhuUg5PmiFioa1Edl2">large</strong>) contra 240 dpi (<code data-page-node-id="1PNnlI3AffYiUj5cOtE1Wb">sw720dp</code>, bucket <strong data-page-node-id="MzQ7dLub8i4N2MB2eIuirb">xlarge</strong>): el HUD sale <strong data-page-node-id="CXgiqQAICk27o8nweEqYw9">idéntico píxel a píxel</strong>. El "35", el 235/350, las monedas, el 1210 y los iconos con sus badges están en la misma coordenada exacta.</p>
+    <p data-page-node-id="blHAh7t0lm1uxJQWB7iCwM">El diff medio entre las dos capturas fue 8,4, y el ruido de animación medido entre dos capturas sin tocar nada fue 7,7. Es decir: mismo valor.</p>
+    <p data-page-node-id="ObfWPcSyZj29TzcXSKg50r"><strong data-page-node-id="sd6R7lXyOGnOVAygliUIR5">Consecuencia:</strong> "ponerlo en modo tablet" bajando la densidad no da ni un píxel de espacio. Es la vía que parecía obvia y no sirve.</p>
+  </div>
+
+  <div class="finding" style="--sev:#FFB300" data-page-node-id="pVc49SYF6QmhhF9oS7W0FA">
+    <header data-page-node-id="OiVcsugoECbWGNCR5mwvVc"><span class="sev-badge" style="background:#FFB300" data-page-node-id="ulcWEmeuSZIGHh3c9mZKkO">MEDIDO</span><h3 data-page-node-id="ewVihonlUZjG3OK5bEDrvq">El juego tampoco reescala su interfaz con la resolución</h3></header>
+    <p data-page-node-id="IJMhO6tYIItisEpWuOyQZ6">A 1080, 1620 y 2160 de ancho, los elementos del HUD miden <strong data-page-node-id="xpR9EniOiU5P9tAkw3usD2">exactamente lo mismo en píxeles</strong>. No se encogen ni se agrandan: se <em data-page-node-id="PChAriW5ROF4FB0wSAOip0">re-anclan</em> (los laterales a los bordes, el botón MAP al centro) y se reparten por el ancho.</p>
+    <p data-page-node-id="lZQiRH878Jy1UDzjcZY7iO">Lo que sí crece es el <strong data-page-node-id="0cPuWq1obiwBRx8qAXvPpA">mundo 3D</strong>: a igual escala vertical, en 2160 de ancho se ve más mapa, más calles y más dinosaurios alrededor.</p>
+  </div>
+
+  <div class="finding" style="--sev:#FF4E00" data-page-node-id="yP1rBVOiBekssYp66DBWj7">
+    <header data-page-node-id="0EVxN0eTgvW4cDzetEc39j"><span class="sev-badge" style="background:#FF4E00" data-page-node-id="GSbNJnr0srEY1yvWYcKiKv">MEDIDO</span><h3 data-page-node-id="oEZgiuvdor3lw8p2DaZa5p">La orientación está bloqueada en vertical</h3></header>
+    <p data-page-node-id="xt6BEA7POOjycHgANkcmye"><code data-page-node-id="xAF10irjisR7YabaCgCfhr">mCurrentAppOrientation=SCREEN_ORIENTATION_PORTRAIT</code>. El landscape queda descartado: una app vertical sobre una pantalla apaisada se letterboxea, así que "modo tablet apaisado" no es una opción.</p>
+  </div>
+
+  <div class="finding" style="--sev:#FFC821" data-page-node-id="3AqKB9Xs4pLjPDHIaEt6RF">
+    <header data-page-node-id="0xwyVAsGQ5W0YtgUO7Af1x"><span class="sev-badge" style="background:#FFC821" data-page-node-id="hE3lE9pTIUDmnLD34m1Dd8">MEDIDO</span><h3 data-page-node-id="GqaSOy8nxcXlATJ2g5zIF5">El ancho está topado en 2160, el alto no</h3></header>
+    <p data-page-node-id="tPrbwdbHnJwxecFGtz8knb">Pedí y obtuve: <code data-page-node-id="5adDbcIg9wy7T6TgUNe3fM">3000x2000 → 2160x2000</code>, <code data-page-node-id="2eA05RgSVbVdXkv5QlXcJr">2700x2160 → 2160x2160</code>, <code data-page-node-id="XYBIb4ITj4u4C453Ys6uwf">2560x2160 → 2160x2160</code>. En cambio <code data-page-node-id="AYsU5uEanHYdjiQZqnyKL8">2160x2700</code> sí se aplica entero.</p>
+    <p data-page-node-id="AaKKSkneWhSKRDyuut2G4O">O sea: <strong data-page-node-id="kvTYQRgff24VRBRjGSx7FF">no se puede pasar de 2160 de ancho</strong> por esta vía, y 2160x2160 es el máximo cuadrado alcanzable. (Ese tope es de <code data-page-node-id="hrN2L6V0Dn4DjReM10ZljP">wm size</code>; cambiando la resolución en Genymotion el límite sería otro, eso no lo probé.)</p>
+  </div>
+
+  <div class="finding" style="--sev:#7ED957" data-page-node-id="UOzQjAuCpE8pjuTxpUolLC">
+    <header data-page-node-id="yTYqJ3H2hSduDYN2hKbBxP"><span class="sev-badge" style="background:#7ED957" data-page-node-id="tQBzoydAThdED3I5AshFLB">MEDIDO</span><h3 data-page-node-id="3bDFBFEDmc57Nw4qOKBGFU">A 2160x2160 la app no se letterboxea</h3></header>
+    <p data-page-node-id="kdyBBvbEdg2YCGcBIgQFDX">Aunque Android marque la configuración como <code data-page-node-id="2DJDhUCHm9xgIfUy7Fsb64">land</code>, <code data-page-node-id="gUjrlOyKYvIz3kJQ3iI7WV">mAppBounds = 2160x2076</code>: la app recibe el <strong data-page-node-id="jxzQogxfYEgDvMS5Wz3dhf">ancho completo</strong>. La captura lo confirma: el juego llena el cuadrado, con el HUD arriba y el botón MAP abajo, sin barras negras.</p>
+  </div>
+
+  <div class="finding" style="--sev:#FF3300" data-page-node-id="R3gKrKUrU0GG2KOQsvEW98">
+    <header data-page-node-id="fJx4jjfLjqX3DDgMb9oMul"><span class="sev-badge" style="background:#FF3300" data-page-node-id="gfe27iQpH8mrRYvbgyjRKR">MEDIDO</span><h3 data-page-node-id="4Skn9cckVEoAkprx6JhLCO">Genymotion no reajusta el zoom cuando el script le cambia la ventana</h3></header>
+    <p data-page-node-id="Ika9H6FPcNdyBJR4lW7FrR">Con la ventana agrandada a 1489x1436 y el dispositivo a 2160x2160, el juego se quedó dibujado como un cuadrado de <strong data-page-node-id="54HcxMvuZFO47ennG2uFdk">718x718</strong> (zoom 0,3324), con barras negras alrededor.</p>
+    <p data-page-node-id="KNDnaRRm4CA3aAzF8bj2ad">En las tres configuraciones que probé, el ancho dibujado fue <strong data-page-node-id="3CuSjZPJ17I0Ve5T6wKrqd">siempre 718 px</strong>: Genymotion arrastra el tamaño de ventana que conocía. Hay que forzarle el reajuste (doble clic en la zona negra, o <code data-page-node-id="xCcy13GeA3ZdeyoD7fmJ9X">Ctrl</code>+rueda) para que aproveche la ventana nueva.</p>
+  </div>
+
+  <div class="finding" style="--sev:#FFB300" data-page-node-id="kxvwJvjgegAjiXIe0qJbRa">
+    <header data-page-node-id="6n20Ax8wE8Er308C7Qfnl5"><span class="sev-badge" style="background:#FFB300" data-page-node-id="teez8nlDqBSMxcfEGvO70I">MEDIDO</span><h3 data-page-node-id="Rwiv17CW2Kkj88uFhcXtzq">El coste de FPS es un escalón, no una pendiente</h3></header>
+    <p data-page-node-id="HEt6SSYD4EC8EA2y2YUsc1">Tres pasadas completas, cada una con swipe continuo sobre el mapa para que el juego renderice de verdad:</p>
+    <table style="margin-top:10px" data-page-node-id="RYNx5etHj82KScUD8FFAJ9">
+      <thead data-page-node-id="G4G9LTSwwX6qhDQvN4Lpla"><tr data-page-node-id="kP1TfT9Ew9a3fyLAMTlr6O"><th data-page-node-id="svVMWIudATuTMwx37vWCVK">Ancho (alto 2160)</th><th class="num" data-page-node-id="OWHwVaANuiy905kC2UibkV">Mediana de frame time</th><th class="num" data-page-node-id="QdiwsuXo1gZW3MWiqTwmBh">FPS</th><th data-page-node-id="jT5QjCXhXa45lDB2ZuRy12">Pasadas</th></tr></thead>
+      <tbody data-page-node-id="4gEwUjdPgcve770jShR5ER">
+        <tr data-page-node-id="PQWma2ZSd5yxnOYeuPbu6y"><td data-page-node-id="5STAkgnkDsyHxMDPOMHvfL"><code data-page-node-id="XBwPHEEuItVz6DMETloWvz">1080</code></td><td class="num" data-page-node-id="wA5MuPUDPrZwicnCdGHBPE">33,3 ms</td><td class="num" data-page-node-id="g4PEm93D6hNP55j6Zee2aw">30</td><td data-page-node-id="c96JUKIZrouyA229mAzAWB">3 de 3</td></tr>
+        <tr data-page-node-id="oCZFc4LGymFXVi3BFkHzFK"><td data-page-node-id="kK3JVA3kB2tWOBHouwqxCm"><code data-page-node-id="m3eu3bdVzXFkyKxETDjn6y">1620</code></td><td class="num" data-page-node-id="QLNkoHArfqOEEWiZXnYA6C">50,0 ms</td><td class="num" data-page-node-id="h8y7E5Ervc4wXBbHXddP0f">20</td><td data-page-node-id="k0GoCfUGEEGKKN2rlHADwr">3 de 3</td></tr>
+        <tr data-page-node-id="x9iN04Xg0NfC79OIP3yFZR"><td data-page-node-id="x6MuEsiQgutuMlkD7LrHpq"><code data-page-node-id="VtWOOyT2Vzg73VUxCx0KZw">1800</code></td><td class="num" data-page-node-id="73F6kFVB68sdca0aiE41wc">50,0 ms</td><td class="num" data-page-node-id="ZrUEnOmFRORwrb7Qf953VH">20</td><td data-page-node-id="tosoQx8yQaSCZC3i9bUwur">3 de 3</td></tr>
+        <tr data-page-node-id="zCFSpGEcwReDPBW0dBzM0B"><td data-page-node-id="o2ByymtnL6lOPa5idHBSfg"><code data-page-node-id="CUgACOcuZSakeLyy7wKtmG">2160</code></td><td class="num" data-page-node-id="bRXg2FhSf0PohGmFRxmhwx">50,0 ms</td><td class="num" data-page-node-id="ZE31cTYQn8i5GgjKFm1eDn">20</td><td data-page-node-id="pZe8SDV8vk75460IHFbQ3L">3 de 3</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:10px" data-page-node-id="b2VS6sIv2zI1CvW7dmSg2r">La GPU se queda en <strong data-page-node-id="vkE0EWNxxQRTto1Jd79rxl">~10 %</strong> en todas: el cuello de botella no es la GPU, es la CPU (la traducción ARM del juego sobre la imagen x86_64). Y el escalón está entre 1080 y 1620: <strong data-page-node-id="Jp1XjT4UoXsLMZr7Y9nSfj">a partir de ahí da igual cuántos píxeles añadas, cuesta lo mismo</strong>.</p>
+  </div>
+</section>
+
+<section data-page-node-id="FhtP9kCWPvySxKevVp0S2b">
+  <h2 data-page-node-id="PTMgvLCH2pTGjHFUmPenzI"><span class="dot" style="color:#FFC821" data-page-node-id="LRz7RQHyuSxCcVXFv8SZTK"></span>3 · La cuenta del espacio</h2>
+  <p class="section-sub" data-page-node-id="xTudzOMjSSvvCpjaWIgrCF">Por qué el techo no está donde parece.</p>
+  <div class="card-panel" data-page-node-id="WHq6Gp82bCshYC0vP48SeG">
+    <p style="color:#C9CDD3;font-size:14.5px;margin-bottom:14px" data-page-node-id="PIHhImdkgz4FnyojG6xxGE">
+      El área que ves en pantalla es <code data-page-node-id="iRcsNf74EWTBHhHEsvGW2F">W × H × zoom²</code>, y el zoom que aplica Genymotion es
+      <code data-page-node-id="dbFtSC84NXAJOfew1bJlit">min(ancho_contenido / W, alto_contenido / H)</code>. La ventana está topada a <strong data-page-node-id="TnZsZkIwyKdCKGneTBepfD">1436 px de alto</strong>
+      (pedí 1440 y Hyprland la dejó en 1436).
+    </p>
+    <p style="color:#C9CDD3;font-size:14.5px;margin-bottom:14px" data-page-node-id="RtuHzETcavhHPp6Ph2edZK">
+      Para <strong data-page-node-id="GII5nxmBSDDqZR4xp0mE70">no perder tamaño aparente ni nitidez</strong>, el zoom tiene que quedarse en 0,6648, y eso fija
+      <code data-page-node-id="krZDl6ZwyI9ftx2iGFZJHN">H = 1436 / 0,6648 = 2160</code>. Es decir: <strong data-page-node-id="NE9lzjEDN4BbsqDAV2Jmar">el alto ya está en su máximo y no se puede tocar</strong>.
+    </p>
+    <p style="color:#C9CDD3;font-size:14.5px" data-page-node-id="uh5bJv2VT9IbGDI44KfD6H">
+      Con el alto clavado en 2160, el único mando es el ancho. Cada píxel de ancho que añadas se traduce en
+      0,6648 px de pantalla. Y el ancho tope es 2160. Por eso el máximo posible es exactamente el doble del área actual.
+    </p>
+  </div>
+</section>
+
+<section data-page-node-id="WBysHXixhAibl4eexekAYL">
+  <h2 data-page-node-id="qaEW8tuJYHCfjmYmhYhsOr"><span class="dot" style="color:#7ED957" data-page-node-id="F3PlNyVqITn0qC4yCVnUSm"></span>4 · Las opciones, con números</h2>
+  <p class="section-sub" data-page-node-id="FLg48cqKosUY8KIln6kGWb">El área de pantalla de las filas que no son la actual está <em data-page-node-id="xDg5x149AFlT8cQCcEGHdy">calculada</em> con la regla de ajuste verificada en la config de hoy — Genymotion no me dejó medirla porque no reajusta el zoom al redimensionar por script.</p>
+  <div class="card-panel" data-page-node-id="nXmwl6O3ZXnU6VYEm432WV">
+  <table data-page-node-id="gmCZ8RSIS4Am4HRcuBUOSh">
+    <thead data-page-node-id="SwvtBKPam0LvXeujpL0EnX">
+      <tr data-page-node-id="y7a6WYpcddlF2FJS5VT8eu"><th data-page-node-id="ngrtbXBQCAbGACX9Eifziz">Dispositivo</th><th class="num" data-page-node-id="QGm8lAEQLFkJsi6uJq65Bh">Mpx</th><th data-page-node-id="uUhaBOMQBMK3yi6BJfnvum">Ventana necesaria</th><th class="num" data-page-node-id="TWWU7WbznvR5ns7j6N2gBB">Área en pantalla</th><th class="num" data-page-node-id="RgSP4AmqfjFrj4E4D7PrxS">vs hoy</th><th class="num" data-page-node-id="VoCEY2SEgoq478ksR17SVa">FPS medido</th><th data-page-node-id="qmvypNAFbfPdHyN5igRz5q">Bucket</th></tr>
+    </thead>
+    <tbody data-page-node-id="IVHESJiHdxXXSxLjvvKoub">
+      <tr class="dim" data-page-node-id="fv5VWQNB8UdQrMSfhBHRb6"><td data-page-node-id="NRhYdEY2wHHT2fZJ3Arw1X"><code data-page-node-id="XMUN9JRi2ojnkj2goCTlyr">1080x2160</code> (hoy)</td><td class="num" data-page-node-id="adIlKSDOL7wP7pbtJg8FcQ">2,33</td><td data-page-node-id="JM0cVZ7Yi5dQHi09mxe0S0">767x1436</td><td class="num" data-page-node-id="exgdVKSa7HkyAVBYFOgvpZ">718x1436 = 1,03 Mpx</td><td class="num" data-page-node-id="YKjQmOZ8sgrQouwHo7VeT1">1,00x</td><td class="num" data-page-node-id="5wOIB9Gp6JSUg25NXpF3rh">30</td><td data-page-node-id="NbXBfHBNKG5CESpGhGVY6z">large</td></tr>
+      <tr class="dim" data-page-node-id="ZoMVmyE2l4hXncuu6lQIAn"><td data-page-node-id="EFcgcglmlO6mojOVYXGZbu"><code data-page-node-id="erGrN8ovCi2mVwKVQrNM05">1350x2160</code></td><td class="num" data-page-node-id="otrs3Gz6PTyfDGsrPbHbGa">2,92</td><td data-page-node-id="2tKECtlVbA2ydFh9IG2WKN">947x1436</td><td class="num" data-page-node-id="3ViY91Tz6swGgYwDrh9Q7y">898x1436 = 1,29 Mpx</td><td class="num" data-page-node-id="htHvUTLVepmLtbr2ZCJ6u4">1,25x</td><td class="num" data-page-node-id="dunRITvqge0uGtnI0BIftw">—</td><td data-page-node-id="MZuqNPSxB8h7gae7Gv2UwO">xlarge</td></tr>
+      <tr data-page-node-id="mYfeq7aRCl30jMkOWwQUD6"><td data-page-node-id="pInkbikl4EbcMcGCYhnstL"><code data-page-node-id="I38a8WAp8TbEb6KfwK2zBl">1620x2160</code> (3:4)</td><td class="num" data-page-node-id="JViAQio4MBHMAIuRlYBUCA">3,50</td><td data-page-node-id="0oRAh2nPpulGbwHzwRCKVF">1129x1436</td><td class="num" data-page-node-id="DWMSiA8wx8NDzCR4XMed0T">1077x1436 = 1,55 Mpx</td><td class="num" data-page-node-id="7eJEaVybSlMMCpBc9ENgU7">1,50x</td><td class="num" data-page-node-id="8edjONlpRvzLZc4VxSmgYA">20</td><td data-page-node-id="HpRjP3xIvbKKVIt2GicdX4">xlarge</td></tr>
+      <tr data-page-node-id="uJTx1BflPpVEI1tGhTbx91"><td data-page-node-id="ecqzGiB2uorYblZjzLFtod"><code data-page-node-id="G4DxVF1fbcC6hhWYqWG4we">1800x2160</code> (5:6)</td><td class="num" data-page-node-id="Gq5SH7KwisLVKsrix2Umu0">3,89</td><td data-page-node-id="fMWx1EYXFiFoFW36UXqTaB">1249x1436</td><td class="num" data-page-node-id="iLODaS7PGVlsIEajCZUmox">1197x1436 = 1,72 Mpx</td><td class="num" data-page-node-id="jbUVkq1mVjbL8Tv3SlUg5U">1,66x</td><td class="num" data-page-node-id="mkWA9hLaZjdCEP5OzFO1BX">20</td><td data-page-node-id="KLRmoGwd8oBH8kCgiZW65p">xlarge</td></tr>
+      <tr class="hl" data-page-node-id="pvucQr6etTD8KfwbTCjzxI"><td data-page-node-id="Nsqi92X6KZ8Bh2D2aPYBmA"><code data-page-node-id="8d6Y45NDEniGh9tHpyM5sI">2160x2160</code> (1:1)</td><td class="num" data-page-node-id="MKif5YkYiIHjy0IABJCctU">4,67</td><td data-page-node-id="tCAMzRgLwuDWloYrOcSYNg">1489x1436</td><td class="num" data-page-node-id="eiYg8jFZWGEaYw1LnmUX4M">1436x1436 = 2,06 Mpx</td><td class="num" data-page-node-id="3FqhKRcXFGrzNjgb3yokdT">2,00x</td><td class="num" data-page-node-id="A3E4n9RcfH4BUJgWx4WCXp">20</td><td data-page-node-id="5WeHvI2Vk73FUVz65KANM5">xlarge (land)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="grid" style="margin-top:22px" data-page-node-id="P1trRJZ7zKGRhJtAv9N55q">
+    <div class="creative-card" data-page-node-id="EijGXye8CcNsyxRxV0ulXB">
+      <div class="creative-head" data-page-node-id="dyf8ErrrYCQKGMqujNi5JZ"><span class="bulb" data-page-node-id="r20lJnNFB0H856aCoazqZg">◆</span><h3 data-page-node-id="w42LeqsRPUCCfLPQozBSRw">La respuesta: 2160x2160</h3><span class="effort" data-page-node-id="EUlpDQ2l95Qp9B7NwtqLRj">recomendado</span></div>
+      <p data-page-node-id="LwFZKfDoPvh5KcgCnOS3gn">Es el único que <strong data-page-node-id="8UvV8SybGluBX6EWJPJKqK">duplica exactamente</strong> el área, y cuesta <strong data-page-node-id="KgWWNUVtbvRKV1Ac0hIK2h">los mismos 20 fps</strong> que 1620 y 1800. Como el escalón de rendimiento está entre 1080 y 1620, quedarse a medio camino no ahorra nada: o 1080 (30 fps) o 2160 (20 fps).</p>
+      <p style="margin-top:8px" data-page-node-id="4EEJJ8V4rUuoG3fz2pHDba">La ventana (1489x1436) sigue dejando <strong data-page-node-id="exXH4kRhZNZacmpOOKq6U3">1951 px libres</strong> del monitor a la derecha.</p>
+    </div>
+    <div class="creative-card" data-page-node-id="XHHlBrMkdBzZyFjxo2m64j">
+      <div class="creative-head" data-page-node-id="bpS26BjGJDdIpmexaGH8D2"><span class="bulb" data-page-node-id="xVbpkFxIjJDZdT3xWlRBpE">◆</span><h3 data-page-node-id="S2NzhTHDT7ctunWyr70UhB">El precio real</h3><span class="effort" data-page-node-id="NLvA8znXpmcxVVGK9Iyh0M">medido</span></div>
+      <p data-page-node-id="k4tjMniEEdJ1eK3w5ziSUp">Un tercio menos de fluidez (30 → 20 fps). El lienzo pasa a ser cuadrado, así que el HUD queda muy repartido en los laterales. Y la GPU ni se entera (10 %), así que <strong data-page-node-id="C9h9BlgkWAVPF1nclxAbGf">no se arregla con más tarjeta</strong>: el límite es la traducción ARM.</p>
+    </div>
+  </div>
+</section>
+
+<section data-page-node-id="1HGxf1GyZpB21WD33ubQBC">
+  <h2 data-page-node-id="RTUaWAiHoHdPhpujptDDIi"><span class="dot" style="color:#FFB300" data-page-node-id="xwxd1UnJsGt8XQtWxhoQSj"></span>5 · Cómo aplicarlo</h2>
+  <p class="section-sub" data-page-node-id="L78VceZDOxRunr1nU9OBA5">Dos ficheros y un ajuste manual de una vez.</p>
+  <div class="card-panel" data-page-node-id="IMMdI0NI5b332JOOovMmvt">
+    <p style="color:#C9CDD3;font-size:14.5px;margin-bottom:12px" data-page-node-id="FyA91DhMBv0YRf2vNKbaDv"><strong data-page-node-id="EqR0Kp24glpdboA0t8DdKC">a) El script</strong> (<code data-page-node-id="sycNhuTClBWCqOaU1kiTzV">genymotion-open.sh</code>, líneas 722-723) — la resolución del dispositivo y la ventana:</p>
+<pre data-page-node-id="JZGpFPjz92dTivgtdnlawj"><span class="c-comment" data-page-node-id="hKCjo09GHMXffkR0iufy9P"># antes</span>
+adb -s "$ADB_SERIAL" shell wm size <span class="c-string" data-page-node-id="pHF8LzkkCgr2JVyT5o5tjR">1080x2160</span>
+adb -s "$ADB_SERIAL" shell wm density <span class="c-string" data-page-node-id="oc3TQ98IrxHRJWFwUC8Bek">320</span>
+
+<span class="c-comment" data-page-node-id="Qf3K1VzQKBg5MGWlOEMRT0"># después</span>
+adb -s "$ADB_SERIAL" shell wm size <span class="c-string" data-page-node-id="F0vC82uPlupUTAydDbZw1p">2160x2160</span>
+adb -s "$ADB_SERIAL" shell wm density <span class="c-string" data-page-node-id="OiX0PHchAXWd06df9UsNrf">320</span>   <span class="c-comment" data-page-node-id="YyfMQAQHpf6LqMlvgyCDX2"># al juego le da igual: medido</span>
+
+<span class="c-comment" data-page-node-id="1rkxpGpGDUBCZJmWmmHWFH"># y la ventana: 1489x1436 en vez de 767x1436</span></pre>
+    <p style="color:#C9CDD3;font-size:14.5px;margin:14px 0 12px" data-page-node-id="VnSsfLkXNMZFhl1s8GtuUe"><strong data-page-node-id="ogxzlKCM5tjTSd06vb1JVy">b) El ajuste de zoom en Genymotion</strong> — una vez por sesión, porque no reajusta solo cuando le cambia la ventana un script. Doble clic en la zona negra de la ventana (<em data-page-node-id="LDn74V04KC0gZX0CgTTvue">fit to content</em>), o <code data-page-node-id="KHrT5xggkJbrBTE45DmpQD">Ctrl</code>+rueda hasta 2/3.</p>
+    <p style="color:#C9CDD3;font-size:14.5px" data-page-node-id="j21dADREFdgNH0ZvkHvPAX"><strong data-page-node-id="oSHvCrjKZ0Rz1fxDatBfzb">c) Alternativa más limpia</strong> — en vez de por script, fijarlo en Genymotion: clic derecho en el dispositivo → <em data-page-node-id="NgqK4g7UGn3zEAu67w7n36">Edit</em> → <em data-page-node-id="G6fB6LlHZM9ozS7KNSYS4u">Display</em> → <em data-page-node-id="AGzHarUhW16HEJwDY8Rngg">Primary Display</em> → resolución personalizada 2160x2160. Queda persistente, la VM arranca ya así y Genymotion ajusta el zoom al arrancar. Requiere apagar la VM para editar.</p>
+  </div>
+</section>
+
+<section data-page-node-id="29nBBxcFpwymhAIOPCUAF7">
+  <h2 data-page-node-id="nUmdYCeS0PBJgFlVyRENBy"><span class="dot" style="color:#FF3300" data-page-node-id="x25wGHgui8mECZkV5DLsYF"></span>6 · Puntos ciegos</h2>
+  <p class="section-sub" data-page-node-id="TxMaTnbioXPNYddnrXv4R9">Lo que no medí, dicho antes de que lo preguntes.</p>
+
+  <div class="blind-card" data-page-node-id="zsINcDXnXEpu4SfZWnBDXU">
+    <div class="blind-head" data-page-node-id="Nx31ENBqfHeaEIsHN1lCyX"><span class="eye" data-page-node-id="pEJGbwYriEt5TRvEO8n4P9">◆</span><h3 data-page-node-id="wbcBgBPBl8mR24DVvlmoKo">El FPS en batalla no lo medí</h3></div>
+    <p data-page-node-id="kREiaGvlDoFpX6O4mA0WBI">Solo medí el mapa con swipe continuo, que es una carga alta. En batalla el reparto de trabajo es otro y podría ser mejor o peor.</p>
+  </div>
+
+  <div class="blind-card" data-page-node-id="yo5qBnVa2YiBLRLq99HAxz">
+    <div class="blind-head" data-page-node-id="zDjgPpy4yjFQCjZU7dQlGx"><span class="eye" data-page-node-id="x3AopzLsnkxGB4i2cXf1Q2">◆</span><h3 data-page-node-id="fOQp5wb4lMcPVc3X0vqxMA">Los valores absolutos de FPS tienen incertidumbre</h3></div>
+    <p data-page-node-id="7C0Hb4zuKtHZwVnZUPLkWO">Una primera medición <em data-page-node-id="qoeg5AExqVc1fM68l0xatP">en reposo</em> dio 17,5 fps y otra <em data-page-node-id="DiKhdA9n53jZtvUYjLMoHv">bajo carga</em> dio 23,5 fps para la misma configuración, así que no cuadran entre sí. Lo que sí es sólido es la <strong data-page-node-id="ccP9SAes35SBs2ArjdG22Y">comparación entre resoluciones</strong>: nueve mediciones idénticas en las tres pasadas.</p>
+  </div>
+
+  <div class="blind-card" data-page-node-id="JYK5Yx11KbsrnH65VbgQNm">
+    <div class="blind-head" data-page-node-id="ayr93xCW1E9kgJaxZrjmLn"><span class="eye" data-page-node-id="JAgYlnGisvfYQL3usdMKLD">◆</span><h3 data-page-node-id="PGaYrXkpoxKuOsWA3V3oPi">Las áreas de la tabla de opciones son calculadas</h3></div>
+    <p data-page-node-id="zQAN8JlLDljy8QGSRdcNe7">Verifiqué la regla de ajuste en la configuración de hoy (718x1436 = 1080x2160 × 0,6648, exacto). Las demás filas son proyección de esa regla, porque Genymotion no reajustó el zoom cuando le redimensioné la ventana por script.</p>
+  </div>
+
+  <div class="blind-card" data-page-node-id="Ubvk85cvbSURukDGKO2tVF">
+    <div class="blind-head" data-page-node-id="2X4VX3HtwmvKr6LogocyiP"><span class="eye" data-page-node-id="bPzaC3rvEiytMhmwNiUEGK">◆</span><h3 data-page-node-id="miV86l4wFIvE7sFCW07reg">No probé arrastrar el borde de la ventana con el ratón</h3></div>
+    <p data-page-node-id="jRTkdM3pbssaypq1ysEZGo">Es posible que Genymotion sí reajuste cuando el redimensionado viene de su propia ventana y no de un script. No puedo simular eso sin moverte el cursor.</p>
+  </div>
+
+  <div class="blind-card" data-page-node-id="jNjhnJNWSiQAe6Dh4BBahJ">
+    <div class="blind-head" data-page-node-id="ewMUAzNFGkq2qTG8HShM1z"><span class="eye" data-page-node-id="XRpt95aCG8pbIQDFwZSDWB">◆</span><h3 data-page-node-id="jyHLQTeRpBQHFmmgGKTe9r">El tope de 2160 es de <code data-page-node-id="o9LmvAe9DlXIDU8GmprLun">wm size</code>, no del sistema</h3></div>
+    <p data-page-node-id="AWQNHsh1NFzEuJYZ2tixQl">Cambiando la resolución en el <code data-page-node-id="oOnZijI0fB7dbmiHagPflW">device.json</code> de Genymotion el límite sería otro. No lo probé porque exige reiniciar la VM.</p>
+  </div>
+</section>
+
+</main>
+
+<footer data-page-node-id="BmwjZ5v5gSg9rAMf55r1Qc">
+  <p data-page-node-id="YBtAU2f0I1N1fgeZsL1l4z">Medido el 30 de septiembre de 2026 sobre el emulador en marcha · <span class="brand" data-page-node-id="RjpBaTSQkPDKS2y4n68eew">Genymotion Desktop 3.10.0</span> · Android 11.0 · JWA 3.23.49</p>
+  <p style="margin-top:6px" data-page-node-id="TmOHDeEcr3rc30KnToIhjI">Todas las cifras de esta página salen de <code data-page-node-id="ixPwYbICDKFWHt1DRiJJfE">hyprctl</code>, <code data-page-node-id="fN8gpYDFOESYqd2Ha4njRp">adb dumpsys</code>, <code data-page-node-id="pIuX23070JctEfAPx98yop">SurfaceFlinger --latency</code>, <code data-page-node-id="45CTYurRPgbmYWKTdOdJAH">radeontop</code> y capturas del framebuffer.</p>
+</footer>
+
+</body>
+</html>

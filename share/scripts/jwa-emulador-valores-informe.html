@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es" data-page-node-id="BY9F77EuH0cAaOOSDcv2FV">
+<head data-page-node-id="GuvwzEPUeMlL2DNCQXbAk1">
+<meta charset="utf-8" data-page-node-id="ubr7IIhF7Y9Eo8F59IJ3Ro">
+<meta name="viewport" content="width=device-width, initial-scale=1" data-page-node-id="tsd3rrlDCLuAZowB9zpmuE">
+<title>Genymotion + JWA — valores actuales, ideal vertical e ideal tablet</title>
+<style>
+  :root {
+    --bg: #0A0A0A; --panel: #16181D; --panel2: #1E2126;
+    --orange: #FF4E00; --red-orange: #FF3300; --amber: #FFB300;
+    --yellow: #FFC821; --text: #F5F1EA; --muted: #9AA0A8;
+    --good: #7ED957;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    line-height: 1.6; min-height: 100vh;
+  }
+  code, pre { font-family: "JetBrains Mono", "Fira Code", ui-monospace, monospace; }
+
+  header.hero { position: relative; overflow: hidden; background: var(--bg); padding: 72px 32px 120px; }
+  .waves { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hero-inner { position: relative; max-width: 1000px; margin: 0 auto; }
+  .hero .kicker {
+    display: inline-block; font-size: 12px; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--yellow); margin-bottom: 10px; font-weight: 700;
+  }
+  .hero h1 { font-size: clamp(27px, 4vw, 42px); font-weight: 800; line-height: 1.15; }
+  .hero h1 .accent { color: var(--orange); }
+  .hero .meta { margin-top: 14px; color: var(--muted); font-size: 14px; }
+  .hero .meta code { background: rgba(255,255,255,.08); padding: 2px 8px; border-radius: 6px; color: var(--amber); font-size: 13px; }
+  .chips { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 32px; }
+  .chip {
+    background: var(--panel); border: 1px solid color-mix(in srgb, var(--chip) 45%, transparent);
+    border-radius: 12px; padding: 10px 18px; min-width: 92px; text-align: center;
+  }
+  .chip-num { font-size: 22px; font-weight: 800; color: var(--chip); display: block; }
+  .chip-label { font-size: 10px; letter-spacing: 1.4px; color: var(--muted); }
+
+  main { max-width: 1000px; margin: -70px auto 0; padding: 0 24px 80px; position: relative; }
+  section { margin-top: 54px; }
+  section h2 { font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex: none; box-shadow: 0 0 10px currentColor; }
+  .section-sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+  .card-panel { background: var(--panel); border: 1px solid rgba(255,255,255,.07); border-radius: 16px; padding: 22px 24px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid rgba(255,255,255,.07); vertical-align: top; }
+  th { color: var(--amber); font-size: 11px; letter-spacing: 1.3px; text-transform: uppercase; font-weight: 800; }
+  td code { background: rgba(255,255,255,.06); padding: 1px 6px; border-radius: 5px; color: var(--yellow); font-size: 12.5px; }
+  tr.hl td { background: rgba(255,179,0,.07); }
+  tr.dim td { color: var(--muted); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .finding {
+    background: var(--panel); border: 1px solid rgba(255,255,255,.07);
+    border-left: 4px solid var(--sev); border-radius: 14px; padding: 18px 22px; margin-bottom: 16px;
+  }
+  .finding header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 9px; }
+  .sev-badge { color: #0A0A0A; font-size: 10.5px; font-weight: 800; letter-spacing: 1.4px; padding: 3px 10px; border-radius: 999px; background: var(--sev); }
+  .src-badge { font-size: 11px; color: var(--muted); background: var(--panel2); border: 1px solid rgba(255,255,255,.08); border-radius: 999px; padding: 2px 10px; }
+  .finding h3 { font-size: 16.5px; margin-bottom: 6px; }
+  .finding p { color: #C9CDD3; font-size: 14.5px; margin-bottom: 7px; }
+  .finding p:last-child { margin-bottom: 0; }
+  .finding strong { color: var(--yellow); }
+
+  .grid { display: grid; gap: 16px; }
+  @media (min-width: 820px) { .grid { grid-template-columns: 1fr 1fr; } }
+  .creative-card {
+    background: linear-gradient(160deg, rgba(255,178,0,.10), rgba(255,78,0,.05));
+    border: 1px solid #FFB30044; border-radius: 14px; padding: 18px 20px;
+  }
+  .creative-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .bulb { color: var(--yellow); font-size: 18px; }
+  .creative-card h3 { font-size: 15.5px; }
+  .effort { margin-left: auto; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--yellow); border: 1px solid #FFB30066; border-radius: 999px; padding: 1px 9px; }
+  .creative-card p { font-size: 14px; color: #C9CDD3; }
+
+  .blind-card {
+    background: linear-gradient(160deg, rgba(255,51,0,.09), rgba(255,78,0,.04));
+    border: 1px solid #FF330055; border-radius: 14px; padding: 18px 20px; margin-bottom: 14px;
+  }
+  .blind-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+  .eye { color: var(--red-orange); font-size: 18px; }
+  .blind-card h3 { font-size: 15.5px; }
+  .blind-card p { font-size: 14px; color: #C9CDD3; }
+
+  pre { background: #0D0E10; border: 1px solid rgba(255,255,255,.06); border-radius: 10px; padding: 14px 16px; font-size: 13px; overflow-x: auto; line-height: 1.55; }
+  .c-comment { color: #6E7681; font-style: italic; }
+  .c-string { color: #FFC821; }
+  .c-var { color: #FF4E00; font-weight: 600; }
+  .c-kw { color: #FF3300; font-weight: 700; }
+
+  footer { max-width: 1000px; margin: 0 auto; padding: 0 24px 48px; color: var(--muted); font-size: 12.5px; text-align: center; }
+  footer .brand { color: var(--orange); font-weight: 700; }
+</style>
+</head>
+<body data-page-node-id="s6eUELpfLXULEyORjpoySJ">
+
+<header class="hero" data-page-node-id="iP693p83cznFxzM2NDmLDP">
+<svg class="waves" viewBox="0 0 1440 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true" data-page-node-id="p9lAdYXbfVgc92rYnsFbof">
+  <defs data-page-node-id="BnTVnzLfmBNWsfR6seVE4G">
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1" data-page-node-id="CoxJBkl40Rg1npKPQgUiRy"><stop offset="0" stop-color="#FF4E00" data-page-node-id="oz4rx4M5hCFwWdZDpTh4kh"/><stop offset="1" stop-color="#FFB300" data-page-node-id="Duipnxfp05dJjC963rHngZ"/></linearGradient>
+    <linearGradient id="g2" x1="0" y1="1" x2="1" y2="0" data-page-node-id="00eiWuqpIRFGl6DGOCw6vU"><stop offset="0" stop-color="#FF3300" data-page-node-id="6cGxyMYVm5FB576VvnUi7B"/><stop offset="1" stop-color="#FF4E00" data-page-node-id="2nZezZuTWt5rLxxZIbyfO9"/></linearGradient>
+    <linearGradient id="g3" x1="0" y1="0" x2="1" y2="0" data-page-node-id="j85fyKx8HBD4gZiaPDYffT"><stop offset="0" stop-color="#FFC821" data-page-node-id="HA8az5VYC23BsqSmPVDEiR"/><stop offset="1" stop-color="#FFB300" data-page-node-id="WeryuDxeXp59E7saRdPt9P"/></linearGradient>
+  </defs>
+  <path fill="url(#g2)" opacity="0.55" d="M0,300 C240,120 420,420 720,260 C960,120 1180,380 1440,180 L1440,420 L0,420 Z" data-page-node-id="iRn0gcKQq8hWk7FPTqvTyL"/>
+  <path fill="url(#g1)" d="M0,180 C260,340 520,40 780,160 C1040,280 1200,60 1440,220 L1440,420 L0,420 Z" data-page-node-id="q1Xx3HUXR5Updz7ImB6B8X"/>
+  <path fill="url(#g3)" opacity="0.9" d="M0,360 C300,240 560,420 860,320 C1120,235 1260,360 1440,300 L1440,420 L0,420 Z" data-page-node-id="LZwTlVhFD9DIzbTNHBRry3"/>
+</svg>
+<div class="hero-inner" data-page-node-id="WRYjMsfJYOEk0tBUBioj1D">
+  <span class="kicker" data-page-node-id="nvnjxpzdfujIzvdKmXdiPp">Registro medido · Genymotion · Android 11 · Google Pixel 6 · JWA 3.23.49</span>
+  <h1 data-page-node-id="Te72FeaMPeShfgZSVHvfPy">Valores del emulador:<br data-page-node-id="YtxO1KVZiSFhFtLARShdNs"><span class="accent" data-page-node-id="BjxRH71IFJiaCuu0gmcA1F">actuales, ideal vertical e ideal tablet</span></h1>
+  <p class="meta" data-page-node-id="H2MnUgVSuTGgQhjtCPVXXT">
+    Medido el <code data-page-node-id="Y98A7csO9HzmUoyjt0ZvyT">30-sep-2026, 18:39–19:20 CST</code> con el juego cerrado y abierto, sobre el monitor
+    <code data-page-node-id="u3ik9drLxc9aMhKMMFFL2l">DP-2 3440x1440</code>. Todo sale de medir el sistema en marcha (capturas de pantalla + <code data-page-node-id="alOLeSj05a9LMzSTWuwWWk">dumpsys</code> + <code data-page-node-id="TFLyK2f1h5YFC3KlRbQVbW">wm</code>),
+    no de fichas técnicas. Donde el dato es deducción y no medición, está marcado.
+  </p>
+  <div class="chips" data-page-node-id="APh59uJmbZ2qbLEyamBDVk">
+    <div class="chip" style="--chip:#FFB300" data-page-node-id="mwekOcLur4dfLsHkFEYXN8"><span class="chip-num" data-page-node-id="Ge0PxNDKRcoM4Zf6cVhhTr">718x1436</span><span class="chip-label" data-page-node-id="hOrN7gFzB5WcomX3UeSWIk">DISPOSITIVO HOY</span></div>
+    <div class="chip" style="--chip:#7ED957" data-page-node-id="Rnu3ceRYXcq3Vn9GU7u2c2"><span class="chip-num" data-page-node-id="0N0eUZm1E4u60QkKCOflkr">1,50x</span><span class="chip-label" data-page-node-id="LzMRf3xe7JmS8MmBGWQrNv">SOBREMUESTREO</span></div>
+    <div class="chip" style="--chip:#FF4E00" data-page-node-id="Ss3LfoZBBbSstFz3tE7EgQ"><span class="chip-num" data-page-node-id="2SiRy9PRsD7Gdsf2tZtUeZ">251</span><span class="chip-label" data-page-node-id="wMCyoVEpy8eLHAenQVjoQ5">PPI EFECTIVOS</span></div>
+    <div class="chip" style="--chip:#FFC821" data-page-node-id="vRIBEnpqLzDwhcdVO0pqxO"><span class="chip-num" data-page-node-id="DjC4Q7ICRzIN70HnIHjQFd">2,00x</span><span class="chip-label" data-page-node-id="YzgsnkzoDb3kkyaIXZKeuA">ÁREA EN TABLET</span></div>
+  </div>
+</div>
+</header>
+
+<main data-page-node-id="zZtLikr3va6WB8qMZIVEhq">
+
+<!-- ============================================================ -->
+<section data-page-node-id="9RmSyHYvULynm3cUHJE9UY">
+  <h2 data-page-node-id="Sok8z0uGE7g9i4XbFh5xfq"><span class="dot" style="color:#FFB300;background:#FFB300" data-page-node-id="2BLvNDQ1zsCn7PqxXLkKIm"></span>1 · Tus valores actuales</h2>
+  <p class="section-sub" data-page-node-id="W7G3EgRTF34rjfJjHbjo9E">Ventana en modo tiling, vista pixel perfect desactivada. Esto es lo que tienes ahora mismo.</p>
+
+  <div class="card-panel" data-page-node-id="NBf2pRG1wlYPP2Ccz7Uit9">
+  <table data-page-node-id="VUsWWEQAjXyNqfdJ1UwNQN">
+    <thead data-page-node-id="V9pi0ygMU1qZFGBOC6YyD1"><tr data-page-node-id="AeiTkQIKMZA2q2b6QRdFFX"><th style="width:34%" data-page-node-id="gOSeeArFQsY73GLRoOb5Ue">Parámetro</th><th style="width:30%" data-page-node-id="NFdJB3UL3LNZ8C9vZ60yDY">Valor</th><th data-page-node-id="5LFBInXshETus5odVmKkx5">Cómo se midió</th></tr></thead>
+    <tbody data-page-node-id="VrrifmadmgaaeTJ7dItUjS">
+      <tr data-page-node-id="3b2PKw5Xqo4BvLqypK61qh"><td data-page-node-id="f7TUsSm4cQQxehHzXW8Bxv">Ventana del reproductor</td><td data-page-node-id="L1gUVCBB3qMTEUahT2uhWc"><code data-page-node-id="AqGhbs6B1wYGRcj1GHxMAO">767 x 1436</code> en <code data-page-node-id="ZKDNzQUR4VqlG9JZlFDmEe">[2,2]</code></td><td data-page-node-id="pZVzDIfj4RShpsHjBtuYBD">tiled, flotante = no, escritorio 2</td></tr>
+      <tr data-page-node-id="sUpTSLsOcYTKghGTgSDKFU"><td data-page-node-id="CaEK8sbqO3PWnzN3DBN6Tg">Barra de herramientas</td><td data-page-node-id="k0lwpaQHtus63iHQRbPXIx"><code data-page-node-id="bnhOJxu5AtRZhma0HyJlVu">48 px</code> a la derecha</td><td data-page-node-id="YlYKfEfWjJAhRGxAcvpmg0">x 719..766, color uniforme <code data-page-node-id="82m3102Vhv1MRDlI1o0pyX">#1A1A1A</code></td></tr>
+      <tr data-page-node-id="wTzCNb4VkDXj6f1ZCO1hGi"><td data-page-node-id="zrNn5nZU2kk6iCVRYdo5zk">Separador</td><td data-page-node-id="NkeoO5O5Ro1mcuXYP57n3y"><code data-page-node-id="JC0i02A3ZpHQZVRCA7MqjW">1 px</code> negro en x = 718</td><td data-page-node-id="HMXFbEnGIrtXre2NGsT6mp">única columna totalmente negra</td></tr>
+      <tr class="hl" data-page-node-id="SSDq99aHZSZcuGKBvrjACP"><td data-page-node-id="CdxHqgEIQn9PLTTE3F8MGC">Área útil para el dispositivo</td><td data-page-node-id="vSJrij5F7XkIA9q7UGz7OL"><code data-page-node-id="C5GYJfslu4d4QxBPSAZqJC">719 x 1436</code></td><td data-page-node-id="HUoCf0FQF6AutFPdfSP9Nn">767 − 48</td></tr>
+      <tr data-page-node-id="9cBhFH5gx5KCjquqE8pmhO"><td data-page-node-id="kXYS4bRMcGzp1GUZZ3mT6m">Resolución del dispositivo</td><td data-page-node-id="KFdnfmOyy22uTvbmbPdJjb"><code data-page-node-id="CYJpvHVvBOC9QkzADMi8b9">1080 x 2160</code></td><td data-page-node-id="9cMeW5y0NesnbiQwtWd0Ly"><code data-page-node-id="BrshgQNHBPGh9kYRyHzSEb">wm size</code></td></tr>
+      <tr data-page-node-id="T8GQy5upXcQzV4oFhpEQTD"><td data-page-node-id="gr44xaXvlZKPzQ9u0Hw7Sl">Densidad</td><td data-page-node-id="zRc6wdUSK5UuWxAZrcxDJ9">override <code data-page-node-id="SBTVQgEA8xPxPQ6WVsXbwG">320 dpi</code> (física 420)</td><td data-page-node-id="B0KAXvopEmFcFarTjiYlC3"><code data-page-node-id="pRTDQ1nRHP6osiuRvd8d9N">wm density</code></td></tr>
+      <tr class="hl" data-page-node-id="Q309NZN0XE16r35JUmfpOk"><td data-page-node-id="lbdGI2iFVBSYUPlToIlaCl">Encuadre (zoom)</td><td data-page-node-id="miZ0haPJM3UzBIRNHjNwqY"><code data-page-node-id="hyHqLDk3fkWJeXevei1lo7">0,6648</code></td><td data-page-node-id="iQU4YnYXPN7xVtsEUT52Qw">1436 ÷ 2160</td></tr>
+      <tr class="hl" data-page-node-id="kfITevubjrJcOUd1fqmPvB"><td data-page-node-id="x2CH2aCqY0RW2ehx3DvcqG">Dispositivo dibujado en pantalla</td><td data-page-node-id="uOdmFAI2Xu4qh9o2vpKOxQ"><code data-page-node-id="D39nO9HBgHz46BYwgOOTyl">718 x 1436 px</code></td><td data-page-node-id="DrNvFSEdTCMqgHbcdIN98k">x 0..717, ocupa toda la altura</td></tr>
+      <tr data-page-node-id="w1bRMuC4DdRcZzVKRKaHoq"><td data-page-node-id="A0FLEZC2Hk5PAyHUCFCaiX">Área de pantalla ocupada</td><td data-page-node-id="oSF0oiAOchvJoYf0geW0of"><code data-page-node-id="V2Yc0YHnH7VYYJqYprTBo2">1,03 Mpx</code></td><td data-page-node-id="mhjc1cx2H8qDEE4vYOCdAg">718 × 1436</td></tr>
+      <tr class="hl" data-page-node-id="rQApph1k2fY0Qyy5nCJqrE"><td data-page-node-id="Bx0BgwNCyRarud0Ue4m9lu">Sobremuestreo</td><td data-page-node-id="FYddV7sKH7N7AL7EuNs7wP"><code data-page-node-id="kJ87M8zesMAicvbb8jkcUc">1,50x</code></td><td data-page-node-id="B75mhFqe889UMyIuxn5m34">1080 px de dispositivo en 718 px de pantalla</td></tr>
+      <tr data-page-node-id="easLPTywrDEJZTFNHRnquA"><td data-page-node-id="92TuQ79QhdUfUszeMIIGNE">ppi efectivos en pantalla</td><td data-page-node-id="V5HsbYHsNUDhOnY0d9Qsfw"><code data-page-node-id="fBmD0xUXmH9BbGaM2zHvpv">251</code></td><td data-page-node-id="At0qvLyW2NcAywxTv7ZTo4">diagonal 1605 px sobre 6,4"</td></tr>
+      <tr data-page-node-id="i5CD3axsJ21a4QAHVZ2h4H"><td data-page-node-id="v7A1xh3VdloPE2WD50PYpY">Barras del sistema</td><td data-page-node-id="D2ns9KCFOLvMlcpCP9QYGv">estado <code data-page-node-id="UTqGNSZAuW14LTMc5IObuL">48 px</code> · navegación <code data-page-node-id="CJQ5mY3GG7VqB8pDp1i0hc">96 px</code></td><td data-page-node-id="MnBgNCo12AW5hJsUAyN31g"><code data-page-node-id="yZJ8Jiqtew1PO5Pl8eKUjH">mStable=[0,48][1080,2064]</code></td></tr>
+      <tr data-page-node-id="k7rTbiADKdjAKKIM4GymZl"><td data-page-node-id="sdnoCb0b7v5L6vdRNNzSgS">Área de app</td><td data-page-node-id="n0m0JK5DzmChIB3RSUCTAm"><code data-page-node-id="kdVH6VI9Bb8bKUjTOjO0vo">1080 x 2016 px</code></td><td data-page-node-id="OWzKNH0RnSr5MhZ7KIx5nP">2160 − 144</td></tr>
+      <tr data-page-node-id="eGGFUMp2ZD7fC8XcxDMlhH"><td data-page-node-id="XBYVFmBKfkI4FKAbmvTUbs">Configuración de app</td><td data-page-node-id="mtzPBUH9Wxt44FNPMmPTGE"><code data-page-node-id="FoUpum0f8TYdVP621VFVOm">sw540dp</code> · 320 dpi · bucket <code data-page-node-id="JubPef3br47SypbA7M3VHh">lrg</code></td><td data-page-node-id="mBFs6IrFnOoTmEDCEgyckC">long, retrato</td></tr>
+      <tr data-page-node-id="0y9bUtOdP6jjTPeDA7ObFw"><td data-page-node-id="tV289xQvYiCn9ddmMtfBaj">Rotación de Android</td><td data-page-node-id="W7Bx1tB3pIO7XUA6E9lYho">accel <code data-page-node-id="bjvFVOyrcBy09gzmSu2zIZ">1</code>, user <code data-page-node-id="Nxbv3BBSWKkMuA8mEFxArU">0</code>, <code data-page-node-id="wCKKOkVgoFrfKGlZ5UAi1V">mRotation=0</code></td><td data-page-node-id="wmGF4KIVn9xHIDzwcHtD6x">ver sección 5</td></tr>
+      <tr class="dim" data-page-node-id="tZ1YE6ae8LaaGYSeW1Kseb"><td data-page-node-id="lbJKC7idOuFczrB3boq7Do">Vista pixel perfect</td><td data-page-node-id="pfCRUodp7niqUmCV1phCCv"><code data-page-node-id="dfEWtoBy4zvwVHPBNBxNxo">DESACTIVADA</code></td><td data-page-node-id="WcfU8GDQ7Zu4CUIDhqiHzY">tu ajuste; ver sección 2</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section data-page-node-id="gSO0RPFyetZltn5MNXf9HE">
+  <h2 data-page-node-id="oJOi70XHrCWxN2GpvD0je6"><span class="dot" style="color:#7ED957;background:#7ED957" data-page-node-id="OL9psEgJIHeXkeRJwhbyfZ"></span>2 · Por qué la vista pixel perfect está apagada</h2>
+  <p class="section-sub" data-page-node-id="y5AXmgmgs1XhjZidiu0esV">Tu frase era «así se ven menos serruchados los gráficos». Medido, es exacto y tiene una razón concreta.</p>
+  <p class="section-sub" style="color:#FFB300" data-page-node-id="MKh2X0ruxDFrDJwjhrOjso">Nota del 30-sep: la has activado a mano, así que esta sección describe el modo que tenías antes. Lo que gana al activarla está medido en la sección 5.</p>
+
+  <div class="finding" style="--sev:#7ED957" data-page-node-id="6Pj9TvLBGDegbgHGLywjWg">
+    <header data-page-node-id="x8HtH0pCPCvhLNGXzKrzzx"><span class="sev-badge" data-page-node-id="MEKove7SpdBn4zOtxMKXjX">MEDIDO</span><span class="src-badge" data-page-node-id="hJ1k7U6LGs8o1ziCYC4FIf">Ctrl+P comparado en vivo</span></header>
+    <h3 data-page-node-id="TBgHyO9J9H4j67ZznBuPXf">Pixel perfect no «mejora» la imagen: la recorta y le quita el suavizado</h3>
+    <p data-page-node-id="U3i1QkNW4apaXFCLMuMpGJ">Con pixel perfect activado el mapeo es 1:1: cada píxel del dispositivo va a un píxel de la pantalla. Como el dispositivo mide 1080 px de ancho y el área útil sólo tiene 719 px, <strong data-page-node-id="i43TqwCnw9sEHMQpTv7drG">no cabe</strong> y el reproductor lo recorta.</p>
+    <p data-page-node-id="f61DpNHnrgau0APncHs20t">Medido con la función activada: <code data-page-node-id="C3lLF6mw7SHBnH6nW9iyJu">703 px de dispositivo + 8 px de barra de desplazamiento + 48 px de barra</code>. Se pierden 377 px de ancho (el 35 % del dispositivo) y desaparece el sobremuestreo.</p>
+    <p data-page-node-id="J1C8FLmAmHt3497j61Sj6t">Con la función desactivada (tu ajuste): <code data-page-node-id="1BkaEPurfoh8tgv350UWbk">718 px + 48 px</code>. Los 1080 px del dispositivo se dibujan en 718 px de pantalla, es decir <strong data-page-node-id="u1mhpAQgNWrTGOFubqFY1y">1,50x de sobremuestreo</strong>: Genymotion renderiza más resolución de la que muestra y la reduce al pintar. Eso es lo que suaviza los bordes. Por eso desactivarla se ve menos «serruchado» y no al revés.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section data-page-node-id="E1DVgZ5z1tMLJ6uujfAEPF">
+  <h2 data-page-node-id="vM13ZxDihx8sHUEXIrbeH0"><span class="dot" style="color:#FF4E00;background:#FF4E00" data-page-node-id="pGyCht7SfGRSrEpRJUxFjt"></span>3 · Qué manda de verdad en el encuadre</h2>
+  <p class="section-sub" data-page-node-id="bk8xqIC5b6v6lrA3fkaRAl">Corregido el 30-sep-2026. La primera versión de este informe decía otra cosa, y era falsa. Esto es lo medido.</p>
+
+  <div class="card-panel" style="margin-bottom:18px" data-page-node-id="dkpSkxSXqS9dtf5YNtD4AM">
+  <pre data-page-node-id="cSJ5KEyYkVaJxAuVFvi8mX"><span class="c-comment" data-page-node-id="N0AtJxS6IGZPKyqfZnAcFT">// El reproductor encuadra el TAMAÑO DE PANTALLA DEL PERFIL del dispositivo
+// —el 1080x2160 que la app muestra en la columna Resolution—, no el
+// framebuffer vivo de Android.</span>
+<span class="c-var" data-page-node-id="ZWO00qfepFQx2FrCjzYGMB">rect_dibujado</span> = perfil × min( (ancho_ventana − 48) / perfil_ancho ,
+                                 alto_ventana      / perfil_alto )
+
+<span class="c-comment" data-page-node-id="m1sDhRtVz2YJ6FNgmqHNyQ">// Y el framebuffer se encaja DENTRO de ese rect conservando su proporción:
+// si no coincide con la del perfil, quedan bandas negras arriba y abajo.</span></pre>
+  </div>
+
+  <div class="card-panel" data-page-node-id="i7PTtxGA6FmOVf44I7W6GB">
+  <table data-page-node-id="bVN6J6hfIdwqqvWaw7vpzR">
+    <thead data-page-node-id="wCt65Q6mQ1a8poBK4d9oV3"><tr data-page-node-id="zlUgqKbc5E8D8s6Cz2ut22"><th data-page-node-id="3FE7GSu1hxJUYpbVIx1125">Perfil (app)</th><th data-page-node-id="KRfLmyKYgiFHyppFCARgge">Framebuffer (wm size)</th><th data-page-node-id="OPukFxKLy3tO2ZZa2liWz5">Ventana</th><th data-page-node-id="fEVdodxXA2KS2iofEbNC0E">Rect dibujado</th><th data-page-node-id="kMMh6v5ORCgYmRYnTUM9Ha">Contenido visible</th></tr></thead>
+    <tbody data-page-node-id="OkRRD944F8JiCOYDRLwK0g">
+      <tr data-page-node-id="xjnAv5HH78CDTvyEtEmquz"><td data-page-node-id="oKTifZeUExzvWHzLUr7syV"><code data-page-node-id="MMbtsVWP4sdyb7Wcbk4p8k">1080x2160</code></td><td data-page-node-id="DueUvKSEgdJaz16QwuCwFq">1080x2160 (nativo)</td><td data-page-node-id="ETFrw6k24zKOfJM6oELBIF">767x1436</td><td data-page-node-id="srX77m3aFhu37dxpzUUcyd"><code data-page-node-id="vDnmKfyoieeGTtA5Wkq4JD">718x1436</code></td><td data-page-node-id="Dwb07L6gGpYQqMfMubZ6NI"><code data-page-node-id="CefFnbw9K7qEaAsnCE3duu">718x1436</code> = 1,03 Mpx</td></tr>
+      <tr class="hl" data-page-node-id="MjzmNnzKF4fj3W6HaIFPp1"><td data-page-node-id="orRH2tMoSHx0Cs7oH2GiDr"><code data-page-node-id="BDtjlTZwQMV0HD4QhSzn4R">1080x2160</code></td><td data-page-node-id="OUTlIKAAlocKfJeoftuZrO">2160x2160</td><td data-page-node-id="A5etwfaagh81vTUEbgIoXZ">1484x1436</td><td data-page-node-id="ER7Cl1Cwq2oHbmh6e3j9mr"><code data-page-node-id="Bg3uxKQwZva8uFlDjt2MmF">718x1436</code></td><td data-page-node-id="0xkmuCmPp8joZBJs5TsEQm"><code data-page-node-id="KyM0msBgVrormX3ZwylJR6">718x718</code> = 0,52 Mpx</td></tr>
+      <tr class="hl" data-page-node-id="uIZ8HwIDTuIRTpWvP8kX2g"><td data-page-node-id="pCXBNuHegpB6jkBkteWOS6"><code data-page-node-id="3iWhGUU003AfGfqQrFS3Qq">1080x2160</code></td><td data-page-node-id="dQKuerVUecWXJAmL6SpHh5">2160x2160</td><td data-page-node-id="j9t2Ld6ng7RXVbutcCYhYG">3436x1436</td><td data-page-node-id="haLtUc5lwr9nvQ7Swdb2wF"><code data-page-node-id="oDYOSH37R1sW242hT69Fiv">718x1436</code></td><td data-page-node-id="gK0S6c4SyPY3TTGEv5SZjD"><code data-page-node-id="LpjXwZhtFQoA8OMEcuHMLH">718x718</code> = 0,52 Mpx</td></tr>
+      <tr data-page-node-id="xA4nLhEKzvCg32F3ERme95"><td data-page-node-id="qoj1vQI1nTgl8lvV18NVZu"><code data-page-node-id="PtH7J4lGpAdlo8eg9pPCGs">1080x2160</code></td><td data-page-node-id="gelG10ie8Bw0jG7PwTQCf4">2160x1080</td><td data-page-node-id="wrzW1pGY8YSme5hJhwcl7J">3436x1436</td><td data-page-node-id="IVU2xa08KMjg3GmhqbUf8Y"><code data-page-node-id="EoSMmP8AHQtJSDQrFTT8If">1080x2160</code> (1:1)</td><td data-page-node-id="AEvO7tBkjz2PDocneOm32p"><code data-page-node-id="JBQB4qzoAZey0JgLxc4sZl">1080x540</code> = 0,58 Mpx</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="finding" style="--sev:#FF3300;margin-top:18px" data-page-node-id="p5MEMy9uGDqpCRfXyZq653">
+    <header data-page-node-id="vY8EK49eTjcYFl2myaBAqR"><span class="sev-badge" data-page-node-id="Kof0GJtOxG5SmpMUVyeUve">CORRECCIÓN</span><span class="src-badge" data-page-node-id="VIhM5KnzeqWMbNuzu0Ot4s">lo que decía este informe antes</span></header>
+    <h3 data-page-node-id="oEhPH2Jk4uwS4AE5tRdNgD">El «tope de 719» no existe, y poner el dispositivo cuadrado no agranda: encoge</h3>
+    <p data-page-node-id="69no9UqgnQtDKgnFM2E51i">La versión anterior afirmaba que el ancho disponible se congela al arrancar el reproductor y que nunca crece por encima de 719 px. <strong data-page-node-id="BrXW0WeeNmIVKckN5L2K8P">Es falso.</strong> Se probó lanzando la ventana en un escritorio vacío, a 3436 px de ancho: el dispositivo se dibujó igualmente 718x718. No hay ningún ancho congelado.</p>
+    <p data-page-node-id="5FM067iGvAxXi9nJZRrkoQ">Lo que había era otra cosa: con un perfil de proporción 1:2 y una ventana de 1436 de alto, el rect <em data-page-node-id="Kd1PcaXoWrAk3IQeHItRiN">ya estaba</em> en su máximo (718x1436) y el ancho de la ventana dejaba de importar. Los 719 que parecían un tope eran simplemente <code data-page-node-id="UySEqlBI4prhWZsSwtCCvo">1436 / 2</code>.</p>
+    <p data-page-node-id="XaJh0GnqFb39aDbxgtkRl6">Y la consecuencia práctica es la contraria de la que se deducía: poner el framebuffer cuadrado (<code data-page-node-id="yyBWw1UUlw9DrgoMRjros9">wm size 2160x2160</code>) <strong data-page-node-id="e8pWrcTOd1hXPg2H4X6EUy">reduce el área a la mitad</strong> —0,52 Mpx frente a 1,03—, porque el rect sigue siendo el del perfil y el cuadrado queda con bandas negras dentro.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section data-page-node-id="nXY6spAOQaU0XfRTtNsOz5">
+  <h2 data-page-node-id="Yd4icaMPbvmslYSl9yDTEF"><span class="dot" style="color:#7ED957;background:#7ED957" data-page-node-id="Jy97KEkbRTkGpiFgs5Wvbb"></span>4 · Modo vertical — valores ideales</h2>
+  <p class="section-sub" data-page-node-id="rtgH2OFxOROkiGWEWC7lvA">Mantienes la forma actual y ganas nitidez, sin cambiar nada en pantalla salvo el suavizado.</p>
+
+  <div class="card-panel" data-page-node-id="oF2JsEjh4e8a87KjkMevl6">
+  <table data-page-node-id="GGgbaowRWQHWNyijECgOTZ">
+    <thead data-page-node-id="04FRqsp4463N1VIIHM4nZ1"><tr data-page-node-id="cru9a9zdBtGNQzT8wDtVQ3"><th data-page-node-id="qG85c8jL6jydGIUhbeZYRO">Parámetro</th><th data-page-node-id="R2Ry8JnNRUHQzgBXDu6hBZ">Hoy</th><th data-page-node-id="0ZkdbezmG41HtMI8CFdUaA">Ideal vertical</th><th data-page-node-id="aRElq007sUHmoNOhB3hPkB">Efecto</th></tr></thead>
+    <tbody data-page-node-id="ZVJFjE8UTHJ2P70Qx9NXqZ">
+      <tr data-page-node-id="dneUIiF7gy9B9x5vvLyqNr"><td data-page-node-id="9p8l6MDui4nGojDZriiBJE">Resolución del dispositivo</td><td data-page-node-id="L4qABn9PGzR7NRDpmcgZIi"><code data-page-node-id="oM0rETyt1kTSsO2bqToBfz">1080x2160</code></td><td data-page-node-id="VwVfUn9Cz9zSaHiOsu5LIx"><code data-page-node-id="T4JCOm4I5sl2OuiQ1MuzBW">1440x2880</code></td><td data-page-node-id="BH7kA8UieFKpJCESidaO5O">—</td></tr>
+      <tr data-page-node-id="XFej8D3pYsFpPC6ZvP2TVh"><td data-page-node-id="feHuzqOptopBjr9iDDOVJj">Densidad</td><td data-page-node-id="xQbAesHek4ZEdkahoBuhhl"><code data-page-node-id="K0IH5WyFaa7fRp8QNZ23ri">320 dpi</code></td><td data-page-node-id="IVpr1kgHKriJ6OqwfAi5Vt"><code data-page-node-id="BqzWxcyCh1Rq5U7lyDfcqj">320 dpi</code></td><td data-page-node-id="bX74x8zKJzq2XGmqNE8gFW">igual</td></tr>
+      <tr data-page-node-id="98ECLCKXiB90gL5VedPfJ0"><td data-page-node-id="L6wAzUESvuUvJXuJxiErx4">Ventana</td><td data-page-node-id="NUfHShgy3Ah9WrUqcvZCwN">767x1436</td><td data-page-node-id="k0CV3gSBSrqR8P4d8n6BCN">767x1436</td><td data-page-node-id="YcaDvjgc1DJw5a5dROKAWa">sin cambios</td></tr>
+      <tr data-page-node-id="NNBaOymDpXnFJcy8UyhOhG"><td data-page-node-id="ZHGhjwAjLPibkMKaIPNlEU">Zoom</td><td data-page-node-id="G006oAqDEBpU9GUBdgDbmA">0,6648</td><td data-page-node-id="8EqJtLeRg7agEx2XjhPoFm">0,4986</td><td data-page-node-id="VKg2OtvUy6EqFg69bLpmN9">2880 → 1436</td></tr>
+      <tr class="hl" data-page-node-id="wgTXW6nb6IFYHRjpprnOby"><td data-page-node-id="eU8mz10D61x1CLIxWe41Ov">Dibujado en pantalla</td><td data-page-node-id="rCDdAkreGdQlmAXyIPwMPx">718x1436</td><td data-page-node-id="78U3OLgTVadCT10mdZ1dcQ"><code data-page-node-id="ifgEbsFr8D7ugfTFEdPwTW">718x1436</code></td><td data-page-node-id="uemtNRmx5dc0wrMsHoxT9M">idéntico</td></tr>
+      <tr class="hl" data-page-node-id="uBF9nc6CuzEAPMX3LjFoEE"><td data-page-node-id="bUFpO4tJ6ibBurQIy4dHuy">Sobremuestreo</td><td data-page-node-id="w3soE8GnCu7BLKmkP1mEQn">1,50x</td><td data-page-node-id="9VhUKriwlZoD1OVOgNNA3H"><code data-page-node-id="qgFFRs1zZMgEqQE5HkkFM0">2,01x</code></td><td style="color:#7ED957" data-page-node-id="ZqkHoaXBI2AUEK5MvRPLtm">+34 % de nitidez</td></tr>
+      <tr data-page-node-id="OMWfZKTrsBZFWtLfrXEBjO"><td data-page-node-id="hEObm6JI1BAdqFBFAqMa8w">Área ocupada</td><td data-page-node-id="I0V1DWj2W7RQLGFubWnMxG">1,03 Mpx</td><td data-page-node-id="tD60FVxj492WHvueHL10yC">1,03 Mpx</td><td data-page-node-id="3qqJUM54Gh1fCOYd1070mu">igual</td></tr>
+      <tr data-page-node-id="grmhux6EuRaPUGUrJqZqYj"><td data-page-node-id="CiZ0OqCfXK4fQySd4LUPSi">ppi efectivos</td><td data-page-node-id="556EluIv8srHSESPJAyE6V">251</td><td data-page-node-id="R7HbE92NhrPAeYR3GqtzKG">251</td><td data-page-node-id="yw4SX5mqAkGNTwGrTuFOgC">igual</td></tr>
+      <tr data-page-node-id="NrxGkYh8JnjjMA3Z52Aqho"><td data-page-node-id="ufKitb6O9KM0Jfa8QJXeyZ">Configuración de app</td><td data-page-node-id="SX68EuOD2rgaZG93Gqodih">sw540dp · lrg</td><td data-page-node-id="D8xkDTjBhXPcVsbxZKa0hf"><code data-page-node-id="cz3WsE3DxWHATbEDATKlLY">sw720dp · xlarge</code></td><td data-page-node-id="MZHzgnR2FuCd8ymprzl7uN">cruza el umbral de tableta</td></tr>
+      <tr data-page-node-id="D26GF5z4BLzYiY9pyV6mT9"><td data-page-node-id="eBAVEkwFJjZHSYCtNYLf4o">Píxeles a renderizar</td><td data-page-node-id="fCNdNnwkxNE4O2a2oUTeDe">2,33 Mpx</td><td data-page-node-id="iE36T6X6LDFDqQPlgfe218">4,15 Mpx</td><td style="color:#FF4E00" data-page-node-id="MbcMfT35v1a89jRCqTAdrH">1,78x más trabajo</td></tr>
+      <tr class="dim" data-page-node-id="OlYBSUGvCFn1UntkFDDqan"><td data-page-node-id="cjHxRZ3kj5BjyHtyNHDh0h">fps esperados</td><td data-page-node-id="g7r32MbwRlWvAB6jZFSzd4">30</td><td data-page-node-id="2KRtELEeYrJwmocppPgOK5">~20</td><td data-page-node-id="vr3cHoqov3NXs7auYJ1KxF">la CPU traduce ARM, no la GPU</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="finding" style="--sev:#FFB300;margin-top:18px" data-page-node-id="3KYLWLBx8ZiDWnEueM4phA">
+    <header data-page-node-id="sKcdypsZa1KI7jATIpI8bo"><span class="sev-badge" data-page-node-id="2j4oWFCd1U0izFShhYB8Vv">INFERIDO</span><span class="src-badge" data-page-node-id="fIZgDoHPnksIDLBAyIEEVn">aritmética sobre la regla verificada</span></header>
+    <h3 data-page-node-id="eO2vVHFikf8Rn9cKFThtbq">El coste real es el framerate, no el espacio</h3>
+    <p data-page-node-id="HxCiRpUvbG9MzYXtu6hM8R">La medida de fps que ya tenías da un escalón, no una pendiente: <strong data-page-node-id="HXDrdUgqJEKmqD73tJxiiT">1080 → 30 fps</strong>; 1620, 1800 y 2160 → <strong data-page-node-id="iD6TC6CaVfyGP593ZroO7f">20 fps</strong> en nueve mediciones. La GPU se queda al ~10 %, así que el cuello es la traducción ARM por CPU.</p>
+    <p data-page-node-id="iFgHJgRzcDcNR2xmmCuppd">1440x2880 son 4,15 Mpx frente a los 2,33 Mpx de hoy. Por el escalón medido, lo más probable es que caiga a 20 fps. Es el precio de subir la nitidez un 34 % sin tocar el tamaño en pantalla.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section data-page-node-id="82NJVjqU8Awt59nyZVshV8">
+  <h2 data-page-node-id="DtWeDVq70JVJ8zb60MmYkL"><span class="dot" style="color:#FFC821;background:#FFC821" data-page-node-id="JfkRVB6EGQiGJzxyRjtA6N"></span>5 · Modo tablet: qué es posible y qué no</h2>
+  <p class="section-sub" data-page-node-id="2GrmCPDQtDyjlsl8Y8B8JO">El objetivo que pediste —casi el doble de espacio sin perder nitidez— sí se puede. Pero no por donde yo lo intenté.</p>
+
+  <div class="grid" data-page-node-id="oiqLzuDazMEe7dGxHFpRqc">
+    <div class="blind-card" style="margin-bottom:0" data-page-node-id="Si9duFBPSayfRM4g2h85df">
+      <div class="blind-head" data-page-node-id="ihK0RH4SwmHGDv5bxhulV3"><span class="eye" data-page-node-id="WKBezrVyqcdI2q0CIFnNdV">▲</span><h3 data-page-node-id="3ckmDglpi4uKPf7btCk8wF">Lo que NO funciona</h3></div>
+      <p data-page-node-id="2X2sjFIooDCgab91rvsrMs"><code data-page-node-id="0wTQFxCq2iTOJrNYXhog9V">wm size</code> y <code data-page-node-id="ewyLnGkqQtDroFVldranvB">wm density</code> desde ADB. Cambian lo que Android compone, pero <strong data-page-node-id="962aFIlzkyt1mt9Vxx3hV4">no</strong> el tamaño con que se dibuja. Medido: con <code data-page-node-id="FQDi0N2J1PItrVU2i0dZWi">wm size 2160x2160</code> y la ventana a 1484 el dispositivo se dibujó <code data-page-node-id="fuopAVlmxB06gGlx1WH7zt">718x718</code>, la mitad del área actual. Y <code data-page-node-id="EFEmlGWbaDAHoiwkrcm0ei">gmtool admin edit --width/--height/--density</code>, que sí sería la vía correcta por línea de comandos, responde <code data-page-node-id="fDXIvEPagsOgT5d1BqW60o">A license is required to use this feature</code>: tu Genymotion es la edición FREE.</p>
+    </div>
+    <div class="creative-card" data-page-node-id="Jfmec6uZn0Ds3HGHlkxma1">
+      <div class="creative-head" data-page-node-id="4AnnlClOyXTDhE2Jg6qrWk"><span class="bulb" data-page-node-id="GdGM3HLZXLRYVqZj3LszHZ">◆</span><h3 data-page-node-id="0NJohrcNmmvDEKzVkd9sSB">Lo que SÍ funciona</h3><span class="effort" data-page-node-id="M5FmgdkOcPMmYnvcbXrd9m">en la app</span></div>
+      <p data-page-node-id="qEPAjk45lcrBNYqU3qB9KZ">Cambiar la <strong data-page-node-id="8hR81FohAFD5DPqyKEywNx">pantalla del perfil del dispositivo</strong>: clic derecho en el dispositivo (o el menú <code data-page-node-id="m7XGem9JIx93qvZuGQWjEK">⋮</code>) → <em data-page-node-id="jIZG4e0uD8ZfglgziRNqTr">Edit</em> → <em data-page-node-id="E9vQ2FxwHyC97ExszEWRFb">System</em> → <em data-page-node-id="ADUVrHShGhMxloti1eoMVf">Display</em> → <em data-page-node-id="bGyFSiNXAd7CZaqVGY1rZR">Primary Display</em> → resolución personalizada. Exige el dispositivo apagado. Es la única palanca que mueve el encuadre.</p>
+    </div>
+  </div>
+
+  <div class="card-panel" style="margin-top:18px" data-page-node-id="rZHzN9crXg0Onvlm9ucaJq">
+  <table data-page-node-id="Q59P14NwUaicw6SBAMCIEj">
+    <thead data-page-node-id="k7ydgzJFW9su5jjyrVWdRE"><tr data-page-node-id="T4W9f6drgTeNGczlZghGLk"><th data-page-node-id="dxeySZ035DSRa6TdH4Z05k">Perfil</th><th data-page-node-id="tWVbxpnMGGnVMmcCZvshfv">Densidad</th><th data-page-node-id="veflYHs4oq7VdENmZSG6CS">Ventana mínima</th><th data-page-node-id="en5S9HfUNDa4J67B7qTd6j">Dibujado</th><th data-page-node-id="4mxMOAJwRKEsAHCT12NcwN">Área</th><th data-page-node-id="LGzvd2W03Rvop5T50t6tp2">Comparación</th></tr></thead>
+    <tbody data-page-node-id="aVKbCLHpbZoBqSq1YxPkoI">
+      <tr data-page-node-id="WOmOAjoW7KPCZFy02DQ7V9"><td data-page-node-id="7DS6dlJHa5EEEXktrA5XEh"><code data-page-node-id="jvXTUJJlrxU6palEBvYFhS">1080x2160</code> (hoy)</td><td data-page-node-id="mUGJgubFsL1GWtPFtAVYJo">420 / 240</td><td data-page-node-id="6AoZUBBEvAu4zvirDrCl7G">767x1436</td><td data-page-node-id="wH8xfLj3duwv6qXnD3gDUi">718x1436</td><td data-page-node-id="n6W7tmxupfsIPOnID2DaFB">1,03 Mpx</td><td data-page-node-id="bsCec7HCQjLKbngnoznbQt">referencia</td></tr>
+      <tr data-page-node-id="pH6OEA6BBiPj99Hk4RAgA0"><td data-page-node-id="TsjtGPWVQMO4DBtPdhFDFH"><code data-page-node-id="IiyPPz1DB5FKae3OCV1xIy">1080x2160</code> + pixel perfect</td><td data-page-node-id="ErIwxESiccx3I318k1xdLg">—</td><td data-page-node-id="Q1gBhkjmoMVTP6R1fjYHd1">1128x1436</td><td data-page-node-id="QG1CMtkNMugfgFhmFuDcdC">1080x1436 visible</td><td data-page-node-id="n7CqfxVBFocnnYAlFkNWZO">1,55 Mpx</td><td data-page-node-id="EFB2SESo4rxNgu6V8sEVGe">+50 %, 1:1, recorta el alto</td></tr>
+      <tr class="hl" data-page-node-id="6Fifbf9DvWgzj0BuvncA1q"><td data-page-node-id="jeGcA9caCC7KpnstE5msfu"><code data-page-node-id="KFMmNDo7NRazRnrINwTzFe">1440x1440</code></td><td data-page-node-id="dQ8dW7gF3LAmfSRJvGCRAD">240</td><td data-page-node-id="rqwQJKvHKBhfsj2iECbqlS">1484x1436</td><td data-page-node-id="6NlhBJjQso6c4QNu6pADE8">1436x1436</td><td data-page-node-id="PXVEwwXpCa7m6CCP8JnVtB">2,06 Mpx</td><td data-page-node-id="P9GLedFPOA3tV70jUWAlyU">el doble, mapeo casi 1:1</td></tr>
+      <tr class="hl" data-page-node-id="2yKAnHcWQs3PwuyE3SH6Nv"><td data-page-node-id="EA9UdFFuR0jaCdBlXYcZ6w"><code data-page-node-id="YVRXEGwmzLuXe6bJVS9BMJ">2160x2160</code></td><td data-page-node-id="793f0x3ufgepseovwAtQbp">240</td><td data-page-node-id="rzkIXDBzCWbA0r2DPBvWJX">1484x1436</td><td data-page-node-id="0EgeAYLh5MIgRwZ39NK4EK">1436x1436</td><td data-page-node-id="9MjmcqHrTd2Uckb5aPnrn7">2,06 Mpx</td><td data-page-node-id="aBMASK0GBg3LpICTj79w9A">el doble, sobremuestreo 1,5x</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="finding" style="--sev:#FFB300;margin-top:18px" data-page-node-id="Uc3XKjahT2cD3R4kO4xHtb">
+    <header data-page-node-id="rvFnNmXf4YGy46RbyVfS0T"><span class="sev-badge" data-page-node-id="YEgOOlYXpzwUBxLznIi1x4">INFERIDO</span><span class="src-badge" data-page-node-id="LlrF5XDcMlvp5uICfuIatJ">aritmética sobre la regla del encuadre</span></header>
+    <h3 data-page-node-id="LPtjPsJfx81anCMpEyJ7Gi">Por qué el cuadrado duplica justo el área</h3>
+    <p data-page-node-id="coBvRl3n5TRp2MKbFQoEvQ">El rect dibujado es el perfil escalado para caber en la ventana. Con 1436 px de alto útil, un perfil cuadrado de 2160 da <code data-page-node-id="4pIF1kwrigFO7mzxz1IqJb">1436 × 1436</code> = 2,06 Mpx, frente a los <code data-page-node-id="dckeHND8MByeVBqRISuGmy">718 × 1436</code> = 1,03 Mpx de un perfil 1:2. Es exactamente el doble, y el sobremuestreo se mantiene en 1,5x, así que los gráficos siguen viéndose suaves (que es lo que buscabas al dejar pixel perfect apagado).</p>
+    <p data-page-node-id="5klUCLtmQmpWZ7gT1kbXgG"><strong data-page-node-id="vFjkQfnvu0zyAApfzqP2hT">Aviso de coste:</strong> son 4,67 Mpx de framebuffer frente a 2,33. Por el escalón de fps ya medido (1080 → 30 fps; 1620 y más → 20 fps), lo esperable es caer a 20 fps.</p>
+  </div>
+
+  <div class="finding" style="--sev:#7ED957;margin-top:18px" data-page-node-id="GxsxpuOt9j09QgxADz3V1M">
+    <header data-page-node-id="EaQlocZwUBlGZ0VLbDEj0O"><span class="sev-badge" data-page-node-id="DDkDdWe2WMKa2DTBZFih2i">MEDIDO</span><span class="src-badge" data-page-node-id="7DB9OG27IXgZErjG9X4ptI">vista pixel perfect, Ctrl+P</span></header>
+    <h3 data-page-node-id="a4NWsiUFoYM3PHLPjoIo60">La pusiste a mano, y resulta que gana un 50 % de área</h3>
+    <p data-page-node-id="GghAatL9EqCqW035criemw">Pixel perfect pone el mapeo <strong data-page-node-id="fOwnFvOfvTdrc1QH3Q14ZA">1:1 contra el perfil</strong>, no contra el framebuffer: el rect pasa a ser 1080x2160 y la ventana se vuelve un visor. Medido con el framebuffer apaisado, el contenido salió <code data-page-node-id="qH7J0M9Bda55InYNaMnloP">1080x540</code>: justo el framebuffer 2160x1080 encajado dentro de un rect de 1080 de ancho. Eso confirma de qué es el 1:1.</p>
+    <p data-page-node-id="Eu3BJ0qPMGh9aowtik6Z9Q">En la práctica, con tu ventana de 1436 de alto: <strong data-page-node-id="V4xPDImRspQO7AJNwX2xsc">1080x1436 = 1,55 Mpx</strong> visibles y cada píxel del dispositivo en un píxel de pantalla. Un 50 % más de área que el modo escalado. El precio es que el perfil es 2160 de alto y solo caben 1436: <strong data-page-node-id="gpn2KRF0oP1XpK68RxNDTF">se recorta y hay que desplazarse</strong>. Y para ver los 1080 px de ancho sin recorte lateral hace falta una ventana de al menos <code data-page-node-id="w730tMDfVFKBTBvc0ktNcW">1080 + 48 = 1128</code> px.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section data-page-node-id="fU9rafygGSfjKYkk41fSA9">
+  <h2 data-page-node-id="ekvVSK29D9Dv1VMfNM4FD6"><span class="dot" style="color:#FF3300;background:#FF3300" data-page-node-id="WeyoA2VBwLmnXbGkx8kMS1"></span>6 · Rotación: lo que sí y lo que no</h2>
+  <p class="section-sub" data-page-node-id="UoUfw5HxRm9INZYDSorwCG">Tenías razón en que la rotación cambia la interfaz. Lo que hace falta precisar es quién rota.</p>
+
+  <div class="grid" data-page-node-id="ISKVJu8fJDgsWHbC2NX1z1">
+    <div class="finding" style="--sev:#FF3300" data-page-node-id="c7UTViE2r73wBehj2u4eiU">
+      <header data-page-node-id="yBblvMqCSuQwv8GbUfBVWP"><span class="sev-badge" data-page-node-id="a77N7WA8ZaCu2NjYXbcPbo">MEDIDO</span><span class="src-badge" data-page-node-id="wRxkiZHggAbSdW4tTxE5uY">6 intentos forzados</span></header>
+      <h3 data-page-node-id="1ZOHFb1BoQ7kBc8sp7bQO0">Android no rota. En absoluto.</h3>
+      <p data-page-node-id="D5WM9KMiv0wMZFyCwbRWC4"><code data-page-node-id="aaGOtyaPZmRQqgA8n8drub">mRotation</code> se quedó en <code data-page-node-id="XXmGxIFdxLvDaFpF8YdRFI">0</code> en los seis intentos: <code data-page-node-id="smwYWiOfwAIi6Ed6ScAnIF">user_rotation</code> = 1, 2 y 3, y también con <code data-page-node-id="vzr25jfp6yWTl7wHOxFMqv">USER_ROTATION_LOCKED</code> y <code data-page-node-id="FwzqWyo1YrqcUhDUOg1z08">user_rotation=90</code>. El valor se registra, pero la pantalla no gira.</p>
+      <p data-page-node-id="QJzf7xaZ3Okeaxa0COlbTB">Con el juego abierto la actividad pide retrato (<code data-page-node-id="JFIWj8enNAC5vol8BEScn5">mLastOrientation=1</code>); con el juego cerrado el lanzador pide «sin sensor» (<code data-page-node-id="KIAo7L5X7LbH8ntOmMpszh">=5</code>). El sensor sí existe y está registrado (<em data-page-node-id="6lobdFB2A6zlKQ24rbbG8h">Genymotion Accelerometer</em>), pero da igual: la política de ventana no lo consulta.</p>
+      <p data-page-node-id="AQEFbK83ulfABfI4SlHAjS">Conclusión: la autorotación que tienes activada no puede hacer nada aquí.</p>
+    </div>
+
+    <div class="finding" style="--sev:#7ED957" data-page-node-id="5ixXbo7AGVgcB4ky0TAkf7">
+      <header data-page-node-id="Qs1e2lqWTLoptfCCGLn967"><span class="sev-badge" data-page-node-id="BpB04w0I3H6RkLs7ed3gCt">MEDIDO</span><span class="src-badge" data-page-node-id="p7oz3xUXkpib9OG3CQhIY9">corregido tras dejarlo a 180°</span></header>
+      <h3 data-page-node-id="F8N2l1c4D2KlrwzoiCHi1B">El reproductor sí rota, con Ctrl+R</h3>
+      <p data-page-node-id="wOoOvZxPpJUYIgIFdEbjJ9"><code data-page-node-id="1YrmW6jzb1qSszGCJmJfVc">Ctrl+R</code> es la acción <code data-page-node-id="spJFGXjbsENiizdG9A0vUK">ROTATE_LEFT</code>: gira <strong data-page-node-id="XdzsNmoOBKkRhr3SgbYPmx">90° por pulsación</strong> y recorre cuatro estados — 0°, 90°, 180° y 270°. Necesita foco real de teclado; con la ventana enfocada de verdad llega, enviando la tecla «a la ventana» sin foco no.</p>
+      <p data-page-node-id="j6iA5alJ1XF1j0Me2fC8cV"><strong data-page-node-id="MRXYYqvMEsNmvlSQNAdhHI">Aquí me equivoqué, y lo dejo escrito:</strong> en la primera pasada clasifiqué la orientación sólo por el alto de la banda de contenido. Eso distingue vertical de horizontal, pero <strong data-page-node-id="SJXfaXD9tJAaMlZVrmyrcD">no distingue 0° de 180°</strong>: los dos ocupan la misma banda. Por eso describí un falso «alterna vertical ↔ horizontal» y por eso te lo dejé boca abajo. Los cuatro estados reales son 0° y 180° (verticales, uno invertido) y 90° y 270° (horizontales, uno espejado).</p>
+    </div>
+  </div>
+
+  <div class="finding" style="--sev:#FF4E00;margin-top:18px" data-page-node-id="ZJbY37O6TnWyMra1fncogT">
+    <header data-page-node-id="WPE0V6jRmDBFQ5ecRt6CYF"><span class="sev-badge" data-page-node-id="CQSPDHlVX8wJrH4yTcFHjf">MEDIDO</span><span class="src-badge" data-page-node-id="Kyc20LPlwkZF8QjlhHDcfl">la trampa</span></header>
+    <h3 data-page-node-id="XATFAldb5j5yU2fHVROMZw">Rotar no vuelve a encuadrar: en horizontal pierdes el 75 % de la pantalla</h3>
+    <p data-page-node-id="yCGuSsJJYEjmniIprCsiLY">El zoom sigue siendo <code data-page-node-id="Y1QTxWDwJ1zctn0K1yEySe">0,6648</code> después de rotar. En horizontal el dispositivo queda <code data-page-node-id="nrFWyV19ncpDbAbcHLLzs0">718 x 359 px</code> con barras negras de 538 px arriba y abajo.</p>
+    <p data-page-node-id="9x3VE4z50MFlrGR3zbsg0f">Área: <strong data-page-node-id="Nq2trx4I0cAo3q2CiAWzBw">0,26 Mpx</strong> frente a 1,03 Mpx en vertical. Es decir, en horizontal el juego ocupa <strong data-page-node-id="lF3jV65gJX8pSNmkZ5j1mB">una cuarta parte</strong> de lo que ocupa ahora. El alto de la ventana deja de ser la restricción y el ancho de 719 pasa a mandar sobre un dispositivo que ahora mide 2160 de ancho.</p>
+    <p data-page-node-id="tIzWqJJfc4qjwvE1hN1X2s">Por eso el modo horizontal no te sirve como está: necesitaría una ventana de unos 2160 px de ancho para empatar.</p>
+  </div>
+
+  <div class="card-panel" style="margin-top:18px" data-page-node-id="VjW1TPAB8AUeosdr2NQH7k">
+  <table data-page-node-id="uaMApEgNG0ZYB7CRONnVER">
+    <thead data-page-node-id="GzS7wYK6Y3ungtDo7OBtFY"><tr data-page-node-id="KDZr9fLEVhXvUzZ3TLDZBd"><th data-page-node-id="OQhbsi0mGOxPUNUSqNiWEW">Atajo</th><th data-page-node-id="6xTyOBFlLQXT7LavenVKVV">Acción</th><th data-page-node-id="0hX5AskXKJbatadEWtWARy">Atajo</th><th data-page-node-id="WBrJ5GHVToE0rP62g6YH7A">Acción</th></tr></thead>
+    <tbody data-page-node-id="fhiAwOzILMZoA1K1VBpg3e">
+      <tr data-page-node-id="rcY2nAhRF3YbWIECA5y1Vt"><td data-page-node-id="6wFz7s9GBxEr1k2duLSBI7"><code data-page-node-id="x2oVzImdredE0tsgReZTGn">Ctrl+R</code></td><td data-page-node-id="Y4Dg9pGmXNqQUfZWzpS70d">rotar a la izquierda</td><td data-page-node-id="vl1XO5VxkZFqdqOK1feTKq"><code data-page-node-id="AgpHOlEX5EWDbgKhJ9yk7h">Ctrl+Shift+R</code></td><td data-page-node-id="PRCApdeB13B9Ue5JNLvzfS">rotar a la derecha</td></tr>
+      <tr data-page-node-id="W1J87ipZLhGl54cnE2qkwN"><td data-page-node-id="8XXfEHHfzHNHk6W02oflCP"><code data-page-node-id="p2MYfOE0VrnYHSnwTmiiuR">Ctrl+P</code></td><td data-page-node-id="g4w42qeM9jsqIqDiXqAPyI">pixel perfect</td><td data-page-node-id="1AItopSfHRBALiCxZcq7ra"><code data-page-node-id="Bi7y1UcAVSIFGsAoMCilIF">Ctrl+T</code></td><td data-page-node-id="dxUbSzXGZwRU16GytjHn8O">mostrar/ocultar barra</td></tr>
+      <tr data-page-node-id="xTSqseXEXMNGYMtHkwtQlz"><td data-page-node-id="UBBqVAL6oBf9tI0Q4pntoa"><code data-page-node-id="KpK5GbGuF7N8qeyVPH3FiW">Ctrl+Shift+F</code></td><td data-page-node-id="CPAuZtPKxmAQmlGIyT4ZCf">pantalla completa</td><td data-page-node-id="xYS6YR27yZQEiJQDDo3rMO"><code data-page-node-id="wF3vlU4QkfnkEmE92J8KEH">Ctrl+Shift+S</code></td><td data-page-node-id="ogYhEgvMVoSjHFqU9nZiw6">captura</td></tr>
+      <tr data-page-node-id="jqEDyI0k8ak3eZONUO8zrl"><td data-page-node-id="uJg4eNMfJbq6QwDSJhRGuL"><code data-page-node-id="NT5sqr1R4WNHxNDguaDEwd">Ctrl+Shift+H</code></td><td data-page-node-id="Rbng7ZEvJS5CD7E4ZigLKY">inicio</td><td data-page-node-id="7MPRiX3tQmz4HVJOZQu4uc"><code data-page-node-id="xBDYtaZQw6JSRKVD6McRtP">Ctrl+Backspace</code></td><td data-page-node-id="hOO2tevpTDxVanPhSLFCnI">atrás</td></tr>
+      <tr data-page-node-id="MXRzrDKqT0V2dwxKKFUUG4"><td data-page-node-id="zev9TAIbbqVfvmbauqIeHd"><code data-page-node-id="sspRa6Nul9YIgmZJwPICCP">Ctrl+Shift+O</code></td><td data-page-node-id="McwckcGTxU7k7W9EeB9xbp">vista general</td><td data-page-node-id="CiIfhw2abTAlDCF8vYt0NA"><code data-page-node-id="MTcyFOGYzkrSbSnpKBKw05">Ctrl+Shift+M</code></td><td data-page-node-id="sVeBr1KsygxwfwJiEeo2t9">menú</td></tr>
+    </tbody>
+  </table>
+  <p style="color:#9AA0A8;font-size:13px;margin-top:12px" data-page-node-id="sFMAuANcAALGBD5gpwbrHk">
+    No existe ningún atajo de zoom o de «ajustar a la ventana»: revisadas las cadenas del plugin, las únicas coincidencias de «zoom» pertenecen al widget del mapa, no al visor.
+  </p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section data-page-node-id="IOvbojJCWnU3ECfkyGMM1w">
+  <h2 data-page-node-id="0FbI9bUXSIv87aw5VoTGhf"><span class="dot" style="color:#9AA0A8;background:#9AA0A8" data-page-node-id="Cw54wKUgU9i9wUEkb39Zwb"></span>7 · Qué está medido y qué no</h2>
+  <p class="section-sub" data-page-node-id="XoRAacEKNHH1DLaOLiHulu">Para que puedas pesarlo tú.</p>
+
+  <div class="card-panel" data-page-node-id="6XVT4hQbIqAmP2tE2Mkxm9">
+  <table data-page-node-id="dHeOPMyfYviE96yVnzA7PV">
+    <thead data-page-node-id="ICAldNi3Ptv19KPJGChfCn"><tr data-page-node-id="BMp9ekNi9qLoUcRlJuy93J"><th style="width:46%" data-page-node-id="3hjA0L1bgrmXTiMUZIPwfz">Afirmación</th><th style="width:16%" data-page-node-id="nbpyAYBNpz6mnJNjJNbtTY">Nivel</th><th data-page-node-id="zGFAhY1B26z8BKrggSxvzV">Base</th></tr></thead>
+    <tbody data-page-node-id="sgczMY6ieTunptPLFsSyG5">
+      <tr data-page-node-id="Drnc3ABgDu56YQ15JeKJ0I"><td data-page-node-id="8XgMmrEEuDYVw2LJ0Ym3TC">El reproductor encuadra el PERFIL del dispositivo, no el framebuffer de Android</td><td style="color:#7ED957" data-page-node-id="z4KReSWTKuHpaErS6nTCZv"><strong data-page-node-id="N70Zt7kK03r9DwGaJl4GPf">medido</strong></td><td data-page-node-id="tbg3XWRWzNpK54Y0uCUDlv">cuatro configuraciones; el cuadrado por <code data-page-node-id="gF2IOBSS2ui0CXTp2sc1cY">wm size</code> dio 718x718 en vez de 1436x1436</td></tr>
+      <tr data-page-node-id="f5A4WzTHNqCu7bbmYuRI0i"><td data-page-node-id="cAOdtEmO8IETLgSxVlSo0V">Poner el framebuffer cuadrado REDUCE el área a la mitad (0,52 vs 1,03 Mpx)</td><td style="color:#7ED957" data-page-node-id="yU9GmBdxct5Nq29wtv0q3d"><strong data-page-node-id="mbwESWkdspbPzgtjyDGgdW">medido</strong></td><td data-page-node-id="GPA6gvudRVAXTE5UYIGNli">ventana 1484 y ventana 3436, las dos dan 718x718</td></tr>
+      <tr data-page-node-id="BeU9gzfW95dvDUAtixWQel"><td data-page-node-id="MYOfB5KYrEIf7cv4wWCNCJ">No existe ningún «ancho de nacimiento congelado»</td><td style="color:#7ED957" data-page-node-id="ouwCL1ZcWFiEejM2tEgG1X"><strong data-page-node-id="dOAMt9QkVX4WyTi1NCunHE">medido</strong></td><td data-page-node-id="ocfV8jTsiyHjcz2B8eKzhh">refutación: ventana nacida a 3436 px de ancho, mismo resultado</td></tr>
+      <tr data-page-node-id="eqBKmuJCwOdJc7VPPJXGFd"><td data-page-node-id="94yBkAOn34igmJn5JqkbmO">Pixel perfect = mapeo 1:1 contra el PERFIL, con la ventana como visor</td><td style="color:#7ED957" data-page-node-id="WL31YqLPy8zfFC6YaFHXen"><strong data-page-node-id="pJIyRIl3AGwyFedC9CLcaY">medido</strong></td><td data-page-node-id="ZCGy9u7Emx0vwZthhxNbgV">framebuffer 2160x1080 → contenido 1080x540 (rect de 1080 de ancho)</td></tr>
+      <tr data-page-node-id="P9N3eoj9eIV6HD48hJWmLS"><td data-page-node-id="9Npa5lY46aoUJVSvECWkJU">Pixel perfect da 1080x1436 = 1,55 Mpx visibles (+50 %)</td><td style="color:#7ED957" data-page-node-id="jtwFJVE9q1Cm4H2CIv4QQT"><strong data-page-node-id="g8bRzuNkgBAeqK5GMaB5UV">medido</strong></td><td data-page-node-id="Gxwg4jYOulzo7W9K6rTab5">sonda blanca (app de Ajustes) sobre la ventana</td></tr>
+      <tr data-page-node-id="In5ncus7zUQzTlAj3ec9w0"><td data-page-node-id="WRQSjT9BA1VueAhEqX26ec">Geometría del modo escalado (718 + 48 en ventana de 767)</td><td style="color:#7ED957" data-page-node-id="LiuoQXnutIn1y2iOLLqsmP"><strong data-page-node-id="enGmUUpW5sdJZdUlI8Dyh4">medido</strong></td><td data-page-node-id="YYKiGY7CVv7azsMPFgxEgy">captura con la frontera en x=718 y la barra a 719..766</td></tr>
+      <tr data-page-node-id="EXuQpgPa9X01leCSsPQTHA"><td data-page-node-id="PdxZ1HJyeGWREThFGiDllp">Android no rota</td><td style="color:#7ED957" data-page-node-id="UzfZFuLcg2GZk20tOFEGK2"><strong data-page-node-id="KpSUheRa0iB4VqJWB0UFdk">medido</strong></td><td data-page-node-id="K4uh1ksOD4ZMfsHL3YwFip">seis intentos, mRotation siempre 0</td></tr>
+      <tr data-page-node-id="CVJDSSiDPFmhk0i2IT8KZF"><td data-page-node-id="uL0PYlFG95gOyjJHPecbGS">Ctrl+R gira en pasos de 90°</td><td style="color:#7ED957" data-page-node-id="xkWG2QRhk8AeZLAqXxxBKG"><strong data-page-node-id="KwAcYaBKPaby3fvhCCIPPv">medido</strong></td><td data-page-node-id="dBgFdlut1CyeWLyLSKNXx0">corregido: clasifiqué por alto de banda y confundí 0° con 180°</td></tr>
+      <tr data-page-node-id="rZtqGO3FPeyxP06K3B1yAu"><td data-page-node-id="kUFrIrPRuVBbAqc37PINmU">Horizontal ocupa 0,26 Mpx</td><td style="color:#7ED957" data-page-node-id="WiZCz7e7ewaB73ygJ1BEoG"><strong data-page-node-id="eBENZpLhCxbAzxR3bgDx0N">medido</strong></td><td data-page-node-id="0cw0HvFPeENWOERdHfuyRZ">banda de 359 px con la ventana a 767</td></tr>
+      <tr data-page-node-id="fDr4H6yDjMB4k7dcFiMB52"><td data-page-node-id="VvyDeiWnpRuanzHh037FVU">La densidad no cambia el HUD del juego</td><td style="color:#7ED957" data-page-node-id="9mVkxfASNFOsjd0WBwUGPZ"><strong data-page-node-id="aAkNaNAiB16EeB4TFGsvyB">medido</strong></td><td data-page-node-id="vJoaLxbABAA329jhIDaPNE">diff de capturas 8,4 frente a ruido 7,7</td></tr>
+      <tr data-page-node-id="J41Fk9Laek0qGcAYfLieHv"><td data-page-node-id="mrcsdAjG5gO4sEdQ2dp74q">Cambiar el perfil a 2160x2160 daría 1436x1436 = 2,06 Mpx</td><td style="color:#FFB300" data-page-node-id="Lry2maYNECDojMZI6m1N9S"><strong data-page-node-id="jZf6EduIUWqZkHaQ1M3D4L">inferido</strong></td><td data-page-node-id="1UfUDXepcZUGCWEHMzs1Ff">aritmética sobre la regla medida; no probado porque la vía CLI exige licencia</td></tr>
+      <tr data-page-node-id="L2iJty1pK2b0CwNU0PfA67"><td data-page-node-id="VFrGrLOGw3oyC6SMU38Iwi">Los fps caerían a 20 con 4,67 Mpx</td><td style="color:#FFB300" data-page-node-id="Q0pvJtBR9ZQoPkOEX1Rhh6"><strong data-page-node-id="FBXXFvO4jEpQD3LlxfwnXf">inferido</strong></td><td data-page-node-id="HJ4uwRdOON7bV7FvFjqPmL">por el escalón ya medido a 1620, 1800 y 2160</td></tr>
+      <tr data-page-node-id="lFtHTcvEDXUvlQb8ctw77o"><td data-page-node-id="HhoMPNqjwgYQezYvj9Vrot">Que la edición FREE deje cambiar Primary Display en la app</td><td style="color:#FF4E00" data-page-node-id="dUbD1qbmSb2KG3Ck1pUyzR"><strong data-page-node-id="IjT3UYMv1cDUFw6Rkr8loC">sin verificar</strong></td><td data-page-node-id="dFaPDhNCYpK98FC6ranjqE">la documentación lo describe; gmtool lo bloquea por licencia</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+</main>
+
+<footer data-page-node-id="LR5dSUCy3k9KDxaWX4HeBG">
+  <span class="brand" data-page-node-id="xLRbxuziPD9yZtijKD5YeB">n30</span> · registro del 30-sep-2026 · Genymotion sobre Hyprland 0.56.2 ·
+  todas las cifras salen de medir el sistema en marcha
+</footer>
+
+</body>
+</html>

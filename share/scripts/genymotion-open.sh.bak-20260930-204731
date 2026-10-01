@@ -41,10 +41,6 @@ GENY_VM_ROOT="${GENY_VM_ROOT%/}"
 
 GENY_VM_DIR="$GENY_VM_ROOT/$VM_NAME"
 
-# Perfil del dispositivo. Aquí vive el tamaño de pantalla con el que el
-# reproductor encuadra el dibujo (ver "PERFIL DEL DISPOSITIVO").
-DEVICE_CONFIG="$GENY_VM_DIR/shared/config/device.json"
-
 # ------------------------------------------------------------
 # Ventana Hyprland
 # ------------------------------------------------------------
@@ -52,47 +48,12 @@ DEVICE_CONFIG="$GENY_VM_DIR/shared/config/device.json"
 GENY_CLASS="Genymotion Player"
 GENY_TITLE_PREFIX="Google Pixel 6 ("
 
-# Ancho del tile cuando NO se pide resolución por parámetro.
-#
-# No es un número arbitrario: está elegido para que el contenido llene
-# la altura útil del workspace. La fórmula, deducida de las medidas del
-# 2026-09-30, es
-#
-#     ancho_tile = alto_util * (perfil_ancho / perfil_alto) + 48
-#
-# donde 48 es la barra de herramientas del reproductor (se resta del
-# ancho) y alto_util es la altura del workspace: 1436 px en un monitor
-# de 1440 con 2 px de borde arriba y abajo.
-#
-#     1080x2160 (1:2) -> 1436 * 0,5 + 48 =  766   (medido: dibuja 718x1436)
-#     2160x2160 (1:1) -> 1436 * 1,0 + 48 = 1484   (medido: dibuja 1436x1436)
-#
-# Con el tile de 767 y un perfil cuadrado el dibujo se quedaría en
-# 719x719, la MITAD de área que en vertical. Por eso -portrait y
-# -landscape cambian las dos cosas a la vez: el perfil del dispositivo
-# y el ancho del tile. Cuando se pasa uno de esos flags, el ancho no se
-# toma de aquí: se calcula al vuelo en tile_width_for_profile().
+# Ancho exacto deseado del tile
 GENY_WIDTH=767
 
 # Límite de intercambios al llevar el tile al borde izquierdo.
 # Normalmente basta uno; el límite también cubre workspaces con muchos tiles.
 GENY_LEFT_MAX_SWAPS=32
-
-# ------------------------------------------------------------
-# Resolución pedida por parámetro (vacío = no tocar nada)
-# ------------------------------------------------------------
-
-PROFILE_W=""
-PROFILE_H=""
-PROFILE_LABEL=""
-TILE_WIDTH_APPLIED=""
-RESOLUTION_ONLY=0
-
-# Densidad Android. El perfil declara 320, pero aquí se fuerza 240 desde
-# el 2026-09-30: con 2160x2160 da 1440x1440 dp (sw1440dp, tableta) en vez
-# de 1080x1080 dp (sw1080dp). Es una incoherencia heredada; se cambia con
-# -d <dpi>.
-DENSITY=240
 
 # ------------------------------------------------------------
 # ADB
@@ -191,13 +152,6 @@ lua_swap_left() {
 lua_resize() {
     printf 'hl.dsp.window.resize({ x = %s, y = %s, window = "address:%s" })' \
         "$1" "$2" "$3"
-}
-
-# Medido el 2026-09-30: el player IGNORA SIGTERM. Cerrar su ventana sí
-# lo mata, y con él a qemu. Es el cierre limpio para poder tocar el
-# perfil del dispositivo.
-lua_close() {
-    printf 'hl.dsp.window.close({ window = "address:%s" })' "$1"
 }
 
 
@@ -433,44 +387,6 @@ move_pixel_window_left() {
 
 
 # ============================================================
-# HYPRLAND - ANCHO DE TILE PARA UN PERFIL DADO
-#
-# El contenido se dibuja escalado al rectángulo del perfil dentro del
-# área de la ventana, y esa área es (ancho - 48) x alto, porque el
-# reproductor gasta 48 px de barra de herramientas a la derecha. Para
-# que el contenido llene la altura disponible:
-#
-#     ancho_tile = alto * (perfil_ancho / perfil_alto) + 48
-#
-# Comprobado con las medidas del 2026-09-30 (alto 1436):
-#     1080x2160 -> 1436 * 0,5 + 48 =  766   (dibujó 718x1436)
-#     2160x2160 -> 1436 * 1,0 + 48 = 1484   (dibujó 1436x1436)
-#
-# Devuelve el ancho por stdout; 1 si no se puede calcular.
-# ============================================================
-
-tile_width_for_profile() {
-
-    local height="$1"
-    local width
-
-    [[ "$height" =~ ^[0-9]+$ ]] || return 1
-    [[ "$PROFILE_W" =~ ^[0-9]+$ ]] || return 1
-    [[ "$PROFILE_H" =~ ^[0-9]+$ ]] || return 1
-
-    (( PROFILE_H > 0 )) || return 1
-
-    # Redondeo al más cercano sin bc ni awk: (+ divisor/2) / divisor.
-    width=$(( (height * PROFILE_W + PROFILE_H / 2) / PROFILE_H + 48 ))
-
-    # Cordura: si sale algo disparatado, mejor no redimensionar.
-    (( width >= 200 && width <= 4000 )) || return 1
-
-    printf '%s\n' "$width"
-}
-
-
-# ============================================================
 # HYPRLAND - RESIZE TILE
 # ============================================================
 
@@ -482,8 +398,6 @@ resize_pixel_window() {
     local final_width
     local final_height
     local floating
-    local target_width="$GENY_WIDTH"
-    local computed_width=""
 
     have hyprctl || return 0
 
@@ -508,24 +422,10 @@ resize_pixel_window() {
         return 1
     fi
 
-    # Con perfil pedido por parámetro, el ancho se calcula para llenar
-    # la altura; sin él se mantiene el ancho de siempre.
-    if [[ -n "$PROFILE_W" ]]; then
-
-        computed_width="$(tile_width_for_profile "$height" || true)"
-
-        if [[ -n "$computed_width" ]]; then
-            target_width="$computed_width"
-            echo "   Perfil ${PROFILE_W}x${PROFILE_H}: ancho calculado para llenar ${height}px de alto."
-        else
-            echo "⚠️ No pude calcular el ancho para el perfil; uso ${GENY_WIDTH}px."
-        fi
-    fi
-
-    echo "   Objetivo: ${target_width}x${height}"
+    echo "   Objetivo: ${GENY_WIDTH}x${height}"
 
     result="$(
-        hyprctl dispatch "$(lua_resize "$target_width" "$height" "$address")" \
+        hyprctl dispatch "$(lua_resize "$GENY_WIDTH" "$height" "$address")" \
             2>&1
     )"
 
@@ -546,12 +446,10 @@ resize_pixel_window() {
     echo "   Resultado: ${final_width}x${final_height}"
     echo "   Floating: $floating"
 
-    if [[ "$final_width" == "$target_width" ]]; then
-        echo "✅ Ancho confirmado en ${target_width}px."
-        TILE_WIDTH_APPLIED="$target_width"
+    if [[ "$final_width" == "$GENY_WIDTH" ]]; then
+        echo "✅ Ancho confirmado en ${GENY_WIDTH}px."
     else
         echo "⚠️ Hyprland dejó el ancho en ${final_width}px."
-        TILE_WIDTH_APPLIED="$final_width"
     fi
 }
 
@@ -813,362 +711,38 @@ wait_for_genyshell() {
 
 
 # ============================================================
-# PERFIL DEL DISPOSITIVO - TAMAÑO DE PANTALLA
-#
-# MEDIDO el 2026-09-30: el reproductor de Genymotion encuadra el
-# TAMAÑO DE PANTALLA DEL PERFIL del dispositivo (el número que sale en
-# el título de la ventana, "Google Pixel 6 (2160x2160, 320dpi)"), NO el
-# framebuffer vivo de Android.
-#
-#     rect_dibujado = perfil * min( (ancho_ventana - 48) / perfil_ancho,
-#                                   alto_ventana / perfil_alto )
-#
-# Consecuencia contraintuitiva y comprobada: poner el framebuffer
-# cuadrado con "wm size 2160x2160" no agranda el dibujo, lo ENCOGE a la
-# mitad, porque el rect sigue siendo el del perfil.
-#
-# Por eso un flag de resolución tiene que tocar el perfil. Vías:
-#
-#   app       Editar > Sistema > Pantalla > Primary Display. Es la vía
-#             oficial, y la app es quien escribe el fichero de abajo.
-#   gmtool    "gmtool admin edit --width/--height/--density" existe (se
-#             ve en "gmtool admin edit -h"), pero responde "A license is
-#             required to use this feature". Y devuelve rc=0 aunque
-#             falle, así que hay que leer el texto, no el código de
-#             salida. "gmtool admin list" sí funciona sin licencia.
-#   fichero   shared/config/device.json -> hardware_profile
-#             .display_settings.displays[0]. Es lo que hace este script,
-#             con copia previa y hash.
-#
-# El player lee el perfil AL ARRANCAR, así que si la VM está encendida
-# hay que pararla antes de cambiarlo; y como la app puede reescribir el
-# fichero, el cambio se hace con la VM parada.
-# ============================================================
-
-profile_get_size() {
-
-    have python3 || return 1
-    [[ -f "$DEVICE_CONFIG" ]] || return 1
-
-    python3 - "$DEVICE_CONFIG" <<'PY'
-import json
-import sys
-
-try:
-    with open(sys.argv[1], encoding="utf-8") as handle:
-        data = json.load(handle)
-    display = data["hardware_profile"]["display_settings"]["displays"][0]
-    print(f'{display["width"]} {display["height"]}')
-except Exception:
-    sys.exit(1)
-PY
-}
-
-
-profile_set_size() {
-
-    local width="$1"
-    local height="$2"
-
-    have python3 || return 1
-
-    # Reescribe SÓLO las dos líneas del tamaño. Antes de escribir nada
-    # compara el antes y el después, y aborta si el diff no son
-    # exactamente esas dos líneas: así un cambio de formato de la app no
-    # puede colarse como efecto colateral. Escribe en un temporal del
-    # mismo directorio y hace os.replace, que es atómico.
-    #
-    # El heredoc va a columna 0 a propósito: es lo que exige bash.
-    python3 - "$DEVICE_CONFIG" "$width" "$height" <<'PY'
-import difflib
-import json
-import os
-import stat
-import sys
-import tempfile
-
-path, width, height = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
-
-try:
-    with open(path, encoding="utf-8") as handle:
-        original = handle.read()
-    data = json.loads(original)
-except OSError as error:
-    sys.exit(f"no pude leer el perfil {path}: {error}")
-except ValueError as error:
-    sys.exit(f"el perfil {path} no es JSON válido: {error}")
-
-try:
-    displays = data["hardware_profile"]["display_settings"]["displays"]
-    if not displays:
-        raise KeyError
-except (KeyError, TypeError):
-    sys.exit("el perfil no tiene ninguna pantalla declarada")
-
-if len(displays) > 1:
-    print(
-        f"aviso: el perfil declara {len(displays)} pantallas; "
-        "cambio sólo la primaria (displays[0])",
-        file=sys.stderr,
-    )
-
-displays[0]["width"] = width
-displays[0]["height"] = height
-
-rewritten = json.dumps(data, indent=4, sort_keys=True) + "\n"
-
-changed = [
-    line
-    for line in difflib.unified_diff(
-        original.splitlines(), rewritten.splitlines(), lineterm="", n=0
-    )
-    if line[:1] in "+-" and not line.startswith(("+++", "---"))
-]
-
-if len(changed) > 4 or not all(
-    '"width"' in line or '"height"' in line for line in changed
-):
-    sys.exit(
-        "abortado: reescribir el perfil tocaría líneas que no son el "
-        f"ancho y el alto ({len(changed)}): {changed[:6]}"
-    )
-
-directory = os.path.dirname(path) or "."
-descriptor, temporary = tempfile.mkstemp(dir=directory, prefix=".device.json.")
-
-try:
-    with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-        handle.write(rewritten)
-    os.chmod(temporary, stat.S_IMODE(os.stat(path).st_mode))
-    os.replace(temporary, path)
-except BaseException:
-    try:
-        os.unlink(temporary)
-    except OSError:
-        pass
-    raise
-PY
-}
-
-
-# ¿Hay un player de ESTE Genymotion en marcha?
-# Se compara el ejecutable real de cada proceso "player" con $PLAYER para
-# no confundirlo con nada que se llame igual. (Un "pgrep -f" se
-# autoempareja con el propio shell que lo lanza.)
-genymotion_running() {
-
-    local executable
-    local pid
-
-    executable="$(readlink -f "$PLAYER" 2>/dev/null || printf '%s' "$PLAYER")"
-
-    for pid in $(pgrep -x player 2>/dev/null || true); do
-        if [[ "$(readlink -f "/proc/$pid/exe" 2>/dev/null)" == "$executable" ]]
-        then
-            return 0
-        fi
-    done
-
-    return 1
-}
-
-
-# ¿Está abierta la app de Genymotion (el lanzador)?
-# Es IMPORTANTE antes de tocar el perfil: la app es la escritora normal
-# de device.json y lo reescribe al apagar la VM, normalizando el orden de
-# algunas listas (medido el 30-sep-2026: cambió el orden de
-# "supported_form_factors"). Si está abierta puede revertir el cambio con
-# su propia copia en memoria.
-genymotion_app_running() {
-
-    local executable
-    local pid
-
-    executable="$(
-        readlink -f "$GENY_PATH/genymotion" 2>/dev/null ||
-            printf '%s' "$GENY_PATH/genymotion"
-    )"
-
-    for pid in $(pgrep -x genymotion 2>/dev/null || true); do
-        if [[ "$(readlink -f "/proc/$pid/exe" 2>/dev/null)" == "$executable" ]]
-        then
-            return 0
-        fi
-    done
-
-    return 1
-}
-
-
-# Parar la VM. Primero la vía documentada (gmtool); si la edición
-# gratuita no la permite, se cierra la ventana del reproductor, que es
-# el único cierre limpio que funciona (el player ignora SIGTERM).
-#
-# MEDIDO el 2026-09-30: "gmtool admin stop <nombre>" SÍ funciona sin
-# licencia (responde "Virtual device stopped successfully"). La caída a
-# cerrar la ventana se queda por si otra edición lo bloquea.
-stop_genymotion() {
-
-    local output
-    local address
-    local attempt
-
-    genymotion_running || return 0
-
-    echo "🛑 Parando la VM..."
-
-    output="$(
-        timeout 60 "$GENY_PATH/gmtool" admin stop "$VM_NAME" 2>&1 || true
-    )"
-
-    if grep -qi "license is required" <<< "$output"; then
-        echo "   gmtool no puede parar la VM sin licencia."
-    fi
-
-    for ((attempt=1; attempt<=20; attempt++)); do
-        genymotion_running || { echo "✅ VM parada."; return 0; }
-        sleep 0.5
-    done
-
-    if have hyprctl; then
-
-        address="$(find_pixel_window || true)"
-
-        if [[ -n "$address" && "$address" != "null" ]]; then
-            echo "   Cierro la ventana del reproductor ($address)..."
-            hyprctl dispatch "$(lua_close "$address")" >/dev/null 2>&1 || true
-        fi
-    fi
-
-    for ((attempt=1; attempt<=20; attempt++)); do
-        genymotion_running || { echo "✅ VM parada."; return 0; }
-        sleep 0.5
-    done
-
-    return 1
-}
-
-
-# Lleva el perfil del dispositivo a WxH. Sin argumentos no hace nada.
-apply_profile_resolution() {
-
-    local width="$1"
-    local height="$2"
-
-    local current
-    local backup
-    local hash_original
-    local hash_backup
-    local hash_new
-
-    [[ -n "$width" && -n "$height" ]] || return 0
-
-    [[ -f "$DEVICE_CONFIG" ]] ||
-        die "No encuentro el perfil del dispositivo: $DEVICE_CONFIG"
-
-    have python3 ||
-        die "Necesito python3 para editar el perfil del dispositivo."
-
-    have sha256sum ||
-        die "Necesito sha256sum para verificar la copia del perfil."
-
-    current="$(profile_get_size || true)"
-
-    if [[ "$current" == "$width $height" ]]; then
-        echo "✅ El perfil ya está en ${width}x${height}: no toco nada."
-        return 0
-    fi
-
-    echo
-    echo "🔧 Perfil del dispositivo: ${current:-desconocido} -> ${width}x${height}"
-
-    if genymotion_running; then
-        echo "   La VM está encendida y el player lee el perfil al arrancar."
-        echo "   Hay que pararla para que el cambio tenga efecto."
-        stop_genymotion ||
-            die "No pude parar la VM; no toco el perfil."
-    fi
-
-    if genymotion_app_running; then
-        echo "⚠️ La app de Genymotion está abierta. Ella también escribe este"
-        echo "   fichero y puede revertir el cambio con su copia en memoria."
-        echo "   Si el tamaño no se aplica, ciérrala y vuelve a lanzar."
-    fi
-
-    backup="${DEVICE_CONFIG}.bak-$(date +%Y%m%d-%H%M%S)"
-
-    cp -p "$DEVICE_CONFIG" "$backup" ||
-        die "No pude copiar el perfil a $backup"
-
-    hash_original="$(sha256sum "$DEVICE_CONFIG" | awk '{print $1}')"
-    hash_backup="$(sha256sum "$backup" | awk '{print $1}')"
-
-    if [[ "$hash_original" != "$hash_backup" ]]; then
-        die "La copia no coincide con el original; aborto sin tocar nada."
-    fi
-
-    echo "💾 Copia: $backup"
-    echo "   sha256 (original == copia): $hash_original"
-
-    if ! profile_set_size "$width" "$height"; then
-        echo "⚠️ La escritura falló; restauro desde la copia."
-        cp -p "$backup" "$DEVICE_CONFIG"
-        die "Perfil restaurado desde $backup"
-    fi
-
-    if [[ "$(profile_get_size || true)" != "$width $height" ]]; then
-        echo "⚠️ El perfil no se relee como ${width}x${height}; restauro."
-        cp -p "$backup" "$DEVICE_CONFIG"
-        die "Perfil restaurado desde $backup"
-    fi
-
-    hash_new="$(sha256sum "$DEVICE_CONFIG" | awk '{print $1}')"
-
-    echo "   sha256 nuevo: $hash_new"
-    echo "✅ Perfil actualizado a ${width}x${height}."
-}
-
-
-# ============================================================
 # RESOLUCIÓN ANDROID
 # ============================================================
 
 configure_display() {
 
     echo
-    echo "🖥️ Ajustando pantalla Android..."
+    echo "🖥️ Ajustando densidad Android..."
 
-    # El tamaño dibujado lo manda el PERFIL del dispositivo, que se
-    # cambia con -portrait / -landscape ANTES de arrancar (ver "PERFIL
-    # DEL DISPOSITIVO"). Aquí no se escribe un "wm size" a mano: se
-    # RESETEA, para que Android componga a su tamaño físico, que es
-    # justo el del perfil. Así un override viejo de otra resolución no
-    # puede quedarse pegado y meter bandas negras.
+    # NO se toca "wm size". Medido el 2026-09-30: el reproductor encuadra
+    # el TAMAÑO DE PANTALLA DEL PERFIL DEL DISPOSITIVO (el 1080x2160 que
+    # aparece en la columna Resolution de la app), no el framebuffer vivo
+    # de Android. Un "wm size" distinto NO agranda el dibujo: sólo cambia
+    # lo que Android compone dentro del encuadre.
     #
-    # La densidad sí se puede forzar en caliente. Con 2160x2160:
-    #   240 dpi -> 1440x1440 dp (sw1440dp, cubo xlarge, interfaz de tableta)
-    #   320 dpi -> 1080x1080 dp (sw1080dp, tableta pequeña)
-    # El juego ignora la densidad para el HUD; esto afecta a la interfaz
-    # de Android y a las métricas dp. Se cambia con -d <dpi>.
+    # Prueba: con "wm size 2160x2160" (cuadrado) y la ventana a 1484 el
+    # dispositivo se dibujó 718x718 = 0,52 Mpx, la MITAD que en vertical
+    # (718x1436 = 1,03 Mpx), porque el perfil seguía siendo 1:2 y el
+    # cuadrado quedaba con bandas negras dentro.
+    #
+    # Para cambiar de verdad el tamaño dibujado hay que cambiar la
+    # pantalla del perfil en la app (Editar > Sistema > Pantalla >
+    # Primary Display). "gmtool admin edit --width/--height/--density"
+    # lo haría por línea de comandos, pero exige licencia de pago.
+    #
+    # La densidad sí es libre: 240 dpi con 1080x2160 da 720x1440 dp, o
+    # sea sw720dp y cubo xlarge (interfaz de tableta). Con 320 daba
+    # 540x1080 dp (sw540dp, teléfono). El juego ignora la densidad para
+    # el HUD; esto afecta a la interfaz de Android y a las métricas dp.
 
-    adb -s "$ADB_SERIAL" shell wm size reset >/dev/null 2>&1 || true
+    adb -s "$ADB_SERIAL" shell wm density 240
 
-    adb -s "$ADB_SERIAL" shell wm density "$DENSITY" >/dev/null 2>&1 || true
-
-    local size_line
-    local density_line
-
-    size_line="$(
-        adb -s "$ADB_SERIAL" shell wm size 2>/dev/null | tr -d '\r' | paste -sd' '
-    )"
-
-    density_line="$(
-        adb -s "$ADB_SERIAL" shell wm density 2>/dev/null | tr -d '\r' | paste -sd' '
-    )"
-
-    echo "   wm size    : ${size_line:-?}"
-    echo "   wm density : ${density_line:-?}"
-    echo "✅ Pantalla configurada (densidad ${DENSITY} dpi)."
+    echo "✅ Densidad configurada (240 dpi)."
 }
 
 
@@ -1419,95 +993,6 @@ launch_jwa() {
 
 
 # ============================================================
-# ARGUMENTOS
-#
-# Sin ningún flag de resolución el script se comporta como siempre:
-# no toca el perfil del dispositivo.
-# ============================================================
-
-show_usage() {
-
-    cat <<EOF
-Uso: $(basename "$0") [opción]
-
-Sin opción, no se toca el perfil del dispositivo: se usa el que haya.
-
-Resolución (cambia de verdad el tamaño dibujado):
-  -portrait,  --portrait,  -p   Perfil 1080x2160 (vertical 1:2)
-  -landscape, --landscape, -l   Perfil 2160x2160 (CUADRADO 1:1)
-  --square                      Lo mismo que -landscape, con el nombre
-                                que sí describe lo que es
-
-Otras:
-  -d, --densidad <dpi>          Densidad Android (por defecto ${DENSITY})
-  -r, --solo-resolucion         Aplica la resolución y sale, sin arrancar
-  -h, --help                    Esta ayuda
-
-Aviso de etiqueta: 2160x2160 es un cuadrado, no un apaisado. Si lo que
-quieres es apaisado de verdad, el tamaño sería 2160x1080.
-
-El tamaño dibujado lo manda el PERFIL del dispositivo, no el framebuffer
-de Android (medido el 2026-09-30), así que el flag escribe el perfil con
-copia previa y hash. Si la VM está encendida hay que pararla.
-EOF
-}
-
-
-parse_args() {
-
-    while (( $# )); do
-
-        case "$1" in
-
-            -portrait|--portrait|-p)
-                PROFILE_W=1080
-                PROFILE_H=2160
-                PROFILE_LABEL="vertical 1:2"
-                ;;
-
-            -landscape|--landscape|-l|--square|-square)
-                PROFILE_W=2160
-                PROFILE_H=2160
-                PROFILE_LABEL="cuadrado 1:1"
-                ;;
-
-            -d|--densidad|--density)
-                shift
-                if [[ ! "${1:-}" =~ ^[0-9]+$ ]]; then
-                    echo "❌ -d necesita un número de dpi." >&2
-                    exit 1
-                fi
-                DENSITY="$1"
-                ;;
-
-            -r|--solo-resolucion)
-                RESOLUTION_ONLY=1
-                ;;
-
-            -h|--help)
-                show_usage
-                exit 0
-                ;;
-
-            *)
-                echo "❌ Opción desconocida: $1" >&2
-                echo >&2
-                show_usage >&2
-                exit 1
-                ;;
-        esac
-
-        shift
-    done
-
-    if (( RESOLUTION_ONLY )) && [[ -z "$PROFILE_W" ]]; then
-        echo "❌ --solo-resolucion necesita -portrait o -landscape." >&2
-        exit 1
-    fi
-}
-
-
-# ============================================================
 # MAIN
 # ============================================================
 
@@ -1515,25 +1000,7 @@ main() {
 
     local pixel_address=""
 
-    parse_args "$@"
-
     check_dependencies
-
-    # --------------------------------------------------------
-    # PERFIL DEL DISPOSITIVO
-    #
-    # Va antes de arrancar: el player lee el perfil al iniciarse, así
-    # que cambiarlo con la VM en marcha no tendría efecto hasta el
-    # siguiente arranque. Si ya está en el tamaño pedido, no se toca.
-    # --------------------------------------------------------
-
-    apply_profile_resolution "$PROFILE_W" "$PROFILE_H"
-
-    if (( RESOLUTION_ONLY )); then
-        echo
-        echo "✅ Resolución aplicada. No arranco nada (--solo-resolucion)."
-        return 0
-    fi
 
     # --------------------------------------------------------
     # ARRANQUE + VENTANA
@@ -1641,16 +1108,7 @@ main() {
     echo "✅ TODO COMPLETADO"
     echo
     echo "Genymotion : activo"
-
-    if [[ -n "$PROFILE_W" ]]; then
-        echo "Perfil     : ${PROFILE_W}x${PROFILE_H} (${PROFILE_LABEL})"
-        echo "Tile       : ${TILE_WIDTH_APPLIED:-${GENY_WIDTH}}px"
-    else
-        echo "Perfil     : sin tocar"
-        echo "Tile       : ${TILE_WIDTH_APPLIED:-${GENY_WIDTH}}px"
-    fi
-
-    echo "Densidad   : ${DENSITY} dpi"
+    echo "Tile       : ${GENY_WIDTH}px"
     echo "ADB        : conectado"
     echo "Android    : iniciado"
     echo "GPS        : verificado"

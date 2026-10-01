@@ -9,6 +9,21 @@
     "emojiLauncher": {
       "repo": "https://github.com/devnullvoid/dms-emoji-launcher",
       "commit": "8ff394e3ddfcb2fd755ed2e7b4c6f01f3e26e596"
+    },
+    "ocrScanner": {
+      "repo": "https://github.com/hthienloc/dms-plugins",
+      "path": "ocrScanner",
+      "commit": "fe521adc77415bdd14efffdc5f6aed7b460bac3e"
+    },
+    "quickCapture": {
+      "repo": "https://github.com/hthienloc/dms-plugins",
+      "path": "quickCapture",
+      "commit": "fe521adc77415bdd14efffdc5f6aed7b460bac3e"
+    },
+    "takeABreak": {
+      "repo": "https://github.com/hthienloc/dms-plugins",
+      "path": "takeABreak",
+      "commit": "fe521adc77415bdd14efffdc5f6aed7b460bac3e"
     }
   }
 }
