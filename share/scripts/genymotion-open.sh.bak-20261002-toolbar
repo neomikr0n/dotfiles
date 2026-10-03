@@ -82,14 +82,9 @@ GENY_TITLE_PREFIX="Google Pixel 6 ("
 # toma de aquí: se calcula al vuelo en tile_width_for_profile().
 # ------------------------------------------------------------
 
-# Ancho de la ventana. 1416 es el que n30 tiene AHORA (medido el
-# 2026-10-02 por la tarde con `hyprctl clients -j`) y pidió que el script
-# lo reproduzca.
-#
-# OJO: 1464 fue un valor anterior del mismo día; n30 lo volvió a ajustar
-# a 1416. No es una constante que se pueda deducir de la fórmula: es lo
-# que él elige a mano. Cuando lo cambie, se mide y se actualiza aquí.
-GENY_WIDTH=1416
+# Ancho de la ventana. 1464 es el que n30 fijó a mano el 2026-10-02
+# (arrastrando el borde) y pidió que el script lo reproduzca.
+GENY_WIDTH=1464
 
 # Alto de la ventana. Fijo desde el 2026-10-02. Vacío = leerlo en vivo,
 # que es lo que hacía antes.
@@ -116,88 +111,17 @@ GENY_HEIGHT=1415
 # (perfil de color de una captura) y el binario la llama $TOOLBAR_WIDTH.
 TOOLBAR_WIDTH=0
 
-# Ocultar la barra lateral del reproductor al arrancar, sin que n30 tenga
-# que pulsar Ctrl+T.
-#
-#     1 -> el script envía Ctrl+T
-#     0 -> no lo toca (la barra queda como la dejara la última sesión)
-#
-# CÓMO, y por qué así (medido el 2026-10-02):
-#
-# El reproductor es XWayland (hyprctl clients: xwayland=true), así que
-# `xdotool key --clearmodifiers ctrl+t` con la ventana ENFOCADA le llega
-# de verdad. Verificado con capturas: la primera pulsación quita los 14
-# iconos de la derecha y la segunda los devuelve.
-#
-# NO se usa `hl.dsp.send_shortcut`, aunque exista y devuelva ok=true. Se
-# probó a fondo el 2026-10-02 (9 variantes de `mods`, con selector de
-# objeto, con selector de cadena, sin selector, y contra un bind propio
-# de Hyprland que debía escribir en un fichero): SIEMPRE devolvía ok=true
-# y NUNCA entregaba la tecla. `send_shortcut` envuelve Actions::pass(),
-# que está pensado para reenviar un evento DENTRO del ciclo de input, no
-# para inyectarlo desde IPC.
-#
-# Tampoco hay API externa: el toggle vive en ToggleToolbarAction /
-# toggleToolBar() de libgmplayerplugin.so, sin D-Bus ni CLI.
-HIDE_TOOLBAR=1
-
-# Cuántas veces se envía Ctrl+T si la barra sigue puesta. Medido el
-# 2026-10-03: un envío suelto puede no llegar (la barra se quedó visible
-# tras un Ctrl+T), así que se comprueba y se reintenta. Como es un toggle,
-# solo se reintenta mientras el objetivo NO se haya cumplido.
-TOOLBAR_HIDE_ATTEMPTS=3
-
-# Abrir el panel de GPS del reproductor al arrancar, sin que n30 tenga
-# que pulsar Ctrl+Alt+G.
-#
-#     1 -> el script lo abre si está cerrado
-#     0 -> no lo toca
-#
-# CÓMO (medido el 2026-10-02): es la MISMA vía que la barra lateral, y
-# por la misma razón — el reproductor es XWayland, así que
-# `xdotool key --clearmodifiers ctrl+alt+g` con la ventana enfocada le
-# llega. Comprobado en los dos sentidos: con el panel abierto lo cierra
-# y con el panel cerrado lo abre, devolviendo la ventana a su sitio
-# (466x306 en 655,-190, que es la regla `genymotion-gps` de Hyprland).
-#
-# OJO: Ctrl+Alt+G NO es un bind de Hyprland (`hyprctl binds` sólo tiene
-# SUPER+G = group.toggle). Es un atajo INTERNO del plugin de Genymotion:
-# vive en WidgetGps / `/Player/GpsWidget.qml`, embebido y comprimido en
-# libgmplayerplugin.so. No hay IPC que lo dispare.
-#
-# A diferencia de la barra, aquí SÍ se puede saber el estado sin capturar
-# pantalla: el panel es una ventana propia con título "GPS - Genymotion",
-# así que se mira en hyprctl clients.
-SHOW_GPS_PANEL=1
-
-# Cuántas veces se envía Ctrl+Alt+G si el panel no aparece.
-#
-# MEDIDO el 2026-10-03, y es la causa del fallo que reportó n30: el script
-# intentaba abrir el panel en el paso [2/7], con la VM TODAVÍA ARRANCANDO,
-# y ahí el reproductor no atiende el atajo — 6 s de espera y nada. Con la
-# VM ya lista, el mismo Ctrl+Alt+G funciona a la primera (comprobado: el
-# panel pasó de 1 a 0 y de 0 a 1). Por eso la llamada se movió AL FINAL
-# del script (ver main) y además se reintenta el envío.
-GPS_PANEL_ATTEMPTS=2
-
-# Segundos que se espera, tras cada envío, a que el panel aparezca. Con la
-# VM ya lista aparece en menos de un segundo, así que este techo es holgado.
-GPS_PANEL_WAIT_S=8
-
 # Límite de intercambios al llevar el tile al borde izquierdo.
 # Normalmente basta uno; el límite también cubre workspaces con muchos tiles.
 GENY_LEFT_MAX_SWAPS=32
 
 # Clase de la ventana con la que se agrupa el reproductor al arrancar,
-# para quedar directamente en modo pestañas.
+# para quedar directamente en modo pestañas. Vacío = no agrupar.
 #
 # Medido el 2026-10-02: la clase exacta de WorkBuddy AI es "WorkBuddy AI"
 # (Wayland nativa, no XWayland) y sólo hay una ventana con esa clase.
-#
-# El reproductor se agrupa SIEMPRE (pedido por n30 el 2026-10-02): si este
-# socio está corriendo van los dos en el mismo grupo; si no, el reproductor
-# queda en un grupo de un solo miembro. Vacío = no busca socio y agrupa el
-# reproductor solo.
+# Si no está corriendo, el reproductor se queda suelto: no se crea un
+# grupo de un solo miembro, que sólo añadiría una barra de pestañas.
 GENY_GROUP_PARTNER="WorkBuddy AI"
 
 # ------------------------------------------------------------
@@ -209,10 +133,6 @@ PROFILE_H=""
 PROFILE_LABEL=""
 TILE_WIDTH_APPLIED=""
 RESOLUTION_ONLY=0
-
-# De dónde salió la posición GPS que se aplicó en este arranque
-# ("recordada" o "de estreno"). Lo rellena set_gps() para el resumen.
-GPS_APPLIED_ORIGIN=""
 
 # Densidad Android. El perfil declara 320, pero aquí se fuerza 240 desde
 # el 2026-09-30: con 2160x2160 da 1440x1440 dp (sw1440dp, tableta) en vez
@@ -235,26 +155,12 @@ ADB_SERIAL="${ADB_HOST}:${ADB_PORT}"
 JWA_PACKAGE="com.ludia.jw2"
 
 # ------------------------------------------------------------
-# GPS
-#
-# Hasta el 2026-10-02 la posición era una constante clavada en Morelia y
-# el script la imponía en CADA arranque, pisando lo que hubiera.
-#
-# Desde entonces el script NO impone nada si el emulador ya tiene
-# posición: la respeta. Estas constantes son sólo el valor de ESTRENO,
-# el que se usa cuando el GPS está en blanco. Ver set_gps().
-#
-# Se probó antes un fichero de estado que guardase "la última posición
-# usada" y NO sirve: el script sólo ve el mundo cuando arranca y JWA mueve
-# el GPS mientras corre, así que ese fichero va siempre un arranque por
-# detrás. El propio emulador ya mantiene su última posición entre
-# arranques; no hay que duplicarla. Medido y descartado el 2026-10-02.
+# GPS - Morelia
 # ------------------------------------------------------------
 
-GPS_DEFAULT_LAT="19.73663978"
-GPS_DEFAULT_LONG="-101.11478609"
-GPS_DEFAULT_ALT="15.04444408"
-
+LAT="19.73663978"
+LONG="-101.11478609"
+ALT="15.04444408"
 
 GPS_ACCURACY="5"
 
@@ -340,14 +246,7 @@ lua_close() {
     printf 'hl.dsp.window.close({ window = "address:%s" })' "$1"
 }
 
-# Agrupa el reproductor, SIEMPRE (pedido por n30 el 2026-10-02):
-#
-#   - con GENY_GROUP_PARTNER corriendo -> grupo de dos (modo pestañas);
-#   - sin él                          -> grupo SOLO con el reproductor.
-#
-# Antes, sin socio, se quedaba suelto para no crear un grupo de un solo
-# miembro. n30 pidió lo contrario: quiere el reproductor siempre en modo
-# grupo, esté o no WorkBuddy.
+# Agrupa el reproductor con la ventana de GENY_GROUP_PARTNER (modo pestañas).
 #
 # OJO, medido el 2026-10-02: los despachadores de grupo IGNORAN el selector
 # en forma de cadena (`window = "address:0x..."`) y el id numérico; SÓLO
@@ -363,7 +262,7 @@ lua_close() {
 # La pertenencia se mira por address, porque comparar los objetos de grupo
 # entre llamadas no es fiable.
 lua_group_player() {
-    printf 'local function _w(c) local t = hl.get_windows({ class = c }); if type(t) == "table" and #t > 0 then return t[1] end return nil end; local p = _w("%s"); if p == nil then return end; local q = _w("%s"); if q ~= nil then if q.group == nil then hl.dispatch(hl.dsp.group.toggle({ window = q })); q = _w("%s"); if q == nil or q.group == nil then return end end; local m = q.group.members; if type(m) == "table" then for _, w in ipairs(m) do if w.address == p.address then return end end end; q.group:add(p); return end; if p.group == nil then hl.dispatch(hl.dsp.group.toggle({ window = p })) end' \
+    printf 'local function _w(c) local t = hl.get_windows({ class = c }); if type(t) == "table" and #t > 0 then return t[1] end return nil end; local p = _w("%s"); local q = _w("%s"); if p == nil or q == nil then return end; if q.group == nil then hl.dispatch(hl.dsp.group.toggle({ window = q })); q = _w("%s"); if q == nil or q.group == nil then return end end; local m = q.group.members; if type(m) == "table" then for _, w in ipairs(m) do if w.address == p.address then return end end end; q.group:add(p)' \
         "$GENY_CLASS" "$GENY_GROUP_PARTNER" "$GENY_GROUP_PARTNER"
 }
 
@@ -405,25 +304,6 @@ check_dependencies() {
     if ! have hyprctl; then
         echo "⚠️ hyprctl no disponible."
         echo "   Se omitirá el ajuste automático de ventana."
-    fi
-
-    # Para la barra lateral y el panel de GPS. No son críticos: si faltan,
-    # el script avisa y sigue, dejándole la tecla a mano a n30.
-    if [[ "$HIDE_TOOLBAR" == "1" || "$SHOW_GPS_PANEL" == "1" ]]; then
-
-        have xdotool ||
-            echo "⚠️ No encuentro xdotool: no podré tocar la barra ni el panel de GPS."
-    fi
-
-    if [[ "$HIDE_TOOLBAR" == "1" ]]; then
-
-        if ! have grim; then
-            echo "⚠️ No encuentro grim: no podré leer si la barra está puesta."
-        fi
-
-        if ! have convert && ! have magick; then
-            echo "⚠️ No encuentro ImageMagick: no podré leer si la barra está puesta."
-        fi
     fi
 
     echo "✅ Dependencias verificadas."
@@ -682,7 +562,9 @@ group_pixel_window() {
     local partner_count=""
     local result=""
     local grouped=""
-    local modo=""
+
+    # Vacío = función desactivada.
+    [[ -n "$GENY_GROUP_PARTNER" ]] || return 0
 
     have hyprctl || return 0
     have jq || return 0
@@ -690,28 +572,22 @@ group_pixel_window() {
     echo
     echo "🗂️ Modo grupo..."
 
-    # Sin socio configurado la función sigue viva: agrupa el reproductor
-    # consigo mismo (grupo de un miembro). Sólo se salta si el usuario la
-    # desactiva del todo.
-    if [[ -z "$GENY_GROUP_PARTNER" ]]; then
-        partner_count="0"
-    else
-        partner_count="$(
-            hyprctl clients -j 2>/dev/null |
-                jq -r \
-                    --arg cls "$GENY_GROUP_PARTNER" \
-                    '[ .[] | select(.class == $cls) ] | length'
-        )"
-    fi
+    partner_count="$(
+        hyprctl clients -j 2>/dev/null |
+            jq -r \
+                --arg cls "$GENY_GROUP_PARTNER" \
+                '[ .[] | select(.class == $cls) ] | length'
+    )"
 
-    if [[ "$partner_count" == "1" ]]; then
-        modo="con ${GENY_GROUP_PARTNER}"
-    elif [[ "$partner_count" == "0" ]]; then
-        modo="solo"
-        echo "   '${GENY_GROUP_PARTNER:-ninguno}' no está corriendo: grupo de un solo miembro."
-    else
-        modo="solo"
-        echo "   Hay ${partner_count} ventanas de '${GENY_GROUP_PARTNER}'; agrupo el reproductor solo (sería ambiguo)."
+    if [[ "$partner_count" != "1" ]]; then
+
+        if [[ "$partner_count" == "0" ]]; then
+            echo "   '${GENY_GROUP_PARTNER}' no está corriendo: el reproductor se queda suelto."
+        else
+            echo "   Hay ${partner_count} ventanas de '${GENY_GROUP_PARTNER}'; no agrupo (sería ambiguo)."
+        fi
+
+        return 0
     fi
 
     result="$(hyprctl eval "$(lua_group_player)" 2>&1 || true)"
@@ -730,329 +606,11 @@ group_pixel_window() {
                 '
     )"
 
-    if [[ "$grouped" =~ ^[0-9]+$ ]] && (( grouped >= 1 )); then
-        echo "   ✅ Reproductor agrupado (${modo}, ${grouped} pestañas)."
+    if [[ "$grouped" =~ ^[0-9]+$ ]] && (( grouped >= 2 )); then
+        echo "   ✅ Reproductor agrupado con '${GENY_GROUP_PARTNER}' (${grouped} pestañas)."
     else
         echo "   ⚠️ El reproductor no quedó agrupado; continúo."
     fi
-
-    return 0
-}
-
-
-# ============================================================
-# HYPRLAND - OCULTAR LA BARRA LATERAL DEL REPRODUCTOR
-#
-# El reproductor dibuja una barra vertical de 48 px pegada al borde
-# derecho con 14 iconos. Ctrl+T la muestra/oculta. Sin esto, n30 tenía
-# que pulsarlo a mano en cada arranque.
-#
-# Vía: xdotool sobre XWayland (ver HIDE_TOOLBAR). Funciona sin importar
-# qué sesión dejó la barra: es un TOGGLE, así que hay que saber el estado
-# de partida.
-#
-# PROBLEMA: no se puede preguntar el estado. La barra está DENTRO del
-# surface de Qt, no es una ventana X11 hija, y no cambia el tamaño de la
-# ventana de Hyprland (medido: 1416x1415 con la barra visible y oculta).
-# No hay forma de leerla desde fuera sin capturar la pantalla.
-#
-# SOLUCIÓN: no adivinar. Se lee el estado con una captura de los 48 px
-# de la derecha. Es la única lectura fiable y cuesta un grim de 48 px de
-# ancho.
-#
-# EL CRITERIO, y por qué NO es la media (medido el 2026-10-02):
-#
-# Lo primero que probé fue la media de gris, y FALLA. El juego es un mapa
-# animado que va de zonas claras a oscuras, así que su media se mueve
-# sola: con la barra OCULTA medí 56 y luego 23 y 27 en la misma franja.
-# La media del juego invade el rango de la barra.
-#
-# Lo que sí separa los dos estados es el NÚMERO DE COLORES ÚNICOS de la
-# franja. La barra es una paleta plana (fondo e iconos, colores sólidos);
-# el juego debajo tiene antialiasing y degradados y dispara el conteo.
-# Cuatro muestras de cada estado, en la misma sesión:
-#
-#     barra VISIBLE:  293, 293, 293, 293   (idéntico: la barra es estática)
-#     barra OCULTA:  1209, 1204, 1194, 1169 (varía: el juego se mueve)
-#
-# La separación es de 4 a 1 y sin zona gris. El umbral 700 cae en medio.
-# ============================================================
-
-player_toolbar_visible() {
-
-    local address="$1"
-    local x=""
-    local y=""
-    local w=""
-    local h=""
-    local probe_x=""
-    local probe_w=48
-    local shot=""
-    local frac=""
-
-    have grim || return 2
-
-    # Geometría real de la ventana, para recortar su franja derecha.
-    read -r x y w h < <(
-        hyprctl clients -j 2>/dev/null |
-            jq -r \
-                --arg addr "$address" '
-                    .[]
-                    | select(.address == $addr)
-                    | "\(.at[0]) \(.at[1]) \(.size[0]) \(.size[1])"
-                '
-    )
-
-    [[ "$x" =~ ^-?[0-9]+$ && "$w" =~ ^[0-9]+$ ]] || return 2
-
-    probe_x=$(( x + w - probe_w ))
-
-    shot="$(mktemp /tmp/geny-toolbar-XXXXXX.png)"
-
-    # shellcheck disable=SC2016  # el %[fx:...] es de ImageMagick, no shell
-    if ! grim -g "${probe_x},${y} ${probe_w}x$(( h - 2 ))" "$shot" 2>/dev/null; then
-        rm -f "$shot"
-        return 2
-    fi
-
-    # --------------------------------------------------------
-    # La señal fiable es el COLOR DE FONDO de la barra, no el contenido.
-    #
-    # El fondo de la barra es un gris UNIFORME y constante, #1A1A1A. La
-    # franja de 48 px de la derecha ES la barra cuando está visible, así
-    # que ese color la ocupa casi entera. Cuando está oculta, la franja es
-    # contenido del emulador y el gris no aparece.
-    #
-    # MEDIDO el 2026-10-03 sobre la franja de 48x1411 = 67 728 px:
-    #     barra VISIBLE -> 0,968 de #1A1A1A   (64 725 px, 95,6 %)
-    #     barra OCULTA  -> 0,002 a 0,09
-    # Separación >10x. El umbral 0,5 cae en medio y no depende del juego.
-    #
-    # El criterio anterior (contar COLORES ÚNICOS con umbral 700) se
-    # descartó: depende del CONTENIDO de la pantalla. El 2026-10-02 dio
-    # 293 vs 1169 (4x de separación), pero el 2026-10-03 el mismo par dio
-    # 285 vs 370 — LOS DOS por debajo del umbral, así que el detector
-    # decía "oculta" siempre y la barra se quedaba puesta al arrancar.
-    # Ese fue el fallo que n30 reportó.
-    # --------------------------------------------------------
-
-    # shellcheck disable=SC2016  # el %[fx:...] es de ImageMagick, no shell
-    frac="$(
-        LC_ALL=C magick "$shot" -fuzz 3% \
-            -fill white -opaque '#1A1A1A' \
-            -fill black +opaque white \
-            -format "%[fx:mean]" info: 2>/dev/null ||
-            LC_ALL=C convert "$shot" -fuzz 3% \
-                -fill white -opaque '#1A1A1A' \
-                -fill black +opaque white \
-                -format "%[fx:mean]" info: 2>/dev/null
-    )"
-
-    rm -f "$shot"
-
-    # LC_ALL=C garantiza el punto decimal; aun así se acepta la coma.
-    frac="${frac/,/.}"
-
-    [[ "$frac" =~ ^[0-9]*\.?[0-9]+$ ]] || return 2
-
-    # 0 = visible, 1 = oculta, 2 = no se pudo leer.
-    awk -v f="$frac" 'BEGIN { exit !(f > 0.5) }'
-}
-
-
-hide_player_toolbar() {
-
-    local address="$1"
-
-    [[ "$HIDE_TOOLBAR" == "1" ]] || {
-        echo "   Barra lateral: sin tocar (HIDE_TOOLBAR=0)."
-        return 0
-    }
-
-    if ! have xdotool; then
-        echo "⚠️ No encuentro xdotool: no puedo ocultar la barra lateral."
-        echo "   Púlsala tú con Ctrl+T (o instala xdotool)."
-        return 0
-    fi
-
-    echo
-    echo "🧰 Barra lateral del reproductor..."
-
-    # xdotool manda la tecla al FOCO, no a una ventana concreta, así que
-    # hay que enfocar primero. Se hace por Hyprland, que es el dueño del
-    # foco, y se comprueba antes de enviar.
-    hyprctl dispatch "hl.dsp.focus({ window = \"address:${address}\" })" \
-        >/dev/null 2>&1 || true
-
-    sleep 0.4
-
-    if [[ "$(hyprctl activewindow -j | jq -r '.address')" != "$address" ]]; then
-        # Sin foco, Ctrl+T iría a la ventana equivocada: mejor no enviarlo.
-        echo "⚠️ No conseguí enfocar el reproductor; no envío Ctrl+T."
-        return 0
-    fi
-
-    # Sin captura no sé si la barra está puesta. Si ya está oculta, pulsar
-    # la MOSTRARÍA, así que ante la duda no se toca.
-    player_toolbar_visible "$address"
-    case $? in
-        0)
-            echo "   La barra estaba visible; la oculto con Ctrl+T."
-            ;;
-        1)
-            echo "   La barra ya estaba oculta; no envío nada."
-            return 0
-            ;;
-        *)
-            echo "⚠️ No pude leer el estado de la barra; no envío Ctrl+T."
-            return 0
-            ;;
-    esac
-
-    # Se envía, se COMPRUEBA y se reintenta.
-    #
-    # Medido el 2026-10-03: con el foco correcto Ctrl+T funciona 3 de 3,
-    # pero un envío suelto puede no llegar (pasó de verdad: tras un Ctrl+T
-    # la barra seguía puesta). Como Ctrl+T es un TOGGLE, reintentar solo
-    # es seguro si el objetivo NO se ha cumplido: si ya está oculta, se
-    # sale sin enviar nada más.
-    local intento
-    local estado
-
-    for ((intento = 1; intento <= TOOLBAR_HIDE_ATTEMPTS; intento++)); do
-
-        xdotool key --clearmodifiers ctrl+t || {
-            echo "⚠️ xdotool falló al enviar Ctrl+T."
-            return 0
-        }
-
-        sleep 1
-
-        player_toolbar_visible "$address"
-        estado=$?
-
-        case $estado in
-            1)
-                echo "   ✅ Barra lateral oculta (envío ${intento})."
-                return 0
-                ;;
-            2)
-                echo "   ⚠️ No pude leer si la barra quedó oculta; no sigo."
-                return 0
-                ;;
-        esac
-
-        if (( intento < TOOLBAR_HIDE_ATTEMPTS )); then
-            echo "   El envío ${intento} no bastó; reintento."
-        fi
-    done
-
-    echo "   ⚠️ La barra sigue visible tras ${TOOLBAR_HIDE_ATTEMPTS} envíos."
-    echo "   Púlsala tú con Ctrl+T."
-
-    return 0
-}
-
-
-# ============================================================
-# HYPRLAND - PANEL DE GPS
-#
-# Abre el panel de GPS del reproductor si está cerrado. Ver SHOW_GPS_PANEL.
-#
-# El panel es una ventana PROPIA de Genymotion Player con el título exacto
-# "GPS - Genymotion" (no una pestaña del grupo, ni parte del reproductor).
-# Por eso su estado SÍ se puede leer de hyprctl clients, sin capturas.
-#
-# Ctrl+Alt+G es un TOGGLE, así que hay que mirar antes: enviarlo con el
-# panel ya abierto lo CERRARÍA, que es justo lo contrario de lo pedido.
-# ============================================================
-
-GPS_PANEL_TITLE="GPS - Genymotion"
-
-gps_panel_open() {
-    local n=""
-
-    n="$(
-        hyprctl clients -j 2>/dev/null |
-            jq -r \
-                --arg t "^${GPS_PANEL_TITLE}\$" '
-                    [ .[] | select(.title | test($t)) ] | length
-                '
-    )"
-
-    [[ "$n" =~ ^[0-9]+$ ]] || return 1
-
-    (( n > 0 ))
-}
-
-
-show_gps_panel() {
-
-    local address="$1"
-    local intento=0
-    local espera=0
-
-    [[ "$SHOW_GPS_PANEL" == "1" ]] || {
-        echo "   Panel GPS: sin tocar (SHOW_GPS_PANEL=0)."
-        return 0
-    }
-
-    if ! have xdotool; then
-        echo "⚠️ No encuentro xdotool: no puedo abrir el panel de GPS."
-        return 0
-    fi
-
-    echo
-    echo "📍 Panel de GPS..."
-
-    if gps_panel_open; then
-        echo "   Ya estaba abierto; no envío nada."
-        return 0
-    fi
-
-    # Se envía y, si el panel no aparece, se VUELVE A ENVIAR.
-    #
-    # Es un toggle, así que reintentar tiene riesgo: si el primer envío
-    # llegó tarde, el segundo lo cerraría. Por eso entre envío y envío se
-    # espera bastante (GPS_PANEL_WAIT_S) y solo se reintenta si el panel
-    # sigue cerrado — si ya apareció, se sale antes de volver a enviar.
-    for ((intento = 1; intento <= GPS_PANEL_ATTEMPTS; intento++)); do
-
-        # El foco se comprueba ANTES DE CADA ENVÍO: el panel que se acaba
-        # de abrir (o cerrar) puede habérselo llevado.
-        hyprctl dispatch "hl.dsp.focus({ window = \"address:${address}\" })" \
-            >/dev/null 2>&1 || true
-
-        sleep 0.6
-
-        if [[ "$(hyprctl activewindow -j | jq -r '.address')" != "$address" ]]; then
-            echo "⚠️ No conseguí enfocar el reproductor; no envío Ctrl+Alt+G."
-            return 0
-        fi
-
-        xdotool key --clearmodifiers ctrl+alt+g || {
-            echo "⚠️ xdotool falló al enviar Ctrl+Alt+G."
-            return 0
-        }
-
-        # El panel tarda en dibujarse: se espera a que aparezca, sin dar
-        # por hecho que aparecerá.
-        for ((espera = 1; espera <= GPS_PANEL_WAIT_S * 2; espera++)); do
-            sleep 0.5
-
-            if gps_panel_open; then
-                echo "   ✅ Panel de GPS abierto (envío ${intento})."
-                return 0
-            fi
-        done
-
-        if (( intento < GPS_PANEL_ATTEMPTS )); then
-            echo "   El envío ${intento} no bastó; reintento."
-        fi
-    done
-
-    echo "   ⚠️ El panel de GPS no apareció tras ${GPS_PANEL_ATTEMPTS} envíos."
-    echo "   ¿Sigue en pie el atajo Ctrl+Alt+G?"
 
     return 0
 }
@@ -1846,76 +1404,7 @@ number_close() {
 
 # ============================================================
 # GPS - CONFIGURACIÓN ROBUSTA
-#
-# El script NO impone una posición fija. Comprobado con n30 el
-# 2026-10-02: si el emulador YA tiene posición, no se toca; sólo se pone
-# una si el GPS está vacío (primer arranque, o alguien lo dejó en blanco).
-#
-# QUÉ ES "VACÍO" (corregido el 2026-10-03):
-#
-# "0 0" NO es una posición, es el CENTINELA de "sin coordenadas" del GPS
-# de Genymotion. La primera versión de esta función daba "0" por bueno
-# (porque `[[ -n "0" ]]` es cierto) y se limitaba a encender el GPS,
-# dejándolo sin coordenadas: exactamente el síntoma que reportó n30
-# ("está prendido el gps pero sin coordenadas"). Ver numero_es_cero().
-#
-# DE DÓNDE SALE LA POSICIÓN, en orden:
-#
-#   1. La que ya tenga el emulador, si es válida (no 0 0). No se toca.
-#   2. La última que guardó el propio emulador, que vive en el
-#      settings.json de la VM bajo `widget.gps.*`. Ver gps_guardado().
-#   3. Si no hay ninguna, la de estreno (Morelia).
-#
-# POR QUÉ EL PASO 2 HACE FALTA, medido el 2026-10-03:
-#
-# El emulador SÍ escribe la posición en `widget.gps.latitude/longitude`
-# del settings.json de la VM, y lo hace EN VIVO (se vio el fichero
-# actualizarse a la vez que JWA movía el GPS). Pero al ARRANCAR la VM,
-# `gps getlatitude` devuelve 0 0 0: el player NO la restaura. Así que el
-# dato está en disco y el script puede leerlo, que es justo lo que pedía
-# n30 ("que se guarde la última posición gps utilizada").
-#
-# Ojo, esto NO es el fichero de estado propio que se descartó el
-# 2026-10-02 (ver el diario): aquí no se mantiene nada por nuestra
-# cuenta, se LEE un registro que el emulador ya lleva solo. Por eso no
-# sufre el problema de ir "un arranque por detrás": no escribimos, solo
-# leemos lo último que el emulador guardó.
 # ============================================================
-
-# Cierto (exit 0) si el número es cero o no es un número.
-#
-# Sirve para tratar "0" como "sin dato": en el GPS de Genymotion el cero
-# es el valor por defecto, no una coordenada.
-numero_es_cero() {
-
-    awk -v v="${1:-}" 'BEGIN { exit !((v + 0) == 0) }'
-}
-
-
-# Última posición que guardó el propio emulador, leída del settings.json
-# de la VM. Imprime "lat lon" y devuelve 0 si hay algo utilizable.
-#
-# Devuelve 1 si no hay fichero, o si lo que hay es 0 0 (que es "sin dato").
-gps_guardado() {
-
-    local f="$GENY_VM_DIR/settings.json"
-    local glat=""
-    local glon=""
-
-    [[ -f "$f" ]] || return 1
-
-    glat="$(jq -r '."widget.gps.latitude"  // empty' "$f" 2>/dev/null)"
-    glon="$(jq -r '."widget.gps.longitude" // empty' "$f" 2>/dev/null)"
-
-    [[ -n "$glat" && -n "$glon" ]] || return 1
-
-    # El cero es el centinela de "sin coordenadas", no una posición.
-    numero_es_cero "$glat" && return 1
-    numero_es_cero "$glon" && return 1
-
-    printf '%s %s\n' "$glat" "$glon"
-}
-
 
 set_gps() {
 
@@ -1930,137 +1419,11 @@ set_gps() {
     local current_lon
     local current_alt
 
-    local seen_lat=""
-    local seen_lon=""
-    local seen_alt=""
-    local seen_status=""
-    local lat=""
-    local long=""
-    local alt=""
-    local origen=""
-
     echo
-    echo "📍 GPS..."
-
-    # ----------------------------------------------------
-    # 1) QUÉ HAY AHORA
-    # ----------------------------------------------------
-
-    seen_status="$(geny_cmd "gps getstatus" || true)"
-
-    seen_lat="$(extract_number <<< "$(geny_cmd "gps getlatitude"  || true)")"
-    seen_lon="$(extract_number <<< "$(geny_cmd "gps getlongitude" || true)")"
-    seen_alt="$(extract_number <<< "$(geny_cmd "gps getaltitude"  || true)")"
-
-    echo "   Estado : ${seen_status:-desconocido}"
-    echo "   Posición actual: ${seen_lat:-?} ${seen_lon:-?} ${seen_alt:-?}"
-
-    # ----------------------------------------------------
-    # ¿HAY POSICIÓN DE VERDAD?
-    #
-    # "0 0" es el centinela de "sin coordenadas", NO una posición. Sin
-    # esta comprobación el script daba por buena la posición 0 0 y sólo
-    # encendía el GPS, dejándolo sin coordenadas.
-    # ----------------------------------------------------
-
-    local hay_posicion=0
-
-    if [[ -n "$seen_lat" && -n "$seen_lon" ]] &&
-        ! numero_es_cero "$seen_lat" &&
-        ! numero_es_cero "$seen_lon"; then
-
-        hay_posicion=1
-    fi
-
-    # ----------------------------------------------------
-    # 2) SI YA HAY POSICIÓN, NO SE TOCA
-    #
-    # Basta con que lat y long estén puestas: la altitud puede faltar y
-    # no es motivo para pisar unas coordenadas buenas.
-    # ----------------------------------------------------
-
-    if (( hay_posicion )); then
-
-        # El GPS tiene que estar ACTIVO: una posición puesta con el GPS
-        # apagado no la ve Android, así que eso sí se arregla.
-        if grep -qi "enabled" <<< "$seen_status"; then
-
-            echo "   ✅ Ya tiene posición y el GPS está activo: no se toca."
-
-            GPS_APPLIED_ORIGIN="respeté la que ya tenía: ${seen_lat} ${seen_lon}"
-
-            # Android necesita el location_mode en 3 (alta precisión) para
-            # que las apps lo lean, y eso lo puede haber revertido un
-            # reinicio. Se deja puesto, que es idempotente.
-            adb -s "$ADB_SERIAL" \
-                shell settings put secure location_mode 3 \
-                >/dev/null 2>&1 || true
-
-            sleep 1
-
-            return 0
-        fi
-
-        echo "   Tiene posición pero el GPS está apagado: lo activo."
-
-        geny_cmd "gps setstatus enabled" >/dev/null || true
-
-        sleep 1
-
-        # Se comprueba de verdad que quedó activo antes de darlo por bueno.
-        if grep -qi "enabled" <<< "$(geny_cmd "gps getstatus" || true)"; then
-            echo "   ✅ GPS activado, posición intacta."
-            GPS_APPLIED_ORIGIN="activé el GPS, posición intacta: ${seen_lat} ${seen_lon}"
-
-            adb -s "$ADB_SERIAL" \
-                shell settings put secure location_mode 3 \
-                >/dev/null 2>&1 || true
-
-            sleep 1
-
-            return 0
-        fi
-
-        echo "   ⚠️ No conseguí activarlo; sigo con la posición de estreno."
-    fi
-
-    # ----------------------------------------------------
-    # 3) NO HAY POSICIÓN UTILIZABLE
-    #
-    # Antes de caer a Morelia se intenta recuperar la última que guardó
-    # el propio emulador (settings.json de la VM, `widget.gps.*`). El
-    # player la escribe EN VIVO pero al arrancar devuelve 0 0 0 y no la
-    # restaura, así que leerla aquí es lo que salva la posición de la
-    # sesión anterior. Ver gps_guardado().
-    # ----------------------------------------------------
-
-    local guardada=""
-
-    if guardada="$(gps_guardado)"; then
-
-        read -r lat long <<< "$guardada"
-        alt="$GPS_DEFAULT_ALT"
-        origen="recuperada del emulador (la última que guardó)"
-
-        echo "   El emulador no la tiene puesta, pero guardó una: la recupero."
-        echo "   (El player escribe widget.gps.* en vivo, pero no lo restaura"
-        echo "    al arrancar; de ahí que gps getlatitude devuelva 0 0 0.)"
-
-    else
-
-        lat="$GPS_DEFAULT_LAT"
-        long="$GPS_DEFAULT_LONG"
-        alt="$GPS_DEFAULT_ALT"
-        origen="de estreno (no había ninguna, ni puesta ni guardada)"
-
-        echo "   No hay posición utilizable: pongo la de estreno."
-    fi
-
-    GPS_APPLIED_ORIGIN="usé la posición ${origen}: ${lat} ${long}"
-
-    echo "   Latitud : $lat"
-    echo "   Longitud: $long"
-    echo "   Altitud : $alt"
+    echo "📍 Configurando GPS..."
+    echo "   Latitud : $LAT"
+    echo "   Longitud: $LONG"
+    echo "   Altitud : $ALT"
     echo "   Accuracy: ${GPS_ACCURACY}m"
 
     for ((attempt=1; attempt<=GPS_RETRIES; attempt++)); do
@@ -2084,12 +1447,13 @@ set_gps() {
 
         sleep 0.5
 
-        geny_cmd "gps setlatitude $lat" >/dev/null || true
-        geny_cmd "gps setlongitude $long" >/dev/null || true
-        geny_cmd "gps setaltitude $alt" >/dev/null || true
+        geny_cmd "gps setlatitude $LAT" >/dev/null || true
+        geny_cmd "gps setlongitude $LONG" >/dev/null || true
+        geny_cmd "gps setaltitude $ALT" >/dev/null || true
         geny_cmd "gps setaccuracy $GPS_ACCURACY" >/dev/null || true
 
         sleep 1
+
 
         # ----------------------------------------------------
         # Android location services
@@ -2098,6 +1462,7 @@ set_gps() {
         adb -s "$ADB_SERIAL" \
             shell settings put secure location_mode 3 \
             >/dev/null 2>&1 || true
+
 
         # ----------------------------------------------------
         # LEER DE VUELTA
@@ -2117,6 +1482,7 @@ set_gps() {
         echo "   Longitud : $lon_output"
         echo "   Altitud  : $alt_output"
 
+
         # ----------------------------------------------------
         # VALIDAR
         # ----------------------------------------------------
@@ -2124,8 +1490,8 @@ set_gps() {
         if grep -qi "enabled" <<< "$status_output" &&
            [[ -n "$current_lat" ]] &&
            [[ -n "$current_lon" ]] &&
-           number_close "$current_lat" "$lat" "$GPS_TOLERANCE" &&
-           number_close "$current_lon" "$long" "$GPS_TOLERANCE"
+           number_close "$current_lat" "$LAT" "$GPS_TOLERANCE" &&
+           number_close "$current_lon" "$LONG" "$GPS_TOLERANCE"
         then
 
             echo
@@ -2364,19 +1730,8 @@ main() {
             move_pixel_window_left "$pixel_address" ||
                 echo "⚠️ El movimiento a la izquierda falló, continúo."
 
-            # La barra lateral primero, y DESPUÉS el resize: el ancho del
-            # tile se calcula suponiendo TOOLBAR_WIDTH=0, así que la barra
-            # tiene que estar ya en su sitio antes de medir.
-            hide_player_toolbar "$pixel_address"
-
             resize_pixel_window "$pixel_address" ||
                 echo "⚠️ El resize falló, continúo."
-
-            # El panel de GPS NO se abre aquí. Medido el 2026-10-03: con
-            # la VM todavía arrancando el reproductor no atiende
-            # Ctrl+Alt+G, así que se abría en el peor momento posible y
-            # fallaba. Se abre al final, con la VM ya lista (ver más abajo,
-            # tras JWA).
 
         else
 
@@ -2452,23 +1807,6 @@ main() {
         die "No pude confirmar el inicio de JWA."
 
 
-    # --------------------------------------------------------
-    # PANEL DE GPS
-    #
-    # Va AQUÍ y no antes: es el único momento en que la VM está lista y
-    # el reproductor atiende de verdad el atajo. Medido el 2026-10-03 —
-    # intentarlo en el paso [2/7] falla, y con la VM lista funciona a la
-    # primera. No depende del tile ni del resize.
-    # --------------------------------------------------------
-
-    if [[ -n "$pixel_address" ]]; then
-        show_gps_panel "$pixel_address"
-    else
-        echo
-        echo "📍 Panel de GPS: sin ventana, no se toca."
-    fi
-
-
     echo
     echo "============================================================"
     echo "✅ TODO COMPLETADO"
@@ -2484,27 +1822,9 @@ main() {
     fi
 
     if [[ -n "$GENY_GROUP_PARTNER" ]]; then
-        echo "Grupo      : con ${GENY_GROUP_PARTNER} si corre; si no, el reproductor solo"
+        echo "Grupo      : con ${GENY_GROUP_PARTNER} (si está corriendo)"
     else
-        echo "Grupo      : el reproductor solo"
-    fi
-
-    if [[ "$HIDE_TOOLBAR" == "1" ]]; then
-        echo "Barra lat. : oculta con Ctrl+T (xdotool)"
-    else
-        echo "Barra lat. : sin tocar (HIDE_TOOLBAR=0)"
-    fi
-
-    if [[ "$SHOW_GPS_PANEL" == "1" ]]; then
-        echo "Panel GPS  : abierto con Ctrl+Alt+G (xdotool)"
-    else
-        echo "Panel GPS  : sin tocar (SHOW_GPS_PANEL=0)"
-    fi
-
-    # De dónde salió la posición que se acaba de aplicar. Se rellena en
-    # set_gps(); si por lo que sea está vacío, no se inventa nada.
-    if [[ -n "$GPS_APPLIED_ORIGIN" ]]; then
-        echo "GPS posición: ${GPS_APPLIED_ORIGIN}"
+        echo "Grupo      : no (GENY_GROUP_PARTNER vacío)"
     fi
 
     echo "Densidad   : ${DENSITY} dpi"

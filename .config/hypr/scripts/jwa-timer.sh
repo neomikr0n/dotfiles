@@ -1,0 +1,1 @@
+/home/n30/Proyectos/jwa-timer/jwa-timer.sh

@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# jwa-timer.sh - Abre el timer JWA en su propia ventana de 120x120.
+#
+# EL TAMANO Y LAS DECORACIONES LOS APLICA HYPRLAND, NO ESTE SCRIPT.
+# Chromium en Wayland IGNORA --window-size (medido el 2026-10-02 sobre
+# Hyprland 0.56.2: pedi 120x120 y salio 1239x1415). La razon de fondo es que
+# la ventana nacia tileada (floating=false), y una ventana en mosaico no
+# respeta tamano pedido. Lo arregla la regla "jwa-timer" de hyprland.lua,
+# que fuerza float + size + border_size 0. Ver alli el comentario completo.
+#
+# Uso:  jwa-timer.sh            abre el timer
+#       jwa-timer.sh --cerrar   cierra la instancia si esta abierta
+#       jwa-timer.sh --toggle   abre o cierra segun su estado (para un bind)
+
+set -euo pipefail
+
+HTML="/home/n30/Proyectos/jwa-timer/jwa-timer.html"
+PERFIL="$HOME/.cache/jwa-timer-profile"
+PATRON="jwa-timer.html"
+
+# --- Selector de navegador -------------------------------------------------
+# Chromium es el preferido. En este equipo (Radeon RX 9070 XT, radv no conforme
+# segun el propio Chromium) el arranque EXIGE --no-sandbox: sin el, el proceso
+# muere al instante con "radv is not a conformant Vulkan implementation" y no
+# llega a crear ventana (medido el 2026-10-02).
+NAVEGADOR=""
+for c in chromium google-chrome-stable brave; do
+    if command -v "$c" >/dev/null 2>&1; then NAVEGADOR="$c"; break; fi
+done
+
+if [ -z "$NAVEGADOR" ]; then
+    echo "jwa-timer: no encontre chromium, google-chrome-stable ni brave" >&2
+    exit 1
+fi
+
+if [ ! -f "$HTML" ]; then
+    echo "jwa-timer: no existe $HTML" >&2
+    exit 1
+fi
+
+esta_abierto() {
+    pgrep -f "app=file://${HTML}" >/dev/null 2>&1
+}
+
+cerrar() {
+    if esta_abierto; then
+        # Solo mata ESTA ventana, no el navegador entero del usuario.
+        pkill -f "app=file://${HTML}" 2>/dev/null || true
+        echo "jwa-timer: cerrado"
+    else
+        echo "jwa-timer: no estaba abierto"
+    fi
+}
+
+case "${1:-}" in
+    --cerrar) cerrar; exit 0 ;;
+    --toggle) if esta_abierto; then cerrar; exit 0; fi ;;
+    --estado) if esta_abierto; then echo "abierto"; else echo "cerrado"; fi; exit 0 ;;
+esac
+
+# Ya abierto: no duplicamos ventana.
+if esta_abierto; then
+    echo "jwa-timer: ya esta abierto"
+    exit 0
+fi
+
+mkdir -p "$PERFIL"
+
+# El perfil NO determina la clase de ventana: medido el 2026-10-02 con dos
+# --user-data-dir distintos, la clase fue IDENTICA en ambos. Lo que la determina
+# es la RUTA DEL HTML, que Chromium incrusta en el nombre de la clase:
+#   chrome-__home_n30_Proyectos_jwa-timer_jwa-timer.html-Default
+# Consecuencia: SI SE MUEVE EL HTML, la regla de Hyprland deja de casar EN
+# SILENCIO (ventana en mosaico, tamano completo, sin error alguno). Tras mover
+# el fichero, revisa la regla y mide con `hyprctl clients -j`.
+setsid "$NAVEGADOR" \
+    --app="file://${HTML}" \
+    --user-data-dir="$PERFIL" \
+    --no-sandbox \
+    --disable-gpu \
+    --no-first-run \
+    --no-default-browser-check \
+    --disable-features=Translate,MediaRouter \
+    --autoplay-policy=no-user-gesture-required \
+    --window-size=120,120 \
+    >/dev/null 2>&1 < /dev/null &
+
+disown 2>/dev/null || true
+echo "jwa-timer: lanzado con ${NAVEGADOR}"

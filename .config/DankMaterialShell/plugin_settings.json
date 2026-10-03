@@ -3,5 +3,14 @@
     "enabled": true,
     "recentEmojis": "🐋,👍,👨🏼‍💻,👩",
     "defaultSkinTone": "🏼"
+  },
+  "takeABreak": {
+    "enabled": true
+  },
+  "ocrScanner": {
+    "enabled": true
+  },
+  "quickCapture": {
+    "enabled": true
   }
 }

@@ -1026,11 +1026,6 @@ hl.window_rule({ name = "editor-ws1", match = { class = "^(com\\.microsoft\\.VSC
 -- ~/.cache/jwa-timer-profile) y la clase fue IDENTICA en ambos: depende de la
 -- URL, no del perfil. (Una medicion anterior con otro perfil me hizo creer lo
 -- contrario; era falso.)
--- EL TITULO SI ES "jwa-timer": se cambio el <title> del HTML a "jwa-timer"
--- el 2026-10-02. Ese es el nombre que se ve en el lanzador de tareas. La regla
--- casa por CLASE, no por titulo, a proposito: el titulo es facil de duplicar
--- (cualquier webview podria llamarse igual) y la clase lleva la ruta, que es
--- unica. No cambiar el match a title salvo que haya motivo medido.
 -- SI SE MUEVE EL HTML DE SITIO, LA CLASE CAMBIA (lleva la ruta incrustada en el
 -- nombre) Y ESTA REGLA DEJA DE CASAR EN SILENCIO: la ventana volveria a salir
 -- en mosaico y a tamano completo sin ningun error. Tras mover el fichero,
@@ -1052,87 +1047,17 @@ hl.window_rule({ name = "editor-ws1", match = { class = "^(com\\.microsoft\\.VSC
 --
 -- SIN `opaque`: la ventana es transparente por diseno (velo al 84% +
 -- backdrop-filter). Poner `opaque` la forzaria opaca y mataria el efecto.
---
--- OPACIDAD DE LA VENTANA (anadido 2026-10-02, peticion de n30).
---
--- ###########################################################################
--- # NO USAR `override` AQUI. MATA EL COLOR DEL NUMERO. MEDIDO, NO SUPUESTO. #
--- ###########################################################################
--- n30 pidio "mitad de transparencia 0.50 override 0.40 override". La sintaxis
--- es correcta (la wiki de 0.56 documenta `override` como sufijo para fijar el
--- valor como absoluto en vez de multiplicador), PERO en esta ventana concreta
--- `override` produce un fallo reproducible: el numero deja de ser amarillo y
--- sale GRIS NEUTRO.
---
--- MEDICION (2026-10-02, `grim` sobre la pantalla real, contando pixeles
--- amarillos con r-b>60 en la zona de la ventana):
---     sin regla de opacidad ......... 2298 px amarillos, sat 196, (235,195,39)
---     opacity = "0.50 0.40" ......... 1475 px amarillos, sat 104, (147, 126, 43)
---     opacity = "0.50 override 0.40 override" ... 0 px amarillos, sat 0,
---                                                  gris (121,121,121)
--- Reproducido 3 veces (con regla / sin regla / con override), siempre igual.
---
--- Causa: `override` fuerza el alfa absoluto del buffer de la superficie. Con
--- --disable-gpu (obligatorio en este equipo, ver jwa-timer.sh) la superficie
--- se rasteriza por software en un formato donde esa manipulacion de alfa sobre
--- un fondo 100% transparente pierde la crominancia. El multiplicador normal no
--- toca el alfa de la misma forma y conserva el color.
---
--- POR QUE 0.50 0.40 Y NO override: `override` solo cambia el resultado cuando
--- hay OTRA regla de opacidad que multiplicaria encima. Aqui no la hay (regla
--- unica, sin `opaque`), asi que 0.50 0.40 da exactamente el mismo resultado
--- visual... salvo que conserva el amarillo. Sin motivo para pagar el gris.
---
--- Efecto buscado: ventana al 50% opaca con foco, 40% sin foco. El fondo ya es
--- 100% transparente por CSS, asi que lo que se atenua es el NUMERO: al 50% se
--- ve a media intensidad. Si queda demasiado tenue, SUBIR estos valores o
--- reforzar el text-shadow del HTML; no volver a `override`.
---
--- ###########################################################################
--- # REGLA RETIRADA EL 2026-10-03. EL TIMER YA NO ES UNA VENTANA.           #
--- # ESTA COMENTADA A PROPOSITO: NO DESCOMENTAR SIN LEER ESTO ENTERO.       #
--- ###########################################################################
---
--- Por que se retiro: el timer se reescribio en Quickshell
--- (jwa-timer.qml, ver jwa-timer.sh). Quickshell crea un PanelWindow, que en
--- Wayland es una CAPA wlr-layer-shell, NO una ventana. Una capa no tiene
--- clase de ventana, asi que `match = { class = ... }` no puede casarla: la
--- regla quedo inerte. Se comprobo:
---     hyprctl layers  -> "namespace: jwa-timer, xywh: 60 60 120 120"  (level 3 overlay)
---     hyprctl clients -> ninguna ventana con clase jwa
---
--- Por que se QUITA en vez de dejarla: dejarla puesta era una trampa. La clase
--- `chrome-__home_n30_Proyectos_jwa-timer_jwa-timer.html-Default` pertenece a
--- la version vieja en Chromium. Si alguien abria el HTML suelto en Chromium
--- (por ejemplo para depurarlo), esta regla lo cazaba y le aplicaba la
--- opacidad y el tamano del timer, sin que nada lo anunciara. Ya paso una vez:
--- el 2026-10-02 una instancia antigua de Chromium --kiosk seguia viva y
--- contaminaba las mediciones de transparencia hechas con `grim`.
---
--- Lo que NO hace falta ya: la transparencia. Antes habia que pelear con
--- `opacity` en la regla porque Chromium pinta una superficie opaca y el velo
--- habia que atenuarlo desde fuera. La capa de Quickshell es transparente de
--- verdad (medido: dentro de la capa (25,25,25), fuera (25,25,25), diferencia
--- 0), asi que no necesita NINGUNA regla del compositor. La transparencia sale
--- del propio QML: `color: "transparent"`.
---
--- Si algun dia se vuelve a Chromium: la regla esta aqui abajo, comentada, con
--- su match original. Descomentar y volver a medir con `hyprctl clients -j`.
---
--- hl.window_rule({
---     name = "jwa-timer",
---     match = { class = "^(chrome-__home_n30_Proyectos_jwa-timer_jwa-timer\\.html-Default)$" },
---     float = true,
---     size = { 120, 120 },
---     move = { 60, 60 },
---     border_size = 0,
---     rounding = 0,
---     no_shadow = true,
---     no_initial_focus = true,
---     opacity = "0.50 0.40",
--- })
-
-
+hl.window_rule({
+    name = "jwa-timer",
+    match = { class = "^(chrome-__home_n30_Proyectos_jwa-timer_jwa-timer\\.html-Default)$" },
+    float = true,
+    size = { 120, 120 },   -- 120x120: con --kiosk no hay barra que compensar
+    move = { 60, 60 },
+    border_size = 0,
+    rounding = 0,
+    no_shadow = true,
+    no_initial_focus = true,
+})
 
 -- Alternativa si prefieres tenerlo SIEMPRE encima de todo mientras corre:
 -- descomentar `pin = true` arriba. `pin` lo deja fijo por encima de las demas

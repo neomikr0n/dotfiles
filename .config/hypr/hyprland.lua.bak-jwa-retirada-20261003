@@ -1087,50 +1087,18 @@ hl.window_rule({ name = "editor-ws1", match = { class = "^(com\\.microsoft\\.VSC
 -- 100% transparente por CSS, asi que lo que se atenua es el NUMERO: al 50% se
 -- ve a media intensidad. Si queda demasiado tenue, SUBIR estos valores o
 -- reforzar el text-shadow del HTML; no volver a `override`.
---
--- ###########################################################################
--- # REGLA RETIRADA EL 2026-10-03. EL TIMER YA NO ES UNA VENTANA.           #
--- # ESTA COMENTADA A PROPOSITO: NO DESCOMENTAR SIN LEER ESTO ENTERO.       #
--- ###########################################################################
---
--- Por que se retiro: el timer se reescribio en Quickshell
--- (jwa-timer.qml, ver jwa-timer.sh). Quickshell crea un PanelWindow, que en
--- Wayland es una CAPA wlr-layer-shell, NO una ventana. Una capa no tiene
--- clase de ventana, asi que `match = { class = ... }` no puede casarla: la
--- regla quedo inerte. Se comprobo:
---     hyprctl layers  -> "namespace: jwa-timer, xywh: 60 60 120 120"  (level 3 overlay)
---     hyprctl clients -> ninguna ventana con clase jwa
---
--- Por que se QUITA en vez de dejarla: dejarla puesta era una trampa. La clase
--- `chrome-__home_n30_Proyectos_jwa-timer_jwa-timer.html-Default` pertenece a
--- la version vieja en Chromium. Si alguien abria el HTML suelto en Chromium
--- (por ejemplo para depurarlo), esta regla lo cazaba y le aplicaba la
--- opacidad y el tamano del timer, sin que nada lo anunciara. Ya paso una vez:
--- el 2026-10-02 una instancia antigua de Chromium --kiosk seguia viva y
--- contaminaba las mediciones de transparencia hechas con `grim`.
---
--- Lo que NO hace falta ya: la transparencia. Antes habia que pelear con
--- `opacity` en la regla porque Chromium pinta una superficie opaca y el velo
--- habia que atenuarlo desde fuera. La capa de Quickshell es transparente de
--- verdad (medido: dentro de la capa (25,25,25), fuera (25,25,25), diferencia
--- 0), asi que no necesita NINGUNA regla del compositor. La transparencia sale
--- del propio QML: `color: "transparent"`.
---
--- Si algun dia se vuelve a Chromium: la regla esta aqui abajo, comentada, con
--- su match original. Descomentar y volver a medir con `hyprctl clients -j`.
---
--- hl.window_rule({
---     name = "jwa-timer",
---     match = { class = "^(chrome-__home_n30_Proyectos_jwa-timer_jwa-timer\\.html-Default)$" },
---     float = true,
---     size = { 120, 120 },
---     move = { 60, 60 },
---     border_size = 0,
---     rounding = 0,
---     no_shadow = true,
---     no_initial_focus = true,
---     opacity = "0.50 0.40",
--- })
+hl.window_rule({
+    name = "jwa-timer",
+    match = { class = "^(chrome-__home_n30_Proyectos_jwa-timer_jwa-timer\\.html-Default)$" },
+    float = true,
+    size = { 120, 120 },
+    move = { 60, 60 },
+    border_size = 0,
+    rounding = 0,
+    no_shadow = true,
+    no_initial_focus = true,
+    opacity = "0.50 0.40",
+})
 
 
 
