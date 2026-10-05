@@ -19,11 +19,6 @@
       "repo": "https://github.com/hthienloc/dms-plugins",
       "path": "quickCapture",
       "commit": "fe521adc77415bdd14efffdc5f6aed7b460bac3e"
-    },
-    "takeABreak": {
-      "repo": "https://github.com/hthienloc/dms-plugins",
-      "path": "takeABreak",
-      "commit": "fe521adc77415bdd14efffdc5f6aed7b460bac3e"
     }
   }
 }

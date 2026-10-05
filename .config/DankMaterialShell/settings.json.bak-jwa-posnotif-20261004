@@ -1,0 +1,291 @@
+{
+  "currentThemeName": "dynamic",
+  "matugenScheme": "scheme-rainbow",
+  "matugenContrast": -0.03,
+  "popupTransparency": 0.94,
+  "widgetBackgroundColor": "custom",
+  "widgetBackgroundCustomColor": "#000000",
+  "widgetBackgroundCustomStrength": 1,
+  "widgetColorMode": "colorful",
+  "cornerRadius": 12,
+  "clockFormat": "24h",
+  "animationSpeed": 4,
+  "customAnimationDuration": 200,
+  "barElevationEnabled": false,
+  "blurEnabled": true,
+  "controlCenterWidgets": [
+    {
+      "id": "volumeSlider",
+      "enabled": true,
+      "width": 50
+    },
+    {
+      "id": "brightnessSlider",
+      "enabled": true,
+      "width": 50,
+      "deviceName": "ddc:i2c-8"
+    },
+    {
+      "id": "wifi",
+      "enabled": true,
+      "width": 50
+    },
+    {
+      "id": "bluetooth",
+      "enabled": true,
+      "width": 50
+    },
+    {
+      "id": "audioOutput",
+      "enabled": true,
+      "width": 50
+    },
+    {
+      "id": "audioInput",
+      "enabled": true,
+      "width": 50
+    },
+    {
+      "id": "nightMode",
+      "enabled": true,
+      "width": 50
+    },
+    {
+      "id": "darkMode",
+      "enabled": true,
+      "width": 50
+    },
+    {
+      "id": "colorPicker",
+      "enabled": true,
+      "width": 50
+    },
+    {
+      "id": "idleInhibitor",
+      "enabled": true,
+      "width": 50
+    },
+    {
+      "id": "diskUsage",
+      "enabled": true,
+      "width": 50,
+      "instanceId": "mpoyfy7iue6jv3dzovri126maf44b",
+      "mountPath": "/"
+    }
+  ],
+  "showWorkspacePadding": true,
+  "mediaAdaptiveWidthEnabled": false,
+  "appleMusicAnimatedArtEnabled": true,
+  "runningAppsCurrentWorkspace": false,
+  "greeterAutoLogin": true,
+  "greeterWallpaperPath": "/home/n30/dotfiles/share/wallpapers/ss_2025-02-09_10-35_17_garuda.jpeg",
+  "greeterWallpaperFillMode": "Fit",
+  "appLauncherViewMode": "grid",
+  "appLauncherGridColumns": 8,
+  "appDrawerSectionViewModes": {
+    "apps": "list"
+  },
+  "cursorSettings": {
+    "theme": "System Default",
+    "size": 29,
+    "niri": {
+      "hideWhenTyping": false,
+      "hideAfterInactiveMs": 0
+    },
+    "hyprland": {
+      "hideOnKeyPress": false,
+      "hideOnTouch": false,
+      "inactiveTimeout": 0
+    },
+    "dwl": {
+      "cursorHideTimeout": 0
+    }
+  },
+  "launcherLogoMode": "compositor",
+  "launcherLogoColorOverride": "primary",
+  "launcherLogoSizeOffset": -2,
+  "notepadFontSize": 13,
+  "notepadTransparencyOverride": 0.92,
+  "notepadLastCustomTransparency": 0.92,
+  "useSystemSoundTheme": true,
+  "acMonitorTimeout": 180,
+  "fadeToLockEnabled": false,
+  "matugenTemplateNeovim": true,
+  "dockAutoHide": true,
+  "notificationTimeoutNormal": 10000,
+  "notificationAnimationSpeed": 4,
+  "notificationCustomAnimationDuration": 464,
+  "notificationRules": [
+    {
+      "enabled": true,
+      "field": "appName",
+      "pattern": "flameshot",
+      "matchType": "exact",
+      "action": "default",
+      "urgency": "default"
+    }
+  ],
+  "osdAlwaysShowValue": true,
+  "osdPosition": 4,
+  "osdPowerProfileEnabled": true,
+  "powerActionConfirm": false,
+  "powerActionHoldDuration": 0.25,
+  "updaterCheckOnStart": true,
+  "updaterUseCustomCommand": true,
+  "updaterCustomCommand": "yay",
+  "screenPreferences": {
+    "wallpaper": [
+      "all"
+    ]
+  },
+  "barConfigs": [
+    {
+      "id": "default",
+      "name": "Main Bar",
+      "enabled": true,
+      "position": 2,
+      "screenPreferences": [
+        "all"
+      ],
+      "showOnLastDisplay": true,
+      "leftWidgets": [
+        {
+          "id": "launcherButton",
+          "enabled": true
+        },
+        {
+          "id": "workspaceSwitcher",
+          "enabled": true
+        },
+        {
+          "id": "spacer",
+          "enabled": true,
+          "size": 50
+        },
+        {
+          "id": "music",
+          "enabled": true,
+          "mediaSize": 3
+        }
+      ],
+      "centerWidgets": [
+        {
+          "id": "clock",
+          "enabled": true
+        },
+        {
+          "id": "spacer",
+          "enabled": true,
+          "size": 30
+        },
+        {
+          "id": "focusedWindow",
+          "enabled": true,
+          "focusedWindowCompactMode": false
+        }
+      ],
+      "rightWidgets": [
+        {
+          "id": "runningApps",
+          "enabled": false
+        },
+        {
+          "id": "weather",
+          "enabled": true
+        },
+        {
+          "id": "systemTray",
+          "enabled": true
+        },
+        {
+          "id": "clipboard",
+          "enabled": true
+        },
+        {
+          "id": "cpuUsage",
+          "enabled": true
+        },
+        {
+          "id": "memUsage",
+          "enabled": true
+        },
+        {
+          "id": "notificationButton",
+          "enabled": true
+        },
+        {
+          "id": "battery",
+          "enabled": true
+        },
+        {
+          "id": "controlCenterButton",
+          "enabled": true
+        },
+        {
+          "id": "notepadButton",
+          "enabled": true
+        }
+      ],
+      "spacing": 4,
+      "innerPadding": 4,
+      "bottomGap": 0,
+      "transparency": 0.21,
+      "widgetTransparency": 1,
+      "squareCorners": false,
+      "noBackground": false,
+      "gothCornersEnabled": false,
+      "gothCornerRadiusOverride": false,
+      "gothCornerRadiusValue": 12,
+      "borderEnabled": true,
+      "borderColor": "primary",
+      "borderOpacity": 0,
+      "borderThickness": 1,
+      "widgetOutlineEnabled": false,
+      "widgetOutlineColor": "primary",
+      "widgetOutlineOpacity": 1,
+      "widgetOutlineThickness": 1,
+      "fontScale": 1.18,
+      "autoHide": true,
+      "autoHideDelay": 400,
+      "openOnOverview": false,
+      "visible": true,
+      "popupGapsAuto": true,
+      "popupGapsManual": 4,
+      "maximizeDetection": true,
+      "shadowIntensity": 0,
+      "attachToScreenEdge": false
+    }
+  ],
+  "desktopClockCustomColor": {
+    "r": 1,
+    "g": 1,
+    "b": 1,
+    "a": 1,
+    "hsvHue": -1,
+    "hsvSaturation": 0,
+    "hsvValue": 1,
+    "hslHue": -1,
+    "hslSaturation": 0,
+    "hslLightness": 1,
+    "valid": true
+  },
+  "systemMonitorCustomColor": {
+    "r": 1,
+    "g": 1,
+    "b": 1,
+    "a": 1,
+    "hsvHue": -1,
+    "hsvSaturation": 0,
+    "hsvValue": 1,
+    "hslHue": -1,
+    "hslSaturation": 0,
+    "hslLightness": 1,
+    "valid": true
+  },
+  "builtInPluginSettings": {
+    "dms_settings_search": {
+      "trigger": "?"
+    }
+  },
+  "configVersion": 18
+}

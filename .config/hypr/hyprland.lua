@@ -1131,6 +1131,38 @@ hl.window_rule({ name = "editor-ws1", match = { class = "^(com\\.microsoft\\.VSC
 --     no_initial_focus = true,
 --     opacity = "0.50 0.40",
 -- })
+--
+-- ###########################################################################
+-- # NO EXISTE REGLA DE OPACIDAD PARA ESTA CAPA. NO SE PUEDE ESCRIBIR.       #
+-- ###########################################################################
+-- n30 pidio el 2026-10-03 una regla con "0.70 override 0.70 override". La
+-- sintaxis es correcta, pero no hay donde aplicarla:
+--
+--   - Las reglas de VENTANA (hl.window_rule) si tienen `opacity`, pero no
+--     pueden alcanzar una capa: una capa no tiene clase de ventana.
+--   - Las reglas de CAPA (hl.layer_rule) si la alcanzan por `namespace`, pero
+--     en Hyprland 0.56.2 NO tienen opacidad. El conjunto completo de efectos
+--     esta en el enum instalado:
+--       /usr/include/hyprland/src/desktop/rule/layerRule/LayerRuleEffectContainer.hpp
+--     y son exactamente diez: no_anim, blur, blur_popups, ignore_alpha,
+--     dim_around, xray, animation, order, above_lock, no_screen_share.
+--     Escribir `opacity` da: hl.layer_rule: unknown field 'opacity'.
+--     Se pidio en el issue #4267 (2023) y se cerro como "not planned".
+--
+-- Sobre `override`, por precision: significa alfa ABSOLUTO en vez de
+-- multiplicado por decoration:active_opacity / inactive_opacity. Los valores de
+-- esta config son 1.0 / 0.9 / 1.0, asi que sin `override` un 0.70 saldria 0.63
+-- sin foco. La intuicion de n30 era correcta; simplemente no hay regla de capa
+-- donde escribirla.
+--
+-- La opacidad 0.70 vive en el QML (jwa-timer.qml), en un Item contenedor.
+-- Medido sobre fondo negro opaco: el glifo sale (178,147,21), que es
+-- exactamente 0,70*(255,210,30) + 0,30*(0,0,0). Alfa implicita por canal:
+-- R 0.698, G 0.700, B 0.700.
+--
+-- Lo que SI se puede hacer con una regla de capa, si algun dia hace falta
+-- (ya hay una equivalente para el quickshell general, mas abajo en este fichero):
+--   hl.layer_rule({ name = "jwa-timer", match = { namespace = "^(jwa-timer)$" }, no_anim = true })
 
 
 
@@ -1162,7 +1194,7 @@ hl.window_rule({ name = "ktimer-dim", match = { class = "^org.kde.ktimer$" }, op
 -- at = [-540, -184], es decir casi todo fuera de pantalla por la izquierda y por arriba.
 -- Que se salga del espacio es INTENCIONADO, no un error de calculo.
 --   - `float = true` hace falta: en una ventana en mosaico la posicion se ignora.
---   - `move` admite negativos sin problema (la regla del GPS ya usa y = -190).
+--   - `move` admite negativos sin problema (la regla del GPS ya usa y = -202).
 --   - `silent`: se va al 2 SIN arrastrar la vista. Si prefieres que al abrirlo te lleve al 2,
 --     quitale el `silent` (que quede `workspace = "2"`). Leido en el fuente: solo cambia de
 --     escritorio si el string no lleva "silent".
@@ -1339,13 +1371,14 @@ hl.window_rule({ name = "genymotion-dim", match = { title = "^(Genymotion)$" }, 
 --   La barra de DMS es vertical y esta en el borde izquierdo (dms:bar, 44x1440 en x=0),
 --   asi que arriba no hay nada que tape la ventana.
 --
--- POSICION: (655, -190) son las coordenadas que eligio n30 a mano el 2026-10-01, y se
---   respetan tal cual. Lo que cuestan, para que conste: con -190 la cabecera queda oculta
---   de sobra (130 < 190), asi que se tiran 60 px de mapa por arriba que no hacian falta;
---   con -131 se recuperarian. No es un error de la regla, es su eleccion.
+-- POSICION: (887, -202) son las coordenadas que eligio n30 a mano, y se respetan tal cual.
+--   Antes fueron (655, -190), puestas el 2026-10-01; el 2026-10-04 las movio a (887, -202).
+--   Lo que cuestan, para que conste: con -202 la cabecera queda oculta de sobra (130 < 202),
+--   asi que se tiran 72 px de mapa por arriba que no hacian falta; con -131 se recuperarian.
+--   No es un error de la regla, es su eleccion.
 -- Para volver a la ventana entera abajo a la derecha: move = { 2960, 1110 }.
 hl.window_rule({ name = "genymotion-gps", match = { title = "^(GPS - Genymotion)$" },
-    float = true, size = { 466, 306 }, move = { 655, -190 }, opacity = "0.55 0.05",
+    float = true, size = { 466, 306 }, move = { 887, -202 }, opacity = "0.55 0.05",
     min_size = { 466, 306 }, max_size = { 466, 306 } })
 
 -- Mascota de ChatGPT

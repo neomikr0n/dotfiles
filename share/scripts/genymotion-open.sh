@@ -141,11 +141,15 @@ TOOLBAR_WIDTH=0
 # toggleToolBar() de libgmplayerplugin.so, sin D-Bus ni CLI.
 HIDE_TOOLBAR=1
 
-# Cuántas veces se envía Ctrl+T si la barra sigue puesta. Medido el
-# 2026-10-03: un envío suelto puede no llegar (la barra se quedó visible
-# tras un Ctrl+T), así que se comprueba y se reintenta. Como es un toggle,
-# solo se reintenta mientras el objetivo NO se haya cumplido.
-TOOLBAR_HIDE_ATTEMPTS=3
+# Cuántas vueltas da el bucle de la barra lateral: medir -> decidir ->
+# enviar -> volver a medir. Medido el 2026-10-03: un envío suelto puede no
+# llegar (la barra se quedó visible tras un Ctrl+T), así que se comprueba
+# y se reintenta. Como es un toggle, solo se reintenta mientras el
+# objetivo NO se haya cumplido.
+#
+# Desde el 2026-10-04 una vuelta también sirve para ESPERAR cuando la
+# lectura es dudosa (ventana a medio pintar), sin enviar nada.
+TOOLBAR_HIDE_ATTEMPTS=4
 
 # Abrir el panel de GPS del reproductor al arrancar, sin que n30 tenga
 # que pulsar Ctrl+Alt+G.
@@ -158,7 +162,7 @@ TOOLBAR_HIDE_ATTEMPTS=3
 # `xdotool key --clearmodifiers ctrl+alt+g` con la ventana enfocada le
 # llega. Comprobado en los dos sentidos: con el panel abierto lo cierra
 # y con el panel cerrado lo abre, devolviendo la ventana a su sitio
-# (466x306 en 655,-190, que es la regla `genymotion-gps` de Hyprland).
+# (466x306 en 887,-202, que es la regla `genymotion-gps` de Hyprland).
 #
 # OJO: Ctrl+Alt+G NO es un bind de Hyprland (`hyprctl binds` sólo tiene
 # SUPER+G = group.toggle). Es un atajo INTERNO del plugin de Genymotion:
@@ -170,19 +174,60 @@ TOOLBAR_HIDE_ATTEMPTS=3
 # así que se mira en hyprctl clients.
 SHOW_GPS_PANEL=1
 
-# Cuántas veces se envía Ctrl+Alt+G si el panel no aparece.
+# Cuántos envíos de Ctrl+Alt+G se permiten si el panel no aparece.
 #
-# MEDIDO el 2026-10-03, y es la causa del fallo que reportó n30: el script
-# intentaba abrir el panel en el paso [2/7], con la VM TODAVÍA ARRANCANDO,
-# y ahí el reproductor no atiende el atajo — 6 s de espera y nada. Con la
-# VM ya lista, el mismo Ctrl+Alt+G funciona a la primera (comprobado: el
-# panel pasó de 1 a 0 y de 0 a 1). Por eso la llamada se movió AL FINAL
-# del script (ver main) y además se reintenta el envío.
-GPS_PANEL_ATTEMPTS=2
+# MEDIDO el 2026-10-03: el script intentaba abrir el panel en el paso
+# [2/7], con la VM TODAVÍA ARRANCANDO, y ahí el reproductor no atiende el
+# atajo — 6 s de espera y nada. Con la VM ya lista, el mismo Ctrl+Alt+G
+# funciona a la primera. Por eso la llamada se movió AL FINAL del script.
+#
+# El 2026-10-04 falló igual en un arranque EN FRÍO, ya estando al final:
+# dos envíos y el panel no apareció. Desde entonces cada intento vuelve a
+# comprobar el panel ANTES de enviar (ver show_gps_panel), así que un
+# panel que se abre tarde se detecta en vez de cerrarse, y subir este
+# número ya no tiene el riesgo de antes. Se paga solo cuando falla: si el
+# panel aparece al primer envío, el bucle sale en menos de un segundo.
+GPS_PANEL_ATTEMPTS=8
 
 # Segundos que se espera, tras cada envío, a que el panel aparezca. Con la
-# VM ya lista aparece en menos de un segundo, así que este techo es holgado.
-GPS_PANEL_WAIT_S=8
+# VM ya lista aparece en menos de un segundo, así que este techo solo se
+# agota en un arranque en frío, que es justo cuando hace falta.
+GPS_PANEL_WAIT_S=6
+
+# Vueltas que se dan para dejar el foco en el reproductor antes de enviar
+# una tecla.
+#
+# MEDIDO el 2026-10-04, en una ejecución real: el foco estaba en otra
+# ventana justo en el hueco entre dos pasos, y con UNA sola comprobación el
+# script se rendía sin abrir el panel. `hl.dsp.focus` recupera el foco de
+# sobra (comprobado a mano: pasó de Zen Browser al reproductor), así que se
+# insiste unas veces antes de darse por vencido.
+FOCUS_ATTEMPTS=3
+
+# Relecturas al CONFIRMAR que la barra quedó oculta.
+#
+# MEDIDO el 2026-10-04: justo después de enviar Ctrl+T la franja puede estar
+# a medio cambiar (la barra saliendo, el juego cargando) y una sola lectura
+# cae en la banda dudosa aunque el objetivo YA esté cumplido. Ese día la
+# barra SÍ quedó oculta y el script dijo «no pude confirmar». Remedir es
+# seguro: no se envía nada más.
+TOOLBAR_VERIFY_READS=4
+
+# Lanzar el temporizador de JWA al arrancar (pedido por n30 el 2026-10-04).
+#
+#     1 -> lo lanza si no está ya abierto
+#     0 -> no lo toca
+#
+# Vive FUERA del repo, en ~/Proyectos/jwa-timer/. Abre una capa Wayland
+# (Quickshell + jwa-timer.qml), no una ventana, así que no la verás en
+# `hyprctl clients`.
+#
+# No hace falta envolverlo en `setsid` ni comprobar antes si está abierto:
+# el propio script ya se desengancha por dentro (`setsid quickshell ...`)
+# y ya es idempotente —si está abierto imprime "ya esta abierto" y sale
+# con 0—. Aquí solo se llama y se recoge lo que diga.
+JWA_TIMER=1
+JWA_TIMER_SCRIPT="$HOME/Proyectos/jwa-timer/jwa-timer.sh"
 
 # Límite de intercambios al llevar el tile al borde izquierdo.
 # Normalmente basta uno; el límite también cubre workspaces con muchos tiles.
@@ -213,6 +258,17 @@ RESOLUTION_ONLY=0
 # De dónde salió la posición GPS que se aplicó en este arranque
 # ("recordada" o "de estreno"). Lo rellena set_gps() para el resumen.
 GPS_APPLIED_ORIGIN=""
+
+# Qué pasó DE VERDAD con la barra lateral y con el panel de GPS. Los
+# rellenan hide_player_toolbar() y show_gps_panel(), y el resumen final los
+# imprime tal cual.
+#
+# MEDIDO el 2026-10-04: el resumen imprimía «oculta con Ctrl+T» y «abierto
+# con Ctrl+Alt+G» como texto FIJO, sin mirar el resultado. En el arranque en
+# frío que falló, el resumen decía que todo estaba hecho mientras la barra
+# seguía puesta — que es justo lo que hizo difícil ver el fallo.
+TOOLBAR_RESULT=""
+GPS_PANEL_RESULT=""
 
 # Densidad Android. El perfil declara 320, pero aquí se fuerza 240 desde
 # el 2026-09-30: con 2160x2160 da 1440x1440 dp (sw1440dp, tableta) en vez
@@ -828,6 +884,12 @@ player_toolbar_visible() {
     #     barra OCULTA  -> 0,002 a 0,09
     # Separación >10x. El umbral 0,5 cae en medio y no depende del juego.
     #
+    # OJO CON EL FUZZ: el #1A1A1A de la barra es EXACTO (medido 04-oct:
+    # 64 802 px de 67 824). Cuanto más ancho el fuzz, más contenido del
+    # emulador entra en la cuenta. Con 3% un fondo oscuro llegaba a 0,33
+    # (banda dudosa) estando la barra OCULTA; con 1% se queda en 0,03. No
+    # lo subas: el margen que gana el ruido lo pierde la separación.
+    #
     # El criterio anterior (contar COLORES ÚNICOS con umbral 700) se
     # descartó: depende del CONTENIDO de la pantalla. El 2026-10-02 dio
     # 293 vs 1169 (4x de separación), pero el 2026-10-03 el mismo par dio
@@ -838,11 +900,11 @@ player_toolbar_visible() {
 
     # shellcheck disable=SC2016  # el %[fx:...] es de ImageMagick, no shell
     frac="$(
-        LC_ALL=C magick "$shot" -fuzz 3% \
+        LC_ALL=C magick "$shot" -fuzz 1% \
             -fill white -opaque '#1A1A1A' \
             -fill black +opaque white \
             -format "%[fx:mean]" info: 2>/dev/null ||
-            LC_ALL=C convert "$shot" -fuzz 3% \
+            LC_ALL=C convert "$shot" -fuzz 1% \
                 -fill white -opaque '#1A1A1A' \
                 -fill black +opaque white \
                 -format "%[fx:mean]" info: 2>/dev/null
@@ -855,8 +917,137 @@ player_toolbar_visible() {
 
     [[ "$frac" =~ ^[0-9]*\.?[0-9]+$ ]] || return 2
 
-    # 0 = visible, 1 = oculta, 2 = no se pudo leer.
-    awk -v f="$frac" 'BEGIN { exit !(f > 0.5) }'
+    # 0 = visible, 1 = oculta, 2 = lectura dudosa o no se pudo leer.
+    #
+    # Los tramos salen de medidas, no de la intuición. Con -fuzz 1%:
+    #     barra VISIBLE -> 0,963 a 0,965   (el fondo es #1A1A1A EXACTO)
+    #     barra OCULTA  -> 0,0001 a 0,032  (según el contenido del emulador)
+    # Separación >20x. El umbral 0,5 cae en medio.
+    #
+    # MEDIDO el 2026-10-04: con el -fuzz 3% anterior, un contenido OSCURO
+    # del emulador daba 0,333 con la barra OCULTA — la banda dudosa, que
+    # hasta ese momento no había dado ningún estado. El fuzz ancho
+    # mezclaba #101010/#111111 del emulador con #1A1A1A. Con 1% ese mismo
+    # contenido da 0,032. El fallo era el fuzz, no la banda.
+    #
+    # El tramo 0,15-0,5 sigue siendo «no lo sé»: si aparece es que la
+    # captura no vale (ventana a medio pintar). Ahí NO se decide: quien
+    # llama espera y remide.
+    awk -v f="$frac" 'BEGIN {
+        if (f > 0.5) exit 0
+        if (f < 0.15) exit 1
+        exit 2
+    }'
+}
+
+
+# ============================================================
+# FOCO PARA ENVIAR TECLAS (XWayland)
+#
+# El reproductor es XWayland, y `xdotool key` inyecta la tecla en el foco
+# del SERVIDOR X, no en el de Hyprland. Son dos focos distintos y hay que
+# poner los dos:
+#
+#   - el de Hyprland, con `hl.dsp.focus`, que decide qué ventana ve n30;
+#   - el de X, con `xdotool windowfocus --sync`, que es al que llega la
+#     tecla.
+#
+# MEDIDO el 2026-10-04, con la sesión ya asentada: los dos apuntaban al
+# reproductor (`xdotool getwindowfocus` devolvía su ventana). Pero el
+# script solo comprobaba el de Hyprland, así que en un arranque en frío no
+# había forma de saber si la tecla tenía destino. Ahora se pone el de X a
+# mano antes de cada envío.
+#
+# OJO al resolver la ventana X: el proceso del reproductor tiene VARIAS
+# ventanas X11 (la principal, el panel de GPS y una tercera llamada
+# "Genymotion"). Se busca por TÍTULO EXACTO, nunca por clase a secas.
+# ============================================================
+
+player_window_title() {
+    hyprctl clients -j 2>/dev/null |
+        jq -r --arg a "$1" '.[] | select(.address == $a) | .title'
+}
+
+
+player_x11_id() {
+
+    local want="$1"
+    local id=""
+    local nombre=""
+
+    have xdotool || return 1
+
+    while read -r id; do
+        nombre="$(xdotool getwindowname "$id" 2>/dev/null)" || continue
+        if [[ "$nombre" == "$want" ]]; then
+            printf '%s' "$id"
+            return 0
+        fi
+    done < <(xdotool search --class "Genymotion Player" 2>/dev/null)
+
+    return 1
+}
+
+
+# Deja el foco de Hyprland Y el de X en la ventana del reproductor.
+#
+# Devuelve 0 solo si consiguió confirmar el foco de X. Ese 0 es un extra,
+# no un requisito: quien llama sigue comprobando el foco de Hyprland, que
+# es el que `hl.dsp.focus` controla de verdad. Si esta función devuelve 1
+# (por ejemplo porque `xdotool getwindowfocus` falla, cosa que se ha visto
+# hacer de forma intermitente), la tecla se envía igual: es lo que se hacía
+# antes y funciona con la sesión asentada.
+focus_player_for_keys() {
+
+    local address="$1"
+    local titulo=""
+    local id=""
+
+    titulo="$(player_window_title "$address")"
+
+    [[ -n "$titulo" && "$titulo" != "null" ]] || return 1
+
+    hyprctl dispatch "hl.dsp.focus({ window = \"address:${address}\" })" \
+        >/dev/null 2>&1 || true
+
+    sleep 0.4
+
+    id="$(player_x11_id "$titulo" || true)"
+
+    [[ -n "$id" ]] || return 1
+
+    # Medido el 2026-10-04: estas dos NO roban el foco (el reproductor lo
+    # conserva), así que son seguras.
+    xdotool windowactivate --sync "$id" >/dev/null 2>&1 || true
+    xdotool windowfocus --sync "$id" >/dev/null 2>&1 || true
+
+    [[ "$(xdotool getwindowfocus 2>/dev/null)" == "$id" ]]
+}
+
+
+# Deja el foco en el reproductor Y LO CONFIRMA por Hyprland, insistiendo.
+#
+# Medido el 2026-10-04, en una ejecución real: el foco estaba en otra
+# ventana justo en el hueco entre dos pasos, y con UNA sola comprobación el
+# script se rendía sin abrir el panel. Ver FOCUS_ATTEMPTS.
+focus_player_checked() {
+
+    local address="$1"
+    local intento=0
+
+    for ((intento = 1; intento <= FOCUS_ATTEMPTS; intento++)); do
+
+        focus_player_for_keys "$address" || true
+
+        sleep 0.5
+
+        if [[ "$(hyprctl activewindow -j 2>/dev/null | jq -r '.address')" \
+              == "$address" ]]; then
+            return 0
+        fi
+    done
+
+    return 1
 }
 
 
@@ -865,11 +1056,13 @@ hide_player_toolbar() {
     local address="$1"
 
     [[ "$HIDE_TOOLBAR" == "1" ]] || {
+        TOOLBAR_RESULT="sin tocar (HIDE_TOOLBAR=0)"
         echo "   Barra lateral: sin tocar (HIDE_TOOLBAR=0)."
         return 0
     }
 
     if ! have xdotool; then
+        TOOLBAR_RESULT="sin tocar: falta xdotool"
         echo "⚠️ No encuentro xdotool: no puedo ocultar la barra lateral."
         echo "   Púlsala tú con Ctrl+T (o instala xdotool)."
         return 0
@@ -878,76 +1071,144 @@ hide_player_toolbar() {
     echo
     echo "🧰 Barra lateral del reproductor..."
 
-    # xdotool manda la tecla al FOCO, no a una ventana concreta, así que
-    # hay que enfocar primero. Se hace por Hyprland, que es el dueño del
-    # foco, y se comprueba antes de enviar.
-    hyprctl dispatch "hl.dsp.focus({ window = \"address:${address}\" })" \
-        >/dev/null 2>&1 || true
-
-    sleep 0.4
-
-    if [[ "$(hyprctl activewindow -j | jq -r '.address')" != "$address" ]]; then
-        # Sin foco, Ctrl+T iría a la ventana equivocada: mejor no enviarlo.
-        echo "⚠️ No conseguí enfocar el reproductor; no envío Ctrl+T."
-        return 0
-    fi
-
-    # Sin captura no sé si la barra está puesta. Si ya está oculta, pulsar
-    # la MOSTRARÍA, así que ante la duda no se toca.
-    player_toolbar_visible "$address"
-    case $? in
-        0)
-            echo "   La barra estaba visible; la oculto con Ctrl+T."
-            ;;
-        1)
-            echo "   La barra ya estaba oculta; no envío nada."
-            return 0
-            ;;
-        *)
-            echo "⚠️ No pude leer el estado de la barra; no envío Ctrl+T."
-            return 0
-            ;;
-    esac
-
-    # Se envía, se COMPRUEBA y se reintenta.
+    # --------------------------------------------------------
+    # POR QUÉ ESTO ES UN BUCLE Y NO UNA LECTURA SUELTA
     #
-    # Medido el 2026-10-03: con el foco correcto Ctrl+T funciona 3 de 3,
-    # pero un envío suelto puede no llegar (pasó de verdad: tras un Ctrl+T
-    # la barra seguía puesta). Como Ctrl+T es un TOGGLE, reintentar solo
-    # es seguro si el objetivo NO se ha cumplido: si ya está oculta, se
-    # sale sin enviar nada más.
+    # MEDIDO el 2026-10-04, en el arranque en frío que reportó n30: la
+    # versión anterior leía la franja UNA vez y decidía. Leyó "oculta"
+    # cuando la barra estaba visible, así que no envió nada y n30 se la
+    # encontró puesta.
+    #
+    # No fue un fallo del detector, fue medir demasiado pronto: ese paso
+    # corría en [2/7], con la ventana recién mapeada y la VM arrancando.
+    # En ese instante la barra todavía no está dibujada, así que la franja
+    # era fondo y la lectura "oculta" era cierta... para un estado que
+    # dejó de serlo un segundo después. Ahora se llama al final, con la VM
+    # ya arrancada (ver main), y además se remide.
+    #
+    # Genymotion NO guarda el estado de la barra en ningún sitio: su
+    # settings.json solo tiene las 6 claves widget.gps.*. Así que en cada
+    # arranque en frío la barra empieza VISIBLE, y este script es lo único
+    # que la puede ocultar.
+    #
+    # El bucle: medir -> decidir -> enviar -> VOLVER A MEDIR. Con lectura
+    # dudosa (2) no se envía nada y se espera. Solo se reintenta el envío
+    # mientras el objetivo NO se haya cumplido, que es lo único seguro con
+    # un toggle.
+    # --------------------------------------------------------
+
     local intento
     local estado
+    local enviados=0
+    local confirmacion
 
     for ((intento = 1; intento <= TOOLBAR_HIDE_ATTEMPTS; intento++)); do
 
+        # Se lee ANTES de tocar el foco. La captura recorta por la geometría
+        # que da hyprctl, así que NO necesita foco; enfocar antes de leer
+        # robaría el foco de la ventana activa aunque la barra ya estuviera
+        # oculta y no hubiera nada que enviar. Se enfoca solo si hay que
+        # pulsar, más abajo.
+        #
+        # Sin captura no sé si la barra está puesta. Si ya está oculta,
+        # pulsar la MOSTRARÍA, así que ante la duda no se toca.
+        player_toolbar_visible "$address"
+        estado=$?
+
+        if (( estado == 1 )); then
+            if (( enviados == 0 )); then
+                TOOLBAR_RESULT="ya estaba oculta"
+                echo "   La barra ya estaba oculta; no envío nada."
+            else
+                TOOLBAR_RESULT="oculta con Ctrl+T (envío ${enviados})"
+                echo "   ✅ Barra lateral oculta (envío ${enviados})."
+            fi
+            return 0
+        fi
+
+        if (( estado == 2 )); then
+            echo "   Lectura dudosa (la ventana aún no está pintada); espero."
+            sleep 1
+            continue
+        fi
+
+        # estado = 0: la barra está visible y hay que ocultarla.
+        #
+        # Medido el 2026-10-03: con el foco correcto Ctrl+T funciona 3 de
+        # 3, pero un envío suelto puede no llegar (pasó de verdad: tras un
+        # Ctrl+T la barra seguía puesta). Por eso se comprueba después.
+        #
+        # xdotool manda la tecla al FOCO, no a una ventana concreta. Se
+        # enfoca por Hyprland (que es el dueño del foco), se pone el foco de
+        # X y se confirma, insistiendo si hace falta.
+        if ! focus_player_checked "$address"; then
+            # Sin foco, Ctrl+T iría a la ventana equivocada: mejor no enviarlo.
+            TOOLBAR_RESULT="sin tocar: no conseguí enfocar el reproductor"
+            echo "⚠️ No conseguí enfocar el reproductor; no envío Ctrl+T."
+            return 0
+        fi
+
+        echo "   La barra estaba visible; la oculto con Ctrl+T."
+
         xdotool key --clearmodifiers ctrl+t || {
+            TOOLBAR_RESULT="sin tocar: xdotool falló al enviar"
             echo "⚠️ xdotool falló al enviar Ctrl+T."
             return 0
         }
 
+        enviados=$(( enviados + 1 ))
+
         sleep 1
 
-        player_toolbar_visible "$address"
-        estado=$?
+        # Se vuelve a medir. Si la lectura sale DUDOSA se remide unas veces
+        # más en vez de darlo por perdido: medido el 2026-10-04, justo
+        # después de ocultar la barra la franja puede estar a medio cambiar
+        # y una sola lectura cae en la banda dudosa aunque el objetivo YA
+        # esté cumplido. Remedir es seguro: no se envía nada más.
+        estado=2
 
-        case $estado in
-            1)
-                echo "   ✅ Barra lateral oculta (envío ${intento})."
-                return 0
-                ;;
-            2)
-                echo "   ⚠️ No pude leer si la barra quedó oculta; no sigo."
-                return 0
-                ;;
-        esac
+        for ((confirmacion = 1; confirmacion <= TOOLBAR_VERIFY_READS; confirmacion++)); do
+
+            player_toolbar_visible "$address"
+            estado=$?
+
+            (( estado != 2 )) && break
+
+            sleep 0.7
+        done
+
+        if (( estado == 1 )); then
+            TOOLBAR_RESULT="oculta con Ctrl+T (envío ${enviados})"
+            echo "   ✅ Barra lateral oculta (envío ${enviados})."
+            return 0
+        fi
+
+        if (( estado == 2 )); then
+            # Ya se envió: volver a enviar podría deshacerlo. Se para.
+            TOOLBAR_RESULT="enviada con Ctrl+T, SIN CONFIRMAR"
+            echo "   ⚠️ No pude confirmar si la barra quedó oculta; no insisto."
+            return 0
+        fi
 
         if (( intento < TOOLBAR_HIDE_ATTEMPTS )); then
-            echo "   El envío ${intento} no bastó; reintento."
+            echo "   El envío ${enviados} no bastó; reintento."
         fi
     done
 
-    echo "   ⚠️ La barra sigue visible tras ${TOOLBAR_HIDE_ATTEMPTS} envíos."
+    # Si no se envió nada, es que TODAS las lecturas fueron dudosas: no se
+    # puede afirmar que la barra esté visible. Se dice tal cual, y sobre
+    # todo NO se manda a n30 a pulsar Ctrl+T: si ya estaba oculta, ese
+    # Ctrl+T la MOSTRARÍA. Ese consejo solo vale si de verdad se vio.
+    if (( enviados == 0 )); then
+        TOOLBAR_RESULT="no pude determinar el estado de la barra"
+        echo "   ⚠️ No pude leer el estado de la barra (¿ventana sin pintar?)."
+        echo "   Mírala tú: si está puesta, púlsala con Ctrl+T."
+        return 0
+    fi
+
+    TOOLBAR_RESULT="SIGUE VISIBLE tras ${enviados} envíos"
+
+    echo "   ⚠️ La barra sigue visible tras ${enviados} envíos."
     echo "   Púlsala tú con Ctrl+T."
 
     return 0
@@ -993,11 +1254,13 @@ show_gps_panel() {
     local espera=0
 
     [[ "$SHOW_GPS_PANEL" == "1" ]] || {
+        GPS_PANEL_RESULT="sin tocar (SHOW_GPS_PANEL=0)"
         echo "   Panel GPS: sin tocar (SHOW_GPS_PANEL=0)."
         return 0
     }
 
     if ! have xdotool; then
+        GPS_PANEL_RESULT="sin tocar: falta xdotool"
         echo "⚠️ No encuentro xdotool: no puedo abrir el panel de GPS."
         return 0
     fi
@@ -1005,32 +1268,45 @@ show_gps_panel() {
     echo
     echo "📍 Panel de GPS..."
 
-    if gps_panel_open; then
-        echo "   Ya estaba abierto; no envío nada."
-        return 0
-    fi
-
     # Se envía y, si el panel no aparece, se VUELVE A ENVIAR.
     #
     # Es un toggle, así que reintentar tiene riesgo: si el primer envío
-    # llegó tarde, el segundo lo cerraría. Por eso entre envío y envío se
-    # espera bastante (GPS_PANEL_WAIT_S) y solo se reintenta si el panel
-    # sigue cerrado — si ya apareció, se sale antes de volver a enviar.
+    # llegó tarde, el segundo lo cerraría. La defensa está en comprobar el
+    # panel ARRIBA de cada vuelta, antes de enviar: un panel que aparece
+    # tarde se DETECTA y se sale sin enviar nada más.
+    #
+    # MEDIDO el 2026-10-04, en el arranque en frío que reportó n30: la
+    # versión anterior comprobaba el panel solo UNA vez, antes del bucle.
+    # El log de ese arranque dice «El envío 1 no bastó; reintento» y luego
+    # «no apareció tras 2 envíos», que es exactamente lo que pasa cuando el
+    # segundo envío cae sobre un panel que ya se estaba abriendo y lo
+    # cierra. Con la comprobación arriba eso ya no puede pasar, así que el
+    # número de intentos se puede subir sin miedo (ver GPS_PANEL_ATTEMPTS).
     for ((intento = 1; intento <= GPS_PANEL_ATTEMPTS; intento++)); do
 
+        if gps_panel_open; then
+            if (( intento == 1 )); then
+                GPS_PANEL_RESULT="ya estaba abierto"
+                echo "   Ya estaba abierto; no envío nada."
+            else
+                GPS_PANEL_RESULT="abierto con Ctrl+Alt+G (envío $((intento - 1)))"
+                echo "   ✅ Panel de GPS abierto (envío $((intento - 1)))."
+            fi
+            return 0
+        fi
+
         # El foco se comprueba ANTES DE CADA ENVÍO: el panel que se acaba
-        # de abrir (o cerrar) puede habérselo llevado.
-        hyprctl dispatch "hl.dsp.focus({ window = \"address:${address}\" })" \
-            >/dev/null 2>&1 || true
-
-        sleep 0.6
-
-        if [[ "$(hyprctl activewindow -j | jq -r '.address')" != "$address" ]]; then
+        # de abrir (o cerrar) puede habérselo llevado, y medido el
+        # 2026-10-04 basta un cambio de foco ajeno para que una sola
+        # comprobación falle.
+        if ! focus_player_checked "$address"; then
+            GPS_PANEL_RESULT="sin tocar: no conseguí enfocar el reproductor"
             echo "⚠️ No conseguí enfocar el reproductor; no envío Ctrl+Alt+G."
             return 0
         fi
 
         xdotool key --clearmodifiers ctrl+alt+g || {
+            GPS_PANEL_RESULT="sin tocar: xdotool falló al enviar"
             echo "⚠️ xdotool falló al enviar Ctrl+Alt+G."
             return 0
         }
@@ -1041,6 +1317,7 @@ show_gps_panel() {
             sleep 0.5
 
             if gps_panel_open; then
+                GPS_PANEL_RESULT="abierto con Ctrl+Alt+G (envío ${intento})"
                 echo "   ✅ Panel de GPS abierto (envío ${intento})."
                 return 0
             fi
@@ -1050,6 +1327,8 @@ show_gps_panel() {
             echo "   El envío ${intento} no bastó; reintento."
         fi
     done
+
+    GPS_PANEL_RESULT="NO apareció tras ${GPS_PANEL_ATTEMPTS} envíos"
 
     echo "   ⚠️ El panel de GPS no apareció tras ${GPS_PANEL_ATTEMPTS} envíos."
     echo "   ¿Sigue en pie el atajo Ctrl+Alt+G?"
@@ -2222,6 +2501,38 @@ launch_jwa() {
 
 
 # ============================================================
+# LANZAR EL TEMPORIZADOR DE JWA
+#
+# Ver JWA_TIMER. Nunca devuelve error a propósito: el temporizador es un
+# extra, y que no arranque no debe tumbar el arranque del emulador.
+# ============================================================
+
+launch_jwa_timer() {
+
+    [[ "$JWA_TIMER" == "1" ]] || {
+        echo "   Temporizador: sin tocar (JWA_TIMER=0)."
+        return 0
+    }
+
+    if [[ ! -x "$JWA_TIMER_SCRIPT" ]]; then
+        echo "⚠️ No encuentro el temporizador en $JWA_TIMER_SCRIPT."
+        echo "   Lo salto; el resto del arranque sigue igual."
+        return 0
+    fi
+
+    local salida=""
+
+    if salida="$("$JWA_TIMER_SCRIPT" 2>&1)"; then
+        echo "   ✅ Temporizador: ${salida:-lanzado}"
+    else
+        echo "⚠️ El temporizador devolvió error: ${salida:-sin salida}"
+    fi
+
+    return 0
+}
+
+
+# ============================================================
 # ARGUMENTOS
 #
 # Sin ningún flag de resolución el script se comporta como siempre:
@@ -2364,18 +2675,21 @@ main() {
             move_pixel_window_left "$pixel_address" ||
                 echo "⚠️ El movimiento a la izquierda falló, continúo."
 
-            # La barra lateral primero, y DESPUÉS el resize: el ancho del
-            # tile se calcula suponiendo TOOLBAR_WIDTH=0, así que la barra
-            # tiene que estar ya en su sitio antes de medir.
-            hide_player_toolbar "$pixel_address"
-
             resize_pixel_window "$pixel_address" ||
                 echo "⚠️ El resize falló, continúo."
 
-            # El panel de GPS NO se abre aquí. Medido el 2026-10-03: con
-            # la VM todavía arrancando el reproductor no atiende
-            # Ctrl+Alt+G, así que se abría en el peor momento posible y
-            # fallaba. Se abre al final, con la VM ya lista (ver más abajo,
+            # Ni la barra lateral ni el panel de GPS se tocan aquí.
+            #
+            # La barra: MEDIDO el 2026-10-04, en un arranque en frío la
+            # ventana acaba de mapearse y la barra TODAVÍA NO ESTÁ
+            # DIBUJADA, así que el detector leía "oculta" y no enviaba
+            # nada; n30 se la encontraba puesta. (Su estado no se guarda
+            # en ningún sitio: ver hide_player_toolbar.)
+            #
+            # El panel de GPS: MEDIDO el 2026-10-03, con la VM todavía
+            # arrancando el reproductor no atiende Ctrl+Alt+G.
+            #
+            # Los dos se hacen al final, con la VM ya lista (ver más abajo,
             # tras JWA).
 
         else
@@ -2453,20 +2767,46 @@ main() {
 
 
     # --------------------------------------------------------
-    # PANEL DE GPS
+    # BARRA LATERAL Y PANEL DE GPS
     #
-    # Va AQUÍ y no antes: es el único momento en que la VM está lista y
-    # el reproductor atiende de verdad el atajo. Medido el 2026-10-03 —
-    # intentarlo en el paso [2/7] falla, y con la VM lista funciona a la
-    # primera. No depende del tile ni del resize.
+    # Los dos van AQUÍ y no antes. Son las dos únicas cosas que dependen
+    # de que el reproductor esté dibujado y atienda teclas, y en un
+    # arranque en frío eso no es verdad hasta que la VM lleva un rato
+    # arrancada. Ninguno de los dos depende del tile ni del resize.
+    #
+    # MEDIDO el 2026-10-04, en el arranque en frío que reportó n30:
+    #   - la barra se medía en [2/7] y salía "oculta" estando visible;
+    #   - el panel de GPS, ya al final, no apareció con 2 envíos.
+    # Los dos se arreglan igual: comprobar antes de actuar y reintentar
+    # con la VM en marcha, en vez de decidir a la primera.
     # --------------------------------------------------------
 
     if [[ -n "$pixel_address" ]]; then
+
+        hide_player_toolbar "$pixel_address"
+
         show_gps_panel "$pixel_address"
+
     else
+        TOOLBAR_RESULT="sin ventana del reproductor"
+        GPS_PANEL_RESULT="sin ventana del reproductor"
         echo
-        echo "📍 Panel de GPS: sin ventana, no se toca."
+        echo "📍 Sin ventana: no toco ni la barra lateral ni el panel de GPS."
     fi
+
+
+    # --------------------------------------------------------
+    # TEMPORIZADOR DE JWA
+    #
+    # Al final, con la app ya lanzada: es su compañero de partida. No
+    # depende de la ventana del reproductor, así que va FUERA del `if`
+    # del panel de GPS y se intenta siempre.
+    # --------------------------------------------------------
+
+    echo
+    echo "⏱️ Temporizador de JWA..."
+
+    launch_jwa_timer
 
 
     echo
@@ -2489,16 +2829,17 @@ main() {
         echo "Grupo      : el reproductor solo"
     fi
 
-    if [[ "$HIDE_TOOLBAR" == "1" ]]; then
-        echo "Barra lat. : oculta con Ctrl+T (xdotool)"
-    else
-        echo "Barra lat. : sin tocar (HIDE_TOOLBAR=0)"
-    fi
+    # Se imprime lo que DIJO el paso, no lo que se intentó. Los rellenan
+    # hide_player_toolbar() y show_gps_panel(); si están vacíos se dice, en
+    # vez de inventarse un resultado.
+    echo "Barra lat. : ${TOOLBAR_RESULT:-sin información}"
 
-    if [[ "$SHOW_GPS_PANEL" == "1" ]]; then
-        echo "Panel GPS  : abierto con Ctrl+Alt+G (xdotool)"
+    echo "Panel GPS  : ${GPS_PANEL_RESULT:-sin información}"
+
+    if [[ "$JWA_TIMER" == "1" ]]; then
+        echo "Temporizador: lanzado si no estaba ($JWA_TIMER_SCRIPT)"
     else
-        echo "Panel GPS  : sin tocar (SHOW_GPS_PANEL=0)"
+        echo "Temporizador: sin tocar (JWA_TIMER=0)"
     fi
 
     # De dónde salió la posición que se acaba de aplicar. Se rellena en
