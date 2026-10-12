@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="es" data-page-node-id="TBk7a1oHkBlXl60jd2gvIV">
+<head data-page-node-id="S4uje8qrjDYTZuQ0wA72bp">
+<meta charset="utf-8" data-page-node-id="uw7qNDtckwuf0BCagI30te">
+<meta name="viewport" content="width=device-width, initial-scale=1" data-page-node-id="o4DCwti6seyI7c7fYYmRC3">
+<title>Guía del sistema de dictado</title>
+<style>
+  :root{
+    --fondo:#0D0E10; --panel:#14161A; --panel2:#191C21;
+    --borde:rgba(255,255,255,.08); --borde2:rgba(255,255,255,.14);
+    --texto:#E6E7EA; --suave:#9AA0A6; --tenue:#6B7076;
+    --verde:#4ADE80; --rojo:#F87171; --ambar:#FBBF24; --azul:#60A5FA; --violeta:#C084FC;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--fondo); color:var(--texto);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+    line-height:1.62; font-size:15.5px; -webkit-font-smoothing:antialiased;
+  }
+  .hoja{max-width:1040px;margin:0 auto;padding:56px 28px 96px}
+  header.cabecera{border-bottom:1px solid var(--borde);padding-bottom:26px;margin-bottom:32px}
+  h1{font-size:31px;line-height:1.2;margin:0 0 10px;letter-spacing:-.02em}
+  .sub{color:var(--suave);font-size:16px;margin:0}
+  .meta{color:var(--tenue);font-size:13.5px;margin-top:14px}
+  h2{font-size:22px;margin:52px 0 14px;letter-spacing:-.01em;padding-bottom:8px;border-bottom:1px solid var(--borde)}
+  h3{font-size:17px;margin:28px 0 10px;letter-spacing:-.01em}
+  h4{font-size:15px;margin:20px 0 8px;color:var(--suave);text-transform:uppercase;letter-spacing:.05em}
+  p{margin:0 0 14px}
+  code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+  code{background:rgba(255,255,255,.05);padding:2px 6px;border-radius:5px;color:#D7DAE0}
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 6px}
+  .chip{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:999px;
+    font-size:13px;font-weight:600;border:1px solid var(--borde2);background:var(--panel2);color:var(--suave)}
+  .chip .pt{width:7px;height:7px;border-radius:50%;background:currentColor}
+  .chip.ok{color:var(--verde);border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.08)}
+  .chip.mal{color:var(--rojo);border-color:rgba(248,113,113,.35);background:rgba(248,113,113,.08)}
+  .chip.aviso{color:var(--ambar);border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
+  .chip.info{color:var(--azul);border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.08)}
+  table{width:100%;border-collapse:collapse;margin:16px 0 8px;font-size:14px}
+  th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--borde);vertical-align:top}
+  th{color:var(--suave);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  tr.mejor td{background:rgba(74,222,128,.07)}
+  tr.peor td{background:rgba(248,113,113,.06)}
+  tr.total td{font-weight:700;border-top:1px solid var(--borde2);background:rgba(255,255,255,.03)}
+  pre{background:#08090B;border:1px solid var(--borde);border-radius:10px;padding:14px 16px;
+    overflow-x:auto;margin:12px 0;font-size:12.5px;line-height:1.55;color:#C9CDD3}
+  ul,ol{margin:10px 0 14px;padding-left:22px}
+  li{margin:6px 0}
+  .pista{color:var(--tenue);font-size:13px}
+  .rejilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:20px 0}
+  .dato{background:var(--panel);border:1px solid var(--borde);border-radius:12px;padding:16px 18px}
+  .dato .etq2{color:var(--suave);font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+  .num-grande{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .nota{background:var(--panel);border:1px solid var(--borde);border-left:3px solid var(--ambar);
+    border-radius:10px;padding:14px 18px;margin:16px 0}
+  .nota.ok{border-left-color:var(--verde)}
+  .nota.mal{border-left-color:var(--rojo)}
+  .nota.info{border-left-color:var(--azul)}
+  .nota p:last-child{margin-bottom:0}
+  .leccion{background:var(--panel);border:1px solid var(--borde);border-radius:14px;padding:18px 20px;margin:14px 0}
+  .leccion .cab{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+  .leccion .n{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:26px;
+    padding:0 8px;border-radius:8px;background:rgba(255,255,255,.07);font-weight:700;font-size:12.5px;flex:0 0 auto}
+  .leccion h3{margin:0;font-size:16.5px}
+  .etq{font-size:11px;font-weight:700;padding:3px 9px;border-radius:6px;letter-spacing:.05em;margin-left:auto}
+  .etq.mal{background:rgba(248,113,113,.16);color:var(--rojo)}
+  .etq.bien{background:rgba(74,222,128,.16);color:var(--verde)}
+  .etq.aviso{background:rgba(251,191,36,.16);color:var(--ambar)}
+  .campo{display:grid;grid-template-columns:110px 1fr;gap:12px;padding:8px 0;border-top:1px solid rgba(255,255,255,.05)}
+  .campo:first-of-type{border-top:0}
+  .campo .k{color:var(--suave);font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;padding-top:3px}
+  .campo p{margin:0}
+  footer{margin-top:64px;padding-top:22px;border-top:1px solid var(--borde);color:var(--tenue);font-size:13px}
+  @media(max-width:620px){.campo{grid-template-columns:1fr;gap:2px}th,td{padding:8px 7px}}
+</style>
+</head>
+<body data-page-node-id="fiTHZ2CrEu3flCHUkFoDBg">
+<div class="hoja" data-page-node-id="NHg79Ew1ABlHQRmITFAQP0">
+
+<header class="cabecera" data-page-node-id="0trUQ5lwrmHcWnUHvvtRbf">
+  <h1 data-page-node-id="DecWq0bHfyJOmEZMbUtKws">Guía del sistema de dictado</h1>
+  <p class="sub" data-page-node-id="ghYisgHyp8drvrd4GyCeKB">Qué es, cómo está montado, qué se midió y qué se rompió por el camino. Escrita para que la entienda alguien que llega nuevo, y para no repetir los mismos errores.</p>
+  <p class="meta" data-page-node-id="5CiNwyjpD81jc1Hh03Lh0w">Última revisión: 11 de octubre de 2026 · <code data-page-node-id="IrMoUCAEsM0XEVBAu8WQag">~/dotfiles/share/scripts/dictado/</code> · suite en 83/83 · whisper.cpp con backend Vulkan</p>
+</header>
+
+<div class="chips" data-page-node-id="BjOfLVuPINO4hU4DkJAaOt">
+  <span class="chip ok" data-page-node-id="bHvxWmLD8UE3VnME7Hlwnk"><span class="pt" data-page-node-id="mEMRXG9zud0U0AfAYLFIRH"></span>funciona y está medido</span>
+  <span class="chip info" data-page-node-id="D3F1Fw2PnVHRFRcS8MUx0e"><span class="pt" data-page-node-id="ZLIXeR9QA7RXFex4BAfgLn"></span>una sola carpeta</span>
+  <span class="chip aviso" data-page-node-id="XJ2COJgXgHoprTMRJuMDH6"><span class="pt" data-page-node-id="dlD22xeRSsGZMr0r1qaXt9"></span>trampas documentadas</span>
+  <span class="chip ok" data-page-node-id="DGebr0mMcd44rHXC322Ifx"><span class="pt" data-page-node-id="s5a7NS05DQ0eZddgP3pHtw"></span>dictado en vivo</span>
+  <span class="chip ok" data-page-node-id="MA82wJ0EwxGqFSp6I0COVe"><span class="pt" data-page-node-id="IVvsxoazfxrepVDDvQ4fPq"></span>4,91 GiB liberados</span>
+</div>
+
+<div class="nota info" data-page-node-id="GGEGWEMTs9HqV4RaigX7R0">
+  <p data-page-node-id="oSLpQecfgZytz4wB5QD5H9">Esta guía es un documento vivo. Cada cambio, cada acierto y cada desacierto se añade aquí en el momento en que ocurre, no al final. El registro cronológico está en <a href="#registro" data-page-node-id="P4abhIJpBLNA3p59FJ1Pik">el registro</a>, y las reglas para mantenerlo, al final del todo.</p>
+</div>
+
+<h2 id="que-es" data-page-node-id="deyJFQOIpkV233dO9YNKld">Qué es y cómo se usa</h2>
+
+<p data-page-node-id="QrEiOBeCWAcXFCCkx6FSbd">Dictado local de voz a texto para Hyprland y Wayland. Se pulsa una tecla, se habla, se vuelve a pulsar, y el texto aparece pegado en la ventana que tenga el foco. Todo ocurre en la máquina, sin mandar audio a ningún servicio.</p>
+
+<p data-page-node-id="0lauFSljo3h66RUMAJEmPO">El disparador es un toque rápido de la tecla <code data-page-node-id="wgadqBWErcqWBUVcfQVWHj">Ctrl izquierdo</code>, no una combinación. Lo vigila <code data-page-node-id="wgadqBWErcqWBUVcfQVWHj2">dictado-tecla.py</code>, que solo lee el teclado y al ver el toque lanza el dictado en vivo. Es un interruptor: un toque abre la capa y empieza a escuchar, el siguiente para, transcribe y pega.</p>
+
+<div class="rejilla" data-page-node-id="Ki9bI7K4uZLbR6MtIUgW9Q">
+  <div class="dato" data-page-node-id="f8oNdYULAhBRolr0Se8KYX"><div class="etq2" data-page-node-id="Kpz4w7FZEHwLrCjvlRpBkG">Tecla</div><div class="num-grande" data-page-node-id="dPVyfxhEF8AaTuGVhnPO59">toque de Ctrl</div><p class="pista" style="margin:6px 0 0" data-page-node-id="3Tq7VD2EEempJBuLQBKwjL">un toque abre la capa, otro cierra y pega</p></div>
+  <div class="dato" data-page-node-id="4i4bkGcsMhbIsTUH3vEphX"><div class="etq2" data-page-node-id="MhE8w3CmObLFY0u2y4Z9dn">Modelo</div><div class="num-grande" data-page-node-id="BDURJzcGncbV3kr1jDYioP">turbo</div><p class="pista" style="margin:6px 0 0" data-page-node-id="cEtgPvVrR3Xh5yGCsR5MR2">large-v3-turbo, 1549 MB</p></div>
+  <div class="dato" data-page-node-id="alXSzKm9TZlx9F5xBCgmjd"><div class="etq2" data-page-node-id="tK08Es3zSOWscNh2IP8uBZ">Latencia</div><div class="num-grande" data-page-node-id="NRe9mCwt1g4TYbhRB8GW70">1,32 s</div><p class="pista" style="margin:6px 0 0" data-page-node-id="KEuAvCcJQJYhJRf0oqfpVx">por cada 10 s de audio</p></div>
+  <div class="dato" data-page-node-id="P4aiVu0mvxwkH3BRCXeQWX"><div class="etq2" data-page-node-id="cdfFKDtIaFqtN1OOx7pY3K">Error medido</div><div class="num-grande" data-page-node-id="11vUYr5Rs7VvWEhKF5KjXU">5,1 %</div><p class="pista" style="margin:6px 0 0" data-page-node-id="oUWI3Ubbh8T73wv7B9r4Dq">de palabras, sobre el corpus</p></div>
+</div>
+
+<h3 data-page-node-id="x0Hjh2XXdV7KV8QPyAI3Lx">Por qué un interruptor y no pulsar-y-mantener</h3>
+
+<p data-page-node-id="9MpohVzAjDrlZ0HKbsf6qH">En Wayland el evento de soltar un modificador se pierde con facilidad, y quedarse grabando sin enterarse es peor que pulsar la tecla dos veces. Los fallos están documentados en los issues 7675, 6946 y 9240 de Hyprland.</p>
+
+<h2 id="cadena" data-page-node-id="B9FVkOqPNCix2mx94sYNeG">La cadena, pieza a pieza</h2>
+
+<pre data-page-node-id="BSnhkJUn4Z5PMK9brPuFJJ">toque de Ctrl izquierdo
+   │
+   ├─ dictado-tecla.py        vigila el teclado en /dev/input y lanza la orden
+   │                          (solo LEE el teclado, no lo remapea)
+   ▼
+dictado-vivo.sh toggle
+   │
+   ├─ arrancar:  capa (dictado-vivo.qml) + motor (dictado-vivo.py con whisper-stream)
+   │             el motor publica estado.json: estado, texto y nivel
+   │
+   └─ parar:     dictado.sh transcribir-fichero  sobre el WAV guardado
+                    │
+                    ├─ ¿hay silencio?  (sox stat, Maximum amplitude)
+                    │
+                    ├─ ¿responde el servidor?  ->  whisper-server en 127.0.0.1:8123
+                    │      si no, o si devuelve vacío
+                    ▼
+                 whisper-cli -m actual.bin --vad -vm silero --vad-speech-pad-ms 500 --prompt "&lt;vocabulario&gt;"
+                    │
+                    ▼
+                 wl-copy  +  wtype -M ctrl -k v -m ctrl
+</pre>
+
+<p data-page-node-id="CuzdT06w7rQ2vFjuMm1lCQ">Hay dos caminos de transcripción y el script elige solo. El servidor tiene el modelo ya cargado y ahorra el coste de cargarlo en cada dictado. Si no responde, o si devuelve texto vacío, cae al binario. Esa caída es la razón de que el sistema no se quede mudo por un fallo del servidor, y está probada por la suite 4. El camino ciego sigue existiendo: el bind <code data-page-node-id="Ciego1">SUPER + D</code> de Hyprland y la variable <code data-page-node-id="Ciego2">DICTADO_TECLA_ORDEN</code> siguen llamando a <code data-page-node-id="Ciego3">dictado.sh toggle</code>, que es la red de seguridad si la capa fallara.</p>
+
+<h2 id="vivo" data-page-node-id="ZsXagnG7DLWHfGLgSFk1HQ">El dictado en vivo</h2>
+
+<p data-page-node-id="vMCz7qtZi2v3tHv7zHmjAK">Modo de uso principal desde el 11 de octubre de 2026. El toque de Ctrl izquierdo lo lanza, y aparece una tira en la parte baja de la pantalla que enseña la hipótesis mientras se habla. Al parar, el texto se pega igual que en el modo ciego. El motor y el modelo son los mismos; lo que cambia es que hay una capa que muestra el avance.</p>
+
+<pre data-page-node-id="19sTzvDJFwFHAJA4HkTZ7S">dictado-vivo.sh toggle     arranca; otra vez para, transcribe y pega
+dictado-vivo.sh start      arranca
+dictado-vivo.sh parar      para, transcribe y pega
+dictado-vivo.sh estado     imprime vivo, sin-capa o parado</pre>
+
+<h3 data-page-node-id="NexSQjog5oo1gj3tiADFjN">Los estados de la capa</h3>
+
+<table data-page-node-id="fZ3Rf4plZx1yT5jjXCTtTA">
+  <thead data-page-node-id="fgE3FWFDKLeXJjQ17Prscq"><tr data-page-node-id="FOPTMo6RhMqjo0GPgAu7bW"><th data-page-node-id="CHrljDE5ELLJf6QykjyJNe">Estado</th><th data-page-node-id="rogPVOvKjUXDBi1BVtmcZ0">Qué se ve</th><th data-page-node-id="5uef36CdPZJC3WnlSXvJNc">Cuándo</th></tr></thead>
+  <tbody data-page-node-id="leDaMPjjTM5GQOKEv7C5Sp">
+    <tr data-page-node-id="5f8kocbY76TzlSex1S2YQI"><td data-page-node-id="ouzX5xopmojX7BGeNbLzK8">escuchando</td><td data-page-node-id="qCUbHgjaHKl0uB7KoFZVRF">un punto rojo que late y una barra con el nivel de audio</td><td data-page-node-id="MN7Q1a5xGKd69sJdfS3X13">mientras se habla</td></tr>
+    <tr data-page-node-id="JpTpWq8peF36n1cerBlfMW"><td data-page-node-id="F2ALXrbw7geSZ3S0LCb18g">transcribiendo</td><td data-page-node-id="OyTDEtk3bFYxJKQMGzIhR0">la hipótesis en gris, con la última palabra en blanco</td><td data-page-node-id="CKt2p9dL9k62ZgsI6O0s1f">cuando whisper ya produce texto</td></tr>
+    <tr data-page-node-id="sXbWSd7JwjqGMrhTmaOVDo"><td data-page-node-id="EnKv99uaGDf6AY5CuAwZco">listo</td><td data-page-node-id="Jkh3d6BYv1Wqw8w4Mk7XaV">el texto final en verde, justo antes de cerrarse</td><td data-page-node-id="64Yb5zEfohdBZiTHbZt4yU">al terminar la transcripción definitiva</td></tr>
+    <tr data-page-node-id="UUFkNl1oHGYNHYZrnoIHER"><td data-page-node-id="n8b2OHw7ZuFxWiXta0zbGt">error</td><td data-page-node-id="668lWY9O3aI6wNYhFFnyd1">una frase en rojo, con el motivo (silencio, micrófono ocupado, no se guardó audio)</td><td data-page-node-id="DgNRdkWwlu2wAgE9N76pH6">cuando algo falla</td></tr>
+  </tbody>
+</table>
+
+<p data-page-node-id="FkjT9ZTHbd79I9CAM5KVuD">La hipótesis que se ve es la de la ventana deslizante, no la de todo lo hablado. <code data-page-node-id="XHa97orQ0MyBjXM6s81j1h">whisper-stream</code> transcribe de dos en dos segundos sobre los últimos diez, así que la capa enseña lo que se está diciendo ahora, y el texto que se pega sale de una pasada final sobre el audio entero.</p>
+
+<h3 data-page-node-id="rm9KDolxU57ntsKUISbWFf">El transcriptor y la grabadora son dos cosas distintas</h3>
+
+<p data-page-node-id="1fcuxFTEbYyDCvPQ57OCSx">La primera versión guardaba el audio con la opción <code data-page-node-id="Fn3lxHBWpgu1eNAtIxyApl">-sa</code> de <code data-page-node-id="bgwI8nFNPlpwSOMNMPc2Ul">whisper-stream</code>. Perdía la última palabra, siempre. Leyendo el bucle de <code data-page-node-id="xDX3IScChwN2uTKSp0IvmK">stream.cpp</code> se ve por qué. El WAV se escribe una vez por iteración, así que al parar se pierde hasta una ventana entera, que es justo la última palabra.</p>
+
+<p data-page-node-id="MJLGJCcPj2LHElGcrzr6Go">Por eso la grabación se separó del transcriptor. <code data-page-node-id="in1F54ZmLs81CbCSWAmIhj">whisper-stream</code> es solo la vista; <code data-page-node-id="SNEsQ8NRzLUDLZOmKYFv38">pw-record</code> es quien graba. <code data-page-node-id="oEI5KZd4FyTlsiqT6CQ884">pw-record</code> escribe según llega el audio y cierra el WAV limpio al recibir SIGINT, así que no se pierde nada. Medido: de una captura de 17,4 s quedó un WAV de 16,27 s, y la diferencia está en el arranque, no en la cola.</p>
+
+<h3 data-page-node-id="hFkMNAqIUk3h032UQSFgg7">Las señales no son intercambiables</h3>
+
+<p data-page-node-id="8wP9KEjoKatw6ABCluZpnc">Los dos procesos no se apagan igual. <code data-page-node-id="S337D3Ng9uDbFzoOZTtWxz">whisper-stream</code> no muere con SIGINT, porque SDL lo captura como <code data-page-node-id="qXCigZM5EmrCBACRSPtGoD">SDL_QUIT</code> y el bucle solo lo mira en ciertos puntos; sí muere con SIGTERM. <code data-page-node-id="hDlXzw1lS9ZzKdhakpF3o5">pw-record</code> necesita SIGINT para cerrar el WAV. Mandar la misma señal a los dos deja uno de ellos a medias: el motor se apaga, pero deja el transcriptor huérfano y no se guarda audio.</p>
+
+<h3 data-page-node-id="Q6xOCPjxToTQIS6hA3FY37">La trampa que dejó la capa congelada</h3>
+
+<p data-page-node-id="BT85HOHtq26zUEJEaGovGy">La capa vigila <code data-page-node-id="clakz39BD7LDcxFYdaecNZ">estado.json</code> con un <code data-page-node-id="D7Ktio6cjDBfvE8OidzhZX">FileView</code> al que se le pone <code data-page-node-id="UOMNwHJ42XyEQhivApQQ5l">watchChanges</code> a <code data-page-node-id="M6n15601Xo3qCdg56XnR9A">true</code>. Eso emite <code data-page-node-id="I6fpcolcWr73bszDOOZUNO">fileChanged</code>, pero no vuelve a leer el fichero. Sin un <code data-page-node-id="IncrjDvFxIuwZjxFk6cYrK">reload()</code> explícito, la capa se queda con el primer estado que leyó y no cambia nunca. Hicieron falta tres capturas idénticas para darse cuenta.</p>
+
+<h3 data-page-node-id="3Wu4aqXFP8IT9LV99LNRYA">El foco no se toca</h3>
+
+<p data-page-node-id="01m5l0RRvnjGnYEBTQ5Y8r">La capa es una superficie de wlr-layer-shell con <code data-page-node-id="TnjV9D8zVt2qweeXpDSFBG">keyboardFocus</code> puesto a <code data-page-node-id="Eh08I45bQpWwrVJ8kChDqk">None</code>, así que no roba el teclado. Se comprobó que la dirección de la ventana activa es la misma antes y después de abrirla. Por eso el pegado va a la ventana donde estabas escribiendo, sin tener que devolverle el foco.</p>
+
+<h3 data-page-node-id="3ybjrV3YxoHh7KqdXvLPRx">La ruta de transcripción es la de siempre</h3>
+
+<p data-page-node-id="W1Utb0iixsiALzuEI5kDZI">El texto final no lo produce el motor en vivo, sino <code data-page-node-id="Xmsm3BKgIRkYMBSfUDxFbR">dictado.sh transcribir-fichero</code>, un modo nuevo que transcribe un WAV concreto. Reutiliza el modelo, el vocabulario, el VAD y el servidor si está levantado, en lugar de duplicar esa lógica. Devuelve 2 si el fichero no existe y 3 si el audio es silencio.</p>
+
+<h2 id="mapa" data-page-node-id="hPgxJ3dxDIYbNLVDwZrQs6">Dónde vive cada cosa</h2>
+
+<pre data-page-node-id="uZE4FkKQaNxtVS9oGZGVPp">~/dotfiles/share/scripts/dictado/
+├── GUIA.html                    este documento
+├── dictado.sh                   el programa principal (toggle, start, stop, estado)
+├── dictado-tecla.py             vigila la tecla y lanza dictado-vivo.sh
+├── dictado-vivo.sh              el puente del dictado en vivo (toggle, start, parar, estado)
+├── dictado-vivo.py              el motor en vivo (whisper-stream y pw-record), publica el estado
+├── dictado-vivo.qml             la capa que se ve (Quickshell, wlr-layer-shell)
+├── dictado-vocabulario.txt      el vocabulario que se pasa a whisper con --prompt
+├── dictado-corpus.sh            fabrica el corpus de pruebas con espeak-ng + sox
+├── dictado-voz-prueba.sh        graba el corpus con voz real y lo mide
+├── dictado-bench.py             banco de modelos (latencia, WER, memoria)
+├── dictado-prompt-medir.py      compara variantes del vocabulario
+├── dictado-modelos-verificar.py comprueba que los modelos son los oficiales
+├── dictado-modelo-usar.sh       instala un modelo, verificándolo antes
+├── pruebas/                     la suite, 83 comprobaciones en siete bloques
+├── informes/                    los informes detallados y las mediciones en JSON
+└── backups/                     copias previas a cada cambio delicado
+</pre>
+
+<p class="pista" data-page-node-id="ANtMTEcCWaQGlKI8r1a52v">Todo el proyecto se movió aquí el 10 de octubre de 2026. Antes estaba suelto en <code data-page-node-id="bhN6YiFlHo1TOuofx3RROL">scripts/</code>, mezclado con los demás scripts de la máquina.</p>
+
+<h2 id="instalacion" data-page-node-id="BhpEXUTM2lxFcKGWFVNwY1">Instalación y configuración</h2>
+
+<h3 data-page-node-id="9zK8skTYXhJykBFKGi1kSL">Ficheros de fuera de la carpeta</h3>
+
+<table data-page-node-id="xY5rh82BBtcmFbtnmfAkKx">
+  <thead data-page-node-id="GtRknMulaHYLI21HByFKJD"><tr data-page-node-id="3c9AC3c21CU9WVBuslMGb6"><th data-page-node-id="q8ESgqMFjr5Y1KpP4YSAzg">Ruta</th><th data-page-node-id="Ecv8PvOzgGVgXVtwqJq6Fm">Para qué</th></tr></thead>
+  <tbody data-page-node-id="VYvXbepnCRNAeHyQY7ElKL">
+    <tr data-page-node-id="QGRluMG9r9P1CuKzJELh8F"><td data-page-node-id="LkmjmrAKhWAy4ktpjzXqlp"><code data-page-node-id="hP2X4EDN8CD6V1rPChKEG5">~/.config/dictado.conf</code></td><td data-page-node-id="AUg5SgoPLRTMljvSH2MHyY">modelo activo, idioma, umbral de silencio, servidor</td></tr>
+    <tr data-page-node-id="AodsRcquZXjN1bSMnytJMI"><td data-page-node-id="IPPxlTsFsPqnJkSpkv7CTy"><code data-page-node-id="dPMIlV3IMgdLmXIAdIB4Ba">~/.config/systemd/user/dictado-tecla.service</code></td><td data-page-node-id="3VCJ1PB8A4lL33cEAihyLA">arranca el vigilante de la tecla</td></tr>
+    <tr data-page-node-id="lpmMiLYpV9rEtUBQQWcMgc"><td data-page-node-id="fuIMOHZ067XDd5r0DIN1It"><code data-page-node-id="FQqcG3Hq1tuO5PH9vBxSte">~/.config/systemd/user/dictado-servidor.service</code></td><td data-page-node-id="K8jfga1AYAXAxER7hD0KZ7">modelo residente, activo desde el 10 de octubre de 2026</td></tr>
+    <tr data-page-node-id="c090EQJq2HDCXxzFNKTNeP"><td data-page-node-id="kioOq9m7Ny9pANM1ddHP9a"><code data-page-node-id="JsEaS93X2ewzOq2Mk07FQW">~/.config/hypr/hyprland.lua</code></td><td data-page-node-id="idz4K8HGVi4ENtuxWqYJWU">el bind de SUPER + D y el arranque de la tecla</td></tr>
+    <tr data-page-node-id="6hMFeCepMGMO5SoXuwi0Ja"><td data-page-node-id="361xbmvCdGyD8S55qwFBt2"><code data-page-node-id="POE2kj9ysmpKBkCI7Zu5bK">~/.local/share/whisper/</code></td><td data-page-node-id="IN2Y4isLGeHpJYDFHYZN1Z">los modelos ggml y el enlace <code data-page-node-id="jzIBm2jXok0BUQ25EsZEmy">actual.bin</code></td></tr>
+    <tr data-page-node-id="NvP3EcJaEBaNoAPQvgXQVQ"><td data-page-node-id="pmjx6pR6vlQEXmCqHiSQ5E"><code data-page-node-id="9yGIfUcqMSZVBY6BfcafxH">~/.local/share/dictado/</code></td><td data-page-node-id="0v6e8ueW8AtiwCc2tlSe5N">el corpus de pruebas y los binarios de whisper</td></tr>
+    <tr data-page-node-id="SF53RmIOBmY5gJwFBDPbr7"><td data-page-node-id="4l1CF2pbCIVrZfAYxYgepA"><code data-page-node-id="o7TceKipJEcjYUsBBLHqbk">60-dji-mic.rules</code></td><td data-page-node-id="naeDZnlraxWIGHHvKuTPvg">regla udev del receptor DJI</td></tr>
+  </tbody>
+</table>
+
+<h3 data-page-node-id="aNaHqzPGf6vqXichWA8Ge6">El enlace del modelo</h3>
+
+<p data-page-node-id="DCNoc3NDyDhl1BH14MI3UU">El modelo activo se elige con un enlace, y el enlace lo hace un instalador que verifica antes de tocarlo. No se enlaza a mano.</p>
+
+<pre data-page-node-id="lIQjPZDgI2XkzlXLk94cci">~/dotfiles/share/scripts/dictado/dictado-modelo-usar.sh \
+  ~/.local/share/whisper/candidatos/ggml-large-v3-turbo.bin</pre>
+
+<p data-page-node-id="PSlWtq0cJsItJVT0XX3GCh">El instalador comprueba que el fichero existe, que su sha256 es el del modelo oficial, y solo entonces repunta el enlace y reinicia el servicio. Un fichero corrupto no se enlaza ni con <code data-page-node-id="CaErEWZib5l6DYn5l1E3Xs">--forzar</code>; uno que no se pueda confirmar, sea no oficial o sin red y sin caché, sí, pero pidiendo <code data-page-node-id="ISY1dH6Q6VeJAd4GpA2ytQ">--forzar</code>. Con <code data-page-node-id="xTmiNbBIKM46srTaRnCdta">--listar</code> enseña los candidatos y el activo.</p>
+
+<div class="nota mal" data-page-node-id="GZf3K5MRM2w88pYSCpkJRV">
+  <p data-page-node-id="UD6grv6EGFwGmpsSCkyB6H">El subnivel <code data-page-node-id="yMp6ws3P4nGRaeIQLNlGz5">candidatos/</code> no es opcional. Los modelos no están en <code data-page-node-id="0gr5CeWNSaWhYNtEFwZVpw">~/.local/share/whisper/</code> sino un nivel más abajo. Si se omite, el enlace queda roto y el dictado falla en la llamada siguiente, sin ningún aviso en el momento de crear el enlace.</p>
+</div>
+
+<h2 id="vocabulario" data-page-node-id="9fARSRLh7c6Ck9OfSqKvSg">El vocabulario</h2>
+
+<p data-page-node-id="oGYzZGwo1d77kAbDAm5fPc">Es una lista de palabras que se le pasa a whisper antes de transcribir. No cambia lo que oye, solo desempata. Cuando dos palabras suenan parecido, elige la que está en la lista. Por eso van ahí los nombres propios, las marcas y la jerga técnica, que son justo las que el modelo destroza.</p>
+
+<p data-page-node-id="G8zKb0EDXCEX7Qcul1hMsn">El fichero es <code data-page-node-id="qIF7KYMnyym1AomnqCNvqq">dictado-vocabulario.txt</code> y <code data-page-node-id="ZyERwIGk3UWsocG5TXfzM6">dictado.sh</code> lo lee en cada invocación, así que un cambio es efectivo en el dictado siguiente, sin reiniciar nada.</p>
+
+<h3 data-page-node-id="v1lr1cmTxSmtxTblvl8Oro">El tamaño correcto no es el máximo</h3>
+
+<p data-page-node-id="4XQff69CiRIDD0mgoeKDmV">Whisper acepta el prompt hasta unos 600 caracteres, pero llenarlos empeora el resultado. Medido sobre el corpus completo de voz real, con dos pasadas idénticas:</p>
+
+<table data-page-node-id="BZvjBTXSozCGCxekwN9l1u">
+  <thead data-page-node-id="Lw5yhlE3DtLr0Ujts6ttGg"><tr data-page-node-id="3aG7wZB4KcQQiVGW6TxFAx"><th data-page-node-id="2QPLwVZXjYF3cm4IrxzpDn">Variante del prompt</th><th class="num" data-page-node-id="w2egoxaG7zJ5vzRa9e9v8q">Caracteres</th><th class="num" data-page-node-id="obygYnCvxsvCLddIXqoXSp">Errores</th><th class="num" data-page-node-id="IhtUCADhGe3CCLUVoM7VIq">WER</th></tr></thead>
+  <tbody data-page-node-id="1KHDNXz1GKBkh3cfIsysvy">
+    <tr data-page-node-id="UvmBTaSPiOVFZMQM0v0THL"><td data-page-node-id="UV01Jst1rUWp8axQvDOy4e">sin lista</td><td class="num" data-page-node-id="SJiiP5WePvBx8BIAKNf18K">0</td><td class="num" data-page-node-id="A8XAddLXjasa3t4yEMCuKh">22</td><td class="num" data-page-node-id="c2Wk0jl6IMc6WFNABzBzxu">10,2 %</td></tr>
+    <tr data-page-node-id="ALsBNwMBQC7E4ZOEMDcwoS"><td data-page-node-id="EEH35eysa0XxoFmZEKHoGf">lista anterior</td><td class="num" data-page-node-id="9DYTRlQyXVVCB0EMYNluj3">324</td><td class="num" data-page-node-id="bMyNB4kxWcbs8BUlSa8Iu1">15</td><td class="num" data-page-node-id="8BzSzlo0DOzh3fuSFdFceN">6,9 %</td></tr>
+    <tr data-page-node-id="Od7znKtqXPNgxZwD17eRgK"><td data-page-node-id="bDHPvjFThm3aCRH3eOOn3E">anterior + 3 unidades</td><td class="num" data-page-node-id="GE6VGKzP8m5mRdGobBX0sk">363</td><td class="num" data-page-node-id="LH93g4dpiGFFUG3CV8fpqf">16</td><td class="num" data-page-node-id="2Y4gnC8mFYqNgrDPMV70Q5">7,4 %</td></tr>
+    <tr class="mejor" data-page-node-id="jYVIH1ww3HWQLo6w4vl2iy"><td data-page-node-id="SFNmBdDdZcBr7Fyuoy9W1x">la que está puesta</td><td class="num" data-page-node-id="GWY8SbDV9YR3LXuixgMHvq">444</td><td class="num" data-page-node-id="QA9KyeY16ZbsegZIxlrjxu">12</td><td class="num" data-page-node-id="CLc7TVlsM3cBraXf8G4pjU">5,6 %</td></tr>
+    <tr class="peor" data-page-node-id="dCqzQHoVUlQ5mhF4LHOh2e"><td data-page-node-id="KWFp4hHbJp98KqBXqZUAxe">anterior + 24 palabras</td><td class="num" data-page-node-id="JaxFKiFobMUqm0CiuuiQDC">583</td><td class="num" data-page-node-id="RapFlaE6jB0BVGqG6EkzqH">17</td><td class="num" data-page-node-id="2dyYFGFDkwuoqaKiy3uxUG">7,9 %</td></tr>
+  </tbody>
+</table>
+
+<p data-page-node-id="XnHKFm9jmZHEYdUopTRdjx">La curva no es monótona. Añadir palabras no mejora por acumulación, y un subconjunto de lo que ayuda aquí empeora. La razón es que los nombres propios son lo único que este prompt aporta de verdad, y las palabras comunes diluyen ese sesgo.</p>
+
+<p data-page-node-id="dTbfeM0pkQ4dfg2PZbDsJy">La misma grabación, en tres variantes, lo deja claro:</p>
+
+<pre data-page-node-id="rVRkp9YgKVHp2TyGW2UR2M">sin lista    Escucho música con los iFIMAN H1000 se conectamos al amplificador AUN S17 Pro.
+444 car.     Escucho música con los Hifiman HE1000se conectados al amplificador AUNE S17 Pro.
+583 car.     Escucho música con los iFIMAN H1000 C conectamos al amplificador AUN S17 Pro.</pre>
+
+<div class="nota" data-page-node-id="XQYLSuoKNiWwItA22mZrRm">
+  <p data-page-node-id="XYgUBIqTCU1h4IVmPEz0RJ">Consecuencia práctica: el prompt no se puede razonar palabra a palabra. Una palabra cambia el resultado de las demás, así que cualquier cambio hay que medirlo dentro de la lista donde va a vivir. Para eso está <code data-page-node-id="ICXICJZcULkhaAYD7vzIG7">dictado-prompt-medir.py</code>.</p>
+</div>
+
+<h2 id="modelos" data-page-node-id="YXlCeeiNrgyOS0VMfvwB5N">Los modelos</h2>
+
+<p data-page-node-id="wFgLa8wEQvSmlocm8gSaUL">Whisper.cpp tiene varios tamaños. La tabla de OpenAI ordena por velocidad relativa y no predice lo que pasará en una máquina concreta, así que aquí se midió. Sobre el corpus de 12 frases, 89,55 s y 216 palabras:</p>
+
+<table data-page-node-id="XEgodHMCW7zwk4F8JZxgop">
+  <thead data-page-node-id="Z8ucwbqiS6cHylJBWDKsjb">
+    <tr data-page-node-id="KfHFVBkAVBSDmSqk0ewmEh"><th data-page-node-id="ODsjst7D0rjNdbHyYRzdDB">Modelo</th><th class="num" data-page-node-id="4mgpPM4vinFDLklmfgBrVL">WER</th><th class="num" data-page-node-id="tBmTCX8jVBkqEfL2tliZ3c">MB</th><th class="num" data-page-node-id="a5y73PY54CVdvyzKW1dFAb">Arranque</th><th class="num" data-page-node-id="zNyVkqAfBQflbDISvQdWK3">Por 10 s</th><th class="num" data-page-node-id="gNS92uEil5ewoREDtpsUCA">Pico RAM</th></tr>
+  </thead>
+  <tbody data-page-node-id="nlGZBwNpOJ4yp7X8wgjLEK">
+    <tr class="mejor" data-page-node-id="dj59xv1Ld7tAqNggHIykKR"><td data-page-node-id="jYFR5BaCofmDdtgXomVytd">large-v3-turbo (en uso)</td><td class="num" data-page-node-id="1WLVHDMUsqxJ43dU9E5FBC">5,1 %</td><td class="num" data-page-node-id="cMS3VvV3gCDNrCVIWcKTmt">1549</td><td class="num" data-page-node-id="CFK5XDqxgV4vDuCO5tLn3Y">0,885 s</td><td class="num" data-page-node-id="XcJMfPvTTjEkLTIaKEM84g">1,32 s</td><td class="num" data-page-node-id="GBScWfRzPkuWZBNI296e4y">205 MB</td></tr>
+    <tr data-page-node-id="mfhmyaKXoTyWzzUt6NBlmu"><td data-page-node-id="kW4VcNCs35y0T0Lra2TnUo">large-v3-turbo por servidor</td><td class="num" data-page-node-id="JGGpscLEswNXDA5yszfnRy">5,6 %</td><td class="num" data-page-node-id="0K0fVDm0oQkvHaF1xiECio">n/a</td><td class="num" data-page-node-id="bLZMUzYBA1ovCYye5ZZ28H">0,107 s</td><td class="num" data-page-node-id="TXEsLTexkLD1hPeUWxBqBh">0,29 s</td><td class="num" data-page-node-id="AQDcZCeyoP0WFGpbpbvQki">n/a</td></tr>
+    <tr data-page-node-id="IkA9m7KH9ROQzCnvpxygtn"><td data-page-node-id="VqbuZ68bKxbau82VEvZGEg">medium</td><td class="num" data-page-node-id="C9efXDQWbjuIH18wc3hAhT">23,6 %</td><td class="num" data-page-node-id="nKPkUE8b71cQH3rw4dc7X9">1463</td><td class="num" data-page-node-id="35BxFEAltCiRGu0USguFh1">0,732 s</td><td class="num" data-page-node-id="ChosIYBFkSgpeG8fNVfOC7">1,33 s</td><td class="num" data-page-node-id="vy0fX63Psk24Fa1EAcaEPr">174 MB</td></tr>
+    <tr data-page-node-id="MQTJE4I8ZsCzw853w7L3Uo"><td data-page-node-id="UEQEo3kywrTdxeZe863ctE">medium por servidor</td><td class="num" data-page-node-id="c2C6V2fV0g70LDzCwCIXJq">23,1 %</td><td class="num" data-page-node-id="Ry4cnbNhrBZmrfB8hs79kn">n/a</td><td class="num" data-page-node-id="ZiLBv3t0jsjJVq6xy9zGHo">0,140 s</td><td class="num" data-page-node-id="Z9xMDABVPVXsvrHKNWJLKK">0,37 s</td><td class="num" data-page-node-id="nbSYU6EzFglY3NsK3vpnTq">n/a</td></tr>
+    <tr data-page-node-id="9Lgp2hL1dnAq5WFvQDqKaP"><td data-page-node-id="U17hXU60fO26aaDWscO3Yo">small</td><td class="num" data-page-node-id="sjZA572ub4JknSWKKpL6pA">29,2 %</td><td class="num" data-page-node-id="80fpsPm3c04NdUXtRP7rRK">465</td><td class="num" data-page-node-id="yVSrvkD4VIqbFdaScIkml3">0,305 s</td><td class="num" data-page-node-id="7tKc9VSSCzbkM430jdKeIH">0,64 s</td><td class="num" data-page-node-id="3UIbOfAErLtwocRpqVv7C9">146 MB</td></tr>
+    <tr class="peor" data-page-node-id="13Dlr3UsjHJxgCkfs8cCcQ"><td data-page-node-id="DHq8AqZwHtgUxhQwdUR0j8">tiny</td><td class="num" data-page-node-id="b2tDDdw6r7FZqVXt9KNMuQ">69,0 %</td><td class="num" data-page-node-id="9IJ2OzDylIAPCrXAIxyj00">74</td><td class="num" data-page-node-id="rIPb2WNL12GcEqw8M0egKs">0,366 s</td><td class="num" data-page-node-id="xEfwuH7t0BAdzAtSiCvSIg">0,67 s</td><td class="num" data-page-node-id="5gNHPQrtHyKMEOfr3eOASO">106 MB</td></tr>
+  </tbody>
+</table>
+
+<p data-page-node-id="RzA4fSmNFHWbacATggXgi2">Dos lecturas que no salen de la ficha del fabricante. <strong data-page-node-id="NYFBn5IDG8PIhFSzaxhyWB">turbo gana a medium</strong> en error y en velocidad a la vez, porque su decodificador tiene 4 capas en vez de 32. Y <strong data-page-node-id="RTEiU2wMY7sAGyqbIPUOui">el servidor no vuelve irrelevante al modelo</strong>, porque quitado el coste fijo turbo sigue sacando ventaja a medium.</p>
+
+<div class="nota" data-page-node-id="NotaCorreccionServidor11Oct26">
+  <p data-page-node-id="NotaCorreccionServidor11Oct26p">La fila del servidor estaba mal medida, y la culpa era del banco. <code data-page-node-id="NotaCorreccionBench">correr_servidor</code> no mandaba el prompt en la petición, así que el servidor transcribía sin el sesgo del vocabulario y salía un 10,6 % que no era real. Corregido y vuelto a medir el 11 de octubre, el servidor da 5,6 % y el binario 5,1 %. Las filas de medium, small y tiny son del 10 de octubre, medidas con el banco anterior y sobre modelos que ya no están en disco, así que no son comparables fila a fila con estas dos. El binario y el servidor llevan ahora el mismo relleno de VAD (500 ms), que quita el recorte de la primera palabra y baja el error del servidor de 6,0 % a 5,6 %.</p>
+</div>
+
+<h3 data-page-node-id="A8CnpLdDOrRgwa9cBSQLDk">Integridad: el tamaño no basta</h3>
+
+<p data-page-node-id="hbnASX5yxzYD5kzR0IYPwQ">El 10 de octubre apareció un <code data-page-node-id="qOZihfigBWvSCWCPG29j5h">ggml-large-v3.bin</code> de 2,88 GiB con el tamaño oficial exacto que transcribía en varios idiomas a la vez. No estaba truncado, estaba corrompido por dentro. El tamaño lo daba por bueno; el sha256 lo delata.</p>
+
+<p data-page-node-id="IABbKoEyuIWXvkFplZqJwi">Para eso está <code data-page-node-id="luaIDWBdbwJfYon30J60YV">dictado-modelos-verificar.py</code>, que compara tamaño y sha256 contra el manifiesto oficial y, con <code data-page-node-id="lHSWJxncEWotFehX5qPRxG">--cargar</code>, intenta levantar el modelo de verdad. Desde el 10 de octubre corre en tres sitios, para que no dependa de que alguien se acuerde de lanzarlo.</p>
+
+<ol data-page-node-id="pKFelGX5Y07zqP6uRGWr6D">
+  <li data-page-node-id="JTGqX9NlczXXK5hAAyVrHf">Antes de instalar un modelo, dentro de <code data-page-node-id="fW6v9aTKKWshwcFz4XLM1J">dictado-modelo-usar.sh</code>. Si el sha256 no cuadra, el enlace no se toca.</li>
+  <li data-page-node-id="LyrU0RHTGpp0D6QspEQxSF">Al arrancar el servicio del servidor, como <code data-page-node-id="3FtNJpNHFZFTDYJfPsurcF">ExecStartPre</code> de la unidad. Si el modelo en uso está corrupto, el servicio no arranca y el dictado cae al binario, que es mejor que dictar galimatías. La unidad se rinde tras tres intentos en un minuto, para no quedarse reintentando en bucle.</li>
+  <li data-page-node-id="VhwbXFBngRhjMgEFuiU86K">En la suite, bloque 7. Comprueba el verificador y los otros dos enganches.</li>
+</ol>
+
+<div class="nota ok" data-page-node-id="SV1rOS8H8iXgCVXwvvwN6Q">
+  <p data-page-node-id="hdgkU3YmAEmsix8e6M7hRs">Estado actual en disco, tras la limpieza del 10 de octubre. Quedan <code data-page-node-id="ucDGRB93oBkpPN2xsW3pWs">actual.bin</code> (turbo, 1,51 GiB) y el VAD de silero. Se borraron <code data-page-node-id="nkPYvwO7nbetajq37KbvoG">ggml-large-v3.bin</code> (2,88 GiB, corrupto), <code data-page-node-id="W5fqzzrDIUZM0fDKUzwl1G">ggml-medium.bin</code> (1,43 GiB, dominado por turbo), <code data-page-node-id="WqLFLaSp6Y2DKTDFXMounD">ggml-small.bin</code> (0,45 GiB), <code data-page-node-id="hwitrecmDe3JOcRzGqoqtJ">ggml-tiny.bin</code> (74 MiB) y una copia suelta del tiny en <code data-page-node-id="ejKAP0pRUFcHAI65kHdEb9">~/Documentos</code> (74 MiB). Son 4,91 GiB menos, y el disco pasó del 96 % al 93 %.</p>
+</div>
+
+<h2 id="pruebas" data-page-node-id="zgLy2TMe01Inlm3nkHl6ne">Las pruebas</h2>
+
+<p data-page-node-id="4kSy2BS4Zt8b5jBTvfABMP">Una suite de 83 comprobaciones, en siete bloques. Ninguna abre ventanas, reproduce sonido ni pega texto, así que se puede correr en cualquier momento.</p>
+
+<pre data-page-node-id="eQo1cLh7uLIx8NSCUzNuOO">~/dotfiles/share/scripts/dictado/pruebas/correr-todas.sh</pre>
+
+<table data-page-node-id="6zLC2L1FjniCJkf09HN0DI">
+  <thead data-page-node-id="morg6Ks7DKlFKSRVlq0kRl"><tr data-page-node-id="8KRl8PfVbhlL4Ci6bEtjjp"><th data-page-node-id="eLIIHgygRo2oN1pJn4sQxS">Bloque</th><th data-page-node-id="mm9IaLwg2BvRPdvgxA4N7C">Qué comprueba</th><th class="num" data-page-node-id="4nGZclwIQqitGtRUlRUcpD">Pruebas</th></tr></thead>
+  <tbody data-page-node-id="noocwrVjm57MAJWDKuLk1E">
+    <tr data-page-node-id="IosPyth5E4nzGPUzdd9m0V"><td data-page-node-id="Y7AG3V0tzkhZYgGjHyWUnY"><code data-page-node-id="GHAQVTVbEtBDRbp5dyJJzB">1-logica.sh</code></td><td data-page-node-id="2C4SD42dwUH1GWF1d9g9Cu">la lógica del script, con dobles. No toca el escritorio</td><td class="num" data-page-node-id="vwBjsh4GB7GC4jHpZPuQJt">17</td></tr>
+    <tr data-page-node-id="5hETKYhPUYtDidC8GNjgap"><td data-page-node-id="I4gfCCLKDEjGXP8fxLuhFB"><code data-page-node-id="TjC447896O6obJGiUFPnFs">2-entorno-hyprland.sh</code></td><td data-page-node-id="u4dNSFiWYBbRujfMtPsYlr">que funciona con el PATH real de Hyprland</td><td class="num" data-page-node-id="EWR4BZJIC068A7k76kwM9H">8</td></tr>
+    <tr data-page-node-id="9yZGQspO2ofh5HGRhjphtd"><td data-page-node-id="mKckkbp6cQBoCFpzl2eZHE"><code data-page-node-id="Mrnb0qSkTVT6MZFr9RHwFR">3-ramas-binario.sh</code></td><td data-page-node-id="qkleh73M3Zy2zKAHYmEdqY">las tres ramas de resolución del binario</td><td class="num" data-page-node-id="e8CrTMLuzUJ5H2CO9LGR9t">8</td></tr>
+    <tr data-page-node-id="ScHr81iuXzwvZA9pz5U2K4"><td data-page-node-id="1OTGaGRCuzkMnygOzqUyF9"><code data-page-node-id="4K9TPR5XrBpR7KGtwtqSB7">4-servidor.sh</code></td><td data-page-node-id="VSJaiMR6Ec4kZ9JMgBEtcq">el servidor y, sobre todo, la caída al binario</td><td class="num" data-page-node-id="hJtpTEn9LPRH7afwwokVsa">5</td></tr>
+    <tr data-page-node-id="LaU5sKcwKoPOPGaSTgdGrL"><td data-page-node-id="D45uYoomuIwFsikEEsv8Xq"><code data-page-node-id="pks4qTyV6dfYCXvg2WQqHD">5-vivo.sh</code></td><td data-page-node-id="kq0HfiAS0tZLhGZXX7SGKW">el dictado en vivo: parser, fichero de estado, modos nuevos, dispositivo y el disparador</td><td class="num" data-page-node-id="OJt7mbh43qL1f4LNp4xChM">23</td></tr>
+    <tr data-page-node-id="CfeEGE4i0GXUvNhHX4wpbw"><td data-page-node-id="HvNJq2ZG0Bi664QFvm06TL"><code data-page-node-id="5gogTo8x7WqChpqWNOcMIe">6-servicio.sh</code></td><td data-page-node-id="nwu4WG95RmRCerdns3CSgM">el servicio residente tal y como queda desplegado</td><td class="num" data-page-node-id="tMYgU4Hg89orPOBA9ed70Y">5</td></tr>
+    <tr data-page-node-id="baBHBlt3bvImQGkRHBB4uS"><td data-page-node-id="v3FPcCsibkbom08jqwKB2K"><code data-page-node-id="gBwTJxDozwW0m2BSIXis0I">7-modelos.sh</code></td><td data-page-node-id="wHz9LWUaim3HcH81Srdmvi">el verificador de modelos y sus tres enganches</td><td class="num" data-page-node-id="MQu1M1XJqRyOp5UBYAcyaz">16</td></tr>
+  </tbody>
+</table>
+
+<div class="nota" data-page-node-id="haZBFUjUvb1rYJ20E5jNFx">
+  <p data-page-node-id="OLDTQDT2UniA79TLQbNV4a">El bloque 5 necesita el micrófono conectado. Comprueba que el motor encuentra el mismo micro por el patrón de SDL, así que sin el receptor enchufado fallan sus secciones E y H. El bloque 1 también lo necesita hoy, porque su sección A resuelve la fuente real por PipeWire, y ese es justo el defecto que la mejora 8 tiene que quitar. Los bloques 6 y 7 no lo necesitan, aunque el 7 sí necesita red o la caché del manifiesto de modelos. La sección que pasa <code data-page-node-id="zxtxim4u0P9hptf3SXd7CJ">qmllint</code> se salta sola si la herramienta no está instalada.</p>
+</div>
+
+<h2 id="herramientas" data-page-node-id="AOVbFcMMIGxelioX3AtMUP">Las herramientas de medición</h2>
+
+<h3 data-page-node-id="AKqsC4gcSa4xU1iF7iptGV">dictado-bench.py</h3>
+
+<p data-page-node-id="CupelH4wr0D3OTacbO5MdY">Mide latencia y WER de cada modelo. Separa el tiempo en coste fijo (cargar el modelo) y marginal (por segundo de audio) por mínimos cuadrados.</p>
+
+<pre data-page-node-id="TEixFkkL10pVezwg02tUim">python3 dictado-bench.py --repetir 3 --detalle --json medidas.json --html informe.html
+python3 dictado-bench.py --desde-json medidas.json --html informe.html   # regenerar sin medir</pre>
+
+<h3 data-page-node-id="t3SMBz9pDM29MT5C2UhCIu">dictado-prompt-medir.py</h3>
+
+<p data-page-node-id="lro7pTfvpJv1UDSQetwt6F">Compara variantes del vocabulario. Importa la normalización del banco en lugar de reimplementarla, comprueba el determinismo con <code data-page-node-id="vbaCcWM8TMsXRgH72pBgyd">--repetir</code> e imprime la dominancia frase por frase.</p>
+
+<pre data-page-node-id="rV47CMMc2Di61zeHMxC3Nh">python3 dictado-prompt-medir.py \
+  --variantes vacio antiguo=/tmp/copia.txt actual=dictado-vocabulario.txt \
+  --base antiguo --repetir 2</pre>
+
+<h3 data-page-node-id="p2RNJFHBfgufhPjnwFUIhU">dictado-modelos-verificar.py</h3>
+
+<p data-page-node-id="Tumew91CksyVkeOHbQol47">Comprueba que los modelos son los oficiales y dice cuál está en uso y cuál no lo usa nadie. Con <code data-page-node-id="f3dNCyhFiN0m1HH6r8Il0J">--buscar</code> barre todo <code data-page-node-id="mygMjQcAu0IQkVBBqaF45c">$HOME</code> entero y marca copias repetidas por sha256. Con <code data-page-node-id="IcuEFeHwNWRASLLEn00uuy">--solo-uso</code> mira solo el modelo y el VAD que dictan, y con <code data-page-node-id="Zs9Kw0oAMTgrgptkQ41e96">--servicio</code> se comporta como en el arranque del servicio. <code data-page-node-id="QnGJ7wbxelhZZYouQJaCDa">--estricto</code> hace que un corrupto salga con código de error.</p>
+
+<pre data-page-node-id="TSFYpW5JjNfvpv5pmE7fb8">python3 dictado-modelos-verificar.py --cargar
+python3 dictado-modelos-verificar.py --buscar
+python3 dictado-modelos-verificar.py --servicio --sin-red</pre>
+
+<h3 data-page-node-id="EmTgygJtqWutgzuTEVcg6L">dictado-modelo-usar.sh</h3>
+
+<p data-page-node-id="wdsAsnBF23vjAY6PJJJRm8">Instala un modelo como el activo. Verifica antes de enlazar, así que un fichero corrupto no llega a dictar nada, y reinicia el servicio si el activo cambió. Con <code data-page-node-id="csx94Tu6oCoSwhAA85OKy1">--listar</code> enseña los candidatos y el que está en uso.</p>
+
+<pre data-page-node-id="DnoN204YTsg0OznCI3L4II">dictado-modelo-usar.sh --listar
+dictado-modelo-usar.sh ~/.local/share/whisper/candidatos/ggml-large-v3-turbo.bin</pre>
+
+<h2 id="registro" data-page-node-id="aeax5G6DhHD5W8E7NKZziH">Registro de cambios, aciertos y desaciertos</h2>
+
+<p data-page-node-id="EkNH5FsV5ERgiSiuBSwhsv">Lo que sigue es el motivo principal de esta guía. Cada entrada es algo que se descubrió a base de medir, casi siempre porque antes se había supuesto lo contrario. Van con el síntoma, la causa y el arreglo, porque el síntoma es lo que uno ve y la causa es lo que no.</p>
+
+<div class="leccion" data-page-node-id="2Lan72Yrt0dxxE6BZQ87kj">
+  <div class="cab" data-page-node-id="GNBMgNDyYZohth8BfsssKJ"><span class="n" data-page-node-id="QZRL92TTmC7kFCYd47NhiE">1</span><h3 data-page-node-id="55kSPUGYzGXlBOqEgEmThk">Un modelo corrupto pasaba por bueno</h3><span class="etq mal" data-page-node-id="AoVsvLg5hW9nr7WNrt4vIs">desacierto</span></div>
+  <div class="campo" data-page-node-id="teQBFRx66spc3SIB18kq7a"><span class="k" data-page-node-id="U8Vo2OtFwPfq5iOFMEDdfP">Síntoma</span><p data-page-node-id="ibFyQ9KjPErsBjFAgUF8lu"><code data-page-node-id="PxCdVdIuhJbPdodG5dEWf4">ggml-large-v3.bin</code> daba un WER de 735 % y transcribía en varios idiomas a la vez.</p></div>
+  <div class="campo" data-page-node-id="8Pfl2ZFuzrYUzyrBF2w6MZ"><span class="k" data-page-node-id="vKPX3zIXs620PUcbCnBqm8">Causa</span><p data-page-node-id="Tud26ze1mvOwpsH8s3ePwS">El fichero tenía el tamaño oficial exacto (3 095 033 483 bytes) pero el sha256 no coincidía. Corrompido por dentro, no truncado.</p></div>
+  <div class="campo" data-page-node-id="QFKco4KhA7MEMXJNvV8khJ"><span class="k" data-page-node-id="7UGsgwLye1JOzebz2Dadvb">Arreglo</span><p data-page-node-id="eYUIVy6c3Vgw1x9QTfQnxH"><code data-page-node-id="ExixsqFU33QHwMxqHDMk3j">dictado-modelos-verificar.py</code>. Compara sha256 contra el manifiesto oficial. <strong data-page-node-id="EZf0AwMnL4VBde1AEDQEAD">El tamaño no basta.</strong></p></div>
+</div>
+
+<div class="leccion" data-page-node-id="1LtG2WaYjfU1bEXdwG0QBW">
+  <div class="cab" data-page-node-id="0CJfTccGpx6E65spCGtRPa"><span class="n" data-page-node-id="cDzvC7UqlhQ6ExIIGxCPET">2</span><h3 data-page-node-id="7wZYauOltOxLMiyOJkmrmP">Cuatro pruebas fallaban tras cada reinicio</h3><span class="etq mal" data-page-node-id="gdlEhestUU8rWgrxnD1Wku">desacierto</span></div>
+  <div class="campo" data-page-node-id="MGCGcd34kzjBjK6NnnOrAC"><span class="k" data-page-node-id="nIl2NJ7b8QzNY6TaN1iK6q">Síntoma</span><p data-page-node-id="2JVwQEV5ng4HBdniATabMF">La suite pasaba de 38/38 a 34/38 sola, sin tocar nada.</p></div>
+  <div class="campo" data-page-node-id="VFPO0cMnDNM1tPlRogXI54"><span class="k" data-page-node-id="S61SkH8KG2AXoA8O86407I">Causa</span><p data-page-node-id="hPQW4c78eZ6yHax3lU0fG4">Los datos de prueba vivían en <code data-page-node-id="2WBFs4bfKzRDzq3Oyq8gU9">/tmp</code>, que es memoria y se vacía al reiniciar. Sobre un fichero inexistente, la guardia de silencio devolvía un fallo falso.</p></div>
+  <div class="campo" data-page-node-id="K2ITWewVW9Qqz85QNYnMvy"><span class="k" data-page-node-id="QN9A5dZvsUj7saONjxEkDK">Arreglo</span><p data-page-node-id="w4q7IQbySzSqgqyJ9JQOp5">El silencio se fabrica con <code data-page-node-id="M6YcTAeNNm9iWNnakXsK3C">sox</code> en cada ejecución y el resto apunta al corpus permanente. <strong data-page-node-id="OpPqUevHYbj7RKZxCuM3de">Un verde que depende de <code data-page-node-id="aqOVNiADSyIbblvgvIpF8g">/tmp</code> es un verde con fecha de caducidad.</strong></p></div>
+</div>
+
+<div class="leccion" data-page-node-id="DzjjDSG5SC4oH3VjD6yXDC">
+  <div class="cab" data-page-node-id="T3CWZg7XDID3NnltxCF9cN"><span class="n" data-page-node-id="IUBiq3BEGGlgcHxHRRvsvy">3</span><h3 data-page-node-id="Fxtx9Y4FPoaAHFnGGdnNlc">Tres servicios llevaban meses muertos sin que nadie lo supiera</h3><span class="etq mal" data-page-node-id="amEK4WqQCnTgxVl4CmPuNc">desacierto</span></div>
+  <div class="campo" data-page-node-id="zGZ7FdAAgTp2JV6yOcObAP"><span class="k" data-page-node-id="tjorpgHEhvS1epxfv47afw">Síntoma</span><p data-page-node-id="vn5sQVCQ8J6Egn6JMPcHpK">Ninguno. Los tres estaban <code data-page-node-id="D3P4NqRUvUJqFasMhQAE5Z">enabled</code> y <code data-page-node-id="gTmzKpINrotnCmFudFRuPa">inactive</code>, y no daban error.</p></div>
+  <div class="campo" data-page-node-id="pWU8JwFqee3BGL2Tn59hiC"><span class="k" data-page-node-id="gbBuYNOgR4ZjQha59aOY7W">Causa</span><p data-page-node-id="DYx6PVwvZB4UqRVrhNqn5u">Colgaban de <code data-page-node-id="HVIDTOyEupYPjP3N7whxDw">graphical-session.target</code>, que Hyprland nunca activa. <code data-page-node-id="L538Zb8LjMlpep3LOy7MCl">enable</code> solo crea un enlace; no arranca nada por sí mismo.</p></div>
+  <div class="campo" data-page-node-id="LKZdCIJ4czri3AJNmcs0o0"><span class="k" data-page-node-id="Aeut1jIYDnZYKh2TydeNHs">Arreglo</span><p data-page-node-id="OB31cYdDkzCSOkWAJ2myxc">Una línea <code data-page-node-id="gVBS09T5drPUjrpL7GZlZh">hl.exec_cmd("systemctl --user start …")</code> por servicio en el bloque de arranque de <code data-page-node-id="sDSoHBcmzlcv6qUX0OQfXt">hyprland.lua</code>. <strong data-page-node-id="vKf6fRKzSZh2Ygl6hVTDnr">No se arranca el target en bloque</strong>, porque DMS cuelga de él y ya corre por otra vía, y se levantaría un segundo DMS.</p></div>
+</div>
+
+<div class="leccion" data-page-node-id="62QHAReGypCK13KkK4l08V">
+  <div class="cab" data-page-node-id="WQpeKpR1hqi0KvVHzCHtV5"><span class="n" data-page-node-id="Vr1rLcInoDoBczl0G2LCuc">4</span><h3 data-page-node-id="4rCk3esiqSwkE6UbN3nMmj">Un espacio sin escapar rompía un <code data-page-node-id="3ic3NeAPsivmhw7VjYzebO">case</code></h3><span class="etq mal" data-page-node-id="d6X1BCTyPBY0jiog42Mkyn">desacierto</span></div>
+  <div class="campo" data-page-node-id="7KUuXSsVIzxEizMMMCFclx"><span class="k" data-page-node-id="Rcja1xfpTuVYEbwG37GXvJ">Síntoma</span><p data-page-node-id="YZytW0KAnaCkEiohIlhj5u"><code data-page-node-id="FVgp3HwMjw6Kp3ZDIEkYcW">bash: error de sintaxis cerca del elemento inesperado 'esto*'</code>.</p></div>
+  <div class="campo" data-page-node-id="bghWcmPANNopbe043CT8mf"><span class="k" data-page-node-id="Qyj2bxGGbj7StRCZtqPGoS">Causa</span><p data-page-node-id="H6v8GCGBmmgbyH6p2wNtlu">En un <code data-page-node-id="NxMQFffq4qB5O8Taw56ePe">case</code>, un espacio sin escapar separa patrones. <code data-page-node-id="KLGf71DBBhOrk2NrRo3DG2">*[Tt]ranscribe esto*)</code> son dos patrones, no uno.</p></div>
+  <div class="campo" data-page-node-id="w82FKqulbCOgdgqE0euXpv"><span class="k" data-page-node-id="eIUGl6ycbdDs3a9eGnV6Cx">Arreglo</span><p data-page-node-id="xhF2tCi7SGHy3YMCxndF6n"><code data-page-node-id="qoAKcYiZPO5VAGLFfYLDQ2">*[Tt]ranscribe\ esto*)</code>, con la barra invertida.</p></div>
+</div>
+
+<div class="leccion" data-page-node-id="U1pdEYmZPh0nuZFQaNPme5">
+  <div class="cab" data-page-node-id="25owL6rlvYWKZBnWqk4aDE"><span class="n" data-page-node-id="8RJSN5mfzxG5peElmi1Btu">5</span><h3 data-page-node-id="HNoddC9FE9bvzJFRH6FGWj">Dos ediciones al mismo fichero se pisan</h3><span class="etq mal" data-page-node-id="DpSQqYjBQYbAYtBUmDDmmW">desacierto</span></div>
+  <div class="campo" data-page-node-id="zZRUR5O3XQKG7zOdcqKZl0"><span class="k" data-page-node-id="MLWs8M0E2POBjz6fJP3vWU">Síntoma</span><p data-page-node-id="MFdHrXYZjHBYZmIGbAif9g">Se aplicaban dos cambios y solo sobrevivía uno. El otro desaparecía sin aviso.</p></div>
+  <div class="campo" data-page-node-id="cr85YM1XtqL5O6KSbC0qX3"><span class="k" data-page-node-id="xHDQ9WKeZcrzIeRQXYi7vN">Causa</span><p data-page-node-id="coBzVvHAbr3ex8FVAgHGTf">La herramienta de edición lee el fichero entero y lo reescribe. Dos ediciones lanzadas a la vez parten las dos de la misma versión, y la segunda machaca la primera.</p></div>
+  <div class="campo" data-page-node-id="EQZ3YM3YSShfEwhB2qBaaH"><span class="k" data-page-node-id="8EbsD00pQYVwFdJk3MpQwx">Arreglo</span><p data-page-node-id="lN5M6vrN4grieXCUrtjPg1">Los cambios al mismo fichero van en serie, o en una sola escritura completa. <strong data-page-node-id="hHJjLDFKfAiQRxtDUiY9Z4">Nunca en paralelo.</strong></p></div>
+</div>
+
+<div class="leccion" data-page-node-id="mdRgnAFdGDp17DRD8lwB7t">
+  <div class="cab" data-page-node-id="RstmL1k1zUI0D1ZA0GQVq6"><span class="n" data-page-node-id="v1QmbrfXeOVoq7aQmZNaLh">6</span><h3 data-page-node-id="WwIXsegzlmHUzJopOkaTRL">El visor contamina el HTML que acabas de generar</h3><span class="etq aviso" data-page-node-id="C0utFeDyZkz3Bd3b243rCO">trampa</span></div>
+  <div class="campo" data-page-node-id="bzu5WT94VeoFQ3ZMDhKAWC"><span class="k" data-page-node-id="KWVyfgtgGoU2we7CETetRy">Síntoma</span><p data-page-node-id="iMPeHTp67tLfcohHXBH4lq">Un informe de 27 KB en disco tenía 240 atributos <code data-page-node-id="hM1ApZHIYyfdUQq0oSvQkA">data-page-node-id</code> que el generador no escribe.</p></div>
+  <div class="campo" data-page-node-id="RXUz1ukeWhCvjrzEIuXdeh"><span class="k" data-page-node-id="HD8BvnaUgVpNuoUjWFBorh">Causa</span><p data-page-node-id="Der1orL2w3BIetlUA9XlLx">Al abrir el informe para verlo, la herramienta le inyecta atributos en todas las etiquetas.</p></div>
+  <div class="campo" data-page-node-id="madSOYBXoDLoHJlNAkIA10"><span class="k" data-page-node-id="ISlTPkPFL3fAH1SaW4Q5yA">Arreglo</span><p data-page-node-id="XK1VCuJT4VOCibswPpaDxo">Regenerar antes de verificar, y contar ocurrencias con <code data-page-node-id="JXxG5jquiP9MkFFstpE9Fe">grep -o … | wc -l</code>, no líneas.</p></div>
+</div>
+
+<div class="leccion" data-page-node-id="bGozoThGH2ahJkzKq2mFCV">
+  <div class="cab" data-page-node-id="6kZBR4BpnGwIG4vc1DD5DZ"><span class="n" data-page-node-id="pNMOCrb9HkgsnW2XUAyezp">7</span><h3 data-page-node-id="UtDpxUNnq5qfFAnqEItnbK">Dos formas de calcular el WER daban cifras distintas</h3><span class="etq mal" data-page-node-id="mqZmEZbBqeZCuYuDjFw1am">desacierto</span></div>
+  <div class="campo" data-page-node-id="k1zA6ECmkxaLhvzJHQqSYj"><span class="k" data-page-node-id="3Hge3zMEQz6M2TPBJ7lTWA">Síntoma</span><p data-page-node-id="mj8eQMmsB7Bo663pnKYGna">Una medición daba 14, 16, 12 y 16 errores donde el banco daba 15, 16, 12 y 17.</p></div>
+  <div class="campo" data-page-node-id="vsqicWdnQwsN4q9gje0kpB"><span class="k" data-page-node-id="WWQQw7CIq5XGSdJnwYxyAo">Causa</span><p data-page-node-id="hc6GJfc8C4waQMOhITmkSn">Un arnés propio quitaba los acentos y no unía los dígitos separados por espacio. Con acentos, «lánzame» contra «lanzame» cuenta como error.</p></div>
+  <div class="campo" data-page-node-id="I0oQwPCl2wO4AWwgZPIb7i"><span class="k" data-page-node-id="mNOQecuON3shJAVvOJK2qz">Arreglo</span><p data-page-node-id="A45IHnup2ppfQYwtaiY4cI">El WER se saca de <code data-page-node-id="wg7RllSgBOlqZeHlq5FfwS">normalizar()</code> y <code data-page-node-id="DBgtqNlXLikX3kItWvwVrQ">wer()</code> de <code data-page-node-id="i3DdbAE981cek6Lr48o6gO">dictado-bench.py</code>, importadas. <strong data-page-node-id="o2ltLfREXcigyX56rKmnAf">Una reimplementación paralela da cifras no comparables</strong>, y se llegó a escribir un informe entero con las equivocadas.</p></div>
+</div>
+
+<div class="leccion" data-page-node-id="6alnkjMYVqpDaqCW2aqqe9">
+  <div class="cab" data-page-node-id="KxCFKrTl6lBcS0PafHipG6"><span class="n" data-page-node-id="bBI0zaFJeCO5jhSg20Ey9g">8</span><h3 data-page-node-id="DUOSZaq5RyEJ0NPMch4zQL">Una ruta fija rompía el dictado al mover el proyecto</h3><span class="etq mal" data-page-node-id="AFMXM0CWKX7xB8us8PiYAx">desacierto</span></div>
+  <div class="campo" data-page-node-id="aJ7UhOleyV2F2UzDzICFu2"><span class="k" data-page-node-id="MW0KBVtGKlHeNxsg1xEXrk">Síntoma</span><p data-page-node-id="9oO3ZP2P0pX1DbhDbS1ImJ">Ninguno visible al mover los ficheros. El fallo aparecía al pulsar la tecla, después.</p></div>
+  <div class="campo" data-page-node-id="QgQxiFBVRYGx1KFHeLJO8p"><span class="k" data-page-node-id="IGEDk2wGKlHFrOGOQtyWVn">Causa</span><p data-page-node-id="u4cuVXSDuDS5pDHN0yk6CN"><code data-page-node-id="RCFXX9A9N5HnkHB4VeWGjU">dictado-tecla.py</code> llevaba escrita a mano la ruta del script principal. El proceso vivo la tenía en memoria, así que seguía corriendo y llamaba a un fichero que ya no existía.</p></div>
+  <div class="campo" data-page-node-id="cGimClSe8u79D7eAKM6S24"><span class="k" data-page-node-id="sADSUyEb9z9NoCPQKkvrDx">Arreglo</span><p data-page-node-id="HnJFHpcth3nATy4qFTftv9">La orden se resuelve desde la carpeta del propio fichero. <strong data-page-node-id="elT6cDdMbq2cfhcHKRTHFJ">Mover código con rutas fijas falla tarde y en silencio.</strong></p></div>
+</div>
+
+<div class="leccion" data-page-node-id="FIKyVdcuQT40BnCp7CVDZM">
+  <div class="cab" data-page-node-id="DLZnJGcPYTR1ot1MrlgJ4K"><span class="n" data-page-node-id="0AxNlt8UptBR2PQ98aLGuc">9</span><h3 data-page-node-id="G6ZeHA4CnrjGrNsWqblorw">La primera palabra se recorta al empezar a grabar</h3><span class="etq bien" data-page-node-id="MHDAPhjFxLsCdprUyAdgVb">arreglado</span></div>
+  <div class="campo" data-page-node-id="fXBhUTV22aUg98LEKcROaW"><span class="k" data-page-node-id="TXlWAZwDhjilFBB091dNEL">Síntoma</span><p data-page-node-id="AGNdnciNth6wKgMs5gtAjP">«Dictado activado» se transcribe como «Conectado activado».</p></div>
+  <div class="campo" data-page-node-id="4bf7FAb3GX0uVQ1V4YSfQx"><span class="k" data-page-node-id="dQ7Muzv9GDIjK2BxRN7tlb">Causa</span><p data-page-node-id="EZYtCV0tUXr3nBHE3YlAFt">El VAD trae 30 ms de relleno por delante de la voz, y con tan poco se come el ataque de la primera palabra.</p></div>
+  <div class="campo" data-page-node-id="6QaSXbHQD9hfdyZBSPIL4R"><span class="k" data-page-node-id="aijZhLvk7vBQlLIAqCYYRQ">Arreglo</span><p data-page-node-id="bPlfSLZDsSAg72FUthNpGE">Subir el relleno a 500 ms, en el binario y en el servidor a la vez para que las dos rutas transcriban igual. Medido sobre el corpus, tres pasadas idénticas, el error del servidor baja de 6,0 % a 5,6 % y «Dictado activado» sale entero. Era la mejora 4 de la autocrítica.</p></div>
+</div>
+
+<div class="leccion" data-page-node-id="H9dvP6wp1uXmYz34CT2lEH">
+  <div class="cab" data-page-node-id="9BkGb67PdeqHQWTNvcQaLR"><span class="n" data-page-node-id="FS6dBSf5KiktrkJ0bfC3E6">10</span><h3 data-page-node-id="0mqbkj0fxj8eb1JhTZ8kNT">Llenar el vocabulario hasta el tope lo empeora</h3><span class="etq mal" data-page-node-id="apnF81jVcfjr9nnix13gi6">desacierto</span></div>
+  <div class="campo" data-page-node-id="pxqCECwFjRUFKDsm7OWBcS"><span class="k" data-page-node-id="mrR4h9GusnKxBSUkJkYJCv">Síntoma</span><p data-page-node-id="WTRqKSbwZylGA5njF6KcUm">Se daba por bueno que hasta 600 caracteres la transcripción era correcta, y que rellenarlos ayudaría.</p></div>
+  <div class="campo" data-page-node-id="WSdJ9sOdxZJiYZMroL0pdU"><span class="k" data-page-node-id="eOo4DegsJ7KBUXIuRFTXah">Causa</span><p data-page-node-id="Aw5JXhbqQJYAckabvGk74a">La afirmación venía de una medición más gruesa. Sobre el corpus completo, 583 caracteres ya empeora respecto a 324, y además vuelve a romper los nombres propios.</p></div>
+  <div class="campo" data-page-node-id="1oYS92J2IaZaHAs1UFPLnN"><span class="k" data-page-node-id="jU4edbOau8CaySAztVG5cS">Arreglo</span><p data-page-node-id="N2Vl6JmUfsRlLuZUOCjtcz">El óptimo medido es 444 caracteres. El tope es un límite técnico, no un objetivo.</p></div>
+</div>
+
+<div class="leccion" data-page-node-id="NnAUBy5z3T2xpE5HBf2nMG">
+  <div class="cab" data-page-node-id="DpATPXJf6wVP6Dqd2OtC9w"><span class="n" data-page-node-id="pah2OTeFYEObtgM43z9Lok">11</span><h3 data-page-node-id="ECuk1PyfVlNTCiNEapEJpQ">El enlace del modelo apuntaba a un fichero que no estaba ahí</h3><span class="etq mal" data-page-node-id="95tdWOqHG7QpeUZL6bdXc4">desacierto</span></div>
+  <div class="campo" data-page-node-id="fF0mTS7CFlPQyYXzRPTYWw"><span class="k" data-page-node-id="ZI1prws7dp6o6cjpBYpu76">Síntoma</span><p data-page-node-id="12ycP8sMOY2yX1kzI1gdjP">El dictado fallaba en la llamada siguiente a cambiar de modelo.</p></div>
+  <div class="campo" data-page-node-id="ernAqQ7gi7hHaVHMjlDaSU"><span class="k" data-page-node-id="ylUUZzODvkiTwICMvNGVrf">Causa</span><p data-page-node-id="2Wm8DR2eIQ99WTWqExxRqd">La orden de ejemplo apuntaba al modelo sin el subnivel <code data-page-node-id="kMLPsTPhmsEejgnDY5SOYI">candidatos/</code>. El enlace quedaba roto en silencio.</p></div>
+  <div class="campo" data-page-node-id="242smWEgyHz9KKNVprH8WG"><span class="k" data-page-node-id="WBi4aYhqS7I1rFv0soLLWP">Arreglo</span><p data-page-node-id="LHqTE2Bi97oSQYxLX8qYO8">Corregido en la unidad del servicio y, el 10 de octubre, también en <code data-page-node-id="u3WyAGsFizmH4TxWgGRpaw">dictado.conf</code>, que arrastraba el mismo error.</p></div>
+</div>
+
+<div class="leccion" data-page-node-id="siAbynvzDSMZG8F9XerTPY">
+  <div class="cab" data-page-node-id="xoVPwDCAy1u1dCXvLvGNbj"><span class="n" data-page-node-id="XDoNLyecSostf5dj9rEbwu">12</span><h3 data-page-node-id="XtRn0S0S7A52wdF19EUNTH">Una copia del modelo vivía fuera de la carpeta de modelos</h3><span class="etq mal" data-page-node-id="sPZ8GEt9htz7nDUinPBKxd">desacierto</span></div>
+  <div class="campo" data-page-node-id="jqNUP6lEDwjAUges8wxzIv"><span class="k" data-page-node-id="aS54frCBOvhiIwom14XU7w">Síntoma</span><p data-page-node-id="wle1yvyHMTzIJ33xW0xmFu">Al limpiar apareció un <code data-page-node-id="JjTABG4Wd99BKjspTGZp5z">ggml-tiny.bin</code> de 74 MiB en <code data-page-node-id="0K7QXzj1yNNYtVTUZtVG2P">~/Documentos/investigacion-dictado/prueba/</code>, byte a byte igual al de la carpeta de modelos.</p></div>
+  <div class="campo" data-page-node-id="2hyMpF6dthxk5wmziGzDK2"><span class="k" data-page-node-id="l7NxJsrG5mFyOmInFSyC6s">Causa</span><p data-page-node-id="DwExsXBjXcvEZ2aA4wOqIH">El inventario miraba solo <code data-page-node-id="WF86Tw8F623mCKUCvueFUJ">~/.local/share/whisper</code>. La copia era del 27 de septiembre, de las primeras pruebas, y nadie la había vuelto a tocar.</p></div>
+  <div class="campo" data-page-node-id="flTvkfWHAC47EGqmQn4F0A"><span class="k" data-page-node-id="nhTxvELdU3tSGPjSBMbA5o">Arreglo</span><p data-page-node-id="HJ1KQOcxofvlyb0D4BkDTh"><code data-page-node-id="QMOjeBLHf8FCsDyZlgWXYp">dictado-modelos-verificar.py --buscar</code> barre <code data-page-node-id="68RQOBaAkU5cbIGviH3HZG">$HOME</code> entero, salta la papelera y marca las copias repetidas por sha256. <strong data-page-node-id="WFO3ULtYP9P2NtT7kYDMVG">Un inventario que mira una sola carpeta no es un inventario.</strong></p></div>
+</div>
+
+<div class="leccion" data-page-node-id="01waVUJPEvWepezCbJAMT5">
+  <div class="cab" data-page-node-id="njpTLgyL9cjC16ulABtwxT"><span class="n" data-page-node-id="NczUY4YTQedmhY2K2CWDe0">13</span><h3 data-page-node-id="YxeczpcMfQ69tb1J9tPfrM">Borrar no libera espacio, porque la papelera está en el mismo disco</h3><span class="etq aviso" data-page-node-id="bDWk4MpW5LoDQRubf4iPcS">trampa</span></div>
+  <div class="campo" data-page-node-id="VLmPOCRdaQoO2gOHDtbP4s"><span class="k" data-page-node-id="DSs3m3Nr9qhAnm72skGP0l">Síntoma</span><p data-page-node-id="QeylcM8cQKaOwmXyCWngGJ">Tras borrar 4,91 GiB, el disco seguía igual, con 6,4 GB libres.</p></div>
+  <div class="campo" data-page-node-id="ZA3APdNC94NELz9oG8js2b"><span class="k" data-page-node-id="viWJDD08LYcD7iYaXJ2flD">Causa</span><p data-page-node-id="jDz60HIZR2SyymSFoRfeHe">En este entorno <code data-page-node-id="eN4iePHGNCvGLRFNBBqr8F">rm</code> es una función de zsh que manda los ficheros a <code data-page-node-id="i5uJ1ZqNkJHezZZkL6GgMP">~/.local/share/Trash</code>, y la papelera vive en el mismo sistema de ficheros que el original. Mover no borra.</p></div>
+  <div class="campo" data-page-node-id="sOZgP55OtOzpANScKA7cyP"><span class="k" data-page-node-id="o0jBIp9SIeOiDSYh66ZM1d">Arreglo</span><p data-page-node-id="gz2MbAPRrW7uyzysSzY5Rp">Para recuperar espacio hay que purgar la papelera. Se purgaron solo las cinco entradas propias, con <code data-page-node-id="fASaKXsJVoH2qBWjtUZKyf">/usr/bin/rm</code>, no la papelera entera, que tenía 14 GB de otras cosas. El disco pasó del 96 % al 93 %.</p></div>
+</div>
+
+<div class="leccion" data-page-node-id="tgrJjKMYegf4ykB68AmQ9E">
+  <div class="cab" data-page-node-id="YcZLmxDRTWWdYEuIcOO5Fq"><span class="n" data-page-node-id="Y6a85N0wQtsusd8pmlQDG6">14</span><h3 data-page-node-id="eFfBNrrfoEZijzrham90Hf">La capa mostraba el primer estado y nunca cambiaba</h3><span class="etq mal" data-page-node-id="Vsax74gmxtRETEaEYmQg1L">desacierto</span></div>
+  <div class="campo" data-page-node-id="yuXBLfNI8hcONYfCSu764F"><span class="k" data-page-node-id="NasIsRWAyRd6ZqqxC8fcSM">Síntoma</span><p data-page-node-id="RAF1nBgACfubTFXNGNdSxo">Las tres capturas de la tira, una por estado, salían idénticas. Se dio por hecho que el motor no escribía el estado.</p></div>
+  <div class="campo" data-page-node-id="JsvxxdgoiOBc0aSaiZ46Z7"><span class="k" data-page-node-id="nPyCfmm04DdQIsmJuKTpDk">Causa</span><p data-page-node-id="Un7DCwiykQZYsfps1rWazo">El motor sí escribía. <code data-page-node-id="Yt2XQtEMwkaitMlVfm5L3y">FileView</code> con <code data-page-node-id="1QuJA6UDxQFYnkCWGDt6KE">watchChanges: true</code> emite <code data-page-node-id="FxzALfjJLOQXTLWIkS7gLz">fileChanged</code>, pero no vuelve a leer el fichero, así que la capa se quedaba con la primera lectura.</p></div>
+  <div class="campo" data-page-node-id="0DRH6qRMBP2EFlO0qhdf6L"><span class="k" data-page-node-id="9uGhhzjcaNzfkcJB93s5HB">Arreglo</span><p data-page-node-id="0oHK1sDCIeUuireku9FeLv"><code data-page-node-id="on3jZd3sVFEOfi3cvL37oA">onFileChanged: vista.reload()</code>. Verificado con tres hashes distintos y a ojo. <strong data-page-node-id="Yim9XpcCM3NXo9hvQ5IRML">Vigilar un fichero no es lo mismo que releerlo.</strong></p></div>
+</div>
+
+<div class="leccion" data-page-node-id="DKQaAc6XGsD0Ui9CmruiGy">
+  <div class="cab" data-page-node-id="Bau4rXO5NgmOEvCy4CGF0g"><span class="n" data-page-node-id="gklU3FBawEnLa4N5imQQ9F">15</span><h3 data-page-node-id="AFGwk62GeUGVb4zVSyqZrQ">El transcriptor guardaba el audio y se comía la última palabra</h3><span class="etq mal" data-page-node-id="Tv4nAmSe8EhDLACiPkE9oS">desacierto</span></div>
+  <div class="campo" data-page-node-id="P5WfxXry5UNiuFnZOVA6eQ"><span class="k" data-page-node-id="Zl7HuBmhFNnJCm4O3PSdqm">Síntoma</span><p data-page-node-id="3vKPUNDINggZ05Yr87X4eG">El texto pegado perdía siempre el final de la frase.</p></div>
+  <div class="campo" data-page-node-id="84exW6RUqdWyaxSFnQSp52"><span class="k" data-page-node-id="mbWOYvA4fMX03efMG7eEcx">Causa</span><p data-page-node-id="iIPAtMQINfazyk1EgGYpBE">Se grababa con <code data-page-node-id="yu2lcerGQrbaTrx8K50hLG">-sa</code> de <code data-page-node-id="oMbg2YkiUUC2J8eUmu4nMf">whisper-stream</code>. Ese WAV se escribe una vez por iteración del bucle, así que al parar se pierde hasta una ventana entera (2 s), que es justo la última palabra.</p></div>
+  <div class="campo" data-page-node-id="DCKo6ynF2stFNYdzqeWyo6"><span class="k" data-page-node-id="C632RgpxlqbRKHxg7q2g93">Arreglo</span><p data-page-node-id="xHkaLYwl985is5YdaxYBW4">Separar la grabación del transcriptor: <code data-page-node-id="ZFO6LANpLBGFiLO5pvCXni">pw-record</code> graba y cierra el WAV al recibir SIGINT. <strong data-page-node-id="L61TDo79dWIOrCnatwCCFS">El transcriptor es la vista; la grabadora es la grabación.</strong></p></div>
+</div>
+
+<div class="leccion" data-page-node-id="immCUUBxdIT6D2xHhIoDsN">
+  <div class="cab" data-page-node-id="ka0Oq2L6BR0FLAaXbO4HPh"><span class="n" data-page-node-id="gSWkuarMZ9vO7X0tH8o4og">16</span><h3 data-page-node-id="yb1TYVZNUdGdBnLnNskZr1">Dos procesos del mismo dictado no se apagan con la misma señal</h3><span class="etq aviso" data-page-node-id="M7RWaXKkGplZyZq1HGuqWq">trampa</span></div>
+  <div class="campo" data-page-node-id="UwagR2Mk19m7vmSPReEFsa"><span class="k" data-page-node-id="3iC2RME5ZnY8pqK9iZf8Y3">Síntoma</span><p data-page-node-id="aXVYo9UDkmzsQyjXpPF9if">Al parar, el motor se apagaba pero no se guardaba audio, y quedaba un <code data-page-node-id="b8hydhBVH39q40QLI3tLhH">whisper-stream</code> huérfano.</p></div>
+  <div class="campo" data-page-node-id="Rm5JuNOx96Ck1RqH8cIEeC"><span class="k" data-page-node-id="UDkcn3YY3AoyfOuVEXeEgb">Causa</span><p data-page-node-id="B666RzQHUyDpcD0A3W9nmF"><code data-page-node-id="FPmBqJePXZa4m0tO6a0FNM">whisper-stream</code> ignora SIGINT (SDL lo captura como <code data-page-node-id="vNtAFEKcTGF2DI6jGuFKEM">SDL_QUIT</code> y el bucle solo lo mira en ciertos puntos) y necesita SIGTERM. <code data-page-node-id="poqm3PoBuZYvfdoUE1KnlO">pw-record</code> necesita SIGINT para cerrar el WAV. Una sola señal para los dos deja a uno a medias.</p></div>
+  <div class="campo" data-page-node-id="SL3B6Tr9Thz7WXjIj4EnCZ"><span class="k" data-page-node-id="5jehjKe592vgOjh6J79pOL">Arreglo</span><p data-page-node-id="SR0w8EwnyJzkQfvWXo3jCC">Cada proceso recibe la suya. SIGTERM al transcriptor, SIGINT a la grabadora. <strong data-page-node-id="Gg91FSxDFCvouOSJrjozPe">Que dos procesos sean del mismo dictado no los hace iguales.</strong></p></div>
+</div>
+
+<div class="leccion" data-page-node-id="3EJN5xqatf6ZOMPDosw7Sv">
+  <div class="cab" data-page-node-id="fGM4jdG77aqlj2wObNdXjB"><span class="n" data-page-node-id="7WJI6nA4vvgGZXp4IsXcX5">17</span><h3 data-page-node-id="hQtYK1XHIitQewNA82tEcd">Dos falsas alarmas seguidas, las dos por medir mal</h3><span class="etq mal" data-page-node-id="ShlQBOg4wHvXZDeYkQidKk">desacierto</span></div>
+  <div class="campo" data-page-node-id="D281brZGBFPjLK0WHKwg5n"><span class="k" data-page-node-id="ijEUh031CrxbaqZBTj75rx">Síntoma</span><p data-page-node-id="AFLcjhAhK73YRs6RasNEiN">Primero se afirmó que el compositor ignoraba el alfa de la tira; después, que el medidor de nivel estaba clavado en cero. Las dos veces me lo había dicho una medición, y las dos veces la medición estaba mal hecha.</p></div>
+  <div class="campo" data-page-node-id="wjTOHV2sBFIO53gKvvGiDz"><span class="k" data-page-node-id="oquBDlikil2Agh1oTDcbkH">Causa</span><p data-page-node-id="AE2bYbzGUD5AyGl7f0cjNz">El alfa: se compararon canales crudos entre capturas de contenido distinto, y el redondeo entre fotogramas mete ruido. El nivel: el arnés reproducía el sonido en primer plano, así que muestreaba el estado cuando el audio ya había terminado.</p></div>
+  <div class="campo" data-page-node-id="Vrbpf2v2kRdrpiaWYa18WQ"><span class="k" data-page-node-id="9W905NQC5kwipRE3TiRBXa">Arreglo</span><p data-page-node-id="1IyQN8NGvAsfPmVctM8jIr">Para el alfa, comparar luminancia en vez de canales crudos, más una prueba decisiva con alfa a cero. Para el nivel, reproducir en segundo plano y muestrear durante el audio. <strong data-page-node-id="OPOwt7jwMfsZCNwBN56s2p">Un instrumento mal montado miente con la misma cara que un programa roto.</strong></p></div>
+</div>
+
+<div class="leccion" data-page-node-id="Lecc18ServidorNunca">
+  <div class="cab" data-page-node-id="Lecc18Cab"><span class="n" data-page-node-id="Lecc18N">18</span><h3 data-page-node-id="Lecc18H3">El servidor residente nunca arrancó, y el banco lo medía sin el prompt</h3><span class="etq mal" data-page-node-id="Lecc18Etq">desacierto</span></div>
+  <div class="campo" data-page-node-id="Lecc18S"><span class="k" data-page-node-id="Lecc18Sk">Síntoma</span><p data-page-node-id="Lecc18Sp">Ninguno. El dictado funcionaba, solo que cada frase pagaba casi un segundo de más. Y en el banco el servidor salía con más error que el binario, que contradecía lo medido el 10 de octubre.</p></div>
+  <div class="campo" data-page-node-id="Lecc18C"><span class="k" data-page-node-id="Lecc18Ck">Causa</span><p data-page-node-id="Lecc18Cp">Dos cosas a la vez. La unidad <code data-page-node-id="Lecc18C1">dictado-servidor.service</code> estaba <code data-page-node-id="Lecc18C2">enabled</code> y <code data-page-node-id="Lecc18C3">inactive</code>, y colgaba del mismo <code data-page-node-id="Lecc18C4">graphical-session.target</code> muerto que la entrada 3, así que el dictado caía al binario y pagaba la carga del modelo en cada llamada (0,885 s fijos frente a 0,107 s del servidor). Y el banco, en <code data-page-node-id="Lecc18C5">correr_servidor</code>, no mandaba el prompt en la petición, así que el servidor transcribía sin el vocabulario y salía un 10,6 % que no era real.</p></div>
+  <div class="campo" data-page-node-id="Lecc18A"><span class="k" data-page-node-id="Lecc18Ak">Arreglo</span><p data-page-node-id="Lecc18Ap">La línea de arranque en <code data-page-node-id="Lecc18A1">hyprland.lua</code>, igual que los otros tres servicios, y una comprobación en la suite 6 que exige esa línea para que no vuelva a apagarse en silencio. El prompt se manda ahora en la petición, y medido el 11 de octubre sale lo que debía: binario 5,1 % y servidor 5,6 %, con el servidor ocho veces más rápido en coste fijo. <strong data-page-node-id="Lecc18A2">Un servicio que no arranca no da error, solo va lento, y por eso hay que vigilarlo con una prueba.</strong></p></div>
+</div>
+
+<div class="leccion" data-page-node-id="Lecc19VivoSinDisparador">
+  <div class="cab" data-page-node-id="Lecc19Cab"><span class="n" data-page-node-id="Lecc19N">19</span><h3 data-page-node-id="Lecc19H3">El dictado en vivo estaba escrito, probado y sin disparador</h3><span class="etq mal" data-page-node-id="Lecc19Etq">desacierto</span></div>
+  <div class="campo" data-page-node-id="Lecc19S"><span class="k" data-page-node-id="Lecc19Sk">Síntoma</span><p data-page-node-id="Lecc19Sp">Ninguno, y por eso duró. Esta guía daba la mejora 2 por hecha y el bloque 5 la cubría con veintiuna comprobaciones, pero al pulsar Ctrl seguía abriéndose el modo ciego. La capa nunca se veía.</p></div>
+  <div class="campo" data-page-node-id="Lecc19C"><span class="k" data-page-node-id="Lecc19Ck">Causa</span><p data-page-node-id="Lecc19Cp"><code data-page-node-id="Lecc19C1">dictado-tecla.py</code>, el vigilante del toque de Ctrl, llamaba a <code data-page-node-id="Lecc19C2">dictado.sh toggle</code> por defecto. El dictado en vivo no tenía ningún disparador, ni tecla, ni unidad, ni nada que lo arrancara. Estaba escrito y probado, pero nunca se había ejecutado en el escritorio.</p></div>
+  <div class="campo" data-page-node-id="Lecc19A"><span class="k" data-page-node-id="Lecc19Ak">Arreglo</span><p data-page-node-id="Lecc19Ap">El toque de Ctrl pasa a lanzar <code data-page-node-id="Lecc19A1">dictado-vivo.sh toggle</code>. La orden se resuelve desde la carpeta del propio script y no desde la unidad, para que mover el proyecto no la rompa, que es la lección 11. El camino ciego queda como red de seguridad, con el bind <code data-page-node-id="Lecc19A2">SUPER + D</code> y la variable <code data-page-node-id="Lecc19A3">DICTADO_TECLA_ORDEN</code>. Una comprobación nueva en el bloque 5 exige que la orden siga apuntando al vivo, para que no vuelva a quedarse sin disparador.</p></div>
+</div>
+
+<h4 data-page-node-id="gMa5K1lFLafAj7Bh0WsEnQ">Aciertos que conviene no deshacer</h4>
+
+<ul data-page-node-id="4H8nnwz2zzM3kKCJMkajvj">
+  <li data-page-node-id="BgzfecFvzs2vdb07fen8KV"><strong data-page-node-id="T2wZhry7ZEqj4CFMKf6zbp">La caída al binario.</strong> El servidor es opcional y su ausencia no deja sin dictado. Está probado por la suite 4.</li>
+  <li data-page-node-id="9pFUP3A6dnsAbR8r4Baasf"><strong data-page-node-id="lF7PeaCW8wcBBxAeAfsfAP">El vocabulario se lee en cada invocación.</strong> Cambiarlo no necesita reiniciar nada.</li>
+  <li data-page-node-id="3YSZ7egeVcZthclPTZ9wVB"><strong data-page-node-id="JqIaBN9PFx3oMEHnzdeYOE">La medición antes de la afirmación.</strong> Casi todas las entradas de arriba salieron de medir algo que se daba por hecho.</li>
+  <li data-page-node-id="AWuAWCd4H5pO471Pb58Ytn"><strong data-page-node-id="CqHKHMpOPjrsz1zug3FWRA">Whisper a temperatura cero es determinista.</strong> Por eso dos pasadas dan el mismo resultado y las comparaciones de vocabulario son de fiar.</li>
+  <li data-page-node-id="4cni6pOqJZvWCEM7DOwHx9"><strong data-page-node-id="DEpRk7IrR3xosAWhekg5Ae">El corpus de voz real.</strong> Un corpus sintético con espeak-ng sirve para ordenar modelos, pero atenúa las diferencias. Las decisiones finas necesitan voz real.</li>
+  <li data-page-node-id="XCTYfgUquy3Q0ry695tgUs"><strong data-page-node-id="DU6OcGS8eh0tAwejWwDtPK">La capa del dictado en vivo no roba el foco.</strong> Es una superficie de wlr-layer-shell con <code data-page-node-id="xpz7lrQJVDPljfdMCWytSZ">keyboardFocus</code> puesto a <code data-page-node-id="9D0GHJgkqGxHZjqhEmjbA7">None</code>. Se comprobó que la ventana activa es la misma antes y después de abrirla, así que el pegado aterriza donde estabas escribiendo.</li>
+  <li data-page-node-id="pxlRwe5DYFWo6n7Kq3fZLs"><strong data-page-node-id="PhCPM5dpzWwwnFRA1rcBQH">El texto final sale de la ruta buena.</strong> El modo en vivo reutiliza <code data-page-node-id="1BQgO1q5u9CHxTRbjoRnIz">dictado.sh transcribir-fichero</code> en vez de duplicar el modelo, el vocabulario y el VAD.</li>
+  <li data-page-node-id="AciertoBancoVive"><strong data-page-node-id="AciertoBancoViveF">El banco mide lo que se vive.</strong> Manda el prompt en la petición, igual que <code data-page-node-id="AciertoBancoViveC">dictado.sh</code>, y su binario usa el mismo VAD y el mismo relleno que producción. Cuando el banco y la ruta real se separan, la medición deja de valer, y fue justo lo que pasó con la columna del servidor.</li>
+</ul>
+
+<h2 id="trampas" data-page-node-id="IYwVW5CeQMdBcvG7bdf1np">Trampas conocidas</h2>
+
+<ul data-page-node-id="O6bsVP68W4KZhikPnUop8z">
+  <li data-page-node-id="rYAE7duydFyh0vkOWwxM9u"><strong data-page-node-id="yc9jcViAN1BR2AbzLBvbw1"><code data-page-node-id="8vYuLJ8IaVFYRPcMq8PoJ7">/tmp</code> es memoria.</strong> Se vacía al reiniciar. No bajar GB de modelos ahí, y no dejar datos de prueba ahí.</li>
+  <li data-page-node-id="z2KzJ0PLNy77TMHrXUEPwe"><strong data-page-node-id="P1sIFmztcQ5nPvdv66comv"><code data-page-node-id="HpmtgNbklMuuCual8vLHFT">pkill -f patron</code> se mata a sí mismo</strong> si el patrón aparece en su propia línea de comandos. Para comprobar un servidor, mirar el puerto o filtrar por nombre de proceso.</li>
+  <li data-page-node-id="HfmCLtYqUPIiqEFiqNqxyb"><strong data-page-node-id="uuBvi42RiGMkdyjiKpgHVi">En zsh, <code data-page-node-id="ZDaigxSPlHbD9xubrgXus9">set -- $var</code> no parte por espacios</strong> como en bash. Un bucle que compare tamaños acabará comparando la cadena entera contra cero.</li>
+  <li data-page-node-id="p9SKK6olEDoJt6SHtyHhO7"><strong data-page-node-id="LODCbvSkwsiH4k5saE2pCc"><code data-page-node-id="tpleIFT3QkABrzi2WOP1Gy">soxi -D fichero.wav</code></strong> da la duración. <code data-page-node-id="59WerekUd4BLaGGUZkF2pB">sox -i -D</code> y <code data-page-node-id="32T9jMPAk94TWGRTiwLkeb">sox --i -D</code> no.</li>
+  <li data-page-node-id="2C9UNdyEgCllR5YJ9ClJaj"><strong data-page-node-id="mTDHUyAdBOZKncFoTEiqFB">HuggingFace directo se estrangula.</strong> <code data-page-node-id="Jd2eUsFxBLBLHYYPccmA8B">hf-mirror.com</code> va mucho más rápido, pero hay que comprobar que sirve el mismo fichero.</li>
+  <li data-page-node-id="fAM3NKjT5nPFCGUFRmcYNH"><strong data-page-node-id="j3dvzxz82S0frBVSuOSxvP">La papelera no libera espacio.</strong> En este entorno <code data-page-node-id="evHqfEArkNIAq5OmdD9quk">rm</code> es una función que manda los ficheros a <code data-page-node-id="2R3m4QIb2HwWVuQXKqYprD">~/.local/share/Trash</code>, que está en el mismo disco. Para recuperar espacio hay que purgar de verdad, con <code data-page-node-id="IEH45gSnmJV2REOkUadc4M">/usr/bin/rm</code>.</li>
+  <li data-page-node-id="srEJaN9nSI4wva18tWLx0E"><strong data-page-node-id="kVecMQpwtrzKBeN0pbVRbb">El VAD no se puede quitar por rendimiento.</strong> En el corpus no empeora, pero un corpus sin pausas largas no puede medir para qué sirve. En voz real sí importa.</li>
+  <li data-page-node-id="TrampaVadRelleno"><strong data-page-node-id="TrampaVadRellenoF">El relleno del VAD por defecto se come la primera palabra.</strong> Whisper deja 30 ms de relleno por delante de la voz, y con eso «Dictado activado» sale como «Conectado activado». Subirlo a 500 ms lo arregla. Hay que ponerlo en los dos sitios, porque el relleno del servidor se decide al arrancarlo, con <code data-page-node-id="TrampaVadRellenoC1">--vad-speech-pad-ms</code> en su unidad, y no se puede cambiar por petición.</li>
+  <li data-page-node-id="XFjQKChZCfJPul1BVvuTsc"><strong data-page-node-id="VEVxmBrNNNop5KXK97onLt"><code data-page-node-id="DzKOPSIG9LZILKSKdmL3sF">watchChanges</code> no recarga.</strong> En Quickshell, <code data-page-node-id="jTceiGpCCJgS3eL2mZKPDx">FileView</code> con <code data-page-node-id="9sSsjl9etEkz8fwgGJdMQj">watchChanges</code> puesto a <code data-page-node-id="w02bzitJsCOxqOUEYc7yFD">true</code> emite <code data-page-node-id="8gkY6b8siBhFOCzcCbRTgF">fileChanged</code> pero no vuelve a leer el fichero. Sin <code data-page-node-id="bOFpoBKHKS2KgNbNPyAOJc">reload()</code> en <code data-page-node-id="IoSzmRZxdcWqgde1MmboRh">onFileChanged</code>, el vigilante se queda con la primera lectura para siempre.</li>
+  <li data-page-node-id="s6bLrDqGSIyJUMTxV2ZbJe"><strong data-page-node-id="VEfz9UV7WxhyoNTklp75Kv"><code data-page-node-id="Hs56Fq4iGYnPShaRuvLQDf">whisper-stream</code> ignora SIGINT.</strong> SDL lo captura como <code data-page-node-id="2MtCpBgW5YZ0ODN80Khj1E">SDL_QUIT</code> y el bucle solo lo mira en ciertos puntos; para matarlo hace falta SIGTERM. <code data-page-node-id="FCiaD1hxRF8WOMqliIhdB4">pw-record</code>, en cambio, necesita SIGINT para cerrar el WAV.</li>
+</ul>
+
+<h2 id="mantener" data-page-node-id="h1FFdbctGOeI89OSCKGVg6">Cómo mantener esta guía</h2>
+
+<ol data-page-node-id="4W8ebvshJ6EWaoi6tRI7mb">
+  <li data-page-node-id="hn01joaXCjETrEzVYqEjhY"><strong data-page-node-id="gDUwLupwbEEO7AQH3Dmw3o">Se actualiza en el momento, no al final.</strong> Cada cambio, acierto o desacierto entra en <a href="#registro" data-page-node-id="3orjHOpXRwKGApzl8z7ECj">el registro</a> cuando ocurre, con el síntoma, la causa y el arreglo.</li>
+  <li data-page-node-id="FUt7aBJNUo2ZBCFLURAK1F"><strong data-page-node-id="IrgIP5DVXhIHwdm5o9uCjs">Las cifras salen de una medición</strong>, con el comando que la produce al lado. Si no se ha medido, se escribe que no se ha medido.</li>
+  <li data-page-node-id="bZZWPYFuhpJbK6p7fnQEIC"><strong data-page-node-id="iB2JMFJ8RyrZgvRuMZaeb1">Cuando una cifra cambia, se cambia en todos los sitios donde esté escrita.</strong> El 10 de octubre el mismo error de normalización estaba en cuatro ficheros a la vez.</li>
+  <li data-page-node-id="5AzBUdB8uT1NFeL2vqrfxX"><strong data-page-node-id="7HzK0XIiWjWoXyCGdLN3iq">Las decisiones de las que no hay dato se marcan como pendientes</strong>, no se rellenan con una suposición.</li>
+  <li data-page-node-id="Z7IM5Cbr94QISBDA1Uc8mE"><strong data-page-node-id="f0SW0CYcBH2laQF4UGbrJw">Al mover o renombrar algo, se actualizan las referencias y se corre la suite.</strong> Un movimiento sin verificar es un fallo que aparece días después.</li>
+</ol>
+
+<h2 id="pendiente" data-page-node-id="n02l4UIZRWDMAEU89nz5Uk">Lo que queda pendiente</h2>
+
+<p data-page-node-id="FqcaLQOv5kGVE0ry41QVa4">El informe de autocrítica cerró el desarrollo con diez mejoras y un orden sugerido para atacarlas. Aquí van condensadas con su estado real a 11 de octubre de 2026, para que quien siga no tenga que abrir el informe para saber qué falta.</p>
+
+<table data-page-node-id="oPrHiQo9LjIC7FgihNPhM9">
+  <thead data-page-node-id="caDLjHOzc2oFZKI5KTCwRE"><tr data-page-node-id="bcrIMfQ04zJbWqXeGvjysz"><th class="num" data-page-node-id="qjocUrJjYAjRbgJXZui6mu">#</th><th data-page-node-id="C8aCQ25XgVy8BotrPW0DFa">Mejora</th><th data-page-node-id="cr63Dr9zs3wefm5u4mGzKk">Estado</th></tr></thead>
+  <tbody data-page-node-id="TClGp8UJOciyeTmdY6UZxx">
+    <tr data-page-node-id="QG5Wpdp8pjRZzfKLYh2fUS"><td class="num" data-page-node-id="SnkqZmMSjxS44sYJAadHFo">1</td><td data-page-node-id="yQdoQsnNWLaCBUREP3p2HZ">Servidor residente, para no recargar el modelo en cada dictado</td><td data-page-node-id="DDsWJYs8Qt8nTHl4qyiLS5"><strong data-page-node-id="GIhmuLTEpLCW3Xr7VdqvHC">Hecho el 10 de octubre de 2026.</strong> El servicio quedó habilitado y <code data-page-node-id="hEXkbRNNT6BHGzzEwEveDb">DICTADO_SERVIDOR</code> descomentado en <code data-page-node-id="iPDN0AB7kFJPSOeKPtL0tq">dictado.conf</code>. En reposo ocupa 1,8 GB de VRAM y unos 0,8 GB de RAM en el cgroup, medido antes de dejarlo fijo. El bloque 6 de la suite comprueba que responde con la config real, y la caída al binario la cubre el bloque 4. <strong data-page-node-id="Mej1Fix11Oct">Pero el 11 de octubre se descubrió que la unidad nunca llegaba a arrancar</strong>, porque colgaba del mismo target muerto de la lección 3. Ahora se arranca desde <code data-page-node-id="Mej1FixLua">hyprland.lua</code> y el bloque 6 lo vigila.</td></tr>
+    <tr data-page-node-id="f9FbDz7kxwHEZbat9MfTpV"><td class="num" data-page-node-id="yqG0gtBNMQZs97vdxZbGWE">2</td><td data-page-node-id="APZChGOOBwvNedEp5E6PrB">Interfaz de dictado en vivo, para ver el texto mientras se forma</td><td data-page-node-id="VjqEUV8OKNJw7rCVAwpo1r"><strong data-page-node-id="kFkXAYHOKv2xYSaoqVlvAl">Hecho, y cableado el 11 de octubre de 2026.</strong> <code data-page-node-id="JoExDkwsbHfwA3VbFincE2">dictado-vivo.sh</code>, <code data-page-node-id="JWnne0PtSN1nbuQVBSxl12">dictado-vivo.qml</code> y <code data-page-node-id="moiPIVQZVdpx4c4fYvh3TM">dictado-vivo.py</code>. La capa muestra cuatro estados y no roba el foco; el bloque 5 de la suite la cubre. El toque de Ctrl ya la lanza en vez del modo ciego, y una comprobación del bloque 5 lo vigila. Ver la lección 19 del registro y <a href="#vivo" data-page-node-id="XN0QxNv5G7MyevHy8BhjcT">El dictado en vivo</a>.</td></tr>
+    <tr data-page-node-id="VFwEa4YYRUmv2tKdFyqXan"><td class="num" data-page-node-id="gna6DAGApj3e2GrcLVxRFD">3</td><td data-page-node-id="l1zvx7Up3RcQTSeds2watY">Verificar la integridad de los modelos</td><td data-page-node-id="LXXdWujzX9bQRruylX77wk"><strong data-page-node-id="RlfNjFXGWX9RFGr5gQ1TMO">Hecho el 10 de octubre de 2026.</strong> <code data-page-node-id="FuuRCNaqZ5YrprwhmPNu6Y">dictado-modelos-verificar.py</code> quedó enganchado en los tres sitios que pedía la autocritica, o sea el instalador <code data-page-node-id="SyjWbHmMJHVO8xXCASfpu2">dictado-modelo-usar.sh</code>, el <code data-page-node-id="e2QzP6Cn2WSCVkmjAP9sOg">ExecStartPre</code> del servicio y el bloque 7 de la suite. Encontró el large-v3 corrupto.</td></tr>
+    <tr data-page-node-id="VXqjTXDNJgmSTSWKBQ9HQG"><td class="num" data-page-node-id="9NOyOAGsnTTRUnTx8DrHWi">4</td><td data-page-node-id="t21h4hRawfumD3AZV354SK">El VAD recorta la primera sílaba de las frases cortas</td><td data-page-node-id="qzqXSAvjnmIBh2hJ1h2yG3"><strong data-page-node-id="Mej4Fix11Oct">Arreglado el 11 de octubre de 2026.</strong> El relleno del VAD sube a 500 ms en el binario y en el servidor a la vez. El error del servidor baja de 6,0 % a 5,6 % y la primera palabra sale entera. Es la lección 9 del registro.</td></tr>
+    <tr data-page-node-id="NupqmFju2Dx9oJKKxTt3NI"><td class="num" data-page-node-id="hYnZTBZieLGSa4UravlCmh">5</td><td data-page-node-id="AgCzton60JRfEBOILGGiuE">Una capa de corrección sobre el vocabulario</td><td data-page-node-id="b0Tj5z3N0W31bAX5oAx7ux">Sin empezar. El prompt sesga, no corrige.</td></tr>
+    <tr data-page-node-id="LTOkB8ryXqh4G9gbFUvXoi"><td class="num" data-page-node-id="37wjz5QkB9VFBaoxfFrzHB">6</td><td data-page-node-id="703fkZfi6XBBmffkrHVInA">Historial y deshacer</td><td data-page-node-id="UxqqauSFFXWvs6xpENg2Mr">Sin empezar. Barato, y encaja con la interfaz en vivo.</td></tr>
+    <tr data-page-node-id="nKjNdB1qx5iwjocZZqP3E2"><td class="num" data-page-node-id="Qm64CbrvGdZEUeJgYCy8Ib">7</td><td data-page-node-id="HakREHXONHEGU8IuTckVO0">El portapapeles se destruye en cada dictado</td><td data-page-node-id="5k6l9Lhvhj6kRAFMpsSSSX">Sin empezar.</td></tr>
+    <tr data-page-node-id="48uobPGIKcyX7ezY4DLkF5"><td class="num" data-page-node-id="zjIbVm4yHgspp1V88t6Lc6">8</td><td data-page-node-id="Fcbg6X03kR5feUCS9b4q0f">La suite depende del receptor DJI conectado</td><td data-page-node-id="uTvDjOU4aAykrliOBHJAbB"><strong data-page-node-id="dXlbzoBnIkrQcxuW3RaHiI">Sin hacer, y esta guía lo daba por hecho.</strong> Medido el 10 de octubre con un <code data-page-node-id="i1c7ChT11VBqlt3nX2KFpT">pactl</code> que no devuelve fuentes, el bloque 1 cae a 9 correctos y 8 fallidos porque su sección A resuelve el micro real por PipeWire. El arreglo es un doble de <code data-page-node-id="e0tUwhtHo2sxZ7GRuIU9HP">pactl</code> en el bloque 1, igual que ya se hace con <code data-page-node-id="G23mweTZ8duu5doDx4M7SB">pw-record</code> y <code data-page-node-id="M19CkK1j7WzFOn6CJn8a2C">wtype</code>.</td></tr>
+    <tr data-page-node-id="kPbcSRcZcoFkFl1DG6o595"><td class="num" data-page-node-id="zrEM96f7EHYvzqxiGnn2Pr">9</td><td data-page-node-id="OeSAUFYxYsN4ViIitjwi7Q">El texto sale crudo, sin normalizar</td><td data-page-node-id="Cb6DLwQOCyKOM5VkCgvuSL">Sin empezar. Opcional y desactivable.</td></tr>
+    <tr data-page-node-id="l7Ks2peYLhMxuP3ai3tc0t"><td class="num" data-page-node-id="KNokdi9YhNsl0UQ2Oaa7By">10</td><td data-page-node-id="1qkUWMKyM5YYOV4hGF3XHy">Higiene del repositorio y deuda de estilo</td><td data-page-node-id="ofW20CSKpxalpEIPki2Xwo">A medias. La mudanza a una sola carpeta está hecha y los modelos muertos ya se borraron; quedan 24 <code data-page-node-id="nrYFLB14d0Yi4PHQQwIege">.bak</code> en <code data-page-node-id="DPsEvVEZ5vdgeqqLVbsiCy">backups/</code> y los hallazgos de estilo de las skills.</td></tr>
+  </tbody>
+</table>
+
+<div class="nota ok" data-page-node-id="KqlOH6DbHqCe9SyQHNbXCg">
+  <p data-page-node-id="YWVYKPMJHWQzyWOKKbkXji">Los modelos sin papel ya se borraron el 10 de octubre, 4,91 GiB en total. El detalle está en la lección 12 del registro y en el estado de disco de la sección de modelos.</p>
+</div>
+
+<h2 id="anexos" data-page-node-id="HFEF6euXkLBry1Qot9BBzq">Anexos</h2>
+
+<p data-page-node-id="hYQPo0YXCXa7a6b4GHtpoY">Los informes detallados están en <code data-page-node-id="5S5nF1LParJmykcTv5MmLe">informes/</code>. Esta guía los resume; ellos tienen el desarrollo completo de cada medición.</p>
+
+<table data-page-node-id="9T6aLs3eKQT4NaO2xEUhGH">
+  <thead data-page-node-id="MCYdwrUysCDqaOeNbS8k0n"><tr data-page-node-id="KC7lEzQ3D8d4ajDDVetUfC"><th data-page-node-id="LOtRw81Ah0B1nEeMsu9QNu">Informe</th><th data-page-node-id="oFMjzLlS31jRzhWFXS6ml9">Qué contiene</th></tr></thead>
+  <tbody data-page-node-id="eyXXX1RAb2BS11ngUDVdNK">
+    <tr data-page-node-id="8hpewRwuct6YhFni4yN6xb"><td data-page-node-id="DAwpy9tmjDahQwBx7342lV"><code data-page-node-id="dsFfXAytbxXYr0ORffGU8U">dictado-modelos-informe.html</code></td><td data-page-node-id="x4yYCyUg04TWuKtOuMOzf8">la comparación de modelos con el desglose fijo y marginal</td></tr>
+    <tr data-page-node-id="89v9pSNWfCfWTsK8BMjfXk"><td data-page-node-id="Ef9CJEzvpmlZutjOFkSTeq"><code data-page-node-id="MrF7zZ55GCTHLd4qzVynYe">dictado-modelos-auditoria.html</code></td><td data-page-node-id="OBmfQ1ZWlfU8thE0q4r8np">el inventario con hashes y el veredicto por modelo</td></tr>
+    <tr data-page-node-id="YmMHttJOmBjtnj0zzAqABD"><td data-page-node-id="IMZCeqQzIVoulnc4CluTvh"><code data-page-node-id="sbp4ZSpbKQp3FsJ2CUgzmj">dictado-vocabulario-repos-informe.html</code></td><td data-page-node-id="xoHPzIinTWGBbW9XYoHs3P">de dónde salió el vocabulario y cómo se corrigió la grafía</td></tr>
+    <tr data-page-node-id="fEn3mFyeGNgINh3fDwBoc9"><td data-page-node-id="ihQYaFTNfRN7oko3xv7TUx"><code data-page-node-id="v7IrzqjlBuWxKH2cfInl7Z">dictado-vocabulario-tope-informe.html</code></td><td data-page-node-id="CLqp3x3lu8FRtSRqMFBeDc">la medición del tope de 600 caracteres, con el detalle por frase</td></tr>
+    <tr data-page-node-id="6XpTImHJbmoGG24mL9AYjf"><td data-page-node-id="d5OcyxottpITgIOAMTwwAQ"><code data-page-node-id="5EDYWJQNGdDpHF6UmL8jep">dictado-autocritica.html</code></td><td data-page-node-id="AtDNrKBVZQrRvweG1ahVg6">los errores del desarrollo y las diez mejoras, condensadas en <a href="#pendiente" data-page-node-id="xR2YoQjBBolYA5TJF1nEo5">Lo que queda pendiente</a></td></tr>
+    <tr data-page-node-id="JEPeZoJ4rG6SYYy5tUtP8N"><td data-page-node-id="3zSXBXbtvH2NugIsv1psXA"><code data-page-node-id="hZQJJJTECCNTlsEE5JOozj">dictado-modelos-medidas.json</code></td><td data-page-node-id="UvlPjyFWTYAESc6fez9lcd">las mediciones crudas, para regenerar informes sin volver a medir</td></tr>
+  </tbody>
+</table>
+
+<footer data-page-node-id="Qfdo1RaOJImmTT3GgFtwOG">
+  Guía del sistema de dictado · <code data-page-node-id="UTyH11WhU5Udm1M8WXdEqo">~/dotfiles/share/scripts/dictado/</code> · revisada el 11 de octubre de 2026.
+  Estado: suite 83/83, dictado en vivo cableado al toque de Ctrl, servidor residente arrancando solo, vocabulario en 444 caracteres, modelos muertos y cachés borrados (disco al 78 %).
+</footer>
+
+</div>
+</body>
+</html>

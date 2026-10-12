@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# dictado-corpus — monta el conjunto de prueba del banco de dictado.
+#
+# Por qué sintético y no voz real: para calcular el error (WER) hay que saber EXACTAMENTE qué se
+# dijo. Con voz real eso exige que n30 lea y confirme el texto. El sintético es reproducible y
+# controlado, pero es MÁS FÁCIL que la voz real, así que las diferencias entre modelos salen
+# atenuadas: sirve para ordenar y para descartar, no para dar la cifra final.
+# Para la cifra final está dictado-voz-prueba.sh, que produce el mismo formato .wav/.txt.
+#
+# POR QUÉ LAS DURACIONES ESTÁN REPARTIDAS A PROPÓSITO
+# El banco separa el tiempo en coste fijo (cargar el modelo) y marginal (por segundo de audio)
+# ajustando una recta sobre las muestras. Si todas las muestras duran lo mismo, la recta es
+# inestable y puede salir un coste fijo NEGATIVO, que es físicamente imposible. Con duraciones
+# que van de 1 s a 30 s el ajuste queda bien condicionado. No quitar las muestras cortas ni las
+# largas: son el sostén del cálculo.
+#
+# Uso:
+#     dictado-corpus.sh [DESTINO]        (por defecto ~/.local/share/dictado/corpus)
+set -eu
+
+D="${1:-$HOME/.local/share/dictado/corpus}"
+mkdir -p "$D"
+
+# Cada línea: nombre<TAB>texto de referencia
+cat >"$D/frases.tsv" <<'EOF'
+c1-vale	Vale.
+c2-guarda	Guarda este fichero y ciérralo.
+c3-abre	Abre la terminal y lánzame el script de dictado.
+m1-comando	Dictado activado, transcribe esto y pégalo en la ventana que tenga el foco.
+m2-numeros	El presupuesto asciende a 47 320 pesos y el descuento es del 12,5 por ciento.
+m3-propios	Escucho música con los Hifiman HE1000se conectados al amplificador Aune S17 Pro.
+m4-tecnico	El grafo de PipeWire entrega la señal al convertidor a 192 kilohercios por el adaptador RME ADI-2.
+m5-ingles	Voy a hacer un commit en la rama main y luego abro una pull request para revisar el merge.
+m6-plano	Hoy hace un día espléndido y voy a salir a caminar por el parque antes de comer.
+l1-reunion	Cuando termine la reunión de las tres y media revisamos el informe de la auditoría y decidimos si merece la pena cambiar el modelo de reconocimiento por otro más preciso.
+l2-informe	El problema no está en el convertidor sino en el reloj del receptor: medimos quinientos treinta y siete milisegundos de deriva cada hora, y eso desplaza el canal derecho respecto al izquierdo de forma audible.
+l3-lista	Antes de cerrar la sesión hay que hacer tres cosas: primero, copiar el respaldo con su hash; segundo, actualizar la documentación del banco de pruebas; y tercero, apagar el servidor de reconocimiento para no dejar el modelo cargado en memoria toda la noche.
+EOF
+
+echo "=== voces españolas disponibles ==="
+espeak-ng --voices=es 2>/dev/null | head -5
+echo
+
+while IFS=$'\t' read -r nombre texto; do
+    [ -n "$nombre" ] || continue
+    espeak-ng -v es -s 145 -p 45 -w "$D/$nombre-raw.wav" "$texto" 2>/dev/null
+    # whisper quiere 16 kHz mono s16
+    sox "$D/$nombre-raw.wav" -r 16000 -c 1 -b 16 "$D/$nombre.wav" 2>/dev/null
+    rm -f "$D/$nombre-raw.wav" 2>/dev/null
+    printf '%s\n' "$texto" >"$D/$nombre.txt"
+    printf '  %-12s %6s s  %s\n' "$nombre" \
+        "$(soxi -D "$D/$nombre.wav" 2>/dev/null)" \
+        "$texto"
+done <"$D/frases.tsv"
+rm -f "$D/frases.tsv" 2>/dev/null
+
+echo
+echo "=== resumen ==="
+total=$(soxi -D "$D"/*.wav 2>/dev/null | awk '{s+=$1} END{printf "%.1f", s}')
+min=$(soxi -D "$D"/*.wav 2>/dev/null | sort -n | head -1)
+max=$(soxi -D "$D"/*.wav 2>/dev/null | sort -n | tail -1)
+echo "ficheros: $(ls "$D"/*.wav | wc -l)   duración total: ${total}s"
+echo "rango de duraciones: ${min}s a ${max}s"
+awk -v a="$min" -v b="$max" 'BEGIN{ if (b/a < 3) print "  AVISO: rango estrecho, el ajuste fijo/marginal saldrá inestable"; else print "  rango suficiente para separar coste fijo de marginal" }'

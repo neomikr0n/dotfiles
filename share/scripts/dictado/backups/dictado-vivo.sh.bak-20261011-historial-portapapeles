@@ -1,0 +1,301 @@
+#!/usr/bin/env bash
+# dictado-vivo.sh, el puente del dictado en vivo.
+#
+#   dictado-vivo.sh toggle   si está parado lo arranca; si está vivo, finaliza, transcribe y pega
+#   dictado-vivo.sh start    arranca
+#   dictado-vivo.sh parar    finaliza, transcribe y pega
+#   dictado-vivo.sh estado   imprime "vivo", "sin-capa" o "parado"
+#
+# QUÉ MONTA
+# =========
+#   dictado-vivo.qml   la capa que se ve (Quickshell)
+#   dictado-vivo.py    el motor: lanza whisper-stream, publica estado.json, mide el nivel
+#
+# El reparto de tareas es a propósito. El motor solo PINTA el avance, porque en modo ventana
+# deslizante la hipótesis que se ve cubre únicamente la ventana y no todo lo hablado. El texto
+# que se pega sale del audio guardado (-sa) y se transcribe aquí, con la ruta buena de
+# dictado.sh: mismo modelo, mismo vocabulario, mismo VAD y el servidor si estuviera levantado.
+#
+# POR QUÉ NO SE PEGA DESDE EL MOTOR
+# =================================
+# El pegado tiene que ocurrir cuando la grabación ya terminó y el audio está cerrado. Si lo
+# hiciera el motor, competiría consigo mismo, porque seguiría capturando mientras pega.
+#
+# ORDEN AL PARAR (importa)
+# ========================
+#   1. parar el motor      -> cierra whisper-stream, que guarda el WAV
+#   2. transcribir         -> mientras tanto la capa sigue mostrando la última hipótesis
+#   3. escribir "listo"    -> la capa enseña el texto final
+#   4. cerrar la capa      -> ya no hace falta y no debe quedarse estorbando
+#   5. pegar               -> wl-copy + Ctrl+V
+# La capa nunca tuvo el teclado (WlrKeyboardFocus.None), así que el destino del pegado es la
+# ventana donde estabas escribiendo desde el principio. Cerrarla antes de pegar es higiene,
+# no un requisito de corrección.
+#
+# DOS MUNDOS DE NOMBRES PARA EL MISMO MICRÓFONO
+# =============================================
+# La fuente de PipeWire se llama
+#   alsa_input.usb-DJI_..._Wireless_Mic_Rx_XSP12345678B-01.analog-stereo
+# y SDL, que es quien abre el micro para whisper-stream, la llama
+#   Wireless Mic Rx Estéreo analógico
+# No comparten ni una palabra útil, así que son dos patrones distintos:
+#   DICTADO_FUENTE        patrón para pactl (lo resuelve dictado.sh)
+#   DICTADO_VIVO_PATRON   patrón para SDL  (por defecto "Wireless Mic")
+#
+# Variables de entorno (todas opcionales):
+#   DICTADO_VIVO_RUNTIME  directorio de trabajo     (por defecto $XDG_RUNTIME_DIR/dictado-vivo)
+#   DICTADO_VIVO_PATRON   patrón del dispositivo SDL (por defecto Wireless Mic)
+#   DICTADO_VIVO_PASO     ms entre pasadas          (por defecto 2000)
+#   DICTADO_VIVO_VENTANA  ms de ventana             (por defecto 10000)
+#   DICTADO_VIVO_HILOS    hilos de whisper          (por defecto 4)
+#   DICTADO_ESPERA_FINAL  segundos de espera al motor antes de matarlo (por defecto 15)
+# Las de dictado.sh (DICTADO_MODELO, DICTADO_FUENTE, DICTADO_CONF…) siguen valiendo, porque la
+# fuente y el modelo se le preguntan a él, que es quien los resuelve.
+set -u
+
+SCRIPT_REAL="$(readlink -f "${BASH_SOURCE[0]}")"
+DIR_SCRIPT="$(dirname "$SCRIPT_REAL")"
+QML="$DIR_SCRIPT/dictado-vivo.qml"
+PY="$DIR_SCRIPT/dictado-vivo.py"
+DICTADO="$DIR_SCRIPT/dictado.sh"
+
+RUNTIME="${DICTADO_VIVO_RUNTIME:-${XDG_RUNTIME_DIR:-/tmp}/dictado-vivo}"
+PATRON="${DICTADO_VIVO_PATRON:-Wireless Mic}"
+PASO="${DICTADO_VIVO_PASO:-2000}"
+VENTANA="${DICTADO_VIVO_VENTANA:-10000}"
+HILOS="${DICTADO_VIVO_HILOS:-4}"
+ESPERA_FINAL="${DICTADO_ESPERA_FINAL:-15}"
+
+# Igual que en dictado.sh: el PATH de Hyprland no trae ~/.local/bin, y ahí viven los puentes a
+# whisper-cli y wtype. Sin esto, el pegado fallaría según desde dónde se lance.
+BIN_PROPIO="${DICTADO_BIN:-$HOME/.local/bin}"
+case ":$PATH:" in
+*":$BIN_PROPIO:"*) ;;
+*) PATH="$BIN_PROPIO:$PATH" ;;
+esac
+export PATH
+
+for f in "$QML" "$PY" "$DICTADO"; do
+    if [ ! -e "$f" ]; then echo "dictado-vivo: falta $f" >&2; exit 1; fi
+done
+if ! command -v quickshell >/dev/null 2>&1; then
+    echo "dictado-vivo: falta quickshell (sudo pacman -S quickshell)" >&2
+    exit 1
+fi
+
+notificar() { notify-send -a dictado -i "${1:-audio-input-microphone}" -t "${3:-4000}" "Dictado en vivo" "$2" >/dev/null 2>&1 || true; }
+
+# --- Quién está vivo --------------------------------------------------------
+# El motor es un python3; su línea de comandos lleva la ruta del .py. Se busca con -f porque
+# el nombre del ejecutable es python3 y no identifica nada, y se confirma mirando la cmdline
+# para que el patrón no case con este mismo script.
+pids_motor() {
+    local pid linea
+    for pid in $(pgrep -f "dictado-vivo\.py" 2>/dev/null || true); do
+        linea="$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null)" || continue
+        case "$linea" in
+        *python3*dictado-vivo.py*) printf '%s\n' "$pid" ;;
+        esac
+    done
+}
+
+# Quickshell de la sesión (DMS) y el de este proyecto son el mismo ejecutable, así que se
+# busca por nombre de ejecutable y se filtra por la cmdline. Con -f el patrón casaría con este
+# script, que también lleva "dictado-vivo" en la línea de comandos.
+pids_capa() {
+    local pid
+    for pid in $(pgrep -x quickshell 2>/dev/null || true); do
+        if tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null | grep -q -- "dictado-vivo.qml"; then
+            printf '%s\n' "$pid"
+        fi
+    done
+}
+
+hay_motor() { [ -n "$(pids_motor)" ]; }
+
+# La capa existe de verdad, no solo el proceso. Se le pregunta a Hyprland, que es quien la ve.
+hay_capa() {
+    if ! command -v hyprctl >/dev/null 2>&1; then return 0; fi
+    hyprctl layers 2>/dev/null | grep -q "namespace: dictado-vivo"
+}
+
+vive_sin_capa() {
+    { [ -n "$(pids_capa)" ] || hay_motor; } || return 1
+    if hay_capa; then return 1; fi
+    return 0
+}
+
+# --- Fichero de estado ------------------------------------------------------
+# Mismo reemplazo atómico que usa el motor. Escribe .tmp y renombra. Así la capa nunca lee
+# un JSON cortado, ni siquiera si la escritura coincide con su lectura.
+escribir_estado() {
+    python3 - "$RUNTIME/estado.json" "$1" "${2:-}" <<'PY'
+import json, os, sys, time
+ruta, estado, texto = sys.argv[1], sys.argv[2], sys.argv[3]
+tmp = ruta + ".tmp"
+with open(tmp, "w", encoding="utf-8") as f:
+    json.dump({"estado": estado, "texto": texto, "nivel": 0.0,
+               "ms": int(time.monotonic() * 1000)}, f, ensure_ascii=False)
+os.replace(tmp, ruta)
+PY
+}
+
+# --- Arranque ---------------------------------------------------------------
+arrancar() {
+    mkdir -p "$RUNTIME"
+
+    if hay_motor; then notificar audio-input-microphone "Ya estaba en vivo"; return 0; fi
+
+    # El dictado normal y el vivo abren el mismo micrófono. PipeWire dejaría que los dos
+    # recibieran audio, pero eso confunde más que ayuda: se avisa y no se arranca.
+    if [ "$(bash "$DICTADO" estado 2>/dev/null)" = "grabando" ]; then
+        notificar dialog-warning "El dictado normal está grabando: páralo primero"
+        return 1
+    fi
+
+    local modelo fuente
+    modelo="$(bash "$DICTADO" modelo 2>/dev/null)"
+    fuente="$(bash "$DICTADO" fuente 2>/dev/null)"
+    if [ -z "$modelo" ] || [ ! -f "$modelo" ]; then
+        notificar dialog-error "No encuentro el modelo ($modelo)"
+        return 1
+    fi
+    if [ -z "$fuente" ]; then
+        notificar dialog-error "No encuentro el micrófono"
+        return 1
+    fi
+
+    # Limpia restos de una sesión anterior: WAVs viejos y el puntero al último.
+    rm -f "$RUNTIME"/*.wav "$RUNTIME/audio.txt" 2>/dev/null || true
+
+    # El estado se deja escrito ANTES de lanzar la capa. La capa vigila el fichero, y vigilar
+    # un fichero que todavía no existe es el caso en el que un vigilante se queda dormido. Si
+    # aparece después, puede no enterarse. Escribiéndolo primero, la capa arranca leyéndolo.
+    escribir_estado escuchando ""
+
+    # La capa necesita saber dónde está el estado. Se le pasa por entorno, que es la única vía
+    # que tiene el QML para enterarse.
+    DICTADO_VIVO_RUNTIME="$RUNTIME" setsid quickshell -p "$QML" >/dev/null 2>&1 </dev/null &
+    disown 2>/dev/null || true
+
+    setsid python3 "$PY" \
+        --runtime "$RUNTIME" \
+        --modelo "$modelo" \
+        --fuente "$fuente" \
+        --patron "$PATRON" \
+        --paso "$PASO" \
+        --ventana "$VENTANA" \
+        --hilos "$HILOS" \
+        >/dev/null 2>&1 </dev/null &
+    disown 2>/dev/null || true
+
+    sleep 0.4
+    if ! hay_motor; then
+        escribir_estado error "No arrancó el motor"
+        notificar dialog-error "No arrancó el motor (¿micro ocupado?)"
+        return 1
+    fi
+    notificar audio-input-microphone "Habla. Otra vez para parar y pegar"
+}
+
+# --- Parada -----------------------------------------------------------------
+cerrar_capa() {
+    local pid
+    for pid in $(pids_capa); do kill "$pid" 2>/dev/null || true; done
+    for _ in $(seq 1 10); do
+        [ -n "$(pids_capa)" ] || return 0
+        sleep 0.2
+    done
+    for pid in $(pids_capa); do kill -9 "$pid" 2>/dev/null || true; done
+}
+
+pegar() {
+    local texto="$1"
+    printf '%s' "$texto" | wl-copy
+    sleep 0.12
+    if command -v wtype >/dev/null 2>&1; then
+        wtype -M ctrl -k v -m ctrl
+        return 0
+    elif command -v ydotool >/dev/null 2>&1; then
+        ydotool key 29:1 47:1 47:0 29:0
+        return 0
+    fi
+    notificar dialog-error "Falta wtype: el texto quedó en el portapapeles"
+    return 1
+}
+
+parar() {
+    if ! hay_motor && [ -z "$(pids_capa)" ]; then
+        notificar dialog-warning "No estaba en vivo"
+        return 0
+    fi
+
+    # 1. Parar el motor. Él cierra whisper-stream, que guarda el WAV y deja su ruta en audio.txt.
+    local pid
+    for pid in $(pids_motor); do kill -TERM "$pid" 2>/dev/null || true; done
+    local i
+    for i in $(seq 1 $((ESPERA_FINAL * 5))); do
+        hay_motor || break
+        sleep 0.2
+    done
+    if hay_motor; then
+        for pid in $(pids_motor); do kill -9 "$pid" 2>/dev/null || true; done
+    fi
+
+    # 2. Transcribir el audio guardado con la ruta buena de dictado.sh.
+    local wav="" texto="" codigo=0
+    [ -r "$RUNTIME/audio.txt" ] && wav="$(cat "$RUNTIME/audio.txt")"
+
+    if [ -z "$wav" ] || [ ! -f "$wav" ]; then
+        escribir_estado error "No se guardó audio"
+        sleep 1.2
+        cerrar_capa
+        notificar dialog-error "No se guardó audio (¿micrófono ocupado?)"
+        return 1
+    fi
+
+    DICTADO_RUNTIME="$RUNTIME" bash "$DICTADO" transcribir-fichero "$wav" >"$RUNTIME/final.txt" 2>"$RUNTIME/final.log" || codigo=$?
+    texto="$(cat "$RUNTIME/final.txt" 2>/dev/null)"
+
+    if [ "$codigo" = "3" ]; then
+        escribir_estado error "Silencio: no se oyó nada"
+        sleep 1.6
+        cerrar_capa
+        notificar dialog-warning "Silencio: no se oyó nada (¿receptor o emisor apagados?)"
+        return 1
+    fi
+    if [ -z "$texto" ]; then
+        escribir_estado error "No se reconoció nada"
+        sleep 1.6
+        cerrar_capa
+        notificar dialog-warning "No se reconoció nada"
+        return 1
+    fi
+
+    # 3. Enseñar el texto final en la capa, que hasta ahora mostraba la hipótesis parcial.
+    escribir_estado listo "$texto"
+    sleep 0.9
+
+    # 4 y 5. Cerrar la capa y pegar.
+    cerrar_capa
+    sleep 0.15
+    pegar "$texto"
+    notificar audio-input-microphone "Pegado: ${texto:0:90}"
+}
+
+estado() {
+    if hay_motor && hay_capa; then echo "vivo"
+    elif vive_sin_capa; then echo "sin-capa"
+    else echo "parado"; fi
+}
+
+case "${1:-toggle}" in
+start) arrancar ;;
+parar | stop) parar ;;
+toggle) if hay_motor || [ -n "$(pids_capa)" ]; then parar; else arrancar; fi ;;
+estado) estado ;;
+*)
+    echo "uso: $(basename "$0") {toggle|start|parar|estado}" >&2
+    exit 2
+    ;;
+esac

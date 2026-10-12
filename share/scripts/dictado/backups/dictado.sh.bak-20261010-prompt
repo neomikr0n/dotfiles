@@ -1,0 +1,265 @@
+#!/usr/bin/env bash
+# dictado.sh. Dictado local de voz a texto para Hyprland/Wayland con PipeWire.
+#
+#   dictado.sh toggle    un toque arranca a grabar; el siguiente transcribe y pega
+#   dictado.sh start     arrancar la grabación
+#   dictado.sh stop      parar, transcribir y pegar
+#   dictado.sh estado    imprimir "grabando" o "parado"
+#
+# Cadena:  pw-record (16 kHz mono s16)  ->  whisper-cli (Vulkan)  ->  wl-copy + Ctrl+V
+#
+# Por qué así:
+#  - 16 kHz mono s16 es el formato que whisper.cpp pide, así que se evita el remuestreo interno.
+#  - La fuente se resuelve por PATRÓN de nombre y no por el nombre completo, porque el nombre
+#    de ALSA lleva el número de serie y cambia si el receptor se enchufa en otro puerto.
+#  - Se PEGA (Ctrl+V) en vez de teclear el texto. wtype tiene abiertos fallos de caracteres
+#    sueltos que no llegan a apps Chromium/Electron, y WorkBuddy es Electron.
+#  - El guardia de silencio evita que whisper alucine frases sobre una grabación vacía.
+#
+# Variables de entorno (todas opcionales):
+#   DICTADO_MODELO        ruta del modelo ggml            (por defecto ggml-medium.bin)
+#   DICTADO_VAD           ruta del modelo VAD de silero   (por defecto ggml-silero-v6.2.0.bin)
+#   DICTADO_IDIOMA        idioma para whisper             (por defecto es)
+#   DICTADO_FUENTE        patrón del nombre de la fuente  (por defecto Wireless_Mic_Rx)
+#   DICTADO_SILENCIO_MIN  umbral de silencio 0..1         (por defecto 0.01)
+#   DICTADO_WHISPER       binario de whisper.cpp         (por defecto whisper-cli)
+#   DICTADO_RUNTIME       dónde dejar el WAV y el PID     (por defecto $XDG_RUNTIME_DIR/dictado)
+#     OJO: para esto no sirve cambiar XDG_RUNTIME_DIR, porque de ahí saca pactl el socket
+#     de PipeWire y sin él `pactl list short sources` no responde.
+#   DICTADO_BIN           dónde están los puentes        (por defecto $HOME/.local/bin)
+#   DICTADO_CONF          fichero de configuración        (por defecto ~/.config/dictado.conf)
+#   DICTADO_SERVIDOR      URL de whisper-server, si se usa (por defecto vacío = binario)
+#     Con servidor el modelo queda cargado y cada dictado se ahorra su carga. Medido 0,22 s
+#     frente a 0,80 s en una frase de 5 s con medium. Si el servidor no responde, el script
+#     cae solo al binario y no te quedas sin dictado.
+#   DICTADO_ESPERA_MAX    segundos máximos de espera al servidor (por defecto 60)
+#
+# El fichero de configuración es opcional y se lee ANTES de aplicar los valores por defecto,
+# así que una línea suya gana. Para cambiar de modelo basta con poner en él:
+#   DICTADO_MODELO="$HOME/.local/share/whisper/ggml-large-v3-turbo.bin"
+set -u
+
+# --- PATH propio: no depender del entorno de quien lanza el script -----------
+# Hyprland NO lee el rc del shell. El PATH con el que lanza los binds no incluye
+# ~/.local/bin, y ahí están los puentes a whisper-cli y wtype. Medido con el PATH real
+# del proceso de Hyprland, de los 18 comandos que usa este script fallan justo tres:
+# whisper-cli, wtype y ydotool. Los quince restantes (pactl, pw-record, wl-copy, sox,
+# notify-send, setsid, pgrep, pkill, awk, sed, tr, mkdir, rm, sleep, basename) viven en
+# /usr/bin y sí se encuentran. ydotool no está instalado y solo era el respaldo del pegado.
+# Por eso el script se antepone su propio directorio de puentes en vez de fiarse del PATH
+# heredado: así funciona igual desde un terminal, desde el bind de Hyprland o desde
+# cualquier otro lanzador.
+BIN_PROPIO="${DICTADO_BIN:-$HOME/.local/bin}"
+case ":$PATH:" in
+*":$BIN_PROPIO:"*) ;;
+*) PATH="$BIN_PROPIO:$PATH" ;;
+esac
+export PATH
+
+# Las bibliotecas de whisper (libwhisper, libggml-vulkan…) viven fuera del cargador por
+# defecto. NO se exporta LD_LIBRARY_PATH para todo el script, a propósito. Si algún día se
+# instala el paquete del sistema, un LD_LIBRARY_PATH global haría que su binario cargase
+# estas bibliotecas locales y mezclase versiones. Se apunta solo en la llamada concreta,
+# y solo cuando el binario elegido es el local. Ver correr_whisper().
+LIB_PROPIA="$HOME/.local/share/dictado/bin"
+
+# Configuración del usuario, si existe. Va ANTES de aplicar los valores por defecto para que
+# una línea del fichero (por ejemplo DICTADO_MODELO=…) gane sobre el valor de fábrica.
+# Para cambiar de modelo no hay que tocar este script: se edita el fichero y ya.
+CONF="${DICTADO_CONF:-$HOME/.config/dictado.conf}"
+if [ -r "$CONF" ]; then
+    # shellcheck source=/dev/null
+    . "$CONF"
+fi
+
+MODELO="${DICTADO_MODELO:-$HOME/.local/share/whisper/ggml-medium.bin}"
+VAD="${DICTADO_VAD:-$HOME/.local/share/whisper/ggml-silero-v6.2.0.bin}"
+IDIOMA="${DICTADO_IDIOMA:-es}"
+WHISPER="${DICTADO_WHISPER:-whisper-cli}"
+PATRON_FUENTE="${DICTADO_FUENTE:-Wireless_Mic_Rx}"
+SILENCIO_MIN="${DICTADO_SILENCIO_MIN:-0.01}"
+# Servidor opcional con el modelo ya cargado. Vacío = se usa el binario de siempre.
+# Medido el 2026-10-09 con medium y una frase de 5 s, 0,22 s por el servidor frente a 0,80 s
+# por el binario, porque el binario paga la carga del modelo en CADA dictado.
+SERVIDOR="${DICTADO_SERVIDOR:-}"
+ESPERA_MAX="${DICTADO_ESPERA_MAX:-60}"
+
+RUNTIME="${DICTADO_RUNTIME:-${XDG_RUNTIME_DIR:-/tmp}/dictado}"
+WAV="$RUNTIME/audio.wav"
+LOG="$RUNTIME/ultimo.log"
+TXT="$RUNTIME/ultimo.txt"
+SALIDA="$RUNTIME/salida"
+# Si hay grabación en curso se sabe buscando el proceso por su línea de comandos, no por un
+# fichero de PID: así no queda estado raro si pw-record muere por lo que sea.
+PATRON_PROC="pw-record.*$WAV"
+
+notificar() { notify-send -a dictado -i "$1" -t "${3:-4000}" "Dictado" "$2" >/dev/null 2>&1 || true; }
+
+# Nombre exacto de la fuente de PipeWire. Cae a la fuente por defecto si el patrón no casa.
+fuente() {
+    local n
+    n="$(pactl list short sources 2>/dev/null | awk -v p="$PATRON_FUENTE" 'index($2,p){print $2; exit}')"
+    if [ -z "$n" ]; then n="$(pactl get-default-source 2>/dev/null)"; fi
+    printf '%s' "$n"
+}
+
+grabando() { pgrep -f "$PATRON_PROC" >/dev/null 2>&1; }
+
+# Ruta real del binario de whisper. Imprime la ruta y devuelve 0; si no hay ninguno, 1.
+# El PATH ya lleva ~/.local/bin delante, así que normalmente esto acierta en el primer paso;
+# los dos últimos son red de seguridad por si el puente se borra o se llama al binario crudo.
+# Nota: un nombre sin "/" NO se prueba como ruta relativa, para no confundir un
+# ./whisper-cli suelto del directorio actual con el binario de verdad.
+resolver_whisper() {
+    local p
+    case "$WHISPER" in
+    */*)
+        if [ -x "$WHISPER" ]; then printf '%s' "$WHISPER"; return 0; fi
+        ;;
+    esac
+    if p="$(command -v "$WHISPER" 2>/dev/null)" && [ -n "$p" ]; then
+        printf '%s' "$p"
+        return 0
+    fi
+    for p in "$LIB_PROPIA/whisper-cli" /usr/bin/whisper-cli; do
+        if [ -x "$p" ]; then printf '%s' "$p"; return 0; fi
+    done
+    return 1
+}
+
+# Ejecuta whisper con las bibliotecas correctas según cuál sea el binario.
+# El puente de ~/.local/bin ya se las apunta él mismo; el binario crudo de LIB_PROPIA no,
+# y por eso se le añade LD_LIBRARY_PATH solo a esa llamada.
+correr_whisper() {
+    local w="$1"; shift
+    case "$w" in
+    "$LIB_PROPIA"/*)
+        LD_LIBRARY_PATH="$LIB_PROPIA${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" "$w" "$@"
+        ;;
+    *) "$w" "$@" ;;
+    esac
+}
+
+arrancar() {
+    mkdir -p "$RUNTIME"
+    if grabando; then notificar audio-input-microphone "Ya está grabando"; return 0; fi
+    local f
+    f="$(fuente)"
+    if [ -z "$f" ]; then
+        notificar dialog-error "No encuentro el micrófono (patrón: $PATRON_FUENTE)"
+        return 1
+    fi
+    rm -f "$WAV" "$TXT" "$SALIDA.txt"
+    # setsid desengancha pw-record del grupo de procesos de quien lanza el script. Medido:
+    # sin esto, si el lanzador mata su grupo al terminar, la grabación se corta a los pocos
+    # segundos y se pierde lo hablado.
+    setsid pw-record --target "$f" --rate 16000 --channels 1 --format s16 "$WAV" >"$LOG" 2>&1 &
+    sleep 0.3
+    if ! grabando; then
+        notificar dialog-error "No arrancó la grabación (ver $LOG)"
+        return 1
+    fi
+    notificar audio-input-microphone "Grabando… (otra vez para parar)"
+}
+
+# 1 si la grabación es silencio casi absoluto, 0 si hay señal. Sin sox, no juzga.
+es_silencio() {
+    command -v sox >/dev/null 2>&1 || return 1
+    local pico
+    pico="$(sox "$1" -n stat 2>&1 | awk '/Maximum amplitude/{print $3}')"
+    [ -n "$pico" ] || return 1
+    awk -v p="$pico" -v m="$SILENCIO_MIN" 'BEGIN{exit !(p < m)}'
+}
+
+# Transcribe con el binario de línea de comandos. Paga la carga del modelo en cada llamada.
+transcribir_cli() {
+    if [ ! -f "$MODELO" ]; then notificar dialog-error "Falta el modelo: $MODELO"; return 1; fi
+    local W
+    if ! W="$(resolver_whisper)"; then
+        notificar dialog-error "Falta el binario $WHISPER (paquete whisper-cpp)"
+        return 1
+    fi
+    local args=(-m "$MODELO" -f "$WAV" -l "$IDIOMA" -nt -np -otxt -of "$SALIDA")
+    [ -f "$VAD" ] && args+=(--vad -vm "$VAD")
+    correr_whisper "$W" "${args[@]}" >"$LOG" 2>&1
+    sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' "$SALIDA.txt" 2>/dev/null \
+        | tr '\n' ' ' | sed -e 's/[[:space:]]*$//'
+}
+
+# ¿Hay servidor escuchando? Comprobación barata, si no responde en 1 s no se usa.
+servidor_vivo() {
+    [ -n "$SERVIDOR" ] || return 1
+    curl -s -o /dev/null --max-time 1 "${SERVIDOR}/" 2>/dev/null
+}
+
+# Transcribe contra el servidor, que ya tiene el modelo cargado.
+transcribir_servidor() {
+    local resp
+    resp="$(curl -s --max-time "$ESPERA_MAX" \
+        -F "file=@$WAV" -F "language=$IDIOMA" -F "response_format=json" \
+        "${SERVIDOR}/inference" 2>"$LOG")" || return 1
+    printf '%s' "$resp" >"$LOG"
+    # Se parsea el JSON con python3, porque hacerlo con sed se rompe en cuanto el texto lleva
+    # comillas, saltos de línea escapados o acentos.
+    printf '%s' "$resp" \
+        | python3 -c 'import json,sys; print(json.load(sys.stdin).get("text","").strip())' 2>/dev/null
+}
+
+# Elige servidor si está disponible, y si falla cae al binario, así que nunca te deja sin dictado.
+transcribir() {
+    if servidor_vivo; then
+        local t
+        if t="$(transcribir_servidor)" && [ -n "$t" ]; then
+            printf '%s' "$t"
+            return 0
+        fi
+    fi
+    transcribir_cli
+}
+
+parar() {
+    if ! grabando; then notificar dialog-warning "No estaba grabando"; return 0; fi
+    pkill -INT -f "$PATRON_PROC"
+    sleep 0.35
+    if [ ! -s "$WAV" ]; then notificar dialog-error "No se grabó nada"; return 1; fi
+    if es_silencio "$WAV"; then
+        notificar dialog-warning "Silencio: no se oyó nada (¿receptor o emisor apagados?)"
+        return 1
+    fi
+
+    local texto
+    texto="$(transcribir)"
+    if [ -z "$texto" ]; then notificar dialog-warning "No se reconoció nada"; return 1; fi
+    printf '%s\n' "$texto" >"$TXT"
+
+    printf '%s' "$texto" | wl-copy
+    sleep 0.12
+    if command -v wtype >/dev/null 2>&1; then
+        wtype -M ctrl -k v -m ctrl
+    elif command -v ydotool >/dev/null 2>&1; then
+        ydotool key 29:1 47:1 47:0 29:0
+    else
+        notificar dialog-error "Falta wtype: el texto quedó en el portapapeles"
+        return 1
+    fi
+    notificar audio-input-microphone "Pegado: ${texto:0:90}"
+}
+
+alternar() { if grabando; then parar; else arrancar; fi; }
+
+estado() { if grabando; then echo "grabando"; else echo "parado"; fi; }
+
+main() {
+    case "${1:-toggle}" in
+    start) arrancar ;;
+    stop) parar ;;
+    toggle) alternar ;;
+    estado) estado ;;
+    *)
+        echo "uso: $(basename "$0") {toggle|start|stop|estado}" >&2
+        return 2
+        ;;
+    esac
+}
+
+main "$@"

@@ -1,0 +1,18 @@
+# Regla de udev para el receptor DJI Mic (VID 2ca3, PID 4011).
+#
+# POR QUÉ HACE FALTA
+# El nodo /dev/bus/usb/... sale como root:root y solo lectura para el resto, así que sin esta
+# regla no se puede reclamar la interfaz 6 (la de la batería) sin ser root. Con esto, cualquier
+# miembro del grupo `input` puede leerla.
+#
+# INSTALAR
+#   sudo cp 60-dji-mic.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload-rules && sudo udevadm trigger
+#   # y DESENCHUFAR y volver a enchufar el receptor, porque la regla no se aplica a lo ya conectado
+#
+# Si tu usuario no está en el grupo input:
+#   sudo usermod -aG input "$USER"     # y vuelve a iniciar sesión
+#
+# SOLO se toca este dispositivo. No afecta al resto del USB ni a la interfaz de audio.
+
+SUBSYSTEM=="usb", ATTR{idVendor}=="2ca3", ATTR{idProduct}=="4011", MODE="0660", GROUP="input"

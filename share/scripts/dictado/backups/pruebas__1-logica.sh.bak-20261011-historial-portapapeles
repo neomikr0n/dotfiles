@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+# Banco de pruebas de dictado.sh: carga el script SIN ejecutar su main y sustituye
+# todo lo que actúa sobre el escritorio (pw-record, wl-copy, wtype, whisper-cli).
+set -u
+S="$(cd "$(dirname "$0")/.." && pwd)/dictado.sh"
+
+ultima="$(tail -n 1 "$S")"
+if [ "$ultima" != 'main "$@"' ]; then echo "ABORTO: la última línea no es main"; exit 1; fi
+
+# RUNTIME propio para no tocar el de la sesión viva.
+# NO se toca XDG_RUNTIME_DIR: de ahí saca pactl el socket de PipeWire y sin él no responde.
+export DICTADO_RUNTIME=/tmp/dictado-test
+rm -rf "$DICTADO_RUNTIME"; mkdir -p "$DICTADO_RUNTIME"
+
+# La config del usuario queda fuera a proposito. Medido el 2026-10-10, al habilitar el servidor
+# residente: esta suite sustituye whisper-cli por un stub que escribe siempre la misma frase, pero
+# no sustituye la ruta del servidor. Con DICTADO_SERVIDOR en la config y el servicio vivo,
+# transcribir() elegia el servidor, mandaba el WAV de prueba al servidor de verdad y el stub no
+# llegaba a correr: dos pruebas fallaban con la transcripcion real del jfk.wav. Apuntando la config
+# a un fichero que no existe, SERVIDOR queda vacio, manda el stub y cada prueba controla su caso.
+# La ruta del servidor tiene su propia suite (4-servidor.sh).
+export DICTADO_CONF="$DICTADO_RUNTIME/conf-que-no-existe"
+
+# El silencio de prueba se fabrica aquí y no se lee de /tmp. Medido el 2026-10-10: la suite
+# apuntaba a /tmp/dictado-prueba.wav, que no sobrevive a un reinicio, y la guardia de silencio
+# daba un fallo falso (sobre un fichero inexistente es_silencio devuelve 1, no 0).
+SILENCIO_WAV="$DICTADO_RUNTIME/silencio.wav"
+if command -v sox >/dev/null 2>&1; then
+    sox -n -r 16000 -c 1 "$SILENCIO_WAV" trim 0 1.0 2>/dev/null
+fi
+
+# shellcheck disable=SC1090
+source <(head -n -1 "$S")
+
+# ---- stubs de lo que actúa de verdad ----
+# Los stubs corren en subshells (uno en background, otro al otro lado de una tubería), así que
+# el estado se lleva en FICHEROS, porque una variable puesta en un subshell no vuelve al padre.
+AVISOS=()
+notificar() { AVISOS+=("$1 | $2"); }
+WAV_SIMULADO=""
+setsid() { "$@"; } # deja pasar al stub de pw-record
+pgrep() { [ -f "$DICTADO_RUNTIME/grabando.marca" ]; }
+pkill() { rm -f "$DICTADO_RUNTIME/grabando.marca"; }
+# Doble de pactl. La suite no debe depender de que el receptor DJI este enchufado. Sin micro real,
+# fuente() devolvia vacio, arrancar() se negaba a empezar y caian en cadena las secciones C, D y F.
+# El doble es un fichero ejecutable y no una funcion de shell porque la seccion E de 5-vivo.sh pide
+# la fuente con `bash dictado.sh fuente`, que es un proceso hijo, y hasta ahi no llega una funcion.
+# Se antepone su carpeta al PATH para que lo encuentren igual este shell y sus hijos.
+export PATH="$(cd "$(dirname "$0")" && pwd)/dobles:$PATH"
+pw-record() {
+    touch "$DICTADO_RUNTIME/grabando.marca"
+    echo x >>"$DICTADO_RUNTIME/grabaciones.txt"
+    [ -n "$WAV_SIMULADO" ] && cp "$WAV_SIMULADO" "$WAV"
+    sleep 5
+}
+wl-copy() { cat >"$DICTADO_RUNTIME/copiado.txt"; }
+wtype() { echo v >>"$DICTADO_RUNTIME/pegados.txt"; }
+whisper-cli() { printf 'texto de prueba con acentos: ñ á é\n' >"${SALIDA}.txt"; }
+# El `[ -f ]` va delante a proposito. Con `wc -l <fichero 2>/dev/null`, si el fichero no existe
+# falla la propia redireccion y el shell escribe el error en su stderr ANTES de aplicar el
+# 2>/dev/null, asi que el mensaje se colaba en la salida de la suite (visto el 2026-10-10 en la
+# prueba F, que borra pegados.txt a mano). Sin fichero no se imprime NADA, que es lo que esperan
+# las pruebas: la F cuenta "no pegó nada" como cadena vacia, no como un cero.
+grabaciones() { [ -f "$DICTADO_RUNTIME/grabaciones.txt" ] && wc -l <"$DICTADO_RUNTIME/grabaciones.txt" | tr -d ' '; }
+pegados() { [ -f "$DICTADO_RUNTIME/pegados.txt" ] && wc -l <"$DICTADO_RUNTIME/pegados.txt" | tr -d ' '; }
+
+ok=0; mal=0
+comprobar() { if [ "$2" = "$3" ]; then echo "  OK   $1"; ok=$((ok + 1)); else echo "  MAL  $1 (esperado [$3], obtenido [$2])"; mal=$((mal + 1)); fi; }
+
+echo "--- A. resolución de la fuente ---"
+f="$(fuente)"
+echo "  fuente() -> $f"
+case "$f" in *Wireless_Mic_Rx*) echo "  OK   resuelve el DJI por patrón"; ok=$((ok + 1));; *) echo "  MAL  no resolvió el DJI"; mal=$((mal + 1));; esac
+
+echo "--- B. guardia de silencio ---"
+es_silencio "$SILENCIO_WAV"; comprobar "silencio real se detecta" "$?" "0"
+es_silencio /home/n30/Documentos/investigacion-dictado/prueba/jfk.wav; comprobar "voz real NO se descarta" "$?" "1"
+
+echo "--- C. arrancar dos veces no duplica la grabación ---"
+WAV_SIMULADO=/home/n30/Documentos/investigacion-dictado/prueba/jfk.wav
+arrancar >/dev/null 2>&1
+comprobar "grabando tras arrancar" "$(grabando && echo si || echo no)" "si"
+arrancar >/dev/null 2>&1
+comprobar "no relanza pw-record" "$(grabaciones)" "1"
+comprobar "avisa de que ya grababa" "${AVISOS[1]%% |*}" "audio-input-microphone"
+
+echo "--- D. parar transcribe y pega UNA vez ---"
+AVISOS=()
+parar >/dev/null 2>&1; rc=$?
+comprobar "parar devuelve 0" "$rc" "0"
+comprobar "Ctrl+V enviado una sola vez" "$(pegados)" "1"
+comprobar "portapapeles con el texto" "$(cat "$DICTADO_RUNTIME/copiado.txt" 2>/dev/null)" "texto de prueba con acentos: ñ á é"
+comprobar "texto guardado en ultimo.txt" "$(cat "$TXT" 2>/dev/null)" "texto de prueba con acentos: ñ á é"
+comprobar "deja de estar grabando" "$(grabando && echo si || echo no)" "no"
+echo "  aviso final: ${AVISOS[0]:-<ninguno>}"
+
+echo "--- E. parar sin estar grabando ---"
+AVISOS=(); parar >/dev/null 2>&1
+comprobar "avisa y no falla" "$?" "0"
+comprobar "mensaje correcto" "${AVISOS[0]%% |*}" "dialog-warning"
+
+echo "--- F. silencio: no llama a whisper ni pega ---"
+WAV_SIMULADO="$SILENCIO_WAV"
+rm -f "$DICTADO_RUNTIME/pegados.txt"
+arrancar >/dev/null 2>&1
+AVISOS=()
+parar >/dev/null 2>&1; rc=$?
+comprobar "devuelve error" "$rc" "1"
+comprobar "no pegó nada" "$(pegados)" ""
+echo "  aviso: ${AVISOS[0]:-<ninguno>}"
+
+echo "--- G. uso incorrecto ---"
+main basura >/dev/null 2>&1; comprobar "rc=2 con argumento inválido" "$?" "2"
+main estado >/dev/null 2>&1; comprobar "estado no falla" "$?" "0"
+
+echo
+echo "RESUMEN: $ok correctos, $mal fallidos"
+[ "$mal" -eq 0 ]

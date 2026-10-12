@@ -1,0 +1,281 @@
+#!/usr/bin/env bash
+# pila-dispositivos.sh — Imprime la pila de tus dispositivos (ratón, teclado y micrófonos) de
+# forma bonita en la terminal, con barras y colores, y manda un resumen a las notificaciones.
+#
+# QUÉ LEE Y DE DÓNDE (medido en esta máquina, 2026-10-10)
+#   - Ratón y teclado: van por el receptor Logi Bolt (USB 046d:c548). Se leen con `solaar show`,
+#     que da un PORCENTAJE real y el estado (descargando / cargando). Aquí están el LIFT Vertical
+#     Ergonomic Mouse y el MX Mechanical.
+#   - Micrófonos: van por el receptor DJI Mic (USB 2ca3:4011). Se leen con el binario `dji-bateria`,
+#     que NO da porcentaje: da 7 ESCALONES (1 = llena ... 6 = batería baja, 7 = crítica). Se muestran
+#     como escalones, no como porcentaje, porque inventar un % a partir de 7 escalones sería mentir
+#     con más cifras.
+#
+# USO
+#   pila-dispositivos.sh                  estado en la terminal + aviso en las notificaciones
+#   pila-dispositivos.sh --sin-notificar  solo terminal, sin aviso
+#   pila-dispositivos.sh --espera 5       segundos de espera para el micrófono (por defecto 3)
+#   pila-dispositivos.sh --sin-color      sin colores (útil al redirigir a un fichero)
+#   pila-dispositivos.sh --color          fuerza color aunque la salida no sea una terminal
+#   pila-dispositivos.sh --ayuda
+#
+# VARIABLES DE ENTORNO
+#   PILA_SIN_NOTIFICAR=1   equivale a --sin-notificar
+#   NO_COLOR=1             equivale a --sin-color
+#   DJI_BATERIA_ORDEN=...  ruta alternativa al binario dji-bateria
+set -u
+
+# ---------------------------------------------------------------- ajustes
+
+DJI_BIN="${DJI_BATERIA_ORDEN:-$HOME/.local/bin/dji-bateria}"
+ESPERA_MIC=3
+NOTIFICAR=1
+SIN_COLOR="${SIN_COLOR:-}"
+FORZAR_COLOR=0
+
+uso() {
+    sed -n '2,25p' "$0" | sed 's/^#\{1,2\} \{0,1\}//'
+}
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --sin-notificar) NOTIFICAR=0 ;;
+        --espera)        shift; ESPERA_MIC="${1:-3}" ;;
+        --sin-color)     SIN_COLOR=1 ;;
+        --color)         FORZAR_COLOR=1 ;;
+        -h|--ayuda)      uso; exit 0 ;;
+        *) printf 'opción no reconocida: %s\n' "$1" >&2; exit 2 ;;
+    esac
+    shift
+done
+[ "${PILA_SIN_NOTIFICAR:-0}" = "1" ] && NOTIFICAR=0
+[ -n "${NO_COLOR:-}" ] && SIN_COLOR=1
+
+# ---------------------------------------------------------------- color
+
+if { [ -t 1 ] || [ "$FORZAR_COLOR" = 1 ]; } && [ -z "$SIN_COLOR" ]; then
+    C_RST=$'\e[0m'; C_BOLD=$'\e[1m'; C_DIM=$'\e[2m'
+    C_GREEN=$'\e[32m'; C_YELLOW=$'\e[33m'; C_RED=$'\e[31m'
+    C_CYAN=$'\e[36m'; C_MAG=$'\e[35m'; C_TITLE=$'\e[1;36m'
+else
+    C_RST=; C_BOLD=; C_DIM=; C_GREEN=; C_YELLOW=; C_RED=; C_CYAN=; C_MAG=; C_TITLE=
+fi
+
+# ---------------------------------------------------------------- relleno y barras
+
+# pad <texto> <ancho>  —  rellena a la derecha con espacios contando CARACTERES, no bytes.
+# Hace falta porque printf '%-9s' mide en bytes y desalinea las palabras con acento: «Ratón» son
+# 5 caracteres pero 6 bytes, así que printf le mete un espacio de menos.
+pad() {
+    local t="$1" w="$2" n
+    n=${#t}
+    printf '%s' "$t"
+    while [ "$n" -lt "$w" ]; do printf ' '; n=$((n + 1)); done
+}
+
+# fila <emoji> <rol> <nombre> <colorDelValor> <valor> <barra> <cola>
+# Una línea de dispositivo. Usa la global $maxw para el ancho de la columna de nombre.
+fila() {
+    printf '  %s  %s%s%s %s%s%s  %s%6s%s  %s  %s%s%s\n' \
+        "$1" "$C_CYAN" "$(pad "$2" 9)" "$C_RST" \
+        "$C_BOLD" "$(pad "$3" "$maxw")" "$C_RST" \
+        "$4" "$5" "$C_RST" "$6" "$C_DIM" "$7" "$C_RST"
+}
+
+# barra_pct <0..100> <ancho>  —  █ llenas, ░ vacías, color por umbral
+barra_pct() {
+    local pct="$1" ancho="${2:-10}" llenas vacias i color
+    llenas=$(( (pct * ancho + 50) / 100 ))
+    [ "$llenas" -gt "$ancho" ] && llenas="$ancho"
+    [ "$llenas" -lt 0 ] && llenas=0
+    vacias=$(( ancho - llenas ))
+    if   [ "$pct" -ge 50 ]; then color="$C_GREEN"
+    elif [ "$pct" -ge 20 ]; then color="$C_YELLOW"
+    else                         color="$C_RED$C_BOLD"; fi
+    printf '%s' "$color"
+    for ((i = 0; i < llenas; i++)); do printf '█'; done
+    printf '%s' "$C_DIM"
+    for ((i = 0; i < vacias; i++)); do printf '░'; done
+    printf '%s' "$C_RST"
+}
+
+# barra_nivel <1..7>  —  más alto = más descargado, así que MENOS llenas. ▓ llenas.
+barra_nivel() {
+    local nivel="$1" ancho=7 llenas vacias i color
+    llenas=$(( 8 - nivel ))          # 1 → 7 llenas ; 7 → 1 llena
+    [ "$llenas" -lt 0 ] && llenas=0
+    [ "$llenas" -gt "$ancho" ] && llenas="$ancho"
+    vacias=$(( ancho - llenas ))
+    if   [ "$nivel" -le 2 ]; then color="$C_GREEN"
+    elif [ "$nivel" -le 5 ]; then color="$C_YELLOW"
+    else                          color="$C_RED$C_BOLD"; fi
+    printf '%s' "$color"
+    for ((i = 0; i < llenas; i++)); do printf '▓'; done
+    printf '%s' "$C_DIM"
+    for ((i = 0; i < vacias; i++)); do printf '░'; done
+    printf '%s' "$C_RST"
+}
+
+etiqueta_nivel() {
+    case "$1" in
+        1) echo "llena" ;; 2) echo "alta" ;; 3) echo "media-alta" ;;
+        4) echo "media" ;; 5) echo "media-baja" ;; 6) echo "BAJA" ;; 7) echo "CRÍTICA" ;;
+        *) echo "desconocida" ;;
+    esac
+}
+
+estado_es() {
+    case "$1" in
+        DISCHARGING)      echo "descargando" ;;
+        RECHARGING|CHARGING) echo "cargando" ;;
+        FULL|CHARGED)     echo "completo" ;;
+        "")               echo "" ;;
+        *)                echo "$1" ;;
+    esac
+}
+
+# ---------------------------------------------------------------- lectura: ratón y teclado
+
+declare -a D_KIND=() D_NAME=() D_PCT=() D_STAT=()
+
+leer_solaar() {
+    command -v solaar >/dev/null 2>&1 || return 0
+    # Bloques de dispositivo: "  N: Nombre" (2 espacios + dígito). Se sacan kind, nombre,
+    # porcentaje y estado. El receptor no tiene línea Battery, así que no aparece.
+    # OJO: sustitución de proceso (< <(...)), NO tubería, para que el bucle corra en este mismo
+    # shell. Con una tubería el while iría a un subshell y los arrays se perderían.
+    while IFS=$'\t' read -r k n p s; do
+        [ -n "$k" ] || continue
+        D_KIND+=("$k"); D_NAME+=("$n"); D_PCT+=("$p"); D_STAT+=("$s")
+    done < <(timeout 20 solaar show 2>/dev/null | awk '
+        /^  [0-9]+: / {
+            if (kind != "") print kind "\t" name "\t" pct "\t" status
+            name = $0; sub(/^  [0-9]+: /, "", name)
+            kind = ""; pct = ""; status = ""
+            next
+        }
+        /^ +Kind +: / {
+            kind = $0; sub(/^ +Kind +: /, "", kind); sub(/[ \t]+$/, "", kind); next
+        }
+        /^ +Battery: / {
+            if (match($0, /[0-9]+%/)) pct = substr($0, RSTART, RLENGTH - 1)
+            if (match($0, /BatteryStatus\.[A-Za-z]+/)) status = substr($0, RSTART + 14, RLENGTH - 14)
+            next
+        }
+        END { if (kind != "") print kind "\t" name "\t" pct "\t" status }
+    ')
+}
+
+# ---------------------------------------------------------------- lectura: micrófonos
+
+MIC_VERSION=""; MIC_ERROR=""
+TX1_NIVEL=0; TX1_CARG=0; TX2_NIVEL=0; TX2_CARG=0
+
+leer_dji() {
+    if [ ! -x "$DJI_BIN" ]; then
+        MIC_ERROR="no encuentro el binario dji-bateria en $DJI_BIN"
+        return 0
+    fi
+    local salida campo
+    salida="$(timeout $((ESPERA_MIC + 4)) "$DJI_BIN" --simple --esperar "$ESPERA_MIC" 2>/dev/null)"
+    if [ -z "$salida" ]; then
+        MIC_ERROR="el receptor DJI no respondió"
+        return 0
+    fi
+    for campo in $salida; do
+        case "$campo" in
+            version=*) MIC_VERSION="${campo#version=}" ;;
+            tx1=*) TX1_NIVEL="${campo#tx1=}"; TX1_NIVEL="${TX1_NIVEL%%:*}"; TX1_CARG="${campo##*:}" ;;
+            tx2=*) TX2_NIVEL="${campo#tx2=}"; TX2_NIVEL="${TX2_NIVEL%%:*}"; TX2_CARG="${campo##*:}" ;;
+        esac
+    done
+}
+
+# ---------------------------------------------------------------- notificación
+
+notificar() {  # notificar <urgencia> <titulo> <cuerpo>
+    [ "$NOTIFICAR" -eq 1 ] || return 0
+    command -v notify-send >/dev/null 2>&1 || return 0
+    if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ] && [ -S "/run/user/$(id -u)/bus" ]; then
+        DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus"
+        export DBUS_SESSION_BUS_ADDRESS
+    fi
+    notify-send -a "Pila" -u "$1" -t 8000 "$2" "$3" 2>/dev/null || true
+}
+
+# ---------------------------------------------------------------- principal
+
+leer_solaar
+leer_dji
+
+printf '\n  %s🔋  Pila de tus dispositivos%s   %s%s%s\n\n' \
+    "$C_TITLE" "$C_RST" "$C_DIM" "$(date '+%a %d %b %H:%M')" "$C_RST"
+
+URGENCIA="normal"
+NOTIF_CUERPO=""
+
+# --- ratón y teclado ---
+maxw=4
+for n in "${D_NAME[@]}"; do [ "${#n}" -gt "$maxw" ] && maxw="${#n}"; done
+
+i=0
+while [ "$i" -lt "${#D_NAME[@]}" ]; do
+    kind="${D_KIND[$i]}"; name="${D_NAME[$i]}"; pct="${D_PCT[$i]}"; stat="${D_STAT[$i]}"
+    case "$kind" in
+        mouse)    emoji="🖱️"; rol="Ratón" ;;
+        keyboard) emoji="⌨️"; rol="Teclado" ;;
+        *)        emoji="🔌"; rol="$kind" ;;
+    esac
+    if [ -n "$pct" ]; then
+        if   [ "$pct" -ge 50 ]; then cv="$C_GREEN"
+        elif [ "$pct" -ge 20 ]; then cv="$C_YELLOW"
+        else                         cv="$C_RED$C_BOLD"; URGENCIA="critical"; fi
+        valor="$pct %"
+        barra="$(barra_pct "$pct" 10)"
+        cola="$(estado_es "$stat")"
+        fila "$emoji" "$rol" "$name" "$cv" "$valor" "$barra" "$cola"
+        NOTIF_CUERPO+="$emoji $rol: $pct%"
+        [ -n "$cola" ] && NOTIF_CUERPO+=" ($cola)"
+        NOTIF_CUERPO+=$'\n'
+    else
+        fila "$emoji" "$rol" "$name" "$C_DIM" " --" "$C_DIM──────────$C_RST" "sin dato"
+        NOTIF_CUERPO+="$emoji $rol: sin dato"$'\n'
+    fi
+    i=$((i + 1))
+done
+
+if [ "${#D_NAME[@]}" -eq 0 ]; then
+    printf '  %s(no encontré ratón ni teclado por el receptor Logi Bolt)%s\n' "$C_DIM" "$C_RST"
+fi
+
+# --- micrófonos ---
+printf '\n'
+
+if [ -n "$MIC_ERROR" ]; then
+    printf '  %s🎤  Micrófonos: %s%s\n' "$C_DIM" "$MIC_ERROR" "$C_RST"
+    NOTIF_CUERPO+="🎤 Micrófonos: $MIC_ERROR"$'\n'
+elif [ "$MIC_VERSION" = "1" ]; then
+    printf '  %s🎤  Micrófonos: el receptor habla protocolo v1, que no publica batería.%s\n' \
+        "$C_DIM" "$C_RST"
+    NOTIF_CUERPO+="🎤 Micrófonos: receptor en v1, sin dato de batería"$'\n'
+else
+    for u in 1 2; do
+        if [ "$u" = "1" ]; then nivel="$TX1_NIVEL"; carg="$TX1_CARG"; else nivel="$TX2_NIVEL"; carg="$TX2_CARG"; fi
+        if [ "$nivel" -ge 1 ] 2>/dev/null; then
+            etq="$(etiqueta_nivel "$nivel")"
+            [ "$carg" = "1" ] && extra=" · cargando" || extra=""
+            # 3 espacios al final: la barra de nivel tiene 7 celdas y así cuadra con la de 10 del %.
+            fila "🎤" "Mic TX$u" "DJI Mic" "$C_MAG" "$nivel/7" "$(barra_nivel "$nivel")   " "$etq$extra"
+            NOTIF_CUERPO+="🎤 Mic TX$u: escalón $nivel/7 ($etq)$extra"$'\n'
+            if [ "$nivel" -ge 6 ]; then URGENCIA="critical"; fi
+        else
+            fila "🎤" "Mic TX$u" "DJI Mic" "$C_DIM" " --" "$C_DIM──────────$C_RST" "sin dato"
+            NOTIF_CUERPO+="🎤 Mic TX$u: sin dato"$'\n'
+        fi
+    done
+fi
+
+printf '\n'
+
+# --- aviso ---
+notificar "$URGENCIA" "🔋 Pila de tus dispositivos" "${NOTIF_CUERPO%$'\n'}"

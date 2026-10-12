@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Doble de wtype para las suites. Anota cada pulsacion en un fichero en vez de mandar la tecla al
+# escritorio.
+#
+# Es ejecutable y no una funcion de shell por lo mismo que los dobles del portapapeles, porque el
+# pegado corre en un proceso hijo. Y es lo que garantiza que la bateria no pueda pegar de verdad
+# ni por accidente, ni siquiera desde un subcomando.
+set -u
+[ -n "${DICTADO_TEST_PEGADOS:-}" ] || { echo "doble wtype sin DICTADO_TEST_PEGADOS" >&2; exit 1; }
+printf 'v\n' >>"$DICTADO_TEST_PEGADOS"
+exit 0

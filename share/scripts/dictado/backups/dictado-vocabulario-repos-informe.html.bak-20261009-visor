@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="es" data-page-node-id="pmymDlwZB4dQ1DQU9Tgmty">
+<head data-page-node-id="1ew64TuUEqx0ryBxNDCMzU">
+<meta charset="utf-8" data-page-node-id="EIK1mrvXvun0iri6TYET72">
+<meta name="viewport" content="width=device-width, initial-scale=1" data-page-node-id="xHZkot2OPNxyODESHQGCAt">
+<title>Informe: vocabulario propio y corrección en el dictado</title>
+<style>
+  :root {
+    --bg: #0A0A0A; --panel: #16181D; --panel2: #1E2126;
+    --orange: #FF4E00; --red-orange: #FF3300; --amber: #FFB300;
+    --yellow: #FFC821; --text: #F5F1EA; --muted: #9AA0A8;
+    --teal: #2ED3B7; --violet: #A78BFA;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    line-height: 1.6; min-height: 100vh;
+  }
+  code, pre { font-family: "JetBrains Mono", "Fira Code", ui-monospace, monospace; }
+
+  header.hero { position: relative; overflow: hidden; background: var(--bg); padding: 72px 32px 118px; }
+  .hero-inner { position: relative; max-width: 980px; margin: 0 auto; }
+  .hero .kicker {
+    display: inline-block; font-size: 12px; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--yellow); margin-bottom: 10px; font-weight: 700;
+  }
+  .hero h1 { font-size: clamp(28px, 4vw, 44px); font-weight: 800; line-height: 1.15; }
+  .hero h1 .accent { color: var(--orange); }
+  .hero .meta { margin-top: 14px; color: var(--muted); font-size: 14px; }
+  .hero .meta code { background: rgba(255,255,255,.08); padding: 2px 8px; border-radius: 6px;
+    color: var(--amber); font-size: 13px; }
+  .chips { margin-top: 30px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .chip { background: var(--panel); border: 1px solid color-mix(in srgb, var(--chip) 45%, transparent);
+    border-radius: 12px; padding: 10px 18px; min-width: 92px; text-align: center; }
+  .chip-num { font-size: 24px; font-weight: 800; color: var(--chip); display: block; }
+  .chip-label { font-size: 10px; letter-spacing: 1.5px; color: var(--muted); }
+
+  main { max-width: 980px; margin: -68px auto 0; padding: 0 24px 90px; position: relative; }
+  section { margin-top: 52px; }
+  section h2 { font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex: none;
+    box-shadow: 0 0 10px currentColor; }
+  .section-sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+  .card-panel { background: var(--panel); border: 1px solid rgba(255,255,255,.07);
+    border-radius: 16px; padding: 24px 26px; }
+  .card-panel p { color: #C9CDD3; font-size: 14.5px; margin-bottom: 12px; }
+  .card-panel p:last-child { margin-bottom: 0; }
+  .card-panel strong { color: var(--yellow); }
+  .card-panel.warn { border-color: rgba(255,51,0,.35); background: rgba(255,51,0,.05); }
+  .card-panel.warn strong { color: var(--orange); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: right; font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase;
+    color: var(--muted); padding: 0 10px 10px; border-bottom: 1px solid rgba(255,255,255,.1); font-weight: 700; }
+  th:first-child, td:first-child { text-align: left; }
+  td { text-align: right; padding: 11px 10px; border-bottom: 1px solid rgba(255,255,255,.05);
+    font-variant-numeric: tabular-nums; }
+  tbody tr:last-child td { border-bottom: none; }
+  .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 13px; }
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11.5px;
+    font-weight: 800; font-variant-numeric: tabular-nums; }
+  .b-ok { background: rgba(46,211,183,.14); color: var(--teal); }
+  .b-warn { background: rgba(255,179,0,.14); color: var(--amber); }
+  .b-bad { background: rgba(255,51,0,.14); color: var(--orange); }
+  .win { color: var(--yellow); font-weight: 800; }
+
+  pre.bloque { background: #0D0E10; border: 1px solid rgba(255,255,255,.07); border-radius: 12px;
+    padding: 16px 18px; font-size: 13px; color: #C9CDD3; overflow-x: auto; line-height: 1.55; }
+  pre.bloque .ok { color: var(--teal); }
+  pre.bloque .mal { color: var(--orange); }
+  pre.bloque .cm { color: #6B7280; }
+
+  .cat { margin-top: 34px; }
+  .cat-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+  .cat-head h3 { font-size: 17px; font-weight: 800; }
+  .cat-head .letra { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 13px;
+    color: var(--violet); border: 1px solid rgba(167,139,250,.4); border-radius: 6px; padding: 1px 8px; }
+  .cat-sub { color: var(--muted); font-size: 13.5px; margin-bottom: 16px; }
+
+  .repo { background: var(--panel); border: 1px solid rgba(255,255,255,.07); border-radius: 14px;
+    padding: 18px 20px; margin-bottom: 12px; }
+  .repo-top { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .repo-n { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted);
+    border: 1px solid rgba(255,255,255,.14); border-radius: 6px; padding: 0 7px; }
+  .repo a.nombre { color: var(--amber); font-weight: 800; font-size: 15.5px; text-decoration: none;
+    font-family: "JetBrains Mono", ui-monospace, monospace; }
+  .repo a.nombre:hover { text-decoration: underline; color: var(--yellow); }
+  .repo .datos { margin-left: auto; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .repo p { font-size: 14px; color: #C9CDD3; margin-top: 9px; }
+  .repo .url { display: block; margin-top: 10px; font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 12px; color: #6B7280; word-break: break-all; }
+
+  ul.lista { list-style: none; }
+  ul.lista li { padding: 8px 0 8px 20px; position: relative; font-size: 14.5px; color: #C9CDD3;
+    border-bottom: 1px solid rgba(255,255,255,.05); }
+  ul.lista li:last-child { border-bottom: none; }
+  ul.lista li::before { content: ""; position: absolute; left: 2px; top: 17px; width: 7px; height: 7px;
+    border-radius: 2px; background: var(--orange); }
+
+  .paso { display: grid; grid-template-columns: 40px 1fr; gap: 14px; padding: 14px 0;
+    border-bottom: 1px solid rgba(255,255,255,.05); }
+  .paso:last-child { border-bottom: none; }
+  .paso .num { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 20px; font-weight: 800;
+    color: var(--orange); }
+  .paso .txt { font-size: 14.5px; color: #C9CDD3; }
+  .paso .txt strong { color: var(--yellow); }
+
+  footer { max-width: 980px; margin: 0 auto; padding: 30px 24px 60px; color: #6B7280; font-size: 12.5px;
+    border-top: 1px solid rgba(255,255,255,.06); }
+</style>
+</head>
+<body data-page-node-id="H9wJkWmHOkh4Z031HvQpKr">
+
+<header class="hero" data-page-node-id="NJj5bzH6x7uWtH6J4cny7P">
+  <div class="hero-inner" data-page-node-id="5wRgJCDfKc5flEHFzf3DHz">
+    <span class="kicker" data-page-node-id="zJIcqd8QWR4H94nyrr6Jy6">Investigación · dictado · vocabulario propio</span>
+    <h1 data-page-node-id="64z693WFv0I6rX95eq0cEb">Cómo hacer que el dictado escriba <span class="accent" data-page-node-id="i7GHiA8JOqH1SrkDMykzst">tus palabras</span><br data-page-node-id="9uy19YxE98T6FviK1hCfV8">y no las que se le parecen</h1>
+    <div class="meta" data-page-node-id="i40pj1Aro8AzNziFvjqjgb">
+      9 de octubre de 2026 · máquina <code data-page-node-id="2CUAVIHFcg2eHywDvogT6W">n30</code> · Garuda / Hyprland · whisper.cpp en Vulkan (RX 9070 XT)
+    </div>
+    <div class="chips" data-page-node-id="gDrQWYzmSGbwrrvnNbDHHo">
+      <div class="chip" style="--chip:#FF4E00" data-page-node-id="h5A2HpcTCdAILwYlS2a5Zc"><span class="chip-num" data-page-node-id="yxS8riG0ZUfP75UqcYJSIT">11,1→5,1</span><span class="chip-label" data-page-node-id="GgeXcbjsF6kntnBhueAuAl">WER %</span></div>
+      <div class="chip" style="--chip:#FFC821" data-page-node-id="Lsp8iPDIA8FDDMwP9COKUC"><span class="chip-num" data-page-node-id="RbMxM5vHPfHbjOdsZsulgc">10</span><span class="chip-label" data-page-node-id="4tpmQbBycjrcJ4tLXBwoVp">REPOS</span></div>
+      <div class="chip" style="--chip:#2ED3B7" data-page-node-id="qEl1BmimpC2qxlBmfEA48N"><span class="chip-num" data-page-node-id="zVvuSNxvweC86rOFHOxiZJ">3</span><span class="chip-label" data-page-node-id="zwHOFprtDPiH4astkjcLYf">MECANISMOS</span></div>
+      <div class="chip" style="--chip:#A78BFA" data-page-node-id="2bfIxQRhv4KkeGRYEQ9hDl"><span class="chip-num" data-page-node-id="cCCsdlsFEaEBQWlofP3YIi">1</span><span class="chip-label" data-page-node-id="MiAnZICCtA7abbyfF1D1Nt">YA INSTALADO</span></div>
+    </div>
+  </div>
+</header>
+
+<main data-page-node-id="bpDw3l5eIv9CIDyPS0FjsS">
+
+<section data-page-node-id="Zr16cl13G8yIqm3Y8pJWYm">
+  <h2 data-page-node-id="gONlbYc3s20X22XJdn1Jig"><span class="dot" style="color:#FF3300" data-page-node-id="141207dDznrhwIqifPinY7"></span>La premisa que hay que corregir</h2>
+  <p class="section-sub" data-page-node-id="sPoINNBYq0h9yJkY3Ul2a3">Ningún repositorio hace lo que describiste tal cual, así que empiezo por ahí.</p>
+  <div class="card-panel warn" data-page-node-id="Pk8dxhA0hMtQi2fqPEUChw">
+    <p data-page-node-id="qoKdu6HkrD9ulJRFjQZBX7">Pediste <strong data-page-node-id="WfpdGa64JwXBqlSw6LNXhE">«decir una palabra con cierto tono y que me la corrija»</strong>. Eso no existe en ningún
+    proyecto de los que he mirado, y no es un hueco que se pueda rellenar. El tono y la prosodia no llegan al
+    reconocedor como señal utilizable. Whisper recibe 16 kHz mono y no tiene ninguna entrada de entonación,
+    y whisper.cpp no expone ningún léxico por pronunciación. Si te dijera que sí, te estaría vendiendo algo
+    que no hay.</p>
+    <p data-page-node-id="Pfu7RmlenO6U3TY3zzvSLT">Lo que sí existe son tres mecanismos distintos. Conviene no mezclarlos, porque se arreglan en sitios
+    diferentes.</p>
+    <p data-page-node-id="2k1FHvQnmUeziloGLnGEhB">El primero <strong data-page-node-id="DmiUi2xQeBwHul0AgO5Qdb">sesga el decodificador</strong>. Le das una lista de palabras antes de transcribir y
+    el modelo las prefiere. Ataca la causa, que es que escriba «iFIMAN H1000 se» en vez de
+    «Hifiman HE1000se».</p>
+    <p data-page-node-id="GqjKAXy1eeheBWkuRGiwj3">El segundo <strong data-page-node-id="oI1I1KoAzEcRRHP9MgsJ37">sustituye después</strong>, con reglas deterministas sobre el texto ya transcrito.
+    No arregla la causa, pero lo que cubre lo cubre siempre, porque no depende del modelo.</p>
+    <p data-page-node-id="A7dfHGDtxs1Xztc8JyxtsY">El tercero <strong data-page-node-id="hwMAtbJpUPLnRRZn1P7Bvs">corrige por parecido</strong>, con ortografía y fonética sobre el resultado, para las
+    palabras que no previste.</p>
+  </div>
+</section>
+
+<section data-page-node-id="5ryZ6ABZgvAyFDE5qK1Cm3">
+  <h2 data-page-node-id="om0XmuJ8DU0of9tGtfK4qw"><span class="dot" style="color:#FFC821" data-page-node-id="OqJG5kN3obXNDGiRN0YZqY"></span>Lo que ya tienes y no usas</h2>
+  <p class="section-sub" data-page-node-id="Ijo2tUObepfwiwV4QceTHu">El primer mecanismo está en tu binario desde el primer día. dictado.sh no lo llama.</p>
+  <div class="card-panel" data-page-node-id="ZYGVtLbWTn0lerjoWyYnjC">
+    <p data-page-node-id="5LLDQWAUKYDUmsgkYRQgSw">Tu <code data-page-node-id="zUaWHayRiyjcMIU0w7eMrW">whisper-cli</code> trae <code data-page-node-id="EJ6TWcOXCNlh01JmjreE0q">--prompt</code>, que sesga el vocabulario antes de transcribir,
+    <code data-page-node-id="YJcfLctMjatXNNi3710BwD">--carry-initial-prompt</code>, que mantiene ese sesgo entre segmentos, y <code data-page-node-id="TIAAzCoXs5Q0LjoHTSeZ4D">--grammar</code>,
+    que restringe la salida a una gramática GBNF con <code data-page-node-id="HMgHekKH7ZQUQnrbb5kfWN">--grammar-rule</code> y
+    <code data-page-node-id="R2WLmA38p57OqqtyxFm3ly">--grammar-penalty</code>. Comprobé los tres en tu instalación. Y busqué los tres nombres en
+    <code data-page-node-id="FcHYfnD0TZIPMamdFllzaL">dictado.sh</code>: no aparece ninguno. Es la mejora más barata que tienes ahora mismo, y la he
+    medido antes de proponértela.</p>
+  </div>
+
+  <div style="margin-top:18px" data-page-node-id="k8KzE6z1WQa7t89l6LPhAC">
+    <pre class="bloque" data-page-node-id="3h3VpeJpBYhoXclHMxbOPv"><span class="cm" data-page-node-id="Mv5WWPZxZae5ET4DxDo5HW"># La frase que destroza a medium, con large-v3-turbo, 16 kHz mono, VAD puesto</span>
+
+<span class="mal" data-page-node-id="3zHi4Q0Y4XfFwyo0IEZX76">SIN --prompt:</span>  Escucho música con los iFIMAN H1000 se conectamos al amplificador AUN S17 Pro.
+<span class="ok" data-page-node-id="3MU8Dlm7tsv4bUuLdmex9q">CON --prompt:</span>  Escucho música con los Hifiman HE1000se conectados al amplificador AUNE S17 Pro.</pre>
+  </div>
+
+  <div class="card-panel" style="margin-top:18px" data-page-node-id="pBv6EtiYbQMTcuq31UfxBe">
+    <table data-page-node-id="WFe0QabEYMBIUW6ShpV5Zg">
+      <thead data-page-node-id="MKSEMH94ZaSFAwGwwZtz0I">
+        <tr data-page-node-id="r8jca2XNxJEDV5lay2N9k8"><th data-page-node-id="bUbsXeB8JcA9ESiULAGd7I">Medición (12 muestras, 216 palabras, 2 repeticiones)</th><th data-page-node-id="MFuX1F6ThaaYMmRBQKhX9a">WER</th><th data-page-node-id="AQDTsqUTacpZpV3GrOlRju">Errores</th><th data-page-node-id="7nhj6yEzHH5BJGvkEHs1WZ">Fijo</th><th data-page-node-id="jSK5LKLLnLioLznbrrz5wj">Por s de audio</th></tr>
+      </thead>
+      <tbody data-page-node-id="Xbez6IhMfrT4qCxLKyED2V">
+        <tr data-page-node-id="DdRcHIZf5ehljMLsjMDwVv"><td data-page-node-id="IvehYeEIvCWmO7EVS6wNRs">turbo, sin prompt</td><td data-page-node-id="Gyu1URV8tLWMdbCsetYx3W">11,1 %</td><td data-page-node-id="rYB46EkRfH6HkyrXZs2jnG">24</td><td class="mono" data-page-node-id="lqcMk5MWAQrrSeneS20res">0,75 s</td><td class="mono" data-page-node-id="3rKSHUxwfcL9KXeD3EN6Tr">0,016 s</td></tr>
+        <tr data-page-node-id="jBzaRj2vefhyf8BqFd4IXz"><td data-page-node-id="lt6Z9AycSdtTNpnl3UOGh2">turbo, con prompt</td><td class="win" data-page-node-id="yLVfvkFEr2NuSbK57R4ctu">5,1 %</td><td class="win" data-page-node-id="QWxwEiv4TWoNv44qXdg58I">11</td><td class="mono" data-page-node-id="O1HEVFeWQsVVBv2Gq0VGhr">0,75 s</td><td class="mono" data-page-node-id="fs6vfFDyDuJaPFXMBAFkxc">0,016 s</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:14px" data-page-node-id="bOmeJXZlPhXWCUmgb5fcrh">El prompt no cuesta tiempo, porque el coste fijo y la pendiente salen idénticos,
+    y parte el error por la mitad. Los fallos que quedan ya no son los nombres propios que se desmoronaban
+    enteros, sino menudencias: <code data-page-node-id="WPiUFYKxBlmWb4FyS6atZA">mine</code> por <code data-page-node-id="Ze9dCnl06kdZr1hIWov58L">main</code>, <code data-page-node-id="GIZzKUAtOrOmxamtWuCgOh">RME-2</code> por
+    <code data-page-node-id="KKmk5TnUniDq1mZu1HxLEG">RME ADI-2</code>, <code data-page-node-id="w3CmjQKEbFkG1SWk8Rw5vU">unible</code> por <code data-page-node-id="kdMCJdHmzgdMnThyVMltke">audible</code>, <code data-page-node-id="e5HUpjMYGLnpDV24bHZV6s">Abro</code> por
+    <code data-page-node-id="TKamvF8bQ3fXa2AUEuhnnl">Abre</code>, <code data-page-node-id="VjBs0U2qn33hrI2ovPsF1l">47,320</code> por <code data-page-node-id="mMnc3cvyop7EjaCmuAudbZ">47 320</code>.</p>
+    <p data-page-node-id="zxEUgT3uVQb7Xq1GsGhGZO">El prompt que usé era exactamente tu vocabulario: Hifiman HE1000se, Aune S17 Pro, RME ADI-2,
+    DJI Mic Mini, PipeWire, WirePlumber, Hyprland, Garuda Linux, kilohercios, milisegundos, decibelios,
+    commit, pull request, merge, respaldo, hash, dictado y auditoría.</p>
+  </div>
+</section>
+
+<section data-page-node-id="IzLNxzxLVZXdnO1ybB3d0t">
+  <h2 data-page-node-id="k4t5RtR9GIiMPkOKph6hwX"><span class="dot" style="color:#2ED3B7" data-page-node-id="PAWweEI1z1T7yIYvGaNTaG"></span>Los 10 repositorios</h2>
+  <p class="section-sub" data-page-node-id="GLIyNIbAp9DCSWPhEouVP1">Comprobé los catorce contra la API de GitHub hoy. Ninguno sale de mi memoria. Los agrupo por mecanismo, no por popularidad.</p>
+
+  <div class="cat" data-page-node-id="sGm3AaDaEFGY7hWmLvS58p">
+    <div class="cat-head" data-page-node-id="PocLpVv4DtOyEsxxxBFz2G"><span class="letra" data-page-node-id="IzUYdZQzxJfPxDUZbHm1et">A</span><h3 data-page-node-id="hsuCeY3f8q5VSsYzYE5ko1">Sesgar el decodificador</h3></div>
+    <p class="cat-sub" data-page-node-id="Xb0DYhonykVBoCzILI0fpV">Hacen que el modelo escriba tu palabra en vez de una que se le parece. Atacan la causa.</p>
+
+    <div class="repo" data-page-node-id="sz3YBvYxeB2DuRrBVBoEXG">
+      <div class="repo-top" data-page-node-id="heb0wBbMnUc1uNPqgtLmwT">
+        <span class="repo-n" data-page-node-id="Gjr0XYOpnTZxPFOqzQEmDp">01</span>
+        <a class="nombre" href="https://github.com/ggml-org/whisper.cpp" data-page-node-id="7pmC0gtCzfKAOFbIMcKsdC">ggml-org/whisper.cpp</a>
+        <span class="datos" data-page-node-id="QTMEC48VLypYcpl2PaK9Sd">★ 54 259 · MIT · C++ · push 2026-10-06</span>
+      </div>
+      <p data-page-node-id="2Q94KDPTfEwLve3L0fYmMs">Es el motor que ya usas, y va primero porque el mecanismo que resuelve tu problema está dentro y no lo
+      aprovechas. Acepta <code data-page-node-id="jXTcJAxAbFptQZw4wqS5Vc">--prompt</code>, mantiene el sesgo entre segmentos con
+      <code data-page-node-id="fgNw2NzkAsLIASK6BURzgQ">--carry-initial-prompt</code>, y puede restringir la salida con una gramática GBNF mediante
+      <code data-page-node-id="wXCvWHuomrAmOBtLBY0zkU">--grammar</code>.</p>
+      <p data-page-node-id="2e7FBrnZx4zC4d6zaeoiiH">Esa gramática es lo más parecido a un léxico cerrado que existe en whisper.cpp. Puedes forzar que la
+      salida encaje en una lista de tus nombres propios. No es un diccionario de pronunciación, pero reduce
+      el espacio de búsqueda. Y es tu propio binario, así que no hay nada que instalar.</p>
+      <span class="url" data-page-node-id="zqHVKAPXWXQRf64AYBbnF4">https://github.com/ggml-org/whisper.cpp</span>
+    </div>
+
+    <div class="repo" data-page-node-id="slFWpad7vsT2hzT3J5hfWH">
+      <div class="repo-top" data-page-node-id="WVvDiheLIGzehggHEGyeaO">
+        <span class="repo-n" data-page-node-id="mm4eq7ytQSEdsjSd337ZPR">02</span>
+        <a class="nombre" href="https://github.com/SYSTRAN/faster-whisper" data-page-node-id="mvA6m10wb5ygpsKoBzv5jy">SYSTRAN/faster-whisper</a>
+        <span class="datos" data-page-node-id="Q9WauCtkOtNVaWV5esqhg1">★ 25 779 · MIT · Python · push 2026-10-06</span>
+      </div>
+      <p data-page-node-id="WVGw7bdR1lo35iXaGKVIE3">Reimplementa whisper sobre CTranslate2. Su documentación promete unas cuatro veces más velocidad con
+      la misma precisión, y eso no lo he medido yo.</p>
+      <p data-page-node-id="r7FjvPZCyLwUt2pXQRr4FA">Es el único de los diez con un parámetro <code data-page-node-id="MDeJVJbAO3t1oyuZufyzaf">hotwords</code> de verdad, una lista de palabras que se
+      refuerzan en la decodificación y que va separada del prompt. Eso es lo que pediste cuando dijiste
+      «agregar diccionarios o palabras». También acepta <code data-page-node-id="9pFnCCVbeCXvYiXE3yLVz6">initial_prompt</code>. El coste es que es
+      Python: te toca envolverlo, no es un argumento más de tu script.</p>
+      <span class="url" data-page-node-id="HV2spWXyfgz7z8t8bQENQk">https://github.com/SYSTRAN/faster-whisper</span>
+    </div>
+
+    <div class="repo" data-page-node-id="1fUASmp4e5un8IWsYcG7AQ">
+      <div class="repo-top" data-page-node-id="01H3sWxliRJ5aXwhLr2h6J">
+        <span class="repo-n" data-page-node-id="sHad56VRvn1uFf9j3GR0ob">03</span>
+        <a class="nombre" href="https://github.com/m-bain/whisperX" data-page-node-id="FqdNAiVUCPSbj7GHkbJNrj">m-bain/whisperX</a>
+        <span class="datos" data-page-node-id="y2FROvLjvbIolcfM7ODM6X">★ 24 443 · BSD-2-Clause · Python · push 2026-09-26</span>
+      </div>
+      <p data-page-node-id="Adw3lVkTuhGbpDmDXjtOR5">Añade a whisper la alineación a nivel de palabra con wav2vec2 y la separación de hablantes.</p>
+      <p data-page-node-id="dbcbB5IawrgKEaGnpiNjOJ">No trae diccionario, pero sí marcas de tiempo por palabra. Eso permite algo que hoy no puedes hacer:
+      saber qué palabra salió con poca confianza y marcarla para que la revises, en vez de tragarte el error
+      entero. Si algún día quieres que el dictado te avise de las palabras dudosas, el camino pasa por aquí.</p>
+      <span class="url" data-page-node-id="sZWEBn4l75CURFw1SzuTk8">https://github.com/m-bain/whisperX</span>
+    </div>
+
+    <div class="repo" data-page-node-id="i65QCneBeyHX9V5vs8Ta60">
+      <div class="repo-top" data-page-node-id="mL2BovL2LwnAvdSBtHPKF5">
+        <span class="repo-n" data-page-node-id="2aT2lmaa9DFkovVTLUbXWZ">04</span>
+        <a class="nombre" href="https://github.com/chidiwilliams/buzz" data-page-node-id="S8kCHQrspbKLDrd9kyxt3u">chidiwilliams/buzz</a>
+        <span class="datos" data-page-node-id="MH3DX0Xj0MrwHCDfJiZeU5">★ 21 900 · MIT · Python · push 2026-10-02</span>
+      </div>
+      <p data-page-node-id="6ObTm5DOmlJrf367Umgsqu">Una interfaz de escritorio sobre whisper y faster-whisper, para transcribir ficheros y audio en vivo.</p>
+      <p data-page-node-id="uA5erspv6iO4BJtUImxI8q">Sus preferencias incluyen un campo de vocabulario propio y prompt inicial. No es para sustituir tu
+      dictado.sh, es para probar prompts y modelos sin pelearte con la línea de comandos, que es exactamente
+      el trabajo que hice a mano con un script esta tarde.</p>
+      <span class="url" data-page-node-id="lry5DBDt3aGkmTvKlHW1mt">https://github.com/chidiwilliams/buzz</span>
+    </div>
+  </div>
+
+  <div class="cat" data-page-node-id="EX69KQsaM6LoQFHLcobQ4H">
+    <div class="cat-head" data-page-node-id="4XkKDmqJyZ1BnyWl9WIuEl"><span class="letra" data-page-node-id="Z1wA0vCwlbuzT7ujVKAlLj">B</span><h3 data-page-node-id="tiqlsQZCrb0KSzMZyHDOyx">Sustituir después</h3></div>
+    <p class="cat-sub" data-page-node-id="PyYxMKJqEtCVxLQcPd0X9n">Diccionario determinista sobre el texto ya transcrito. Aquí es donde se implementa «si digo X, escribe Y».</p>
+
+    <div class="repo" data-page-node-id="QLwOXGdUZ5gKNdoOK73wyE">
+      <div class="repo-top" data-page-node-id="39ldmosY4FRa4fHbRPpcBt">
+        <span class="repo-n" data-page-node-id="MVUx0B7imy2lRUcLdK3EAi">05</span>
+        <a class="nombre" href="https://github.com/espanso/espanso" data-page-node-id="DRz5EuPFGKJqEp84sUuwkf">espanso/espanso</a>
+        <span class="datos" data-page-node-id="sO3knSNsrm21fFZS6W4ZCJ">★ 14 605 · GPL-3.0 · Rust · push 2026-10-04</span>
+      </div>
+      <p data-page-node-id="3izk80WXTCmLybGVJAb2Lf">Un expansor de texto multiplataforma que dispara sustituciones según lo que escribes, con las reglas
+      en YAML.</p>
+      <p data-page-node-id="bQY5LVyU57Q0R1v0RGvcmG">Es la forma más limpia de tener tu diccionario fuera del código. Un <code data-page-node-id="za5HEhCbBCWdZ0FaDB7poZ">base.yml</code> con
+      <code data-page-node-id="zFTkiD5WsE6CgriCfxU8h3">:hifi</code> que se convierte en <code data-page-node-id="D0bwvaG9Eze3eIwJD9IVE7">Hifiman HE1000se</code>, <code data-page-node-id="vAhr0KW85fsFmnBb1q5YL6">:rme</code> en
+      <code data-page-node-id="TNb40bKDpCD4Mxj4xNob9V">RME ADI-2</code>, <code data-page-node-id="e166W22TKib6OkfrtlBkAr">:pw</code> en <code data-page-node-id="ZkbdoAwR0xPDjeZGYUQdLB">PipeWire</code>. Funciona en Wayland con su propio
+      backend, sin depender de X11. Lo editas sin tocar scripts y te sirve en cualquier programa donde
+      escribas, no solo en el dictado.</p>
+      <span class="url" data-page-node-id="JXUYKryWyGrkWBcB2LyOnW">https://github.com/espanso/espanso</span>
+    </div>
+
+    <div class="repo" data-page-node-id="Gr54GRDOvCZaSuBKh2xuZt">
+      <div class="repo-top" data-page-node-id="URZlMeufF9hyvbwgJkgLFB">
+        <span class="repo-n" data-page-node-id="N0zM8WrAJ0QSlQNT3aB8df">06</span>
+        <a class="nombre" href="https://github.com/ideasman42/nerd-dictation" data-page-node-id="MDHYBm8jX5Ba51un1V4PEI">ideasman42/nerd-dictation</a>
+        <span class="datos" data-page-node-id="GcosbFb3yPFBKtpXQBVuzd">★ 1 932 · GPL-3.0 · Python · push 2025-10-10</span>
+      </div>
+      <p data-page-node-id="556xkebPKw1G7bzWvCz9BW">Dictado para Linux sobre Vosk y whisper, con la configuración en Python. Trae de serie reglas de
+      sustitución por expresión regular y un conversor de números a texto.</p>
+      <p data-page-node-id="cja808h62rsbi4k2ZMteK6">Es la implementación de referencia del segundo mecanismo en Linux, donde las sustituciones son parte
+      del producto y no un añadido, y como el fichero es Python admite lógica y no solo literales.</p>
+      <p data-page-node-id="LqKuYZOSdimkBuAan4f5mI">Dos reservas. El último push es de hace un año, y su soporte nativo es X11, así que en Wayland
+      funciona por <code data-page-node-id="UzdzyktsM58p92S5eyYmhY">--compositor</code> con limitaciones. Léelo como fuente de ideas más que como
+      dependencia.</p>
+      <span class="url" data-page-node-id="sdEzF44nCsYa9YMkwzdL3e">https://github.com/ideasman42/nerd-dictation</span>
+    </div>
+
+    <div class="repo" data-page-node-id="YJSgct5b6x54gUAF1BId6o">
+      <div class="repo-top" data-page-node-id="Jrb8rH7co6gw8eXVRAwBpm">
+        <span class="repo-n" data-page-node-id="46plsYr1Mz4Kr2UGA44r1a">07</span>
+        <a class="nombre" href="https://github.com/goodroot/hyprwhspr" data-page-node-id="dxantRMgUAZiEiY5zqBcxL">goodroot/hyprwhspr</a>
+        <span class="datos" data-page-node-id="2mj7IHTHcuQuhL1zEPhELy">★ 1 234 · MIT · Python · push 2026-10-07</span>
+      </div>
+      <p data-page-node-id="2z8C9ujkRNRGjtI5mGBS0X">Dictado escrito para Hyprland, con whisper por debajo.</p>
+      <p data-page-node-id="oV4zZsizisDXgNFTCZay71">Es el único de la lista que apunta a tu compositor como objetivo y no como caso secundario. Interesa
+      por cómo resuelve dos cosas que a ti te costaron trabajo: inyectar el texto y montar el ciclo de teclas
+      en Wayland. Comparar su enfoque con tu dictado.sh es más útil que adoptarlo.</p>
+      <span class="url" data-page-node-id="hZxXbfnXrD5meoSwH0pGPN">https://github.com/goodroot/hyprwhspr</span>
+    </div>
+  </div>
+
+  <div class="cat" data-page-node-id="HK3ZrlsCxxvBnr2GhhbjaC">
+    <div class="cat-head" data-page-node-id="5lWFbdFVrMHEMTihDxSwHd"><span class="letra" data-page-node-id="TPi2Qcj3DGAyUNHttJhqPj">C</span><h3 data-page-node-id="RHlu6oGoV4i1FU1I6TC9db">Corregir por parecido</h3></div>
+    <p class="cat-sub" data-page-node-id="wyEhwNSNlL0EdAjqtIH2RO">Ortografía y fonética sobre el texto transcrito, para las palabras que no previste.</p>
+
+    <div class="repo" data-page-node-id="pGDJiNEp2qWp1dADofM4xe">
+      <div class="repo-top" data-page-node-id="45czcX9vSthXTRQnaiqKMe">
+        <span class="repo-n" data-page-node-id="i8g67GPvP4rkLO4tDVcUKP">08</span>
+        <a class="nombre" href="https://github.com/mammothb/symspellpy" data-page-node-id="Zucsou4CUD3YrNzC5tlv2x">mammothb/symspellpy</a>
+        <span class="datos" data-page-node-id="QzxfWmdBrxrKEzTkcKA6ye">★ 876 · MIT · Python · push 2026-08-21</span>
+      </div>
+      <p data-page-node-id="GVVUvD999MCKHa8bvGdKOx">SymSpell en Python. Corrige ortografía por distancia de edición contra un diccionario de frecuencias
+      que construyes tú.</p>
+      <p data-page-node-id="MRePcSjsSAkDtXJPFalN1B">Esto es el «agregar diccionarios» en su forma más directa. Tú armas la lista de frecuencias con tu
+      vocabulario y él corrige <code data-page-node-id="EBsJxA5Xn6IlripTktWBmy">unible</code> a <code data-page-node-id="bqmfskfOHCLih8rUKmER83">audible</code> y <code data-page-node-id="OFFLFavR1E3gHs9jgctXTD">iFIMAN</code> a
+      <code data-page-node-id="bNtG0fwQNAYI5WOr0A6ZYh">Hifiman</code>. Complementa al prompt, porque el prompt evita que se equivoque y esto recoge lo que se le escapó.</p>
+      <span class="url" data-page-node-id="YQIm1HnRTW03gre1YHbfdC">https://github.com/mammothb/symspellpy</span>
+    </div>
+
+    <div class="repo" data-page-node-id="B8FG8hhSXgZpxqfa1lgtMv">
+      <div class="repo-top" data-page-node-id="mJI0GmgbUdjRN3zkv2nHcM">
+        <span class="repo-n" data-page-node-id="B3xnLPSMAuVFpYGXvnOgah">09</span>
+        <a class="nombre" href="https://github.com/jamesturk/jellyfish" data-page-node-id="xNoau1tGIFzBPD4PAuGLHC">jamesturk/jellyfish</a>
+        <span class="datos" data-page-node-id="f2aVWxzGsPFNmFiyE8iav7">★ 2 231 · MIT · Python · push 2026-07-24</span>
+      </div>
+      <p data-page-node-id="2ZVHlBrX8zsJVME2Iuuum3">Una biblioteca de comparación de cadenas con Levenshtein, Jaro-Winkler y varios algoritmos fonéticos
+      como Metaphone, Soundex y NYSIIS.</p>
+      <p data-page-node-id="wEcPEKPoRTANDK5ANS7SIA">Es lo más cerca que se llega a lo del tono que pediste, y por una vía distinta, la comparación
+      fonética. Si el modelo escribe «AUN S17 Pro», la distancia fonética contra «Aune» es pequeña aunque la
+      ortográfica no lo sea. Con eso puedes montar un corrector que no dependa de acertar el error exacto.
+      No es prosodia, es cómo suena escrito, y el límite conviene tenerlo claro.</p>
+      <span class="url" data-page-node-id="ttG2K5GXhIOwV0LBafoyCy">https://github.com/jamesturk/jellyfish</span>
+    </div>
+
+    <div class="repo" data-page-node-id="ffmN8rVznfOBPkHOpReqL9">
+      <div class="repo-top" data-page-node-id="uFuyW5Rup76K9ClG43QgeF">
+        <span class="repo-n" data-page-node-id="uoG0xDATmpMw0HphzHYhej">10</span>
+        <a class="nombre" href="https://github.com/languagetool-org/languagetool" data-page-node-id="WJ6iEjucVGLqkdjIILrftV">languagetool-org/languagetool</a>
+        <span class="datos" data-page-node-id="Cn5XexDL2nyIV8dD1dsK9s">★ 15 118 · LGPL-2.1 · Java · push 2026-10-09</span>
+      </div>
+      <p data-page-node-id="EnNl3Fakuio4Cc82KcDn39">Un corrector gramatical y ortográfico con más de 25 idiomas, que corre en local, tiene API y admite
+      diccionario de usuario con <code data-page-node-id="mGORl8fsbbryERdmxHNbzG">--userdict</code>.</p>
+      <p data-page-node-id="isZf95SE8tkc7qAJC9DQQ6">Es el único que ataca tu mezcla de español e inglés. Detecta concordancia, artículos y preposiciones
+      en español, que es donde tu dictado bilingüe falla más que en los nombres propios. Con
+      <code data-page-node-id="cqbpx7IcRhqpCWXVLIDOef">--userdict</code> le metes tus términos técnicos para que no los marque como error. El coste es
+      que es Java y pesa.</p>
+      <span class="url" data-page-node-id="ggHlP1VtSGkZsi8wpydJf4">https://github.com/languagetool-org/languagetool</span>
+    </div>
+  </div>
+</section>
+
+<section data-page-node-id="TDa406FkJnzDLtKf4qmlND">
+  <h2 data-page-node-id="WXrrleSKxnN9YgJkOHf1Kq"><span class="dot" style="color:#A78BFA" data-page-node-id="nHS8dPUwgrU9zQGsTjdDPf"></span>Tabla de datos verificados</h2>
+  <p class="section-sub" data-page-node-id="sGUyDotsAMRq8hicGrDkzF">Consultado contra <code data-page-node-id="9pDOKjHHNkCFuUgFEPSAyg">api.github.com</code> el 9 de octubre de 2026. Estrellas, licencia, lenguaje y fecha del último push.</p>
+  <div class="card-panel" data-page-node-id="GNNxBTghOhXyLLEuAWhPV0">
+    <table data-page-node-id="KqBkk92V4xzvHKMwdThG9k">
+      <thead data-page-node-id="JJEu0TSYH8OXrEiUuCXRqA">
+        <tr data-page-node-id="LBnu7DRSlPEvsqkAncabze"><th data-page-node-id="0fEDmxYxVCZ6hNOgortTBA">Repositorio</th><th data-page-node-id="X1FSVbejd073HL3Ueyu1rA">Estrellas</th><th data-page-node-id="yr4xxbBTsE2t5iQuE9tEc5">Licencia</th><th data-page-node-id="J2YzBO10S2opc1c0JuTdCV">Lenguaje</th><th data-page-node-id="ZQsUnBJoYTLR1Z9J1Ddcu8">Último push</th><th data-page-node-id="dQ9FmAixvYrav1aAufTPxx">Estado</th></tr>
+      </thead>
+      <tbody data-page-node-id="gHvlC3u6peWDCwUaty91Sx">
+        <tr data-page-node-id="jmCaIbfuHdNCAkpL0xOvzs"><td class="mono" data-page-node-id="l9xB0r5CZD2ZeQxFhqSilU">ggml-org/whisper.cpp</td><td data-page-node-id="zdvSccCySwMJSDzLeRDPtx">54 259</td><td data-page-node-id="FoCmrEwOLCEcZq8WA8wDcN">MIT</td><td data-page-node-id="LxOHjjrG0vlf8h9LJk0lVz">C++</td><td class="mono" data-page-node-id="wLzm1yTsIShvFAJJ1gM6e2">2026-10-06</td><td data-page-node-id="ew4aFVYywydbTfHuSF8JMu"><span class="badge b-ok" data-page-node-id="jLkH5cW3nFyg3QIOFUZuRI">activo</span></td></tr>
+        <tr data-page-node-id="35xHeLgEliPJE6jLn2e8Xg"><td class="mono" data-page-node-id="jC98gFuhioY0EDnjsFrXYh">SYSTRAN/faster-whisper</td><td data-page-node-id="2WmD5tRvQuCe0NeDrzjs6H">25 779</td><td data-page-node-id="9RQxjdZFtz5KCyhJcetwbH">MIT</td><td data-page-node-id="FFsWxuNXcPCWPSusbhDzJG">Python</td><td class="mono" data-page-node-id="QRWiIsakeW7RQ7mJLZ9EL4">2026-10-06</td><td data-page-node-id="Tz660C9XHmiDVtWzT9fbMb"><span class="badge b-ok" data-page-node-id="sb0Nd94e0SoIQEE2wvKXJX">activo</span></td></tr>
+        <tr data-page-node-id="pGUTuHcIN24gL585YKmMLj"><td class="mono" data-page-node-id="j3W5vEamkAoK2wpWJPpWEe">m-bain/whisperX</td><td data-page-node-id="rsysJ4ZJvQfeL6LC22e2ty">24 443</td><td data-page-node-id="D2NGBHCEAa1Ho7M1eBESIx">BSD-2</td><td data-page-node-id="8z6OnAHgKJvnAVRMc3hNwf">Python</td><td class="mono" data-page-node-id="i2moUSGxkdYEorFlmvVtFw">2026-09-26</td><td data-page-node-id="8G0461kNE1WrMvMupYbva9"><span class="badge b-ok" data-page-node-id="Dg8hywC66FE8sl0j6jA6Rr">activo</span></td></tr>
+        <tr data-page-node-id="IGbVgrxuXXmUotfeA6jL1b"><td class="mono" data-page-node-id="A0AxCuMfsxJ3YESHB7RUlT">chidiwilliams/buzz</td><td data-page-node-id="Ujnrk74OJ0APqWKxJZEy81">21 900</td><td data-page-node-id="wv7RBoadOU4oK4SZHlejZy">MIT</td><td data-page-node-id="e1N7UsuUZhJSzpYBDOTY9x">Python</td><td class="mono" data-page-node-id="yV6aKcU3ZjKaS4bksWCjLG">2026-10-02</td><td data-page-node-id="qZgXyBaaI5SK87omlZEozL"><span class="badge b-ok" data-page-node-id="5uBiUHvQjyGgxEfxTACReO">activo</span></td></tr>
+        <tr data-page-node-id="Q8cBEFGxLBYEptXBqBu3Is"><td class="mono" data-page-node-id="3Ai4NuC6CpjzABipWNUgfR">languagetool-org/languagetool</td><td data-page-node-id="OEECZ7MIOOtM5bnXExGBqz">15 118</td><td data-page-node-id="AcXdjwtvCeVpMwvE9muH3K">LGPL-2.1</td><td data-page-node-id="ordipXaR1zGjWeW9ZhFNRw">Java</td><td class="mono" data-page-node-id="Ktr0ep1OLgqGfAJpLHeohJ">2026-10-09</td><td data-page-node-id="hwaEmAfFoT7CL18fTZ9u2f"><span class="badge b-ok" data-page-node-id="AA6aofiruizklHHXVF2WRX">activo</span></td></tr>
+        <tr data-page-node-id="AyTqTZ4lnwzR1CY9iVlDfu"><td class="mono" data-page-node-id="xiI7aDXO0Qnaarmhkf6Y2B">espanso/espanso</td><td data-page-node-id="6dkzFNCFi1uKxmSObQmA9D">14 605</td><td data-page-node-id="dXMV4AS5XZvvBecKzSX96a">GPL-3.0</td><td data-page-node-id="SNdeuEzhDX0cnGyNVz9kpJ">Rust</td><td class="mono" data-page-node-id="eK0nV3tPdPlFBDJNNkCGPL">2026-10-04</td><td data-page-node-id="JmdInPTgY0CMygEC6czO4O"><span class="badge b-ok" data-page-node-id="MBAfAQig24Gp6PdtFa01yM">activo</span></td></tr>
+        <tr data-page-node-id="SpEKJeeyGZTbFo9wtvKDPd"><td class="mono" data-page-node-id="5xZd6C2pMhWFqKcjEtOAms">jamesturk/jellyfish</td><td data-page-node-id="hZqtHbw64eKmjSUFPlycyn">2 231</td><td data-page-node-id="MrZouHBHBr60YLsDp0pZIt">MIT</td><td data-page-node-id="2rKcHTFSiDRgxS1r61X16f">Python</td><td class="mono" data-page-node-id="VQViJKemQA4hOeQxavxsL5">2026-07-24</td><td data-page-node-id="K7uzSmOAQqRaWu0MNWqNHX"><span class="badge b-ok" data-page-node-id="4nwFXckjZyDrU23mk3KkGf">activo</span></td></tr>
+        <tr data-page-node-id="fu1YOk7KrMFSPBihIu4q4F"><td class="mono" data-page-node-id="2FpE6CmGTVaJCgPZIiGORr">ideasman42/nerd-dictation</td><td data-page-node-id="4AtyFzk6YKPkG98ypR7qOE">1 932</td><td data-page-node-id="sFHWXpsN8JrN8xhlrP2NFx">GPL-3.0</td><td data-page-node-id="NK9hcPeAOfW7DAbolS0KP8">Python</td><td class="mono" data-page-node-id="aAUy04jfDnvccelpm464D3">2025-10-10</td><td data-page-node-id="8IQd2AG5l6nFurRMNVwSrO"><span class="badge b-warn" data-page-node-id="AImB9Svga8TyyzTREnxqU1">lento</span></td></tr>
+        <tr data-page-node-id="ACWNXldr33hjDZpGsjvzXE"><td class="mono" data-page-node-id="rNinrXA0hCQjScnp92D8yJ">goodroot/hyprwhspr</td><td data-page-node-id="rvFWvmt2kxbN1KmGyW8f1m">1 234</td><td data-page-node-id="pfM6nDkuQ60qZCyJQBT9F9">MIT</td><td data-page-node-id="lkOgeaiWH9NZrT7bEKc8Hs">Python</td><td class="mono" data-page-node-id="7m38cL6l2UAdxztihrCjME">2026-10-07</td><td data-page-node-id="SyjrCbrU3hahd8caI2j21C"><span class="badge b-ok" data-page-node-id="5jRoBYTj4A5TDi7OReqwPK">activo</span></td></tr>
+        <tr data-page-node-id="AwBiMUjcFNeK0Q5o23AbR0"><td class="mono" data-page-node-id="AbxEAKSYJELFHjE4w9OqwJ">mammothb/symspellpy</td><td data-page-node-id="Gn0W5kAkqUoL4vEZFdDWZh">876</td><td data-page-node-id="7uVcg38RoRKnsrv67laPl4">MIT</td><td data-page-node-id="kFI0IauZET0sBt1KmFmzWl">Python</td><td class="mono" data-page-node-id="ssbgOoUxwzvSuCNCtP4W4B">2026-08-21</td><td data-page-node-id="AMMyBftOAuYPWpWwNTt4Rv"><span class="badge b-ok" data-page-node-id="VT1KiHqVXmc3sgw3dZvHfs">activo</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section data-page-node-id="habsovjple4ynprtvRRIzj">
+  <h2 data-page-node-id="nNpJO1puJ0DdvGqsJy1Sfp"><span class="dot" style="color:#9AA0A8" data-page-node-id="MQ3dzbNcQugeAvRg7YqScN"></span>Cuatro más, y uno con reserva</h2>
+  <p class="section-sub" data-page-node-id="DfBEvYlBkir2dsHR6FZprs">No entran en los diez porque no añaden un mecanismo nuevo, pero son dictado en Linux y Wayland directamente.</p>
+  <div class="card-panel" data-page-node-id="OPNt0SjRXPwDZbds5PuSEv">
+    <ul class="lista" data-page-node-id="Cd5SZCkptwgSC7wsi1HZaN">
+      <li data-page-node-id="CFlcXJRuhpSg6dRLIsSqm1"><strong data-page-node-id="cAA4ufkS7DvE7bS9Qx0GxG">peteonrails/voxtype</strong> · ★ 1 625 · MIT · Rust · 2026-10-07. Dictado para Wayland en Rust, con modo «pulsar para hablar». <span class="mono" data-page-node-id="ZlvafR7fd16JBSkc5g4drZ">github.com/peteonrails/voxtype</span></li>
+      <li data-page-node-id="GBNrKJEmipsGXewU7gOHiz"><strong data-page-node-id="K7ntCoOh6YIWk0sOwq918E">VocaHQ/vocalinux</strong> · ★ 922 · AGPL-3.0 · Python · 2026-10-09. Dictado con asistente de configuración para escritorio. La licencia es AGPL, mírala antes de integrar nada. <span class="mono" data-page-node-id="lAZmSLoTDEIguDg0KPbtnr">github.com/VocaHQ/vocalinux</span></li>
+      <li data-page-node-id="ydFEBzx1lQpO3uH1aDAL8M"><strong data-page-node-id="c9eXcevwkELI5YPggMgwe7">y0sif/whisrs</strong> · ★ 132 · MIT · Rust · 2026-10-09. Cliente Rust pequeño sobre whisper, útil como referencia de código. <span class="mono" data-page-node-id="KGLyvYbaPrbz36Ex23Vmj4">github.com/y0sif/whisrs</span></li>
+      <li data-page-node-id="yMgGrqnpOnxhsdeNUpdemw"><strong data-page-node-id="71UaXm0m0gcKGRWdkZAxTG">synesthesiam/voice2json</strong> · ★ 1 105 · MIT · 2024-03-07. Está <span style="color:#FF4E00;font-weight:700" data-page-node-id="gbs8rn08Zau7dhTbNZehIH">archivado</span>. Tenía gramáticas JSGF de verdad y ranuras para vocabulario cerrado, justo lo que pediste. Lleva muerto desde marzo de 2024, así que no lo uses como base, pero su diseño de gramáticas sigue siendo la mejor idea documentada de la lista. <span class="mono" data-page-node-id="zPzX2DY2ZEUzzaQeOaEsqy">github.com/synesthesiam/voice2json</span></li>
+    </ul>
+  </div>
+</section>
+
+<section data-page-node-id="vx6RsWmMcD24l2ATjCoSce">
+  <h2 data-page-node-id="vzfkDElKCHHRQWKnvSRgFL"><span class="dot" style="color:#FF3300" data-page-node-id="MbhF7rBToTRjjDXZlirsvN"></span>Lo que busqué y no existe</h2>
+  <p class="section-sub" data-page-node-id="MzZDiqWvLqiv5RONyZH9ti">Esto también es un resultado, y omitirlo sería venderte un conjunto de herramientas que no hay.</p>
+  <div class="card-panel" data-page-node-id="9z6CZ5qegQQCsfl1IJj7fE">
+    <p data-page-node-id="NydvwugkWy8H9bLaBA9O0o">Ocho búsquedas devolvieron cero resultados utilizables, ni repos con estrellas ni proyectos vivos:
+    «whisper custom vocabulary dictionary replacement», «speech recognition custom pronunciation lexicon»,
+    «whisper prompt initial vocabulary biasing», «hotwords whisper boosting», «vosk grammar custom words»,
+    «voice dictation replacement rules», «whisper hallucination correction post processing» y
+    «code switching speech recognition multilingual».</p>
+    <p data-page-node-id="UfyLWPLW6DjCBom5apaJnv">El nicho del diccionario de pronunciación está casi vacío en GitHub. Lo que hay es sesgo de vocabulario,
+    que es el primer mecanismo, y sustitución de texto, que es el segundo. Y lo segundo casi siempre son
+    herramientas genéricas como espanso adaptadas, no proyectos de dictado.</p>
+  </div>
+</section>
+
+<section data-page-node-id="T4onbrv1mUYEMdphkkP9vg">
+  <h2 data-page-node-id="0IfyNGi0jHJww7HBj9kzoj"><span class="dot" style="color:#FF4E00" data-page-node-id="3fLda5bnAqYdLH8nSNAdvK"></span>Qué haría yo, en este orden</h2>
+  <p class="section-sub" data-page-node-id="FJ1wtArSapthePwBN24Zbh">De coste cero y efecto medido a lo experimental. No instales nada antes del paso 2.</p>
+  <div class="card-panel" data-page-node-id="kg61Cng8AxILaKKAiEuDLj">
+    <div class="paso" data-page-node-id="rgImxv0DCBE8khT5cM5829">
+      <div class="num" data-page-node-id="RyOSnx7xbF7d4gAt2D6rM0">1</div>
+      <div class="txt" data-page-node-id="Gx8axZxajDu6xlLiW4dGxM">Añadir <code data-page-node-id="BtSBh3Ht3VUjA16Gw3cyHc">--prompt</code> a <code data-page-node-id="8wf1Zk1sCGn5PaL7dujMMR">dictado.sh</code>. Es una línea en la lista de
+      argumentos de <code data-page-node-id="Ty3QA0XsJKaMUnEBAC6kSO">transcribir_cli()</code>, en la línea 182, y otra en el <code data-page-node-id="2IEQEX2AABt4lgyp65nNZb">curl</code> de
+      <code data-page-node-id="ikeE4m03GO6h9sivVhzlD2">transcribir_servidor()</code>, en la 199. No cuesta tiempo y baja el error del 11,1 % al 5,1 %.
+      Ya medido, ya verificado. Es lo único que recomiendo sin reservas.</div>
+    </div>
+    <div class="paso" data-page-node-id="1XvQDSeBqHms1BACA8H8aK">
+      <div class="num" data-page-node-id="NQF2eaFrBoTS8deS5DL2Iu">2</div>
+      <div class="txt" data-page-node-id="0qGVOJkEh4JvliGSFFetT9">Probar <code data-page-node-id="Kqck7ptHP7nQkPWTrcrZY6">--grammar</code> con GBNF. También está en tu binario. Antes de instalar
+      nada, comprobar si restringir la salida a una lista de nombres propios mejora lo que el prompt ya
+      arregló. Si no mejora, se descarta y no se instala nada.</div>
+    </div>
+    <div class="paso" data-page-node-id="RuGy7MHXqKXMgIeoKLqeVB">
+      <div class="num" data-page-node-id="lhC9P336RlWEHIkJtO8FWg">3</div>
+      <div class="txt" data-page-node-id="6UwnDPIe3BC5WmmjQ50E78">Espanso para el diccionario vivo. Saca las sustituciones del script a un YAML editable.
+      Es independiente del dictado, así que no puede romperlo.</div>
+    </div>
+    <div class="paso" data-page-node-id="RxCE8CdxTCuancK6ZNjFD4">
+      <div class="num" data-page-node-id="1hwQS1EptdvlOgL6VN1cF0">4</div>
+      <div class="txt" data-page-node-id="9Ny0QCQIy8PGjVZoO598tP">Symspellpy o jellyfish solo si después del paso 1 siguen quedando errores que te
+      molesten. Hoy quedan cinco tipos y todos son menores, así que probablemente no haga falta.</div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer data-page-node-id="FKbtsF5r1p6iOJLEHfvLmX">
+  Escribí este informe el 9 de octubre de 2026. Comprobé los diez repositorios y los cuatro adicionales
+  contra la API de GitHub ese mismo día; las estrellas y las fechas son de esa consulta y cambian con el
+  tiempo. El WER lo medí en esta máquina con <code data-page-node-id="NXxawzto5gi2AzC2kXbCsh">dictado-bench.py</code> sobre el corpus de 12 muestras,
+  y no lo he copiado de ninguna fuente.
+</footer>
+
+</body>
+</html>

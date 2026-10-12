@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Informe: limpieza de tics de IA en las skills</title>
+<style>
+  :root { --tinta:#1b1b1f; --suave:#5a5a66; --linea:#e3e3ea; --fondo:#fbfbfd; --acento:#2b6cb0; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:2.4rem 1.2rem 4rem; background:var(--fondo); color:var(--tinta);
+    font:16px/1.6 -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  main { max-width:820px; margin:0 auto; }
+  h1 { font-size:1.7rem; line-height:1.25; margin:0 0 .3rem; }
+  .fecha { color:var(--suave); font-size:.92rem; margin:0 0 1.8rem; }
+  h2 { font-size:1.15rem; margin:2.4rem 0 .7rem; padding-bottom:.35rem; border-bottom:1px solid var(--linea); }
+  p, li { color:var(--tinta); }
+  .resumen { display:flex; gap:1.4rem; flex-wrap:wrap; margin:0 0 .4rem; }
+  .cifra { background:#fff; border:1px solid var(--linea); border-radius:10px; padding:.8rem 1.1rem; min-width:150px; }
+  .cifra b { display:block; font-size:1.5rem; line-height:1.2; }
+  .cifra span { color:var(--suave); font-size:.86rem; }
+  table { width:100%; border-collapse:collapse; margin:.6rem 0 0; font-size:.94rem; }
+  th, td { text-align:left; padding:.42rem .6rem; border-bottom:1px solid var(--linea); }
+  th { color:var(--suave); font-weight:600; font-size:.82rem; text-transform:uppercase; letter-spacing:.03em; }
+  td.nu { text-align:right; font-variant-numeric:tabular-nums; width:5.5rem; }
+  td.lote { text-align:center; color:var(--suave); width:3.4rem; }
+  td.sk { font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:.86rem; }
+  code { background:#f1f1f6; border:1px solid var(--linea); border-radius:5px; padding:.05rem .3rem;
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:.86em; }
+  .nota { background:#fff; border:1px solid var(--linea); border-left:3px solid var(--acento);
+    border-radius:8px; padding:.8rem 1rem; margin:1rem 0; }
+  footer { margin-top:3rem; color:var(--suave); font-size:.86rem; border-top:1px solid var(--linea); padding-top:1rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Limpieza de tics de IA en las skills</h1>
+  <p class="fecha">10 de octubre de 2026. Comprobador <code>unslop-revisar.py</code> sobre
+  <code>~/.workbuddy-ai/skills</code>.</p>
+
+  <div class="resumen">
+    <div class="cifra"><b>41</b><span>skills limpiadas</span></div>
+    <div class="cifra"><b>1648</b><span>hallazgos quitados</span></div>
+    <div class="cifra"><b>58 / 60</b><span>skills revisables a cero</span></div>
+  </div>
+
+  <h2>Cómo se hizo</h2>
+  <p>El comprobador señala y no reescribe, así que cada fichero se pasó por él, se reescribió la
+  prosa y se volvió a medir hasta dar cero. El trabajo fue en dos lotes: primero los doce skills con
+  más hallazgos, después los treinta y dos restantes en español más los dos de cuerpo inglés. Cada
+  fichero tiene su copia <code>SKILL.md.bak-20261010-unslop</code>.</p>
+
+  <h2>Qué más se comprobó</h2>
+  <ul>
+    <li>Los bloques de código entre cercas quedaron idénticos byte a byte a la copia, en los 41.</li>
+    <li>El frontmatter YAML parsea en todos, incluidos los que cambiaron de <code>description</code>.</li>
+    <li>Cero caracteres chinos en los ficheros tocados.</li>
+    <li>Los números y los identificadores entre comillas invertidas cuadran antes y después. La única
+    diferencia fue un cambio de formato de fecha, misma fecha.</li>
+    <li>Control de regresión: el comprobador sigue marcando las copias previas (2542 hallazgos sobre
+    las doce del lote 1), así que el cero no es ceguera de la herramienta.</li>
+  </ul>
+
+  <h2>Tabla</h2>
+  <table>
+    <thead><tr><th>Skill</th><th class="nu">Antes</th><th class="nu">Después</th><th class="lote">Lote</th></tr></thead>
+    <tbody>
+      <tr><td class=sk>mac-apple-silicon-para-linux</td><td class=nu>544</td><td class=nu>0</td><td class=lote>1</td></tr>
+      <tr><td class=sk>stalker2-gear-lookup</td><td class=nu>146</td><td class=nu>0</td><td class=lote>1</td></tr>
+      <tr><td class=sk>pipewire-grafo-y-codec-streaming</td><td class=nu>142</td><td class=nu>0</td><td class=lote>1</td></tr>
+      <tr><td class=sk>coste-ia-suscripcion-vs-api</td><td class=nu>96</td><td class=nu>0</td><td class=lote>1</td></tr>
+      <tr><td class=sk>protein-quality-assessment</td><td class=nu>75</td><td class=nu>0</td><td class=lote>1</td></tr>
+      <tr><td class=sk>ktimer-comando-perceptible</td><td class=nu>67</td><td class=nu>0</td><td class=lote>1</td></tr>
+      <tr><td class=sk>video-wallpaper-horneado-mpv</td><td class=nu>55</td><td class=nu>0</td><td class=lote>1</td></tr>
+      <tr><td class=sk>tiktok-video-desaparecido</td><td class=nu>40</td><td class=nu>0</td><td class=lote>1</td></tr>
+      <tr><td class=sk>docx-oficios-to-pdf-calendar</td><td class=nu>36</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>antiparasitarios-veterinarios-mexico</td><td class=nu>34</td><td class=nu>0</td><td class=lote>1</td></tr>
+      <tr><td class=sk>modelo-local-apple-silicon</td><td class=nu>33</td><td class=nu>0</td><td class=lote>1</td></tr>
+      <tr><td class=sk>html-animation-debug-firefox</td><td class=nu>32</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>transparencia-real-wayland-hyprland</td><td class=nu>21</td><td class=nu>0</td><td class=lote>1</td></tr>
+      <tr><td class=sk>medir-consumo-wallpaper-hyprland</td><td class=nu>21</td><td class=nu>0</td><td class=lote>1</td></tr>
+      <tr><td class=sk>kitty-keybind-regression-check</td><td class=nu>20</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>zen-firefox-localstorage-forense</td><td class=nu>19</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>pdf-normativo-a-html-legible</td><td class=nu>19</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>verificar-bug-app-movil</td><td class=nu>17</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>modelo-local-amd-linux</td><td class=nu>17</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>genymotion-player-flag-crash</td><td class=nu>17</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>artefacto-generado-contaminado</td><td class=nu>17</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>promodescuentos-graphql</td><td class=nu>16</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>escaneo-pdf-a-html-cotejado</td><td class=nu>15</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>linux-dos-uplinks-por-app</td><td class=nu>14</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>capa-quickshell-no-vuelve-tras-monitor</td><td class=nu>14</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>hdr-juegos-hyprland-gamescope</td><td class=nu>13</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>pdf-extraer-imagenes-max-res-y-rehacer</td><td class=nu>12</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>dms-ajustes-ocultos-notificaciones</td><td class=nu>12</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>informe-html-a-markdown</td><td class=nu>11</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>dms-plugins-dankmaterialshell</td><td class=nu>11</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>identificar-barra-o-ventana-desconocida</td><td class=nu>9</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>hyprshade-shaders-hyprland</td><td class=nu>9</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>comparar-moviles-datos-verificados</td><td class=nu>8</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>android-en-linux-emulador-waydroid</td><td class=nu>8</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>edicion-multiple-mismo-fichero</td><td class=nu>7</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>cotejo-ediciones-documento-html</td><td class=nu>6</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>pages-no-publica-tras-push</td><td class=nu>4</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>jwa-datos-y-costes-adn</td><td class=nu>4</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>dms-lanzador-entradas-desktop</td><td class=nu>4</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>verificar-lectura-ocr-contra-facsimil</td><td class=nu>2</td><td class=nu>0</td><td class=lote>2</td></tr>
+      <tr><td class=sk>zapzap-whatsappweb-css</td><td class=nu>1</td><td class=nu>0</td><td class=lote>2</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Lo que queda fuera, y por qué</h2>
+  <div class="nota">
+    <p><b>Dos skills no se han tocado.</b> <code>buro-credito-mexico-consulta</code> (27 hallazgos) y
+    <code>pago-tarjeta-credito-tiempos-mexico</code> (16) las estaba escribiendo otra sesión a la vez.
+    Su fecha de modificación se movió mientras se medía, así que se dejan hasta que esa sesión cierre.</p>
+  </div>
+  <div class="nota">
+    <p><b>Seis ficheros del pack <code>deep-research</code> quedan fuera a propósito.</b> Son de
+    terceros (licencia MIT, repositorio propio) y están escritos en chino. Sus hallazgos son su
+    propio idioma, no tics de escritura.</p>
+  </div>
+  <div class="nota">
+    <p><b>Los dos diccionarios no se revisan.</b> <code>unslop_ESPAÑOL</code> y <code>unslop_EN</code>
+    contienen las listas de reglas y de palabras prohibidas. Pasarlos por el comprobador es pedirle a
+    un diccionario que no contenga las palabras.</p>
+  </div>
+
+  <h2>Un arreglo en la herramienta</h2>
+  <p>La regla de rayas marcaba también lo que va entre comillas invertidas, donde hay literales y
+  código y no prosa. Eso hizo que dos agentes borraran un literal, o sea que perdieran un dato. Ya
+  está corregida: esa regla mide el texto con esos tramos en blanco, igual que hacían las de dos
+  puntos y de vocabulario. Los cuatro literales perdidos se restauraron.</p>
+
+  <footer>Generado el 2026-10-10. Los datos salen del comprobador <code>unslop-revisar.py</code>,
+  medidos fichero a fichero.</footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,2980 @@
+#!/usr/bin/env bash
+
+# ============================================================
+# GENYMOTION + HYPRLAND + GPS + JURASSIC WORLD ALIVE
+# ============================================================
+
+set -u
+
+# ------------------------------------------------------------
+# CONFIGURACIÓN
+# ------------------------------------------------------------
+
+GENY_PATH="/opt/genymotion"
+
+PLAYER="$GENY_PATH/player"
+
+# Genymotion actual documenta "genymotion-shell".
+# Algunas instalaciones antiguas usan "genyshell".
+if [[ -x "$GENY_PATH/genymotion-shell" ]]; then
+    GENYSHELL="$GENY_PATH/genymotion-shell"
+else
+    GENYSHELL="$GENY_PATH/genyshell"
+fi
+
+VM_NAME="Google Pixel 6"
+
+# Carpeta de la VM. Genymotion la publica en su settings.json; si no
+# se puede leer, se usa la ruta por defecto.
+GENY_SETTINGS="$HOME/.Genymobile/Genymotion/settings.json"
+
+GENY_VM_ROOT="$(
+    jq -r '."virtual_devices.directory" // empty' "$GENY_SETTINGS" 2>/dev/null
+)"
+
+if [[ -z "$GENY_VM_ROOT" ]]; then
+    GENY_VM_ROOT="$HOME/.Genymobile/Genymotion/deployed"
+fi
+
+# jq devuelve la ruta con barra final; la normalizamos.
+GENY_VM_ROOT="${GENY_VM_ROOT%/}"
+
+GENY_VM_DIR="$GENY_VM_ROOT/$VM_NAME"
+
+# Perfil del dispositivo. Aquí vive el tamaño de pantalla con el que el
+# reproductor encuadra el dibujo (ver "PERFIL DEL DISPOSITIVO").
+DEVICE_CONFIG="$GENY_VM_DIR/shared/config/device.json"
+
+# ------------------------------------------------------------
+# Ventana Hyprland
+# ------------------------------------------------------------
+
+GENY_CLASS="Genymotion Player"
+GENY_TITLE_PREFIX="Google Pixel 6 ("
+
+# ------------------------------------------------------------
+# TAMAÑO DEL TILE
+#
+# CAMBIO DEL 2026-10-02 (pedido por n30): el tile pasa a ser fijo,
+# 1012x1440. Hasta esa fecha el ancho salía de la fórmula y el alto se
+# leía en vivo del tile; ahora los dos son fijos.
+#
+# El motivo del cambio es que la barra de herramientas del reproductor
+# está OCULTA (Ctrl+T), así que el contenido ya no pierde 48 px de
+# ancho. Ver TOOLBAR_WIDTH.
+#
+# La fórmula sigue viva para -portrait / -landscape:
+#
+#     ancho_tile = alto_util * (perfil_ancho / perfil_alto) + TOOLBAR_WIDTH
+#
+# donde alto_util es la altura útil del workspace: 1436 px en un monitor
+# de 1440 con 2 px de borde arriba y abajo.
+#
+# Medidas del 2026-09-30, hechas con la barra VISIBLE (TOOLBAR_WIDTH=48):
+#
+#     1080x2160 (1:2) -> 1436 * 0,5 + 48 =  766   (medido: dibuja 718x1436)
+#     2160x2160 (1:1) -> 1436 * 1,0 + 48 = 1484   (medido: dibuja 1436x1436)
+#
+# Con el tile de 767 y un perfil cuadrado el dibujo se quedaría en
+# 719x719, la MITAD de área que en vertical. Por eso -portrait y
+# -landscape cambian las dos cosas a la vez: el perfil del dispositivo
+# y el ancho del tile. Cuando se pasa uno de esos flags, el ancho no se
+# toma de aquí: se calcula al vuelo en tile_width_for_profile().
+# ------------------------------------------------------------
+
+# Ancho de la ventana. 1416 es el que n30 tiene AHORA (medido el
+# 2026-10-02 por la tarde con `hyprctl clients -j`) y pidió que el script
+# lo reproduzca.
+#
+# OJO: 1464 fue un valor anterior del mismo día; n30 lo volvió a ajustar
+# a 1416. No es una constante que se pueda deducir de la fórmula: es lo
+# que él elige a mano. Cuando lo cambie, se mide y se actualiza aquí.
+GENY_WIDTH=1416
+
+# Alto de la ventana. Fijo desde el 2026-10-02. Vacío = leerlo en vivo,
+# que es lo que hacía antes.
+#
+# 1415 NO es un número elegido: es el TECHO mientras el reproductor está
+# agrupado. Medido en su ejecución real del 2026-10-02 (log del .desktop):
+# con GENY_HEIGHT=1440 el script pedía 1012x1440, Hyprland respondía `ok`
+# y la ventana se quedaba en 1415. El grupo reserva 21 px para su barra de
+# pestañas (1436 del tile - 21 = 1415) y el alto del tile lo fija el
+# layout, así que pedir más no cambia nada.
+#
+# El ANCHO sí se puede forzar estando agrupado; el ALTO no. Si algún día
+# se desagrupa (GENY_GROUP_PARTNER vacío), el alto puede subir a 1436.
+GENY_HEIGHT=1415
+
+# Píxeles que el reproductor gasta en su barra de herramientas lateral
+# derecha y que por tanto NO son contenido. Se descuenta al calcular el
+# tile de un perfil.
+#
+#   48 -> barra visible (valor por defecto del reproductor)
+#    0 -> barra oculta con Ctrl+T  <-- estado desde el 2026-10-02
+#
+# Medido el 2026-10-02: el fondo de la barra ocupa exactamente 48 px
+# (perfil de color de una captura) y el binario la llama $TOOLBAR_WIDTH.
+TOOLBAR_WIDTH=0
+
+# Ocultar la barra lateral del reproductor al arrancar, sin que n30 tenga
+# que pulsar Ctrl+T.
+#
+#     1 -> el script envía Ctrl+T
+#     0 -> no lo toca (la barra queda como la dejara la última sesión)
+#
+# CÓMO, y por qué así (medido el 2026-10-02):
+#
+# El reproductor es XWayland (hyprctl clients: xwayland=true), así que
+# `xdotool key --clearmodifiers ctrl+t` con la ventana ENFOCADA le llega
+# de verdad. Verificado con capturas: la primera pulsación quita los 14
+# iconos de la derecha y la segunda los devuelve.
+#
+# NO se usa `hl.dsp.send_shortcut`, aunque exista y devuelva ok=true. Se
+# probó a fondo el 2026-10-02 (9 variantes de `mods`, con selector de
+# objeto, con selector de cadena, sin selector, y contra un bind propio
+# de Hyprland que debía escribir en un fichero): SIEMPRE devolvía ok=true
+# y NUNCA entregaba la tecla. `send_shortcut` envuelve Actions::pass(),
+# que está pensado para reenviar un evento DENTRO del ciclo de input, no
+# para inyectarlo desde IPC.
+#
+# Tampoco hay API externa: el toggle vive en ToggleToolbarAction /
+# toggleToolBar() de libgmplayerplugin.so, sin D-Bus ni CLI.
+HIDE_TOOLBAR=1
+
+# Cuántas vueltas da el bucle de la barra lateral: medir -> decidir ->
+# enviar -> volver a medir. Medido el 2026-10-03: un envío suelto puede no
+# llegar (la barra se quedó visible tras un Ctrl+T), así que se comprueba
+# y se reintenta. Como es un toggle, solo se reintenta mientras el
+# objetivo NO se haya cumplido.
+#
+# Desde el 2026-10-04 una vuelta también sirve para ESPERAR cuando la
+# lectura es dudosa (ventana a medio pintar), sin enviar nada.
+TOOLBAR_HIDE_ATTEMPTS=4
+
+# Abrir el panel de GPS del reproductor al arrancar, sin que n30 tenga
+# que pulsar Ctrl+Alt+G.
+#
+#     1 -> el script lo abre si está cerrado
+#     0 -> no lo toca
+#
+# CÓMO (medido el 2026-10-02): es la MISMA vía que la barra lateral, y
+# por la misma razón — el reproductor es XWayland, así que
+# `xdotool key --clearmodifiers ctrl+alt+g` con la ventana enfocada le
+# llega. Comprobado en los dos sentidos: con el panel abierto lo cierra
+# y con el panel cerrado lo abre, devolviendo la ventana a su sitio
+# (466x306 en 887,-202, que es la regla `genymotion-gps` de Hyprland).
+#
+# OJO: Ctrl+Alt+G NO es un bind de Hyprland (`hyprctl binds` sólo tiene
+# SUPER+G = group.toggle). Es un atajo INTERNO del plugin de Genymotion:
+# vive en WidgetGps / `/Player/GpsWidget.qml`, embebido y comprimido en
+# libgmplayerplugin.so. No hay IPC que lo dispare.
+#
+# A diferencia de la barra, aquí SÍ se puede saber el estado sin capturar
+# pantalla: el panel es una ventana propia con título "GPS - Genymotion",
+# así que se mira en hyprctl clients.
+SHOW_GPS_PANEL=1
+
+# Cuántos envíos de Ctrl+Alt+G se permiten si el panel no aparece.
+#
+# MEDIDO el 2026-10-03: el script intentaba abrir el panel en el paso
+# [2/7], con la VM TODAVÍA ARRANCANDO, y ahí el reproductor no atiende el
+# atajo — 6 s de espera y nada. Con la VM ya lista, el mismo Ctrl+Alt+G
+# funciona a la primera. Por eso la llamada se movió AL FINAL del script.
+#
+# El 2026-10-04 falló igual en un arranque EN FRÍO, ya estando al final:
+# dos envíos y el panel no apareció. Desde entonces cada intento vuelve a
+# comprobar el panel ANTES de enviar (ver show_gps_panel), así que un
+# panel que se abre tarde se detecta en vez de cerrarse, y subir este
+# número ya no tiene el riesgo de antes. Se paga solo cuando falla: si el
+# panel aparece al primer envío, el bucle sale en menos de un segundo.
+GPS_PANEL_ATTEMPTS=8
+
+# Segundos que se espera, tras cada envío, a que el panel aparezca. Con la
+# VM ya lista aparece en menos de un segundo, así que este techo solo se
+# agota en un arranque en frío, que es justo cuando hace falta.
+GPS_PANEL_WAIT_S=6
+
+# Vueltas que se dan para dejar el foco en el reproductor antes de enviar
+# una tecla.
+#
+# MEDIDO el 2026-10-04, en una ejecución real: el foco estaba en otra
+# ventana justo en el hueco entre dos pasos, y con UNA sola comprobación el
+# script se rendía sin abrir el panel. `hl.dsp.focus` recupera el foco de
+# sobra (comprobado a mano: pasó de Zen Browser al reproductor), así que se
+# insiste unas veces antes de darse por vencido.
+FOCUS_ATTEMPTS=3
+
+# Relecturas al CONFIRMAR que la barra quedó oculta.
+#
+# MEDIDO el 2026-10-04: justo después de enviar Ctrl+T la franja puede estar
+# a medio cambiar (la barra saliendo, el juego cargando) y una sola lectura
+# cae en la banda dudosa aunque el objetivo YA esté cumplido. Ese día la
+# barra SÍ quedó oculta y el script dijo «no pude confirmar». Remedir es
+# seguro: no se envía nada más.
+TOOLBAR_VERIFY_READS=4
+
+# Lanzar el temporizador de JWA al arrancar (pedido por n30 el 2026-10-04).
+#
+#     1 -> lo lanza si no está ya abierto
+#     0 -> no lo toca
+#
+# Vive FUERA del repo, en ~/Proyectos/jwa-timer/. Abre una capa Wayland
+# (Quickshell + jwa-timer.qml), no una ventana, así que no la verás en
+# `hyprctl clients`.
+#
+# No hace falta envolverlo en `setsid` ni comprobar antes si está abierto:
+# el propio script ya se desengancha por dentro (`setsid quickshell ...`)
+# y ya es idempotente —si está abierto imprime "ya esta abierto" y sale
+# con 0—. Aquí solo se llama y se recoge lo que diga.
+JWA_TIMER=1
+JWA_TIMER_SCRIPT="$HOME/Proyectos/jwa-timer/jwa-timer.sh"
+
+# Límite de intercambios al llevar el tile al borde izquierdo.
+# Normalmente basta uno; el límite también cubre workspaces con muchos tiles.
+GENY_LEFT_MAX_SWAPS=32
+
+# Clase de la ventana con la que se agrupa el reproductor al arrancar,
+# para quedar directamente en modo pestañas.
+#
+# Medido el 2026-10-02: la clase exacta de WorkBuddy AI es "WorkBuddy AI"
+# (Wayland nativa, no XWayland) y sólo hay una ventana con esa clase.
+#
+# El reproductor se agrupa SIEMPRE (pedido por n30 el 2026-10-02): si este
+# socio está corriendo van los dos en el mismo grupo; si no, el reproductor
+# queda en un grupo de un solo miembro. Vacío = no busca socio y agrupa el
+# reproductor solo.
+GENY_GROUP_PARTNER="WorkBuddy AI"
+
+# ------------------------------------------------------------
+# Resolución pedida por parámetro (vacío = no tocar nada)
+# ------------------------------------------------------------
+
+PROFILE_W=""
+PROFILE_H=""
+PROFILE_LABEL=""
+TILE_WIDTH_APPLIED=""
+RESOLUTION_ONLY=0
+
+# De dónde salió la posición GPS que se aplicó en este arranque
+# ("recordada" o "de estreno"). Lo rellena set_gps() para el resumen.
+GPS_APPLIED_ORIGIN=""
+
+# Qué pasó DE VERDAD con la barra lateral y con el panel de GPS. Los
+# rellenan hide_player_toolbar() y show_gps_panel(), y el resumen final los
+# imprime tal cual.
+#
+# MEDIDO el 2026-10-04: el resumen imprimía «oculta con Ctrl+T» y «abierto
+# con Ctrl+Alt+G» como texto FIJO, sin mirar el resultado. En el arranque en
+# frío que falló, el resumen decía que todo estaba hecho mientras la barra
+# seguía puesta — que es justo lo que hizo difícil ver el fallo.
+TOOLBAR_RESULT=""
+GPS_PANEL_RESULT=""
+
+# Densidad Android. El perfil declara 320, pero aquí se fuerza 240 desde
+# el 2026-09-30: con 2160x2160 da 1440x1440 dp (sw1440dp, tableta) en vez
+# de 1080x1080 dp (sw1080dp). Es una incoherencia heredada; se cambia con
+# -d <dpi>.
+DENSITY=240
+
+# ------------------------------------------------------------
+# ADB
+# ------------------------------------------------------------
+
+ADB_HOST="127.0.0.1"
+ADB_PORT="6555"
+ADB_SERIAL="${ADB_HOST}:${ADB_PORT}"
+
+# ------------------------------------------------------------
+# Jurassic World Alive
+# ------------------------------------------------------------
+
+JWA_PACKAGE="com.ludia.jw2"
+
+# ------------------------------------------------------------
+# GPS
+#
+# Hasta el 2026-10-02 la posición era una constante clavada en Morelia y
+# el script la imponía en CADA arranque, pisando lo que hubiera.
+#
+# Desde entonces el script NO impone nada si el emulador ya tiene
+# posición: la respeta. Estas constantes son sólo el valor de ESTRENO,
+# el que se usa cuando el GPS está en blanco. Ver set_gps().
+#
+# Se probó antes un fichero de estado que guardase "la última posición
+# usada" y NO sirve: el script sólo ve el mundo cuando arranca y JWA mueve
+# el GPS mientras corre, así que ese fichero va siempre un arranque por
+# detrás. El propio emulador ya mantiene su última posición entre
+# arranques; no hay que duplicarla. Medido y descartado el 2026-10-02.
+# ------------------------------------------------------------
+
+GPS_DEFAULT_LAT="19.73663978"
+GPS_DEFAULT_LONG="-101.11478609"
+GPS_DEFAULT_ALT="15.04444408"
+
+
+GPS_ACCURACY="5"
+
+GPS_RETRIES=5
+
+# Diferencia máxima aceptada entre coordenada solicitada y devuelta
+GPS_TOLERANCE="0.0001"
+
+# ------------------------------------------------------------
+# Timeouts
+# ------------------------------------------------------------
+
+WINDOW_TIMEOUT_SECONDS=30
+ADB_TIMEOUT_SECONDS=60
+BOOT_TIMEOUT_SECONDS=90
+GENYSHELL_TIMEOUT_SECONDS=30
+
+# ------------------------------------------------------------
+# Logging
+# ------------------------------------------------------------
+
+LOG="/tmp/genymotion-jwa.log"
+
+
+# ============================================================
+# LOG
+# ============================================================
+
+exec > >(tee -a "$LOG") 2>&1
+
+echo
+echo "============================================================"
+echo " Genymotion / Hyprland / GPS / JWA"
+echo " $(date)"
+echo "============================================================"
+echo
+
+
+# ============================================================
+# HYPRLAND ≥ 0.56 - DISPATCHERS EN LUA
+#
+# hyprctl dispatch YA NO acepta la sintaxis clásica
+# ("dispatch swapwindow l"). Desde 0.56 el argumento se evalúa
+# como expresión Lua, de modo que la forma antigua produce:
+#
+#   error: [string "return hl.dispatch(swapwindow l)"]:1:
+#          ')' expected near 'l'
+#
+# Equivalencias usadas en este script:
+#
+#   dispatch focuswindow address:A
+#       -> hl.dsp.focus({ window = "address:A" })
+#
+#   dispatch swapwindow l
+#       -> hl.dsp.window.swap({ direction = "l" })
+#          (actúa sobre la ventana ACTIVA)
+#
+#   dispatch resizewindowpixel exact W H,address:A
+#       -> hl.dsp.window.resize({ x = W, y = H, window = "address:A" })
+#          (sin "relative" el tamaño es exacto en píxeles)
+#
+# Las funciones siguientes concentran el escapado de comillas
+# para no repetirlo en cada llamada.
+# ============================================================
+
+lua_focus() {
+    printf 'hl.dsp.focus({ window = "address:%s" })' "$1"
+}
+
+lua_swap_left() {
+    printf 'hl.dsp.window.swap({ direction = "l" })'
+}
+
+lua_resize() {
+    printf 'hl.dsp.window.resize({ x = %s, y = %s, window = "address:%s" })' \
+        "$1" "$2" "$3"
+}
+
+# Medido el 2026-09-30: el player IGNORA SIGTERM. Cerrar su ventana sí
+# lo mata, y con él a qemu. Es el cierre limpio para poder tocar el
+# perfil del dispositivo.
+lua_close() {
+    printf 'hl.dsp.window.close({ window = "address:%s" })' "$1"
+}
+
+# Agrupa el reproductor, SIEMPRE (pedido por n30 el 2026-10-02):
+#
+#   - con GENY_GROUP_PARTNER corriendo -> grupo de dos (modo pestañas);
+#   - sin él                          -> grupo SOLO con el reproductor.
+#
+# Antes, sin socio, se quedaba suelto para no crear un grupo de un solo
+# miembro. n30 pidió lo contrario: quiere el reproductor siempre en modo
+# grupo, esté o no WorkBuddy.
+#
+# OJO, medido el 2026-10-02: los despachadores de grupo IGNORAN el selector
+# en forma de cadena (`window = "address:0x..."`) y el id numérico; SÓLO
+# aceptan el OBJETO de ventana. Por eso esto no puede usar lua_focus ni
+# lua_resize, que sí pasan cadena (y para ellos la cadena vale).
+#
+# Va por `hyprctl eval` y no por `hyprctl dispatch` porque necesita
+# sentencias (local, if), no una sola expresión que devuelva un despachador.
+# `eval` no imprime el valor devuelto, así que el resultado lo comprueba
+# group_pixel_window() leyendo hyprctl clients -j.
+#
+# Idempotente: si el reproductor ya está en el grupo del socio no hace nada.
+# La pertenencia se mira por address, porque comparar los objetos de grupo
+# entre llamadas no es fiable.
+lua_group_player() {
+    printf 'local function _w(c) local t = hl.get_windows({ class = c }); if type(t) == "table" and #t > 0 then return t[1] end return nil end; local p = _w("%s"); if p == nil then return end; local q = _w("%s"); if q ~= nil then if q.group == nil then hl.dispatch(hl.dsp.group.toggle({ window = q })); q = _w("%s"); if q == nil or q.group == nil then return end end; local m = q.group.members; if type(m) == "table" then for _, w in ipairs(m) do if w.address == p.address then return end end end; q.group:add(p); return end; if p.group == nil then hl.dispatch(hl.dsp.group.toggle({ window = p })) end' \
+        "$GENY_CLASS" "$GENY_GROUP_PARTNER" "$GENY_GROUP_PARTNER"
+}
+
+
+# ============================================================
+# FUNCIONES BÁSICAS
+# ============================================================
+
+die() {
+    echo
+    echo "❌ ERROR: $*" >&2
+    echo "📄 Log: $LOG"
+    exit 1
+}
+
+have() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+
+# ============================================================
+# COMPROBAR DEPENDENCIAS
+# ============================================================
+
+check_dependencies() {
+
+    [[ -x "$PLAYER" ]] ||
+        die "No existe o no es ejecutable: $PLAYER"
+
+    [[ -x "$GENYSHELL" ]] ||
+        die "No encuentro Genymotion Shell en $GENY_PATH"
+
+    have adb ||
+        die "No encuentro adb"
+
+    have jq ||
+        die "No encuentro jq"
+
+    if ! have hyprctl; then
+        echo "⚠️ hyprctl no disponible."
+        echo "   Se omitirá el ajuste automático de ventana."
+    fi
+
+    # Para la barra lateral y el panel de GPS. No son críticos: si faltan,
+    # el script avisa y sigue, dejándole la tecla a mano a n30.
+    if [[ "$HIDE_TOOLBAR" == "1" || "$SHOW_GPS_PANEL" == "1" ]]; then
+
+        have xdotool ||
+            echo "⚠️ No encuentro xdotool: no podré tocar la barra ni el panel de GPS."
+    fi
+
+    if [[ "$HIDE_TOOLBAR" == "1" ]]; then
+
+        if ! have grim; then
+            echo "⚠️ No encuentro grim: no podré leer si la barra está puesta."
+        fi
+
+        if ! have convert && ! have magick; then
+            echo "⚠️ No encuentro ImageMagick: no podré leer si la barra está puesta."
+        fi
+    fi
+
+    echo "✅ Dependencias verificadas."
+    echo "   Player: $PLAYER"
+    echo "   Shell : $GENYSHELL"
+}
+
+
+# ============================================================
+# HYPRLAND - BUSCAR PIXEL
+# ============================================================
+
+find_pixel_window() {
+
+    have hyprctl || return 1
+
+    hyprctl clients -j 2>/dev/null |
+        jq -r \
+            --arg cls "$GENY_CLASS" \
+            --arg prefix "$GENY_TITLE_PREFIX" '
+                .[]
+                | select(
+                    .class == $cls
+                    and
+                    (.title | startswith($prefix))
+                )
+                | .address
+            ' |
+        head -n 1
+}
+
+
+# ============================================================
+# HYPRLAND - ESPERAR PIXEL
+#
+# IMPORTANTE:
+# Todos los mensajes van a stderr.
+# stdout contiene EXCLUSIVAMENTE la address.
+#
+# $1 (opcional): PID del player. Si el proceso muere antes de que
+# aparezca la ventana, se sale con 2 en vez de agotar el timeout.
+# ============================================================
+
+# Un proceso en estado Z (zombie) ya terminó, aunque /proc siga ahí.
+player_alive() {
+
+    local pid="$1"
+    local state
+
+    [[ -n "$pid" ]] || return 1
+    [[ -d "/proc/$pid" ]] || return 1
+
+    state="$(awk '{print $3}' "/proc/$pid/stat" 2>/dev/null)"
+
+    [[ "$state" != "Z" ]]
+}
+
+wait_for_pixel_window() {
+
+    have hyprctl || return 1
+
+    local watch_pid="${1:-}"
+    local address=""
+    local iterations
+
+    iterations=$((WINDOW_TIMEOUT_SECONDS * 5))
+
+    echo "🪟 Esperando ventana principal de Genymotion..." >&2
+
+    for ((i=1; i<=iterations; i++)); do
+
+        address="$(find_pixel_window || true)"
+
+        if [[ -n "$address" && "$address" != "null" ]]; then
+
+            echo "✅ Ventana encontrada: $address" >&2
+
+            printf '%s\n' "$address"
+            return 0
+        fi
+
+        if [[ -n "$watch_pid" ]] && ! player_alive "$watch_pid"; then
+            echo "❌ El player (PID $watch_pid) murió antes de mostrar la ventana." >&2
+            return 2
+        fi
+
+        sleep 0.2
+    done
+
+    echo "⚠️ Timeout esperando ventana." >&2
+    return 1
+}
+
+
+# ============================================================
+# HYPRLAND - LLEVAR PIXEL AL EXTREMO IZQUIERDO
+#
+# Dwindle decide dónde insertar una ventana nueva según el foco/cursor.
+# Para no depender de esa decisión, intercambiamos el tile con el vecino
+# situado a su izquierda hasta que alcance la X mínima de su monitor.
+# Se usa la address, no el título ni la ventana que estuviera enfocada.
+# ============================================================
+
+move_pixel_window_left() {
+
+    local address="$1"
+    local active_address=""
+    local state=""
+    local x=""
+    local min_x=""
+    local floating=""
+    local result=""
+    local attempt
+
+    have hyprctl || return 0
+
+    echo
+    echo "🧭 Moviendo el tile de Genymotion al extremo izquierdo..."
+
+    active_address="$(
+        hyprctl activewindow -j 2>/dev/null |
+            jq -r '.address // empty' 2>/dev/null || true
+    )"
+
+    for ((attempt=1; attempt<=GENY_LEFT_MAX_SWAPS; attempt++)); do
+
+        state="$(
+            hyprctl clients -j 2>/dev/null |
+                jq -r \
+                    --arg addr "$address" '
+                        (.[] | select(.address == $addr)) as $target
+                        | [
+                            $target.at[0],
+                            ([.[]
+                                | select(
+                                    .monitor == $target.monitor
+                                    and .workspace.id == $target.workspace.id
+                                    and .floating == false
+                                    and .mapped == true
+                                )
+                                | .at[0]
+                            ] | min),
+                            $target.floating
+                          ]
+                        | @tsv
+                    ' 2>/dev/null
+        )"
+
+        IFS=$'\t' read -r x min_x floating <<< "$state"
+
+        if ! [[ "$x" =~ ^-?[0-9]+$ && "$min_x" =~ ^-?[0-9]+$ ]]; then
+            echo "⚠️ No pude determinar la posición horizontal del tile."
+            break
+        fi
+
+        if [[ "$floating" == "true" ]]; then
+            echo "⚠️ La ventana es flotante; no pertenece al árbol Dwindle."
+            break
+        fi
+
+        if (( x <= min_x )); then
+            echo "✅ Tile situado en el extremo izquierdo (x=${x})."
+            break
+        fi
+
+        # hl.dsp.window.swap actúa sobre la ventana activa. El batch enfoca
+        # por address y hace el intercambio como una sola operación, evitando
+        # que el cursor o el foco previo elijan otra ventana.
+        result="$(
+            hyprctl --batch \
+                "dispatch $(lua_focus "$address"); dispatch $(lua_swap_left)" \
+                2>&1
+        )"
+
+        if [[ "$result" == *"error"* || "$result" == *"Err"* ]]; then
+            echo "⚠️ Hyprland no pudo intercambiar el tile: $result"
+            break
+        fi
+
+        sleep 0.1
+    done
+
+    if (( attempt > GENY_LEFT_MAX_SWAPS )); then
+        echo "⚠️ Se alcanzó el límite de ${GENY_LEFT_MAX_SWAPS} intercambios."
+    fi
+
+    # Restaurar la ventana que estaba enfocada al comenzar este ajuste.
+    if [[ -n "$active_address" && "$active_address" != "$address" ]]; then
+        hyprctl dispatch "$(lua_focus "$active_address")" \
+            >/dev/null 2>&1 || true
+    fi
+}
+
+
+# ============================================================
+# HYPRLAND - ANCHO DE TILE PARA UN PERFIL DADO
+#
+# El contenido se dibuja escalado al rectángulo del perfil dentro del
+# área de la ventana, y esa área es (ancho - TOOLBAR_WIDTH) x alto,
+# porque el reproductor gasta TOOLBAR_WIDTH px de barra de herramientas
+# a la derecha. Para que el contenido llene la altura disponible:
+#
+#     ancho_tile = alto * (perfil_ancho / perfil_alto) + TOOLBAR_WIDTH
+#
+# Comprobado con las medidas del 2026-09-30 (alto 1436, barra visible):
+#     1080x2160 -> 1436 * 0,5 + 48 =  766   (dibujó 718x1436)
+#     2160x2160 -> 1436 * 1,0 + 48 = 1484   (dibujó 1436x1436)
+#
+# Desde el 2026-10-02 TOOLBAR_WIDTH=0 (barra oculta con Ctrl+T): con el
+# perfil cuadrado y un alto de 1415, el ancho que llena la altura es
+# 1415, no 1463.
+#
+# Devuelve el ancho por stdout; 1 si no se puede calcular.
+# ============================================================
+
+tile_width_for_profile() {
+
+    local height="$1"
+    local width
+
+    [[ "$height" =~ ^[0-9]+$ ]] || return 1
+    [[ "$PROFILE_W" =~ ^[0-9]+$ ]] || return 1
+    [[ "$PROFILE_H" =~ ^[0-9]+$ ]] || return 1
+
+    (( PROFILE_H > 0 )) || return 1
+
+    # Redondeo al más cercano sin bc ni awk: (+ divisor/2) / divisor.
+    width=$(( (height * PROFILE_W + PROFILE_H / 2) / PROFILE_H + TOOLBAR_WIDTH ))
+
+    # Cordura: si sale algo disparatado, mejor no redimensionar.
+    (( width >= 200 && width <= 4000 )) || return 1
+
+    printf '%s\n' "$width"
+}
+
+
+# ============================================================
+# HYPRLAND - MODO GRUPO (PESTAÑAS)
+#
+# Deja el reproductor dentro del grupo de GENY_GROUP_PARTNER, para
+# arrancar ya en modo pestañas. Si esa ventana no está corriendo NO se
+# crea un grupo de un solo miembro: sólo añadiría una barra de pestañas
+# que se come 21 px de alto sin dar nada a cambio.
+#
+# Va DESPUÉS de que exista la ventana del reproductor y ANTES del
+# movimiento y del resize, porque agrupar re-reparte la geometría: el
+# tamaño que se fije antes de agrupar se pierde.
+#
+# La pertenencia se comprueba en el JSON de hyprctl, no por el valor
+# devuelto: `hyprctl eval` no imprime lo que devuelve la Lua.
+# ============================================================
+
+group_pixel_window() {
+
+    local address="$1"
+    local partner_count=""
+    local result=""
+    local grouped=""
+    local modo=""
+
+    have hyprctl || return 0
+    have jq || return 0
+
+    echo
+    echo "🗂️ Modo grupo..."
+
+    # Sin socio configurado la función sigue viva: agrupa el reproductor
+    # consigo mismo (grupo de un miembro). Sólo se salta si el usuario la
+    # desactiva del todo.
+    if [[ -z "$GENY_GROUP_PARTNER" ]]; then
+        partner_count="0"
+    else
+        partner_count="$(
+            hyprctl clients -j 2>/dev/null |
+                jq -r \
+                    --arg cls "$GENY_GROUP_PARTNER" \
+                    '[ .[] | select(.class == $cls) ] | length'
+        )"
+    fi
+
+    if [[ "$partner_count" == "1" ]]; then
+        modo="con ${GENY_GROUP_PARTNER}"
+    elif [[ "$partner_count" == "0" ]]; then
+        modo="solo"
+        echo "   '${GENY_GROUP_PARTNER:-ninguno}' no está corriendo: grupo de un solo miembro."
+    else
+        modo="solo"
+        echo "   Hay ${partner_count} ventanas de '${GENY_GROUP_PARTNER}'; agrupo el reproductor solo (sería ambiguo)."
+    fi
+
+    result="$(hyprctl eval "$(lua_group_player)" 2>&1 || true)"
+
+    if [[ "$result" == *error* ]]; then
+        echo "   hyprctl eval: $result"
+    fi
+
+    sleep 0.3
+
+    grouped="$(
+        hyprctl clients -j 2>/dev/null |
+            jq -r \
+                --arg addr "$address" '
+                    [ .[] | select(.address == $addr) | (.grouped | length) ][0] // 0
+                '
+    )"
+
+    if [[ "$grouped" =~ ^[0-9]+$ ]] && (( grouped >= 1 )); then
+        echo "   ✅ Reproductor agrupado (${modo}, ${grouped} pestañas)."
+    else
+        echo "   ⚠️ El reproductor no quedó agrupado; continúo."
+    fi
+
+    return 0
+}
+
+
+# ============================================================
+# HYPRLAND - OCULTAR LA BARRA LATERAL DEL REPRODUCTOR
+#
+# El reproductor dibuja una barra vertical de 48 px pegada al borde
+# derecho con 14 iconos. Ctrl+T la muestra/oculta. Sin esto, n30 tenía
+# que pulsarlo a mano en cada arranque.
+#
+# Vía: xdotool sobre XWayland (ver HIDE_TOOLBAR). Funciona sin importar
+# qué sesión dejó la barra: es un TOGGLE, así que hay que saber el estado
+# de partida.
+#
+# PROBLEMA: no se puede preguntar el estado. La barra está DENTRO del
+# surface de Qt, no es una ventana X11 hija, y no cambia el tamaño de la
+# ventana de Hyprland (medido: 1416x1415 con la barra visible y oculta).
+# No hay forma de leerla desde fuera sin capturar la pantalla.
+#
+# SOLUCIÓN: no adivinar. Se lee el estado con una captura de los 48 px
+# de la derecha. Es la única lectura fiable y cuesta un grim de 48 px de
+# ancho.
+#
+# EL CRITERIO, y por qué NO es la media (medido el 2026-10-02):
+#
+# Lo primero que probé fue la media de gris, y FALLA. El juego es un mapa
+# animado que va de zonas claras a oscuras, así que su media se mueve
+# sola: con la barra OCULTA medí 56 y luego 23 y 27 en la misma franja.
+# La media del juego invade el rango de la barra.
+#
+# Lo que sí separa los dos estados es el NÚMERO DE COLORES ÚNICOS de la
+# franja. La barra es una paleta plana (fondo e iconos, colores sólidos);
+# el juego debajo tiene antialiasing y degradados y dispara el conteo.
+# Cuatro muestras de cada estado, en la misma sesión:
+#
+#     barra VISIBLE:  293, 293, 293, 293   (idéntico: la barra es estática)
+#     barra OCULTA:  1209, 1204, 1194, 1169 (varía: el juego se mueve)
+#
+# La separación es de 4 a 1 y sin zona gris. El umbral 700 cae en medio.
+# ============================================================
+
+player_toolbar_visible() {
+
+    local address="$1"
+    local x=""
+    local y=""
+    local w=""
+    local h=""
+    local probe_x=""
+    local probe_w=48
+    local shot=""
+    local frac=""
+
+    have grim || return 2
+
+    # Geometría real de la ventana, para recortar su franja derecha.
+    read -r x y w h < <(
+        hyprctl clients -j 2>/dev/null |
+            jq -r \
+                --arg addr "$address" '
+                    .[]
+                    | select(.address == $addr)
+                    | "\(.at[0]) \(.at[1]) \(.size[0]) \(.size[1])"
+                '
+    )
+
+    [[ "$x" =~ ^-?[0-9]+$ && "$w" =~ ^[0-9]+$ ]] || return 2
+
+    probe_x=$(( x + w - probe_w ))
+
+    shot="$(mktemp /tmp/geny-toolbar-XXXXXX.png)"
+
+    # shellcheck disable=SC2016  # el %[fx:...] es de ImageMagick, no shell
+    if ! grim -g "${probe_x},${y} ${probe_w}x$(( h - 2 ))" "$shot" 2>/dev/null; then
+        rm -f "$shot"
+        return 2
+    fi
+
+    # --------------------------------------------------------
+    # La señal fiable es el COLOR DE FONDO de la barra, no el contenido.
+    #
+    # El fondo de la barra es un gris UNIFORME y constante, #1A1A1A. La
+    # franja de 48 px de la derecha ES la barra cuando está visible, así
+    # que ese color la ocupa casi entera. Cuando está oculta, la franja es
+    # contenido del emulador y el gris no aparece.
+    #
+    # MEDIDO el 2026-10-03 sobre la franja de 48x1411 = 67 728 px:
+    #     barra VISIBLE -> 0,968 de #1A1A1A   (64 725 px, 95,6 %)
+    #     barra OCULTA  -> 0,002 a 0,09
+    # Separación >10x. El umbral 0,5 cae en medio y no depende del juego.
+    #
+    # OJO CON EL FUZZ: el #1A1A1A de la barra es EXACTO (medido 04-oct:
+    # 64 802 px de 67 824). Cuanto más ancho el fuzz, más contenido del
+    # emulador entra en la cuenta. Con 3% un fondo oscuro llegaba a 0,33
+    # (banda dudosa) estando la barra OCULTA; con 1% se queda en 0,03. No
+    # lo subas: el margen que gana el ruido lo pierde la separación.
+    #
+    # El criterio anterior (contar COLORES ÚNICOS con umbral 700) se
+    # descartó: depende del CONTENIDO de la pantalla. El 2026-10-02 dio
+    # 293 vs 1169 (4x de separación), pero el 2026-10-03 el mismo par dio
+    # 285 vs 370 — LOS DOS por debajo del umbral, así que el detector
+    # decía "oculta" siempre y la barra se quedaba puesta al arrancar.
+    # Ese fue el fallo que n30 reportó.
+    # --------------------------------------------------------
+
+    # shellcheck disable=SC2016  # el %[fx:...] es de ImageMagick, no shell
+    frac="$(
+        LC_ALL=C magick "$shot" -fuzz 1% \
+            -fill white -opaque '#1A1A1A' \
+            -fill black +opaque white \
+            -format "%[fx:mean]" info: 2>/dev/null ||
+            LC_ALL=C convert "$shot" -fuzz 1% \
+                -fill white -opaque '#1A1A1A' \
+                -fill black +opaque white \
+                -format "%[fx:mean]" info: 2>/dev/null
+    )"
+
+    rm -f "$shot"
+
+    # LC_ALL=C garantiza el punto decimal; aun así se acepta la coma.
+    frac="${frac/,/.}"
+
+    [[ "$frac" =~ ^[0-9]*\.?[0-9]+$ ]] || return 2
+
+    # 0 = visible, 1 = oculta, 2 = lectura dudosa o no se pudo leer.
+    #
+    # Los tramos salen de medidas, no de la intuición. Con -fuzz 1%:
+    #     barra VISIBLE -> 0,963 a 0,965   (el fondo es #1A1A1A EXACTO)
+    #     barra OCULTA  -> 0,0001 a 0,032  (según el contenido del emulador)
+    # Separación >20x. El umbral 0,5 cae en medio.
+    #
+    # MEDIDO el 2026-10-04: con el -fuzz 3% anterior, un contenido OSCURO
+    # del emulador daba 0,333 con la barra OCULTA — la banda dudosa, que
+    # hasta ese momento no había dado ningún estado. El fuzz ancho
+    # mezclaba #101010/#111111 del emulador con #1A1A1A. Con 1% ese mismo
+    # contenido da 0,032. El fallo era el fuzz, no la banda.
+    #
+    # El tramo 0,15-0,5 sigue siendo «no lo sé»: si aparece es que la
+    # captura no vale (ventana a medio pintar). Ahí NO se decide: quien
+    # llama espera y remide.
+    awk -v f="$frac" 'BEGIN {
+        if (f > 0.5) exit 0
+        if (f < 0.15) exit 1
+        exit 2
+    }'
+}
+
+
+# ============================================================
+# FOCO PARA ENVIAR TECLAS (XWayland)
+#
+# El reproductor es XWayland, y `xdotool key` inyecta la tecla en el foco
+# del SERVIDOR X, no en el de Hyprland. Son dos focos distintos y hay que
+# poner los dos:
+#
+#   - el de Hyprland, con `hl.dsp.focus`, que decide qué ventana ve n30;
+#   - el de X, con `xdotool windowfocus --sync`, que es al que llega la
+#     tecla.
+#
+# MEDIDO el 2026-10-04, con la sesión ya asentada: los dos apuntaban al
+# reproductor (`xdotool getwindowfocus` devolvía su ventana). Pero el
+# script solo comprobaba el de Hyprland, así que en un arranque en frío no
+# había forma de saber si la tecla tenía destino. Ahora se pone el de X a
+# mano antes de cada envío.
+#
+# OJO al resolver la ventana X: el proceso del reproductor tiene VARIAS
+# ventanas X11 (la principal, el panel de GPS y una tercera llamada
+# "Genymotion"). Se busca por TÍTULO EXACTO, nunca por clase a secas.
+# ============================================================
+
+player_window_title() {
+    hyprctl clients -j 2>/dev/null |
+        jq -r --arg a "$1" '.[] | select(.address == $a) | .title'
+}
+
+
+player_x11_id() {
+
+    local want="$1"
+    local id=""
+    local nombre=""
+
+    have xdotool || return 1
+
+    while read -r id; do
+        nombre="$(xdotool getwindowname "$id" 2>/dev/null)" || continue
+        if [[ "$nombre" == "$want" ]]; then
+            printf '%s' "$id"
+            return 0
+        fi
+    done < <(xdotool search --class "Genymotion Player" 2>/dev/null)
+
+    return 1
+}
+
+
+# Deja el foco de Hyprland Y el de X en la ventana del reproductor.
+#
+# Devuelve 0 solo si consiguió confirmar el foco de X. Ese 0 es un extra,
+# no un requisito: quien llama sigue comprobando el foco de Hyprland, que
+# es el que `hl.dsp.focus` controla de verdad. Si esta función devuelve 1
+# (por ejemplo porque `xdotool getwindowfocus` falla, cosa que se ha visto
+# hacer de forma intermitente), la tecla se envía igual: es lo que se hacía
+# antes y funciona con la sesión asentada.
+focus_player_for_keys() {
+
+    local address="$1"
+    local titulo=""
+    local id=""
+
+    titulo="$(player_window_title "$address")"
+
+    [[ -n "$titulo" && "$titulo" != "null" ]] || return 1
+
+    hyprctl dispatch "hl.dsp.focus({ window = \"address:${address}\" })" \
+        >/dev/null 2>&1 || true
+
+    sleep 0.4
+
+    id="$(player_x11_id "$titulo" || true)"
+
+    [[ -n "$id" ]] || return 1
+
+    # Medido el 2026-10-04: estas dos NO roban el foco (el reproductor lo
+    # conserva), así que son seguras.
+    xdotool windowactivate --sync "$id" >/dev/null 2>&1 || true
+    xdotool windowfocus --sync "$id" >/dev/null 2>&1 || true
+
+    [[ "$(xdotool getwindowfocus 2>/dev/null)" == "$id" ]]
+}
+
+
+# Deja el foco en el reproductor Y LO CONFIRMA por Hyprland, insistiendo.
+#
+# Medido el 2026-10-04, en una ejecución real: el foco estaba en otra
+# ventana justo en el hueco entre dos pasos, y con UNA sola comprobación el
+# script se rendía sin abrir el panel. Ver FOCUS_ATTEMPTS.
+focus_player_checked() {
+
+    local address="$1"
+    local intento=0
+
+    for ((intento = 1; intento <= FOCUS_ATTEMPTS; intento++)); do
+
+        focus_player_for_keys "$address" || true
+
+        sleep 0.5
+
+        if [[ "$(hyprctl activewindow -j 2>/dev/null | jq -r '.address')" \
+              == "$address" ]]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+
+hide_player_toolbar() {
+
+    local address="$1"
+
+    [[ "$HIDE_TOOLBAR" == "1" ]] || {
+        TOOLBAR_RESULT="sin tocar (HIDE_TOOLBAR=0)"
+        echo "   Barra lateral: sin tocar (HIDE_TOOLBAR=0)."
+        return 0
+    }
+
+    if ! have xdotool; then
+        TOOLBAR_RESULT="sin tocar: falta xdotool"
+        echo "⚠️ No encuentro xdotool: no puedo ocultar la barra lateral."
+        echo "   Púlsala tú con Ctrl+T (o instala xdotool)."
+        return 0
+    fi
+
+    echo
+    echo "🧰 Barra lateral del reproductor..."
+
+    # --------------------------------------------------------
+    # POR QUÉ ESTO ES UN BUCLE Y NO UNA LECTURA SUELTA
+    #
+    # MEDIDO el 2026-10-04, en el arranque en frío que reportó n30: la
+    # versión anterior leía la franja UNA vez y decidía. Leyó "oculta"
+    # cuando la barra estaba visible, así que no envió nada y n30 se la
+    # encontró puesta.
+    #
+    # No fue un fallo del detector, fue medir demasiado pronto: ese paso
+    # corría en [2/7], con la ventana recién mapeada y la VM arrancando.
+    # En ese instante la barra todavía no está dibujada, así que la franja
+    # era fondo y la lectura "oculta" era cierta... para un estado que
+    # dejó de serlo un segundo después. Ahora se llama al final, con la VM
+    # ya arrancada (ver main), y además se remide.
+    #
+    # Genymotion NO guarda el estado de la barra en ningún sitio: su
+    # settings.json solo tiene las 6 claves widget.gps.*. Así que en cada
+    # arranque en frío la barra empieza VISIBLE, y este script es lo único
+    # que la puede ocultar.
+    #
+    # El bucle: medir -> decidir -> enviar -> VOLVER A MEDIR. Con lectura
+    # dudosa (2) no se envía nada y se espera. Solo se reintenta el envío
+    # mientras el objetivo NO se haya cumplido, que es lo único seguro con
+    # un toggle.
+    # --------------------------------------------------------
+
+    local intento
+    local estado
+    local enviados=0
+    local confirmacion
+
+    for ((intento = 1; intento <= TOOLBAR_HIDE_ATTEMPTS; intento++)); do
+
+        # Se lee ANTES de tocar el foco. La captura recorta por la geometría
+        # que da hyprctl, así que NO necesita foco; enfocar antes de leer
+        # robaría el foco de la ventana activa aunque la barra ya estuviera
+        # oculta y no hubiera nada que enviar. Se enfoca solo si hay que
+        # pulsar, más abajo.
+        #
+        # Sin captura no sé si la barra está puesta. Si ya está oculta,
+        # pulsar la MOSTRARÍA, así que ante la duda no se toca.
+        player_toolbar_visible "$address"
+        estado=$?
+
+        if (( estado == 1 )); then
+            if (( enviados == 0 )); then
+                TOOLBAR_RESULT="ya estaba oculta"
+                echo "   La barra ya estaba oculta; no envío nada."
+            else
+                TOOLBAR_RESULT="oculta con Ctrl+T (envío ${enviados})"
+                echo "   ✅ Barra lateral oculta (envío ${enviados})."
+            fi
+            return 0
+        fi
+
+        if (( estado == 2 )); then
+            echo "   Lectura dudosa (la ventana aún no está pintada); espero."
+            sleep 1
+            continue
+        fi
+
+        # estado = 0: la barra está visible y hay que ocultarla.
+        #
+        # Medido el 2026-10-03: con el foco correcto Ctrl+T funciona 3 de
+        # 3, pero un envío suelto puede no llegar (pasó de verdad: tras un
+        # Ctrl+T la barra seguía puesta). Por eso se comprueba después.
+        #
+        # xdotool manda la tecla al FOCO, no a una ventana concreta. Se
+        # enfoca por Hyprland (que es el dueño del foco), se pone el foco de
+        # X y se confirma, insistiendo si hace falta.
+        if ! focus_player_checked "$address"; then
+            # Sin foco, Ctrl+T iría a la ventana equivocada: mejor no enviarlo.
+            TOOLBAR_RESULT="sin tocar: no conseguí enfocar el reproductor"
+            echo "⚠️ No conseguí enfocar el reproductor; no envío Ctrl+T."
+            return 0
+        fi
+
+        echo "   La barra estaba visible; la oculto con Ctrl+T."
+
+        xdotool key --clearmodifiers ctrl+t || {
+            TOOLBAR_RESULT="sin tocar: xdotool falló al enviar"
+            echo "⚠️ xdotool falló al enviar Ctrl+T."
+            return 0
+        }
+
+        enviados=$(( enviados + 1 ))
+
+        sleep 1
+
+        # Se vuelve a medir. Si la lectura sale DUDOSA se remide unas veces
+        # más en vez de darlo por perdido: medido el 2026-10-04, justo
+        # después de ocultar la barra la franja puede estar a medio cambiar
+        # y una sola lectura cae en la banda dudosa aunque el objetivo YA
+        # esté cumplido. Remedir es seguro: no se envía nada más.
+        estado=2
+
+        for ((confirmacion = 1; confirmacion <= TOOLBAR_VERIFY_READS; confirmacion++)); do
+
+            player_toolbar_visible "$address"
+            estado=$?
+
+            (( estado != 2 )) && break
+
+            sleep 0.7
+        done
+
+        if (( estado == 1 )); then
+            TOOLBAR_RESULT="oculta con Ctrl+T (envío ${enviados})"
+            echo "   ✅ Barra lateral oculta (envío ${enviados})."
+            return 0
+        fi
+
+        if (( estado == 2 )); then
+            # Ya se envió: volver a enviar podría deshacerlo. Se para.
+            TOOLBAR_RESULT="enviada con Ctrl+T, SIN CONFIRMAR"
+            echo "   ⚠️ No pude confirmar si la barra quedó oculta; no insisto."
+            return 0
+        fi
+
+        if (( intento < TOOLBAR_HIDE_ATTEMPTS )); then
+            echo "   El envío ${enviados} no bastó; reintento."
+        fi
+    done
+
+    # Si no se envió nada, es que TODAS las lecturas fueron dudosas: no se
+    # puede afirmar que la barra esté visible. Se dice tal cual, y sobre
+    # todo NO se manda a n30 a pulsar Ctrl+T: si ya estaba oculta, ese
+    # Ctrl+T la MOSTRARÍA. Ese consejo solo vale si de verdad se vio.
+    if (( enviados == 0 )); then
+        TOOLBAR_RESULT="no pude determinar el estado de la barra"
+        echo "   ⚠️ No pude leer el estado de la barra (¿ventana sin pintar?)."
+        echo "   Mírala tú: si está puesta, púlsala con Ctrl+T."
+        return 0
+    fi
+
+    TOOLBAR_RESULT="SIGUE VISIBLE tras ${enviados} envíos"
+
+    echo "   ⚠️ La barra sigue visible tras ${enviados} envíos."
+    echo "   Púlsala tú con Ctrl+T."
+
+    return 0
+}
+
+
+# ============================================================
+# HYPRLAND - PANEL DE GPS
+#
+# Abre el panel de GPS del reproductor si está cerrado. Ver SHOW_GPS_PANEL.
+#
+# El panel es una ventana PROPIA de Genymotion Player con el título exacto
+# "GPS - Genymotion" (no una pestaña del grupo, ni parte del reproductor).
+# Por eso su estado SÍ se puede leer de hyprctl clients, sin capturas.
+#
+# Ctrl+Alt+G es un TOGGLE, así que hay que mirar antes: enviarlo con el
+# panel ya abierto lo CERRARÍA, que es justo lo contrario de lo pedido.
+# ============================================================
+
+GPS_PANEL_TITLE="GPS - Genymotion"
+
+gps_panel_open() {
+    local n=""
+
+    n="$(
+        hyprctl clients -j 2>/dev/null |
+            jq -r \
+                --arg t "^${GPS_PANEL_TITLE}\$" '
+                    [ .[] | select(.title | test($t)) ] | length
+                '
+    )"
+
+    [[ "$n" =~ ^[0-9]+$ ]] || return 1
+
+    (( n > 0 ))
+}
+
+
+show_gps_panel() {
+
+    local address="$1"
+    local intento=0
+    local espera=0
+
+    [[ "$SHOW_GPS_PANEL" == "1" ]] || {
+        GPS_PANEL_RESULT="sin tocar (SHOW_GPS_PANEL=0)"
+        echo "   Panel GPS: sin tocar (SHOW_GPS_PANEL=0)."
+        return 0
+    }
+
+    if ! have xdotool; then
+        GPS_PANEL_RESULT="sin tocar: falta xdotool"
+        echo "⚠️ No encuentro xdotool: no puedo abrir el panel de GPS."
+        return 0
+    fi
+
+    echo
+    echo "📍 Panel de GPS..."
+
+    # Se envía y, si el panel no aparece, se VUELVE A ENVIAR.
+    #
+    # Es un toggle, así que reintentar tiene riesgo: si el primer envío
+    # llegó tarde, el segundo lo cerraría. La defensa está en comprobar el
+    # panel ARRIBA de cada vuelta, antes de enviar: un panel que aparece
+    # tarde se DETECTA y se sale sin enviar nada más.
+    #
+    # MEDIDO el 2026-10-04, en el arranque en frío que reportó n30: la
+    # versión anterior comprobaba el panel solo UNA vez, antes del bucle.
+    # El log de ese arranque dice «El envío 1 no bastó; reintento» y luego
+    # «no apareció tras 2 envíos», que es exactamente lo que pasa cuando el
+    # segundo envío cae sobre un panel que ya se estaba abriendo y lo
+    # cierra. Con la comprobación arriba eso ya no puede pasar, así que el
+    # número de intentos se puede subir sin miedo (ver GPS_PANEL_ATTEMPTS).
+    for ((intento = 1; intento <= GPS_PANEL_ATTEMPTS; intento++)); do
+
+        if gps_panel_open; then
+            if (( intento == 1 )); then
+                GPS_PANEL_RESULT="ya estaba abierto"
+                echo "   Ya estaba abierto; no envío nada."
+            else
+                GPS_PANEL_RESULT="abierto con Ctrl+Alt+G (envío $((intento - 1)))"
+                echo "   ✅ Panel de GPS abierto (envío $((intento - 1)))."
+            fi
+            return 0
+        fi
+
+        # El foco se comprueba ANTES DE CADA ENVÍO: el panel que se acaba
+        # de abrir (o cerrar) puede habérselo llevado, y medido el
+        # 2026-10-04 basta un cambio de foco ajeno para que una sola
+        # comprobación falle.
+        if ! focus_player_checked "$address"; then
+            GPS_PANEL_RESULT="sin tocar: no conseguí enfocar el reproductor"
+            echo "⚠️ No conseguí enfocar el reproductor; no envío Ctrl+Alt+G."
+            return 0
+        fi
+
+        xdotool key --clearmodifiers ctrl+alt+g || {
+            GPS_PANEL_RESULT="sin tocar: xdotool falló al enviar"
+            echo "⚠️ xdotool falló al enviar Ctrl+Alt+G."
+            return 0
+        }
+
+        # El panel tarda en dibujarse: se espera a que aparezca, sin dar
+        # por hecho que aparecerá.
+        for ((espera = 1; espera <= GPS_PANEL_WAIT_S * 2; espera++)); do
+            sleep 0.5
+
+            if gps_panel_open; then
+                GPS_PANEL_RESULT="abierto con Ctrl+Alt+G (envío ${intento})"
+                echo "   ✅ Panel de GPS abierto (envío ${intento})."
+                return 0
+            fi
+        done
+
+        if (( intento < GPS_PANEL_ATTEMPTS )); then
+            echo "   El envío ${intento} no bastó; reintento."
+        fi
+    done
+
+    GPS_PANEL_RESULT="NO apareció tras ${GPS_PANEL_ATTEMPTS} envíos"
+
+    echo "   ⚠️ El panel de GPS no apareció tras ${GPS_PANEL_ATTEMPTS} envíos."
+    echo "   ¿Sigue en pie el atajo Ctrl+Alt+G?"
+
+    return 0
+}
+
+
+# ============================================================
+# HYPRLAND - RESIZE TILE
+# ============================================================
+
+resize_pixel_window() {
+
+    local address="$1"
+    local height
+    local result
+    local final_width
+    local final_height
+    local floating
+    local target_width="$GENY_WIDTH"
+    local computed_width=""
+
+    have hyprctl || return 0
+
+    echo
+    echo "📐 Ajustando tile de Genymotion..."
+
+    # Dar tiempo a Dwindle para finalizar el reparto inicial
+    sleep 1
+
+    height="$(
+        hyprctl clients -j 2>/dev/null |
+            jq -r \
+                --arg addr "$address" '
+                    .[]
+                    | select(.address == $addr)
+                    | .size[1]
+                '
+    )"
+
+    if ! [[ "$height" =~ ^[0-9]+$ ]]; then
+        echo "⚠️ No pude determinar la altura del tile."
+        return 1
+    fi
+
+    # Desde el 2026-10-02 el alto es fijo (GENY_HEIGHT), pedido por n30.
+    # Si está vacío se mantiene el del tile en vivo, que es lo de antes.
+    if [[ -n "$GENY_HEIGHT" && "$height" != "$GENY_HEIGHT" ]]; then
+        echo "   Alto del tile en vivo: ${height}px -> se fuerza ${GENY_HEIGHT}px."
+        height="$GENY_HEIGHT"
+    fi
+
+    # Con perfil pedido por parámetro, el ancho se calcula para llenar
+    # la altura; sin él se mantiene el ancho de siempre.
+    if [[ -n "$PROFILE_W" ]]; then
+
+        computed_width="$(tile_width_for_profile "$height" || true)"
+
+        if [[ -n "$computed_width" ]]; then
+            target_width="$computed_width"
+            echo "   Perfil ${PROFILE_W}x${PROFILE_H}: ancho calculado para llenar ${height}px de alto."
+        else
+            echo "⚠️ No pude calcular el ancho para el perfil; uso ${GENY_WIDTH}px."
+        fi
+    fi
+
+    echo "   Objetivo: ${target_width}x${height}"
+
+    result="$(
+        hyprctl dispatch "$(lua_resize "$target_width" "$height" "$address")" \
+            2>&1
+    )"
+
+    echo "   hyprctl: $result"
+
+    sleep 0.5
+
+    read -r final_width final_height floating < <(
+        hyprctl clients -j |
+            jq -r \
+                --arg addr "$address" '
+                    .[]
+                    | select(.address == $addr)
+                    | "\(.size[0]) \(.size[1]) \(.floating)"
+                '
+    )
+
+    echo "   Resultado: ${final_width}x${final_height}"
+    echo "   Floating: $floating"
+
+    if [[ "$final_width" == "$target_width" ]]; then
+        echo "✅ Ancho confirmado en ${target_width}px."
+        TILE_WIDTH_APPLIED="$target_width"
+    else
+        echo "⚠️ Hyprland dejó el ancho en ${final_width}px."
+        TILE_WIDTH_APPLIED="$final_width"
+
+        # Causa medida el 2026-10-10: si el grupo es el ÚNICO tile de su
+        # escritorio, Dwindle lo obliga a llenar y el resize no prende. Se
+        # COMPRUEBA en vez de suponerlo: se cuentan los tiles (ventanas no
+        # flotantes) del escritorio del reproductor.
+        if have hyprctl && have jq; then
+            local tiles_del_ws
+            tiles_del_ws="$(
+                hyprctl clients -j 2>/dev/null |
+                    jq --arg addr "$address" '
+                        ([ .[] | select(.address == $addr) | .workspace.id ][0]) as $ws
+                        | [ .[] | select(.workspace.id == $ws and (.floating | not)) ]
+                        | length
+                    '
+            )"
+            if [[ "$tiles_del_ws" == "1" ]]; then
+                echo "   Causa: es el ÚNICO tile de su escritorio, y Dwindle lo"
+                echo "   obliga a llenar. El ancho prende si hay otra ventana."
+            fi
+        fi
+    fi
+
+    # El ALTO sí puede no aplicarse, y en SILENCIO: `resizewindowpixel`
+    # devuelve `ok` igual. Medido el 2026-10-02 con el reproductor
+    # agrupado: se pedían 1440 y la ventana se quedaba en 1415, el techo
+    # que deja la barra de pestañas del grupo. Sin esta comprobación el
+    # log decía «Objetivo: 1012x1440» y el fallo no se veía en ninguna
+    # parte. El ancho sí se aplicaba; el alto no.
+    if [[ "$final_height" != "$height" ]]; then
+        echo "⚠️ Hyprland dejó el ALTO en ${final_height}px (se pedían ${height}px)."
+        echo "   Con el reproductor agrupado el techo es 1415 (1436 del tile - 21 de la barra)."
+    fi
+}
+
+
+# ============================================================
+# GENYMOTION - FLAG DE CRASH
+#
+# El player crea el fichero ".flag" dentro de la carpeta de la VM
+# al arrancar, y lo borra al salir limpiamente (CrashFlag::create
+# / CrashFlag::remove en el binario).
+#
+# Si la máquina se apaga con la VM encendida, systemd manda SIGTERM
+# a QEMU (queda en qemu.log) y el player muere sin borrar el flag.
+# En el siguiente arranque el player detecta el flag y entra en su
+# ruta de recuperación de crash, que consulta el estado de la
+# imagen en la nube (GET cloud.genymotion.com/patterns/os-images).
+# Sin sesión válida ese endpoint responde 302 -> login (HTML, no
+# JSON) y el player hace SEGV en WebServiceClient::onCallFinished,
+# llamando a QObject::property() sobre un objeto nulo.
+#
+# El crash ocurre ANTES de CrashFlag::remove, así que el flag nunca
+# se limpia y TODOS los arranques posteriores fallan igual: el
+# emulador no vuelve a abrir hasta apartar el flag a mano.
+#
+# Verificado el 2026-09-24 con coredumpctl + timestamps del fichero.
+#
+# Se RENOMBRA, no se borra: queda como .flag.stale-<fecha> por si
+# hace falta la recuperación nativa.
+# ============================================================
+
+clear_stale_crash_flag() {
+
+    local flag="$GENY_VM_DIR/.flag"
+    local backup
+
+    # Si hay un player vivo, el flag es legítimo (VM en marcha).
+    if pgrep -f "$PLAYER" >/dev/null 2>&1; then
+        return 0
+    fi
+
+    [[ -f "$flag" ]] || return 0
+
+    backup="${flag}.stale-$(date +%Y%m%d-%H%M%S)"
+
+    if mv "$flag" "$backup" 2>/dev/null; then
+        echo "⚠️ La VM no cerró limpiamente la última vez (flag de crash)." >&2
+        echo "   Lo aparto para esquivar el SEGV del player:" >&2
+        echo "   $backup" >&2
+    else
+        echo "⚠️ No pude apartar el flag de crash: $flag" >&2
+    fi
+}
+
+
+# ============================================================
+# ARRANCAR GENYMOTION (con reintentos)
+#
+# El player de Genymotion 3.10.0 hace SEGV de forma INTERMITENTE
+# al arrancar: no es un fallo determinista, es una carrera en
+# WebServiceClient::onCallFinished al resolver su consulta a la
+# nube. Medido sobre los logs de ~10 semanas (245 arranques):
+#
+#   ruta "Device is up to date" (caché local)   81 arranques,  0% fallos
+#   ruta "GET patterns/os-images" (red)         37 arranques, 76% fallos
+#   ruta con flag de crash                     123 arranques, 33% fallos
+#
+# Por eso un solo intento no basta: aquí se relanza el player
+# mientras muera sin llegar a mostrar ventana. Cuando un intento
+# consigue completar la consulta, Genymotion deja la lista en
+# cache/osimage/osimages.list y los arranques siguientes usan la
+# ruta local (0% fallos) hasta que esa caché caduque.
+#
+# Devuelve por stdout la address de la ventana; los mensajes van
+# a stderr, igual que en wait_for_pixel_window.
+# ============================================================
+
+GENY_LAUNCH_ATTEMPTS=5
+
+start_genymotion() {
+
+    local attempt
+    local address
+    local pid
+    local rc
+
+    for ((attempt=1; attempt<=GENY_LAUNCH_ATTEMPTS; attempt++)); do
+
+        address="$(find_pixel_window || true)"
+
+        if [[ -n "$address" && "$address" != "null" ]]; then
+            echo "✅ El Pixel 6 ya está abierto." >&2
+            printf '%s\n' "$address"
+            return 0
+        fi
+
+        echo "🚀 Intento ${attempt}/${GENY_LAUNCH_ATTEMPTS}: iniciando $VM_NAME..." >&2
+
+        clear_stale_crash_flag
+
+        "$PLAYER" --vm-name "$VM_NAME" >>"$LOG" 2>&1 &
+        pid=$!
+
+        echo "   Launcher PID: $pid" >&2
+
+        rc=0
+        address="$(wait_for_pixel_window "$pid")" || rc=$?
+
+        if (( rc == 0 )) && [[ -n "$address" ]]; then
+            printf '%s\n' "$address"
+            return 0
+        fi
+
+        # rc=2 -> el player murió: tiene sentido reintentar.
+        # rc=1 -> timeout con el player vivo: relanzar no ayudaría.
+        if (( rc != 2 )); then
+            break
+        fi
+
+        echo "⚠️ El player se cayó al arrancar (SEGV intermitente conocido)." >&2
+
+        if (( attempt < GENY_LAUNCH_ATTEMPTS )); then
+            echo "🔄 Reintentando..." >&2
+            sleep 2
+        fi
+    done
+
+    echo "❌ No pude abrir la ventana de Genymotion en ${GENY_LAUNCH_ATTEMPTS} intentos." >&2
+    return 1
+}
+
+
+# ============================================================
+# ADB - ESPERAR DISPOSITIVO
+# ============================================================
+
+wait_for_adb() {
+
+    local iterations
+
+    iterations=$((ADB_TIMEOUT_SECONDS / 2))
+
+    echo
+    echo "📡 Esperando ADB en $ADB_SERIAL..."
+
+    for ((i=1; i<=iterations; i++)); do
+
+        adb connect "$ADB_SERIAL" >/dev/null 2>&1 || true
+
+        if adb devices |
+            awk -v target="$ADB_SERIAL" '
+                $1 == target && $2 == "device" {
+                    found=1
+                }
+                END {
+                    exit !found
+                }
+            '
+        then
+            echo "✅ ADB conectado: $ADB_SERIAL"
+            return 0
+        fi
+
+        echo "   ADB: $((i * 2))/${ADB_TIMEOUT_SECONDS}s"
+        sleep 2
+    done
+
+    return 1
+}
+
+
+# ============================================================
+# ANDROID - ESPERAR BOOT COMPLETO
+# ============================================================
+
+wait_for_android_boot() {
+
+    local boot_completed=""
+
+    echo
+    echo "🤖 Esperando arranque completo de Android..."
+
+    for ((i=1; i<=BOOT_TIMEOUT_SECONDS; i++)); do
+
+        boot_completed="$(
+            adb -s "$ADB_SERIAL" \
+                shell getprop sys.boot_completed \
+                2>/dev/null |
+                tr -d '\r\n'
+        )"
+
+        if [[ "$boot_completed" == "1" ]]; then
+            echo "✅ Android completamente iniciado."
+
+            # Servicios Android terminan de estabilizarse
+            sleep 2
+
+            return 0
+        fi
+
+        if (( i % 5 == 0 )); then
+            echo "   Android boot: ${i}/${BOOT_TIMEOUT_SECONDS}s"
+        fi
+
+        sleep 1
+    done
+
+    return 1
+}
+
+
+# ============================================================
+# GENYMOTION SHELL
+# ============================================================
+
+geny_cmd() {
+
+    "$GENYSHELL" -q -c "$1" 2>&1
+}
+
+
+# ============================================================
+# ESPERAR QUE GENYMOTION SHELL VEA LA VM
+# ============================================================
+
+wait_for_genyshell() {
+
+    local output
+
+    echo
+    echo "🛰️ Esperando interfaz de sensores Genymotion..."
+
+    for ((i=1; i<=GENYSHELL_TIMEOUT_SECONDS; i++)); do
+
+        output="$(geny_cmd "gps getstatus" || true)"
+
+        if ! grep -qi \
+            "No Genymotion virtual device running found" \
+            <<< "$output" &&
+           ! grep -qi \
+            "Command not found" \
+            <<< "$output" &&
+           [[ -n "$output" ]]
+        then
+            echo "✅ Genymotion Shell conectado al dispositivo."
+            echo "   $output"
+            return 0
+        fi
+
+        if (( i % 5 == 0 )); then
+            echo "   Sensores: ${i}/${GENYSHELL_TIMEOUT_SECONDS}s"
+        fi
+
+        sleep 1
+    done
+
+    echo "❌ Genymotion Shell no detectó una VM activa."
+    return 1
+}
+
+
+# ============================================================
+# PERFIL DEL DISPOSITIVO - TAMAÑO DE PANTALLA
+#
+# MEDIDO el 2026-09-30: el reproductor de Genymotion encuadra el
+# TAMAÑO DE PANTALLA DEL PERFIL del dispositivo (el número que sale en
+# el título de la ventana, "Google Pixel 6 (2160x2160, 320dpi)"), NO el
+# framebuffer vivo de Android.
+#
+#     rect_dibujado = perfil * min( (ancho_ventana - TOOLBAR_WIDTH)
+#                                   / perfil_ancho,
+#                                   alto_ventana / perfil_alto )
+#
+# (TOOLBAR_WIDTH eran 48 px el 2026-09-30; desde el 2026-10-02 es 0
+# porque la barra del reproductor está oculta. Ver la cabecera del
+# script.)
+#
+# Consecuencia contraintuitiva y comprobada: poner el framebuffer
+# cuadrado con "wm size 2160x2160" no agranda el dibujo, lo ENCOGE a la
+# mitad, porque el rect sigue siendo el del perfil.
+#
+# Por eso un flag de resolución tiene que tocar el perfil. Vías:
+#
+#   app       Editar > Sistema > Pantalla > Primary Display. Es la vía
+#             oficial, y la app es quien escribe el fichero de abajo.
+#   gmtool    "gmtool admin edit --width/--height/--density" existe (se
+#             ve en "gmtool admin edit -h"), pero responde "A license is
+#             required to use this feature". Y devuelve rc=0 aunque
+#             falle, así que hay que leer el texto, no el código de
+#             salida. "gmtool admin list" sí funciona sin licencia.
+#   fichero   shared/config/device.json -> hardware_profile
+#             .display_settings.displays[0]. Es lo que hace este script,
+#             con copia previa y hash.
+#
+# El player lee el perfil AL ARRANCAR, así que si la VM está encendida
+# hay que pararla antes de cambiarlo; y como la app puede reescribir el
+# fichero, el cambio se hace con la VM parada.
+# ============================================================
+
+profile_get_size() {
+
+    have python3 || return 1
+    [[ -f "$DEVICE_CONFIG" ]] || return 1
+
+    python3 - "$DEVICE_CONFIG" <<'PY'
+import json
+import sys
+
+try:
+    with open(sys.argv[1], encoding="utf-8") as handle:
+        data = json.load(handle)
+    display = data["hardware_profile"]["display_settings"]["displays"][0]
+    print(f'{display["width"]} {display["height"]}')
+except Exception:
+    sys.exit(1)
+PY
+}
+
+
+profile_set_size() {
+
+    local width="$1"
+    local height="$2"
+
+    have python3 || return 1
+
+    # Reescribe SÓLO las dos líneas del tamaño. Antes de escribir nada
+    # compara el antes y el después, y aborta si el diff no son
+    # exactamente esas dos líneas: así un cambio de formato de la app no
+    # puede colarse como efecto colateral. Escribe en un temporal del
+    # mismo directorio y hace os.replace, que es atómico.
+    #
+    # El heredoc va a columna 0 a propósito: es lo que exige bash.
+    python3 - "$DEVICE_CONFIG" "$width" "$height" <<'PY'
+import difflib
+import json
+import os
+import stat
+import sys
+import tempfile
+
+path, width, height = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
+
+try:
+    with open(path, encoding="utf-8") as handle:
+        original = handle.read()
+    data = json.loads(original)
+except OSError as error:
+    sys.exit(f"no pude leer el perfil {path}: {error}")
+except ValueError as error:
+    sys.exit(f"el perfil {path} no es JSON válido: {error}")
+
+try:
+    displays = data["hardware_profile"]["display_settings"]["displays"]
+    if not displays:
+        raise KeyError
+except (KeyError, TypeError):
+    sys.exit("el perfil no tiene ninguna pantalla declarada")
+
+if len(displays) > 1:
+    print(
+        f"aviso: el perfil declara {len(displays)} pantallas; "
+        "cambio sólo la primaria (displays[0])",
+        file=sys.stderr,
+    )
+
+displays[0]["width"] = width
+displays[0]["height"] = height
+
+rewritten = json.dumps(data, indent=4, sort_keys=True) + "\n"
+
+changed = [
+    line
+    for line in difflib.unified_diff(
+        original.splitlines(), rewritten.splitlines(), lineterm="", n=0
+    )
+    if line[:1] in "+-" and not line.startswith(("+++", "---"))
+]
+
+if len(changed) > 4 or not all(
+    '"width"' in line or '"height"' in line for line in changed
+):
+    sys.exit(
+        "abortado: reescribir el perfil tocaría líneas que no son el "
+        f"ancho y el alto ({len(changed)}): {changed[:6]}"
+    )
+
+directory = os.path.dirname(path) or "."
+descriptor, temporary = tempfile.mkstemp(dir=directory, prefix=".device.json.")
+
+try:
+    with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+        handle.write(rewritten)
+    os.chmod(temporary, stat.S_IMODE(os.stat(path).st_mode))
+    os.replace(temporary, path)
+except BaseException:
+    try:
+        os.unlink(temporary)
+    except OSError:
+        pass
+    raise
+PY
+}
+
+
+# ¿Hay un player de ESTE Genymotion en marcha?
+# Se compara el ejecutable real de cada proceso "player" con $PLAYER para
+# no confundirlo con nada que se llame igual. (Un "pgrep -f" se
+# autoempareja con el propio shell que lo lanza.)
+genymotion_running() {
+
+    local executable
+    local pid
+
+    executable="$(readlink -f "$PLAYER" 2>/dev/null || printf '%s' "$PLAYER")"
+
+    for pid in $(pgrep -x player 2>/dev/null || true); do
+        if [[ "$(readlink -f "/proc/$pid/exe" 2>/dev/null)" == "$executable" ]]
+        then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+
+# ¿Está abierta la app de Genymotion (el lanzador)?
+# Es IMPORTANTE antes de tocar el perfil: la app es la escritora normal
+# de device.json y lo reescribe al apagar la VM, normalizando el orden de
+# algunas listas (medido el 30-sep-2026: cambió el orden de
+# "supported_form_factors"). Si está abierta puede revertir el cambio con
+# su propia copia en memoria.
+genymotion_app_running() {
+
+    local executable
+    local pid
+
+    executable="$(
+        readlink -f "$GENY_PATH/genymotion" 2>/dev/null ||
+            printf '%s' "$GENY_PATH/genymotion"
+    )"
+
+    for pid in $(pgrep -x genymotion 2>/dev/null || true); do
+        if [[ "$(readlink -f "/proc/$pid/exe" 2>/dev/null)" == "$executable" ]]
+        then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+
+# Parar la VM. Primero la vía documentada (gmtool); si la edición
+# gratuita no la permite, se cierra la ventana del reproductor, que es
+# el único cierre limpio que funciona (el player ignora SIGTERM).
+#
+# MEDIDO el 2026-09-30: "gmtool admin stop <nombre>" SÍ funciona sin
+# licencia (responde "Virtual device stopped successfully"). La caída a
+# cerrar la ventana se queda por si otra edición lo bloquea.
+stop_genymotion() {
+
+    local output
+    local address
+    local attempt
+
+    genymotion_running || return 0
+
+    echo "🛑 Parando la VM..."
+
+    output="$(
+        timeout 60 "$GENY_PATH/gmtool" admin stop "$VM_NAME" 2>&1 || true
+    )"
+
+    if grep -qi "license is required" <<< "$output"; then
+        echo "   gmtool no puede parar la VM sin licencia."
+    fi
+
+    for ((attempt=1; attempt<=20; attempt++)); do
+        genymotion_running || { echo "✅ VM parada."; return 0; }
+        sleep 0.5
+    done
+
+    if have hyprctl; then
+
+        address="$(find_pixel_window || true)"
+
+        if [[ -n "$address" && "$address" != "null" ]]; then
+            echo "   Cierro la ventana del reproductor ($address)..."
+            hyprctl dispatch "$(lua_close "$address")" >/dev/null 2>&1 || true
+        fi
+    fi
+
+    for ((attempt=1; attempt<=20; attempt++)); do
+        genymotion_running || { echo "✅ VM parada."; return 0; }
+        sleep 0.5
+    done
+
+    return 1
+}
+
+
+# Lleva el perfil del dispositivo a WxH. Sin argumentos no hace nada.
+apply_profile_resolution() {
+
+    local width="$1"
+    local height="$2"
+
+    local current
+    local backup
+    local hash_original
+    local hash_backup
+    local hash_new
+
+    [[ -n "$width" && -n "$height" ]] || return 0
+
+    [[ -f "$DEVICE_CONFIG" ]] ||
+        die "No encuentro el perfil del dispositivo: $DEVICE_CONFIG"
+
+    have python3 ||
+        die "Necesito python3 para editar el perfil del dispositivo."
+
+    have sha256sum ||
+        die "Necesito sha256sum para verificar la copia del perfil."
+
+    current="$(profile_get_size || true)"
+
+    if [[ "$current" == "$width $height" ]]; then
+        echo "✅ El perfil ya está en ${width}x${height}: no toco nada."
+        return 0
+    fi
+
+    echo
+    echo "🔧 Perfil del dispositivo: ${current:-desconocido} -> ${width}x${height}"
+
+    if genymotion_running; then
+        echo "   La VM está encendida y el player lee el perfil al arrancar."
+        echo "   Hay que pararla para que el cambio tenga efecto."
+        stop_genymotion ||
+            die "No pude parar la VM; no toco el perfil."
+    fi
+
+    if genymotion_app_running; then
+        echo "⚠️ La app de Genymotion está abierta. Ella también escribe este"
+        echo "   fichero y puede revertir el cambio con su copia en memoria."
+        echo "   Si el tamaño no se aplica, ciérrala y vuelve a lanzar."
+    fi
+
+    backup="${DEVICE_CONFIG}.bak-$(date +%Y%m%d-%H%M%S)"
+
+    cp -p "$DEVICE_CONFIG" "$backup" ||
+        die "No pude copiar el perfil a $backup"
+
+    hash_original="$(sha256sum "$DEVICE_CONFIG" | awk '{print $1}')"
+    hash_backup="$(sha256sum "$backup" | awk '{print $1}')"
+
+    if [[ "$hash_original" != "$hash_backup" ]]; then
+        die "La copia no coincide con el original; aborto sin tocar nada."
+    fi
+
+    echo "💾 Copia: $backup"
+    echo "   sha256 (original == copia): $hash_original"
+
+    if ! profile_set_size "$width" "$height"; then
+        echo "⚠️ La escritura falló; restauro desde la copia."
+        cp -p "$backup" "$DEVICE_CONFIG"
+        die "Perfil restaurado desde $backup"
+    fi
+
+    if [[ "$(profile_get_size || true)" != "$width $height" ]]; then
+        echo "⚠️ El perfil no se relee como ${width}x${height}; restauro."
+        cp -p "$backup" "$DEVICE_CONFIG"
+        die "Perfil restaurado desde $backup"
+    fi
+
+    hash_new="$(sha256sum "$DEVICE_CONFIG" | awk '{print $1}')"
+
+    echo "   sha256 nuevo: $hash_new"
+    echo "✅ Perfil actualizado a ${width}x${height}."
+}
+
+
+# ============================================================
+# RESOLUCIÓN ANDROID
+# ============================================================
+
+configure_display() {
+
+    echo
+    echo "🖥️ Ajustando pantalla Android..."
+
+    # El tamaño dibujado lo manda el PERFIL del dispositivo, que se
+    # cambia con -portrait / -landscape ANTES de arrancar (ver "PERFIL
+    # DEL DISPOSITIVO"). Aquí no se escribe un "wm size" a mano: se
+    # RESETEA, para que Android componga a su tamaño físico, que es
+    # justo el del perfil. Así un override viejo de otra resolución no
+    # puede quedarse pegado y meter bandas negras.
+    #
+    # La densidad sí se puede forzar en caliente. Con 2160x2160:
+    #   240 dpi -> 1440x1440 dp (sw1440dp, cubo xlarge, interfaz de tableta)
+    #   320 dpi -> 1080x1080 dp (sw1080dp, tableta pequeña)
+    # El juego ignora la densidad para el HUD; esto afecta a la interfaz
+    # de Android y a las métricas dp. Se cambia con -d <dpi>.
+
+    adb -s "$ADB_SERIAL" shell wm size reset >/dev/null 2>&1 || true
+
+    adb -s "$ADB_SERIAL" shell wm density "$DENSITY" >/dev/null 2>&1 || true
+
+    local size_line
+    local density_line
+
+    size_line="$(
+        adb -s "$ADB_SERIAL" shell wm size 2>/dev/null | tr -d '\r' | paste -sd' '
+    )"
+
+    density_line="$(
+        adb -s "$ADB_SERIAL" shell wm density 2>/dev/null | tr -d '\r' | paste -sd' '
+    )"
+
+    echo "   wm size    : ${size_line:-?}"
+    echo "   wm density : ${density_line:-?}"
+    echo "✅ Pantalla configurada (densidad ${DENSITY} dpi)."
+}
+
+
+# ============================================================
+# AJUSTES GRÁFICOS
+# ============================================================
+
+configure_gpu() {
+
+    echo
+    echo "🚀 Aplicando ajustes gráficos..."
+
+    adb -s "$ADB_SERIAL" shell su root \
+        "setprop threaded 1" \
+        >/dev/null 2>&1 || true
+
+    adb -s "$ADB_SERIAL" shell su root \
+        "setprop persist.sys.ui.hw true" \
+        >/dev/null 2>&1 || true
+
+    adb -s "$ADB_SERIAL" shell su root \
+        "setprop debug.hwui.renderer opengl" \
+        >/dev/null 2>&1 || true
+
+    echo "✅ Ajustes gráficos enviados."
+}
+
+
+# ============================================================
+# GPS - EXTRAER NÚMERO DE RESPUESTA
+# ============================================================
+
+extract_number() {
+
+    grep -Eo -- '[-+]?[0-9]+([.][0-9]+)?' |
+        tail -n 1
+}
+
+
+# ============================================================
+# GPS - COMPARACIÓN NUMÉRICA CON TOLERANCIA
+# ============================================================
+
+number_close() {
+
+    local actual="$1"
+    local expected="$2"
+    local tolerance="$3"
+
+    awk \
+        -v a="$actual" \
+        -v b="$expected" \
+        -v t="$tolerance" '
+            BEGIN {
+                d = a - b
+                if (d < 0)
+                    d = -d
+
+                exit !(d <= t)
+            }
+        '
+}
+
+
+# ============================================================
+# GPS - CONFIGURACIÓN ROBUSTA
+#
+# El script NO impone una posición fija. Comprobado con n30 el
+# 2026-10-02: si el emulador YA tiene posición, no se toca; sólo se pone
+# una si el GPS está vacío (primer arranque, o alguien lo dejó en blanco).
+#
+# QUÉ ES "VACÍO" (corregido el 2026-10-03):
+#
+# "0 0" NO es una posición, es el CENTINELA de "sin coordenadas" del GPS
+# de Genymotion. La primera versión de esta función daba "0" por bueno
+# (porque `[[ -n "0" ]]` es cierto) y se limitaba a encender el GPS,
+# dejándolo sin coordenadas: exactamente el síntoma que reportó n30
+# ("está prendido el gps pero sin coordenadas"). Ver numero_es_cero().
+#
+# DE DÓNDE SALE LA POSICIÓN, en orden:
+#
+#   1. La que ya tenga el emulador, si es válida (no 0 0). No se toca.
+#   2. La última que guardó el propio emulador, que vive en el
+#      settings.json de la VM bajo `widget.gps.*`. Ver gps_guardado().
+#   3. Si no hay ninguna, la de estreno (Morelia).
+#
+# POR QUÉ EL PASO 2 HACE FALTA, medido el 2026-10-03:
+#
+# El emulador SÍ escribe la posición en `widget.gps.latitude/longitude`
+# del settings.json de la VM, y lo hace EN VIVO (se vio el fichero
+# actualizarse a la vez que JWA movía el GPS). Pero al ARRANCAR la VM,
+# `gps getlatitude` devuelve 0 0 0: el player NO la restaura. Así que el
+# dato está en disco y el script puede leerlo, que es justo lo que pedía
+# n30 ("que se guarde la última posición gps utilizada").
+#
+# Ojo, esto NO es el fichero de estado propio que se descartó el
+# 2026-10-02 (ver el diario): aquí no se mantiene nada por nuestra
+# cuenta, se LEE un registro que el emulador ya lleva solo. Por eso no
+# sufre el problema de ir "un arranque por detrás": no escribimos, solo
+# leemos lo último que el emulador guardó.
+# ============================================================
+
+# Cierto (exit 0) si el número es cero o no es un número.
+#
+# Sirve para tratar "0" como "sin dato": en el GPS de Genymotion el cero
+# es el valor por defecto, no una coordenada.
+numero_es_cero() {
+
+    awk -v v="${1:-}" 'BEGIN { exit !((v + 0) == 0) }'
+}
+
+
+# Última posición que guardó el propio emulador, leída del settings.json
+# de la VM. Imprime "lat lon" y devuelve 0 si hay algo utilizable.
+#
+# Devuelve 1 si no hay fichero, o si lo que hay es 0 0 (que es "sin dato").
+gps_guardado() {
+
+    local f="$GENY_VM_DIR/settings.json"
+    local glat=""
+    local glon=""
+
+    [[ -f "$f" ]] || return 1
+
+    glat="$(jq -r '."widget.gps.latitude"  // empty' "$f" 2>/dev/null)"
+    glon="$(jq -r '."widget.gps.longitude" // empty' "$f" 2>/dev/null)"
+
+    [[ -n "$glat" && -n "$glon" ]] || return 1
+
+    # El cero es el centinela de "sin coordenadas", no una posición.
+    numero_es_cero "$glat" && return 1
+    numero_es_cero "$glon" && return 1
+
+    printf '%s %s\n' "$glat" "$glon"
+}
+
+
+set_gps() {
+
+    local attempt
+
+    local status_output
+    local lat_output
+    local lon_output
+    local alt_output
+
+    local current_lat
+    local current_lon
+    local current_alt
+
+    local seen_lat=""
+    local seen_lon=""
+    local seen_alt=""
+    local seen_status=""
+    local lat=""
+    local long=""
+    local alt=""
+    local origen=""
+
+    echo
+    echo "📍 GPS..."
+
+    # ----------------------------------------------------
+    # 1) QUÉ HAY AHORA
+    # ----------------------------------------------------
+
+    seen_status="$(geny_cmd "gps getstatus" || true)"
+
+    seen_lat="$(extract_number <<< "$(geny_cmd "gps getlatitude"  || true)")"
+    seen_lon="$(extract_number <<< "$(geny_cmd "gps getlongitude" || true)")"
+    seen_alt="$(extract_number <<< "$(geny_cmd "gps getaltitude"  || true)")"
+
+    echo "   Estado : ${seen_status:-desconocido}"
+    echo "   Posición actual: ${seen_lat:-?} ${seen_lon:-?} ${seen_alt:-?}"
+
+    # ----------------------------------------------------
+    # ¿HAY POSICIÓN DE VERDAD?
+    #
+    # "0 0" es el centinela de "sin coordenadas", NO una posición. Sin
+    # esta comprobación el script daba por buena la posición 0 0 y sólo
+    # encendía el GPS, dejándolo sin coordenadas.
+    # ----------------------------------------------------
+
+    local hay_posicion=0
+
+    if [[ -n "$seen_lat" && -n "$seen_lon" ]] &&
+        ! numero_es_cero "$seen_lat" &&
+        ! numero_es_cero "$seen_lon"; then
+
+        hay_posicion=1
+    fi
+
+    # ----------------------------------------------------
+    # 2) SI YA HAY POSICIÓN, NO SE TOCA
+    #
+    # Basta con que lat y long estén puestas: la altitud puede faltar y
+    # no es motivo para pisar unas coordenadas buenas.
+    # ----------------------------------------------------
+
+    if (( hay_posicion )); then
+
+        # El GPS tiene que estar ACTIVO: una posición puesta con el GPS
+        # apagado no la ve Android, así que eso sí se arregla.
+        if grep -qi "enabled" <<< "$seen_status"; then
+
+            echo "   ✅ Ya tiene posición y el GPS está activo: no se toca."
+
+            GPS_APPLIED_ORIGIN="respeté la que ya tenía: ${seen_lat} ${seen_lon}"
+
+            # Android necesita el location_mode en 3 (alta precisión) para
+            # que las apps lo lean, y eso lo puede haber revertido un
+            # reinicio. Se deja puesto, que es idempotente.
+            adb -s "$ADB_SERIAL" \
+                shell settings put secure location_mode 3 \
+                >/dev/null 2>&1 || true
+
+            sleep 1
+
+            return 0
+        fi
+
+        echo "   Tiene posición pero el GPS está apagado: lo activo."
+
+        geny_cmd "gps setstatus enabled" >/dev/null || true
+
+        sleep 1
+
+        # Se comprueba de verdad que quedó activo antes de darlo por bueno.
+        if grep -qi "enabled" <<< "$(geny_cmd "gps getstatus" || true)"; then
+            echo "   ✅ GPS activado, posición intacta."
+            GPS_APPLIED_ORIGIN="activé el GPS, posición intacta: ${seen_lat} ${seen_lon}"
+
+            adb -s "$ADB_SERIAL" \
+                shell settings put secure location_mode 3 \
+                >/dev/null 2>&1 || true
+
+            sleep 1
+
+            return 0
+        fi
+
+        echo "   ⚠️ No conseguí activarlo; sigo con la posición de estreno."
+    fi
+
+    # ----------------------------------------------------
+    # 3) NO HAY POSICIÓN UTILIZABLE
+    #
+    # Antes de caer a Morelia se intenta recuperar la última que guardó
+    # el propio emulador (settings.json de la VM, `widget.gps.*`). El
+    # player la escribe EN VIVO pero al arrancar devuelve 0 0 0 y no la
+    # restaura, así que leerla aquí es lo que salva la posición de la
+    # sesión anterior. Ver gps_guardado().
+    # ----------------------------------------------------
+
+    local guardada=""
+
+    if guardada="$(gps_guardado)"; then
+
+        read -r lat long <<< "$guardada"
+        alt="$GPS_DEFAULT_ALT"
+        origen="recuperada del emulador (la última que guardó)"
+
+        echo "   El emulador no la tiene puesta, pero guardó una: la recupero."
+        echo "   (El player escribe widget.gps.* en vivo, pero no lo restaura"
+        echo "    al arrancar; de ahí que gps getlatitude devuelva 0 0 0.)"
+
+    else
+
+        lat="$GPS_DEFAULT_LAT"
+        long="$GPS_DEFAULT_LONG"
+        alt="$GPS_DEFAULT_ALT"
+        origen="de estreno (no había ninguna, ni puesta ni guardada)"
+
+        echo "   No hay posición utilizable: pongo la de estreno."
+    fi
+
+    GPS_APPLIED_ORIGIN="usé la posición ${origen}: ${lat} ${long}"
+
+    echo "   Latitud : $lat"
+    echo "   Longitud: $long"
+    echo "   Altitud : $alt"
+    echo "   Accuracy: ${GPS_ACCURACY}m"
+
+    for ((attempt=1; attempt<=GPS_RETRIES; attempt++)); do
+
+        echo
+        echo "📡 Intento GPS $attempt/$GPS_RETRIES..."
+
+        # ----------------------------------------------------
+        # Cada comando se ejecuta POR SEPARADO.
+        #
+        # No usamos:
+        # device select ...; gps ...
+        #
+        # porque -c ejecuta un comando y el dispositivo
+        # activo ya es seleccionado por Genymotion.
+        # ----------------------------------------------------
+
+        echo "   Activando GPS..."
+
+        geny_cmd "gps setstatus enabled" >/dev/null || true
+
+        sleep 0.5
+
+        geny_cmd "gps setlatitude $lat" >/dev/null || true
+        geny_cmd "gps setlongitude $long" >/dev/null || true
+        geny_cmd "gps setaltitude $alt" >/dev/null || true
+        geny_cmd "gps setaccuracy $GPS_ACCURACY" >/dev/null || true
+
+        sleep 1
+
+        # ----------------------------------------------------
+        # Android location services
+        # ----------------------------------------------------
+
+        adb -s "$ADB_SERIAL" \
+            shell settings put secure location_mode 3 \
+            >/dev/null 2>&1 || true
+
+        # ----------------------------------------------------
+        # LEER DE VUELTA
+        # ----------------------------------------------------
+
+        status_output="$(geny_cmd "gps getstatus" || true)"
+        lat_output="$(geny_cmd "gps getlatitude" || true)"
+        lon_output="$(geny_cmd "gps getlongitude" || true)"
+        alt_output="$(geny_cmd "gps getaltitude" || true)"
+
+        current_lat="$(extract_number <<< "$lat_output")"
+        current_lon="$(extract_number <<< "$lon_output")"
+        current_alt="$(extract_number <<< "$alt_output")"
+
+        echo "   Estado   : $status_output"
+        echo "   Latitud  : $lat_output"
+        echo "   Longitud : $lon_output"
+        echo "   Altitud  : $alt_output"
+
+        # ----------------------------------------------------
+        # VALIDAR
+        # ----------------------------------------------------
+
+        if grep -qi "enabled" <<< "$status_output" &&
+           [[ -n "$current_lat" ]] &&
+           [[ -n "$current_lon" ]] &&
+           number_close "$current_lat" "$lat" "$GPS_TOLERANCE" &&
+           number_close "$current_lon" "$long" "$GPS_TOLERANCE"
+        then
+
+            echo
+            echo "✅ GPS verificado correctamente."
+            echo "   Latitud real : $current_lat"
+            echo "   Longitud real: $current_lon"
+
+            # Pequeña espera antes de abrir JWA para permitir
+            # propagación de la posición dentro de Android.
+            sleep 2
+
+            return 0
+        fi
+
+        echo
+        echo "⚠️ GPS todavía no coincide."
+
+        if (( attempt < GPS_RETRIES )); then
+            echo "🔄 Reintentando en 2 segundos..."
+            sleep 2
+        fi
+    done
+
+    echo
+    echo "❌ GPS no pudo verificarse tras $GPS_RETRIES intentos."
+
+    return 1
+}
+
+
+# ============================================================
+# COMPROBAR QUE JWA ESTÁ INSTALADO
+# ============================================================
+
+check_jwa_installed() {
+
+    adb -s "$ADB_SERIAL" shell pm path "$JWA_PACKAGE" \
+        2>/dev/null |
+        grep -q '^package:'
+}
+
+
+# ============================================================
+# LANZAR JWA
+# ============================================================
+
+launch_jwa() {
+
+    echo
+    echo "🦖 Preparando Jurassic World Alive..."
+
+    if ! check_jwa_installed; then
+        echo "❌ No encuentro el paquete Android:"
+        echo "   $JWA_PACKAGE"
+        return 1
+    fi
+
+    echo "✅ JWA instalado."
+
+    echo "🛑 Cerrando instancia previa..."
+
+    adb -s "$ADB_SERIAL" \
+        shell am force-stop "$JWA_PACKAGE"
+
+    sleep 1
+
+    echo "🦖 Abriendo Jurassic World Alive..."
+
+    local output
+
+    output="$(
+        adb -s "$ADB_SERIAL" shell monkey \
+            -p "$JWA_PACKAGE" \
+            -c android.intent.category.LAUNCHER \
+            1 \
+            2>&1
+    )"
+
+    echo "$output"
+
+    # Dar tiempo a Android para crear la actividad
+    sleep 2
+
+    if adb -s "$ADB_SERIAL" shell pidof "$JWA_PACKAGE" \
+        >/dev/null 2>&1
+    then
+        echo "✅ JWA está ejecutándose."
+        return 0
+    fi
+
+    echo "⚠️ Monkey terminó pero no encuentro proceso de JWA."
+    return 1
+}
+
+
+# ============================================================
+# LANZAR EL TEMPORIZADOR DE JWA
+#
+# Ver JWA_TIMER. Nunca devuelve error a propósito: el temporizador es un
+# extra, y que no arranque no debe tumbar el arranque del emulador.
+# ============================================================
+
+launch_jwa_timer() {
+
+    [[ "$JWA_TIMER" == "1" ]] || {
+        echo "   Temporizador: sin tocar (JWA_TIMER=0)."
+        return 0
+    }
+
+    if [[ ! -x "$JWA_TIMER_SCRIPT" ]]; then
+        echo "⚠️ No encuentro el temporizador en $JWA_TIMER_SCRIPT."
+        echo "   Lo salto; el resto del arranque sigue igual."
+        return 0
+    fi
+
+    local salida=""
+
+    if salida="$("$JWA_TIMER_SCRIPT" 2>&1)"; then
+        echo "   ✅ Temporizador: ${salida:-lanzado}"
+    else
+        echo "⚠️ El temporizador devolvió error: ${salida:-sin salida}"
+    fi
+
+    return 0
+}
+
+
+# ============================================================
+# ARGUMENTOS
+#
+# Sin ningún flag de resolución el script se comporta como siempre:
+# no toca el perfil del dispositivo.
+# ============================================================
+
+# ============================================================
+# PERFILES CON NOMBRE
+#
+# Cuatro tamaños de pantalla del dispositivo, pensados para JWA. El
+# nombre dice la FORMA; el número es el tamaño de pantalla del PERFIL,
+# que es lo que manda en el encuadre (ver "PERFIL DEL DISPOSITIVO").
+#
+# El ancho de la VENTANA no se escribe aquí: lo calcula
+# tile_width_for_profile() para que el contenido llene el alto del tile.
+# Por eso un perfil cambia las dos cosas a la vez (forma y ancho): con
+# el ancho de otro perfil el dibujo encogería.
+#
+#                        perfil      forma            dibuja (tile 1415)
+#   slim       1080x2160  vertical 1:2   celular      708x1415
+#   square     2160x2160  cuadrado 1:1                1415x1415
+#   big        2880x2880  cuadrado 1:1   más detalle  1415x1415
+#   max        3440x3440  cuadrado 1:1   el mayor     1415x1415
+#
+# NINGÚN PERFIL ES APAISADO, Y NO ES UN OLVIDO. Medido el 2026-10-10 con
+# siete tamaños de pantalla: el lienzo que dibuja JWA tiene aspecto
+# min(r, 1/r), con r = ancho/alto de la pantalla. Nunca dibuja apaisado: por
+# encima de 1:1 se ENCOGE. Medido con capturas del framebuffer, contando
+# columnas negras:
+#
+#     2560x1440 -> deja 810x1440 de juego   (68,4 % del ancho en negro)
+#     3440x1440 -> deja 602x1440 de juego   (82,5 % del ancho en negro)
+#     2160x2160 -> deja 2160x2160           (lleno)
+#
+# El área de juego visible es proporcional a min(r, 1/r), así que el cuadrado
+# es el máximo y lo apaisado da MENOS juego con MÁS carga de GPU. Las barras
+# las dibuja el juego, no Android: no hay ventana de letterbox y la app es
+# de pantalla completa y resizeable. La app pide PORTRAIT en el manifiesto
+# (GameActivity, mOrientation=1). No añadas perfiles apaisados.
+#
+# Los «dibuja» son con el reproductor agrupado (tile de 1415 de alto) y su
+# barra lateral oculta (TOOLBAR_WIDTH=0). El método y las trampas están en
+# la skill emulador-resolucion-modo-tablet.
+# ============================================================
+
+set_profile_by_name() {
+
+    case "$1" in
+
+        slim)
+            PROFILE_W=1080
+            PROFILE_H=2160
+            PROFILE_LABEL="vertical 1:2 (celular)"
+            ;;
+
+        square)
+            PROFILE_W=2160
+            PROFILE_H=2160
+            PROFILE_LABEL="cuadrado 1:1"
+            ;;
+
+        big)
+            PROFILE_W=2880
+            PROFILE_H=2880
+            PROFILE_LABEL="cuadrado 1:1, más resolución interna"
+            ;;
+
+        max)
+            PROFILE_W=3440
+            PROFILE_H=3440
+            PROFILE_LABEL="cuadrado 1:1 máximo (beta pesada)"
+            ;;
+
+        *)
+            return 1
+            ;;
+
+    esac
+}
+
+
+show_usage() {
+
+    cat <<EOF
+Uso: $(basename "$0") [perfil] [opciones]
+
+Sin perfil no se toca el tamaño del dispositivo: se usa el que haya.
+
+Perfiles (cambian de verdad el tamaño dibujado; exigen parar la VM):
+  slim,      -p, --portrait    1080x2160  vertical 1:2  (celular)
+  square,    -l, --landscape   2160x2160  cuadrado 1:1
+  big                          2880x2880  cuadrado 1:1, más resolución
+  max,       -m                3440x3440  cuadrado 1:1, el mayor
+                                         (BETA: 11,8 Mpx de framebuffer,
+                                         lo más pesado que cabe en tu
+                                         pantalla)
+
+  Los cuatro también se aceptan con guion: -slim, -square, -big, -max.
+  El perfil se escribe en device.json con copia previa y hash.
+
+Otras:
+  -d, --densidad <dpi>          Densidad Android (por defecto ${DENSITY})
+  -r, --solo-resolucion         Aplica la resolución y sale, sin arrancar
+  -h, --help                    Esta ayuda
+
+El tamaño dibujado lo manda el PERFIL del dispositivo, no el framebuffer
+de Android (medido el 2026-09-30). El ancho de la ventana se calcula para
+que el contenido llene el alto del tile.
+
+Aviso de etiqueta: los cuatro perfiles son verticales o cuadrados, NINGUNO
+apaisado. No es un olvido: JWA dibuja un lienzo de aspecto min(r, 1/r), así
+que por encima de 1:1 se encoge (medido el 2026-10-10). Un perfil 16:9 deja
+810x1440 de juego y el resto en negro. Por eso el mayor se llama max y no
+ultrawide.
+EOF
+}
+
+
+parse_args() {
+
+    while (( $# )); do
+
+        case "$1" in
+
+            slim|-p|-portrait|--portrait|-slim|--slim)
+                set_profile_by_name slim
+                ;;
+
+            square|-l|-landscape|--landscape|-square|--square)
+                set_profile_by_name square
+                ;;
+
+            big|-big|--big)
+                set_profile_by_name big
+                ;;
+
+            max|-m|-max|--max|ultra|--ultra)
+                set_profile_by_name max
+                ;;
+
+            # Nombre retirado. El perfil ultra-ancho (3440x1440) se quitó
+            # porque encogía el juego a 602x1440 y llenaba el resto de negro
+            # (medido el 2026-10-10). Se sigue aceptando para no romper
+            # guiones que lo llamen, pero avisando de lo que hace ahora.
+            ultrawide|-uw|-ultrawide|--ultrawide)
+                echo "ℹ️ 'ultrawide' ya no es un perfil apaisado: ahora es 'max'" >&2
+                echo "   (cuadrado 3440x3440). El ultra-ancho dejaba el juego en 602x1440." >&2
+                set_profile_by_name max
+                ;;
+
+            -d|--densidad|--density)
+                shift
+                if [[ ! "${1:-}" =~ ^[0-9]+$ ]]; then
+                    echo "❌ -d necesita un número de dpi." >&2
+                    exit 1
+                fi
+                DENSITY="$1"
+                ;;
+
+            -r|--solo-resolucion)
+                RESOLUTION_ONLY=1
+                ;;
+
+            -h|--help)
+                show_usage
+                exit 0
+                ;;
+
+            *)
+                echo "❌ Opción desconocida: $1" >&2
+                echo >&2
+                show_usage >&2
+                exit 1
+                ;;
+        esac
+
+        shift
+    done
+
+    if (( RESOLUTION_ONLY )) && [[ -z "$PROFILE_W" ]]; then
+        echo "❌ --solo-resolucion necesita un perfil (slim, square, big, max)." >&2
+        exit 1
+    fi
+}
+
+
+# ============================================================
+# MAIN
+# ============================================================
+
+main() {
+
+    local pixel_address=""
+
+    parse_args "$@"
+
+    check_dependencies
+
+    # --------------------------------------------------------
+    # PERFIL DEL DISPOSITIVO
+    #
+    # Va antes de arrancar: el player lee el perfil al iniciarse, así
+    # que cambiarlo con la VM en marcha no tendría efecto hasta el
+    # siguiente arranque. Si ya está en el tamaño pedido, no se toca.
+    # --------------------------------------------------------
+
+    apply_profile_resolution "$PROFILE_W" "$PROFILE_H"
+
+    if (( RESOLUTION_ONLY )); then
+        echo
+        echo "✅ Resolución aplicada. No arranco nada (--solo-resolucion)."
+        return 0
+    fi
+
+    # --------------------------------------------------------
+    # ARRANQUE + VENTANA
+    #
+    # start_genymotion ya espera la ventana y reintenta si el
+    # player muere al arrancar (SEGV intermitente).
+    # --------------------------------------------------------
+
+    echo
+    echo "[1/7] 🔍 Verificando Genymotion..."
+
+    pixel_address="$(start_genymotion || true)"
+
+    echo
+    echo "[2/7] 🪟 Ventana..."
+
+    if have hyprctl; then
+
+        if [[ -n "$pixel_address" ]]; then
+
+            echo "   Address limpia: <$pixel_address>"
+
+            group_pixel_window "$pixel_address"
+
+            move_pixel_window_left "$pixel_address" ||
+                echo "⚠️ El movimiento a la izquierda falló, continúo."
+
+            resize_pixel_window "$pixel_address" ||
+                echo "⚠️ El resize falló, continúo."
+
+            # Ni la barra lateral ni el panel de GPS se tocan aquí.
+            #
+            # La barra: MEDIDO el 2026-10-04, en un arranque en frío la
+            # ventana acaba de mapearse y la barra TODAVÍA NO ESTÁ
+            # DIBUJADA, así que el detector leía "oculta" y no enviaba
+            # nada; n30 se la encontraba puesta. (Su estado no se guarda
+            # en ningún sitio: ver hide_player_toolbar.)
+            #
+            # El panel de GPS: MEDIDO el 2026-10-03, con la VM todavía
+            # arrancando el reproductor no atiende Ctrl+Alt+G.
+            #
+            # Los dos se hacen al final, con la VM ya lista (ver más abajo,
+            # tras JWA).
+
+        else
+
+            echo "⚠️ No encontré la ventana."
+            echo "   Continúo con ADB."
+        fi
+
+    fi
+
+
+    # --------------------------------------------------------
+    # ADB
+    # --------------------------------------------------------
+
+    echo
+    echo "[3/7] 📡 ADB..."
+
+    wait_for_adb ||
+        die "ADB no quedó disponible."
+
+
+    # --------------------------------------------------------
+    # BOOT ANDROID
+    # --------------------------------------------------------
+
+    echo
+    echo "[4/7] 🤖 Android..."
+
+    wait_for_android_boot ||
+        die "Android no completó el arranque."
+
+
+    # --------------------------------------------------------
+    # GENYMOTION SHELL
+    # --------------------------------------------------------
+
+    echo
+    echo "[5/7] 🛰️ Sensores Genymotion..."
+
+    wait_for_genyshell ||
+        die "Genymotion Shell no detectó la VM."
+
+
+    # --------------------------------------------------------
+    # CONFIGURACIÓN
+    # --------------------------------------------------------
+
+    configure_display
+    configure_gpu
+
+
+    # --------------------------------------------------------
+    # GPS
+    # --------------------------------------------------------
+
+    echo
+    echo "[6/7] 📍 GPS..."
+
+    if ! set_gps; then
+
+        die "GPS no pudo verificarse. JWA no será iniciado."
+    fi
+
+
+    # --------------------------------------------------------
+    # JWA
+    # --------------------------------------------------------
+
+    echo
+    echo "[7/7] 🦖 Jurassic World Alive..."
+
+    launch_jwa ||
+        die "No pude confirmar el inicio de JWA."
+
+
+    # --------------------------------------------------------
+    # BARRA LATERAL Y PANEL DE GPS
+    #
+    # Los dos van AQUÍ y no antes. Son las dos únicas cosas que dependen
+    # de que el reproductor esté dibujado y atienda teclas, y en un
+    # arranque en frío eso no es verdad hasta que la VM lleva un rato
+    # arrancada. Ninguno de los dos depende del tile ni del resize.
+    #
+    # MEDIDO el 2026-10-04, en el arranque en frío que reportó n30:
+    #   - la barra se medía en [2/7] y salía "oculta" estando visible;
+    #   - el panel de GPS, ya al final, no apareció con 2 envíos.
+    # Los dos se arreglan igual: comprobar antes de actuar y reintentar
+    # con la VM en marcha, en vez de decidir a la primera.
+    # --------------------------------------------------------
+
+    if [[ -n "$pixel_address" ]]; then
+
+        hide_player_toolbar "$pixel_address"
+
+        show_gps_panel "$pixel_address"
+
+    else
+        TOOLBAR_RESULT="sin ventana del reproductor"
+        GPS_PANEL_RESULT="sin ventana del reproductor"
+        echo
+        echo "📍 Sin ventana: no toco ni la barra lateral ni el panel de GPS."
+    fi
+
+
+    # --------------------------------------------------------
+    # TEMPORIZADOR DE JWA
+    #
+    # Al final, con la app ya lanzada: es su compañero de partida. No
+    # depende de la ventana del reproductor, así que va FUERA del `if`
+    # del panel de GPS y se intenta siempre.
+    # --------------------------------------------------------
+
+    echo
+    echo "⏱️ Temporizador de JWA..."
+
+    launch_jwa_timer
+
+
+    echo
+    echo "============================================================"
+    echo "✅ TODO COMPLETADO"
+    echo
+    echo "Genymotion : activo"
+
+    if [[ -n "$PROFILE_W" ]]; then
+        echo "Perfil     : ${PROFILE_W}x${PROFILE_H} (${PROFILE_LABEL})"
+        echo "Tile       : ${TILE_WIDTH_APPLIED:-${GENY_WIDTH}}px de ancho, ${GENY_HEIGHT:-alto en vivo}px de alto"
+    else
+        echo "Perfil     : sin tocar"
+        echo "Tile       : ${TILE_WIDTH_APPLIED:-${GENY_WIDTH}}px de ancho, ${GENY_HEIGHT:-alto en vivo}px de alto"
+    fi
+
+    if [[ -n "$GENY_GROUP_PARTNER" ]]; then
+        echo "Grupo      : con ${GENY_GROUP_PARTNER} si corre; si no, el reproductor solo"
+    else
+        echo "Grupo      : el reproductor solo"
+    fi
+
+    # Se imprime lo que DIJO el paso, no lo que se intentó. Los rellenan
+    # hide_player_toolbar() y show_gps_panel(); si están vacíos se dice, en
+    # vez de inventarse un resultado.
+    echo "Barra lat. : ${TOOLBAR_RESULT:-sin información}"
+
+    echo "Panel GPS  : ${GPS_PANEL_RESULT:-sin información}"
+
+    if [[ "$JWA_TIMER" == "1" ]]; then
+        echo "Temporizador: lanzado si no estaba ($JWA_TIMER_SCRIPT)"
+    else
+        echo "Temporizador: sin tocar (JWA_TIMER=0)"
+    fi
+
+    # De dónde salió la posición que se acaba de aplicar. Se rellena en
+    # set_gps(); si por lo que sea está vacío, no se inventa nada.
+    if [[ -n "$GPS_APPLIED_ORIGIN" ]]; then
+        echo "GPS posición: ${GPS_APPLIED_ORIGIN}"
+    fi
+
+    echo "Densidad   : ${DENSITY} dpi"
+    echo "ADB        : conectado"
+    echo "Android    : iniciado"
+    echo "GPS        : verificado"
+    echo "JWA        : ejecutándose"
+    echo
+    echo "📄 Log: $LOG"
+    echo "============================================================"
+}
+
+
+main "$@"

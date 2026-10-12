@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auditoría de modelos de dictado</title>
+<style>
+  :root{
+    --fondo:#0D0E10; --panel:#14161A; --panel2:#191C21;
+    --borde:rgba(255,255,255,.08); --borde2:rgba(255,255,255,.14);
+    --texto:#E6E7EA; --suave:#9AA0A6; --tenue:#6B7076;
+    --verde:#4ADE80; --rojo:#F87171; --ambar:#FBBF24; --azul:#60A5FA;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--fondo); color:var(--texto);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+    line-height:1.62; font-size:15.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .hoja{max-width:1000px;margin:0 auto;padding:56px 28px 96px}
+  header.cabecera{border-bottom:1px solid var(--borde);padding-bottom:26px;margin-bottom:38px}
+  h1{font-size:30px;line-height:1.2;margin:0 0 10px;letter-spacing:-.02em}
+  .sub{color:var(--suave);font-size:16px;margin:0}
+  .meta{color:var(--tenue);font-size:13.5px;margin-top:14px}
+  h2{font-size:20px;margin:46px 0 14px;letter-spacing:-.01em}
+  h3{font-size:16px;margin:28px 0 10px;color:#CFD2D6}
+  p{margin:0 0 14px}
+  a{color:var(--azul);text-decoration:none}
+  code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+  code{background:rgba(255,255,255,.05);padding:2px 6px;border-radius:5px;color:#D7DAE0}
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 6px}
+  .chip{
+    display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:999px;
+    font-size:13px;font-weight:600;border:1px solid var(--borde2);background:var(--panel2);color:var(--suave)
+  }
+  .chip .pt{width:7px;height:7px;border-radius:50%;background:currentColor}
+  .chip.ok{color:var(--verde);border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.08)}
+  .chip.mal{color:var(--rojo);border-color:rgba(248,113,113,.35);background:rgba(248,113,113,.08)}
+  .chip.aviso{color:var(--ambar);border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
+  .chip.info{color:var(--azul);border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.08)}
+  table{width:100%;border-collapse:collapse;margin:18px 0 8px;font-size:14px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--borde);vertical-align:top}
+  th{color:var(--suave);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  tr.total td{border-top:1px solid var(--borde2);font-weight:600}
+  .panel{background:var(--panel);border:1px solid var(--borde);border-radius:14px;padding:20px 22px;margin:18px 0}
+  .panel.filo-verde{border-left:3px solid var(--verde)}
+  .panel.filo-rojo{border-left:3px solid var(--rojo)}
+  .panel.filo-ambar{border-left:3px solid var(--ambar)}
+  .panel h3{margin-top:0}
+  pre{
+    background:#08090B;border:1px solid var(--borde);border-radius:10px;
+    padding:14px 16px;overflow-x:auto;margin:12px 0;font-size:12.5px;line-height:1.55;color:#C9CDD3
+  }
+  ul{margin:10px 0 14px;padding-left:22px}
+  li{margin:6px 0}
+  .estado{display:inline-block;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:700;letter-spacing:.03em}
+  .estado.keep{background:rgba(74,222,128,.14);color:var(--verde)}
+  .estado.del{background:rgba(248,113,113,.14);color:var(--rojo)}
+  .estado.cond{background:rgba(251,191,36,.14);color:var(--ambar)}
+  .pista{color:var(--tenue);font-size:13px}
+  .num-grande{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .rejilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:20px 0}
+  .dato{background:var(--panel);border:1px solid var(--borde);border-radius:12px;padding:16px 18px}
+  .dato .etq{color:var(--suave);font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+  .dato .pie{color:var(--tenue);font-size:12.5px;margin-top:4px}
+  .sello{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:5px;letter-spacing:.05em;vertical-align:middle}
+  .sello.medido{background:rgba(74,222,128,.14);color:var(--verde)}
+  .sello.verificado{background:rgba(96,165,250,.14);color:var(--azul)}
+  .sello.nocoincide{background:rgba(248,113,113,.14);color:var(--rojo)}
+  footer{margin-top:64px;padding-top:22px;border-top:1px solid var(--borde);color:var(--tenue);font-size:13px}
+</style>
+</head>
+<body>
+<div class="hoja">
+
+<header class="cabecera">
+  <h1>Auditoría de los modelos de dictado</h1>
+  <p class="sub">Inventario de lo descargado, verificación por hash, las pruebas que justifican la elección actual y veredicto de conservación por modelo.</p>
+  <p class="meta">10 de octubre de 2026 · disco del dictado al 96 % (6.4 GB libres de 152 GB) · corpus de 12 frases, 89.55 s de audio, 218 palabras</p>
+</header>
+
+<div class="chips">
+  <span class="chip info"><span class="pt"></span>6 ficheros de modelo</span>
+  <span class="chip ok"><span class="pt"></span>5 con hash oficial verificado</span>
+  <span class="chip mal"><span class="pt"></span>1 corrupto</span>
+  <span class="chip aviso"><span class="pt"></span>3.47 GiB liberables sin tocar nada en uso</span>
+</div>
+
+<h2>1. Qué hay en disco</h2>
+
+<p>Los modelos viven en dos rutas. El directorio del dictado guarda el enlace <code>actual.bin</code> y el modelo de voz (VAD). Los candidatos que se bajaron para comparar están un nivel más abajo, en <code>candidatos/</code>. Hay un duplicado fuera de sitio, en Documentos.</p>
+
+<table>
+  <thead>
+    <tr><th>Fichero</th><th>Ruta</th><th class="num">Bytes</th><th class="num">GiB</th><th>SHA-256 frente al oficial</th><th>Uso</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="mono">ggml-large-v3-turbo.bin</td>
+      <td class="mono pista">…/whisper/candidatos/</td>
+      <td class="num">1 624 555 275</td><td class="num">1.51</td>
+      <td><span class="sello verificado">COINCIDE</span></td>
+      <td>activo (<code>actual.bin</code>)</td>
+    </tr>
+    <tr>
+      <td class="mono">ggml-silero-v6.2.0.bin</td>
+      <td class="mono pista">…/whisper/</td>
+      <td class="num">885 098</td><td class="num">0.0008</td>
+      <td><span class="pista">no está en el repo de modelos</span></td>
+      <td>activo (VAD, <code>-vm</code>)</td>
+    </tr>
+    <tr>
+      <td class="mono">ggml-medium.bin</td>
+      <td class="mono pista">…/whisper/</td>
+      <td class="num">1 533 763 059</td><td class="num">1.43</td>
+      <td><span class="sello verificado">COINCIDE</span></td>
+      <td>suite y valor de fábrica</td>
+    </tr>
+    <tr>
+      <td class="mono">ggml-large-v3.bin</td>
+      <td class="mono pista">…/whisper/candidatos/</td>
+      <td class="num">3 095 033 483</td><td class="num">2.88</td>
+      <td><span class="sello nocoincide">NO COINCIDE</span></td>
+      <td>ninguno</td>
+    </tr>
+    <tr>
+      <td class="mono">ggml-small.bin</td>
+      <td class="mono pista">…/whisper/candidatos/</td>
+      <td class="num">487 601 967</td><td class="num">0.45</td>
+      <td><span class="sello verificado">COINCIDE</span></td>
+      <td>ninguno</td>
+    </tr>
+    <tr>
+      <td class="mono">ggml-tiny.bin</td>
+      <td class="mono pista">…/whisper/candidatos/</td>
+      <td class="num">77 691 713</td><td class="num">0.07</td>
+      <td><span class="sello verificado">COINCIDE</span></td>
+      <td>ninguno</td>
+    </tr>
+    <tr>
+      <td class="mono">ggml-tiny.bin</td>
+      <td class="mono pista">~/Documentos/investigacion-dictado/prueba/</td>
+      <td class="num">77 691 713</td><td class="num">0.07</td>
+      <td><span class="sello verificado">COINCIDE</span></td>
+      <td>duplicado exacto</td>
+    </tr>
+    <tr class="total">
+      <td colspan="2">Total en disco</td>
+      <td class="num">6 974 128 308</td><td class="num">6.50</td>
+      <td colspan="2" class="pista">más de lo que queda libre en la partición</td>
+    </tr>
+  </tbody>
+</table>
+
+<p class="pista">Los hashes se han contrastado contra los punteros LFS publicados en <code>huggingface.co/ggerganov/whisper.cpp</code>, el repositorio oficial de estos ficheros.</p>
+
+<h2>2. Con qué se eligió el modelo que usas</h2>
+
+<p>La elección no se hizo a ojo. Hay cuatro piezas que la sostienen, todas dentro de <code>~/dotfiles/share/scripts</code>.</p>
+
+<ul>
+  <li><code>dictado-bench.py</code>, el arnés. Mide error de palabra (WER por distancia de Levenshtein), tiempo total, velocidad relativa al audio, pico de memoria y los dos coeficientes de un ajuste lineal (tiempo fijo de carga y pendiente por segundo de audio).</li>
+  <li><code>dictado-modelos-medidas.json</code>, la salida cruda del arnés, frase por frase, con el texto reconocido y la referencia al lado.</li>
+  <li><code>dictado-modelos-informe.html</code>, el informe que se generó con esas medidas.</li>
+  <li><code>dictado-pruebas/</code>, la suite funcional de cuatro bloques (<code>1-logica</code>, <code>2-entorno-hyprland</code>, <code>3-ramas-binario</code>, <code>4-servidor</code>) con su lanzador <code>correr-todas.sh</code>. Comprueba el comportamiento del script, no la calidad del modelo.</li>
+</ul>
+
+<p>El corpus de referencia son 12 frases grabadas con el DJI Mic, 89.55 s en total y 218 palabras. Cubre tres registros, órdenes cortas, frases largas y una tanda con nombres propios del equipo (Hifiman, Aune, RME, PipeWire).</p>
+
+<table>
+  <thead>
+    <tr><th>Variante</th><th class="num">WER</th><th class="num">× tiempo real</th><th class="num">Pico RAM</th><th class="num">Tiempo fijo</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>turbo, por el binario</td><td class="num">11.1 %</td><td class="num">8.51×</td><td class="num">205 MB</td><td class="num">0.73 s</td></tr>
+    <tr><td>turbo, por el servidor</td><td class="num">10.6 %</td><td class="num">49.4×</td><td class="num">n/d</td><td class="num">0.10 s</td></tr>
+    <tr><td>medium, por el binario</td><td class="num">23.6 %</td><td class="num">7.52×</td><td class="num">174 MB</td><td class="num">0.73 s</td></tr>
+    <tr><td>medium, por el servidor</td><td class="num">23.1 %</td><td class="num">26.9×</td><td class="num">n/d</td><td class="num">0.14 s</td></tr>
+    <tr><td>medium, sin VAD</td><td class="num">24.1 %</td><td class="num">8.18×</td><td class="num">174 MB</td><td class="num">0.70 s</td></tr>
+    <tr><td>small</td><td class="num">29.2 %</td><td class="num">15.7×</td><td class="num">146 MB</td><td class="num">0.30 s</td></tr>
+    <tr><td>tiny</td><td class="num">69.0 %</td><td class="num">14.8×</td><td class="num">106 MB</td><td class="num">0.37 s</td></tr>
+    <tr><td>large-v3 (grande)</td><td class="num pista">sin medir hasta hoy</td><td class="num pista">n/d</td><td class="num pista">n/d</td><td class="num pista">n/d</td></tr>
+  </tbody>
+</table>
+
+<p>Dos lecturas de esa tabla. Turbo es el único que baja del 12 % de error, y medium cuesta 1.43 GiB para duplicar el número de fallos de turbo. Small y tiny no tienen ningún uso posible, porque small acierta un 71 % de las palabras y tiny produce ruido.</p>
+
+<h2>3. Lo que faltaba medir, y lo que apareció</h2>
+
+<p>El modelo grande era el único sin medición. Lo he pasado por el mismo corpus, el mismo arnés y las mismas banderas que los demás, incluido tu vocabulario nuevo. El resultado no es una transcripción mala.</p>
+
+<div class="rejilla">
+  <div class="dato">
+    <div class="etq">turbo, con tu vocabulario</div>
+    <div class="num-grande" style="color:var(--verde)">6.9 %</div>
+    <div class="pie">15 errores en 218 palabras · 8.59× tiempo real</div>
+  </div>
+  <div class="dato">
+    <div class="etq">large-v3 (grande)</div>
+    <div class="num-grande" style="color:var(--rojo)">735.8 %</div>
+    <div class="pie">1604 «errores» en 218 palabras · 0.40× tiempo real</div>
+  </div>
+</div>
+
+<p>Un WER por encima del 100 % significa que la hipótesis es más larga que la referencia. La primera frase del corpus tiene una sola palabra, <em>Vale.</em>, y el modelo grande devolvió 131 palabras para transcribirla. Eso no es reconocer mal, es no reconocer.</p>
+
+<p>He aislado la causa. No es el VAD, no es la temperatura de muestreo y no es el vocabulario. La salida es idéntica con <code>--vad</code> y sin él, e idéntica forzando <code>--temperature 0</code>.</p>
+
+<pre>Minist Partnerssa Minist···ps RUS트를 Emir sinner definit WW newest moursover inic Columbus
+···ete···troopanta···exemption 사실ox mammalsarrass hazardseniz bites···Lage mo wn politicitäten
+···esf DebatW pum doubles 말을 phenomena WWxx···ents WW recount кр pumkich···</pre>
+
+<p>El mismo fragmento con turbo sale limpio, sin nada alrededor, «Vale.»</p>
+
+<p>La comprobación que cierra el caso es el hash. El fichero mide 3 095 033 483 bytes, exactamente los que declara el oficial, pero su SHA-256 no es el que publica whisper.cpp.</p>
+
+<pre>local   278c40874bdfbaf75553aa7f476d4139a14bbe8f9f9cf1e1bf5678b38ec9ed30
+oficial 64d182b440b98d5203c4f9bd541544d84c605196c4f7b845dfa11fb23594d1e2</pre>
+
+<p><span class="sello medido">MEDIDO</span> El fichero está corrupto. Tiene el mismo tamaño que el oficial y el contenido distinto. Los otros cuatro modelos descargados coinciden con el oficial al byte. La corrupción explica tanto el galimatías como la lentitud, porque un modelo que no carga bien no puede decodificar bien.</p>
+
+<h2>4. Veredicto por modelo</h2>
+
+<table>
+  <thead>
+    <tr><th>Modelo</th><th class="num">Espacio</th><th>Veredicto</th><th>Motivo</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="mono">ggml-large-v3-turbo.bin</td>
+      <td class="num">1.51 GiB</td>
+      <td><span class="estado keep">CONSERVAR</span></td>
+      <td>Es el que usas. Hash oficial exacto y el mejor WER medido de todos, 6.9 % con tu vocabulario.</td>
+    </tr>
+    <tr>
+      <td class="mono">ggml-silero-v6.2.0.bin</td>
+      <td class="num">865 KiB</td>
+      <td><span class="estado keep">CONSERVAR</span></td>
+      <td>Es el detector de voz que <code>dictado.sh</code> pasa con <code>-vm</code>. Sin él no hay recorte de silencios. Ocupa menos que una foto.</td>
+    </tr>
+    <tr>
+      <td class="mono">ggml-large-v3.bin</td>
+      <td class="num">2.88 GiB</td>
+      <td><span class="estado del">BORRAR</span></td>
+      <td>Corrupto, verificado por hash. No transcribe nada. Es el fichero más grande del disco y el que más espacio devuelve. Si algún día quieres el modelo completo, se vuelve a descargar.</td>
+    </tr>
+    <tr>
+      <td class="mono">ggml-small.bin</td>
+      <td class="num">0.45 GiB</td>
+      <td><span class="estado del">BORRAR</span></td>
+      <td>29.2 % de error, peor que medium, y apenas más rápido. No lo referencia ningún script. Su único papel fue la comparación que ya está hecha y guardada en el JSON.</td>
+    </tr>
+    <tr>
+      <td class="mono">ggml-tiny.bin</td>
+      <td class="num">74 MiB</td>
+      <td><span class="estado del">BORRAR</span></td>
+      <td>69.0 % de error. Transcribe «Vale» bien y el resto lo convierte en ruido («¡Ah! ¡Ah! ¡Ah!»). No sirve ni como respaldo.</td>
+    </tr>
+    <tr>
+      <td class="mono">ggml-tiny.bin (duplicado)</td>
+      <td class="num">74 MiB</td>
+      <td><span class="estado del">BORRAR</span></td>
+      <td>Mismo hash que el anterior, así que es copia literal. Es un resto de la carpeta de investigación, fuera de la ruta del dictado.</td>
+    </tr>
+    <tr>
+      <td class="mono">ggml-medium.bin</td>
+      <td class="num">1.43 GiB</td>
+      <td><span class="estado cond">BORRAR, CON DOS CAMBIOS</span></td>
+      <td>Funciona y su hash es correcto, pero no lo usa el dictado, porque tu <code>dictado.conf</code> fija <code>DICTADO_MODELO=actual.bin</code>. Sigue referenciado en dos sitios que habría que editar antes de borrarlo (sección 6).</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="panel filo-verde">
+  <h3>Lo que no hay que tocar</h3>
+  <p>Turbo y el modelo de voz suman 1.51 GiB y son los dos únicos que intervienen en el dictado real. El resto del inventario existe para una comparación que ya se hizo. Borrar los candidatos no quita ninguna capacidad que estés usando.</p>
+</div>
+
+<h2>5. Espacio que se recupera</h2>
+
+<table>
+  <thead>
+    <tr><th>Caso</th><th class="num">Liberado</th><th class="num">Libre después</th><th class="num">Uso del disco</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Hoy</td><td class="num">n/d</td><td class="num">6.4 GB</td><td class="num">96 %</td></tr>
+    <tr><td>Borrando large-v3, small y los dos tiny</td><td class="num">3.47 GiB</td><td class="num">9.9 GB</td><td class="num">93 %</td></tr>
+    <tr class="total"><td>Sumando medium</td><td class="num">4.90 GiB</td><td class="num">11.3 GB</td><td class="num">92 %</td></tr>
+  </tbody>
+</table>
+
+<p>El primer caso no toca nada que esté en uso y recupera 3.47 GiB. El segundo añade medium, que tampoco usa el dictado, y deja el disco por debajo del 92 %.</p>
+
+<h2>6. Dos cambios si decides borrar medium</h2>
+
+<p>Medium no está muerto del todo. Sigue citado en dos ficheros, y borrar el modelo sin editarlos deja una referencia rota. Son dos líneas.</p>
+
+<ul>
+  <li><code>dictado.sh</code>, línea 83. El valor de fábrica del modelo es medium, y solo entra en juego si no existiera <code>~/.config/dictado.conf</code>. Como ese fichero sí existe y apunta a <code>actual.bin</code>, hoy no se usa, pero conviene dejarlo coherente.</li>
+  <li><code>dictado-pruebas/4-servidor.sh</code>, línea 10. La prueba levanta un servidor de verdad con medium para comprobar que el dictado tira del servidor cuando está. Si borras medium, esa prueba falla.</li>
+</ul>
+
+<div class="panel filo-ambar">
+  <h3>Antes de borrar</h3>
+  <p>Ninguna de estas órdenes se ha ejecutado. La auditoría solo mide y comprueba. Si quieres que borre los ficheros, dime cuáles de los cinco candidatos y lo hago con copia de seguridad previa y verificación del hash de cada borrado.</p>
+</div>
+
+<footer>
+  Las fuentes de este informe son <code>dictado-modelos-medidas.json</code> y <code>dictado-modelos-informe.html</code> para las medidas previas, la medición de hoy sobre el corpus de 12 frases, y los punteros LFS de <code>ggerganov/whisper.cpp</code> para los hashes oficiales. Los hashes locales se han calculado con <code>sha256sum</code> sobre los ficheros del disco.
+</footer>
+
+</div>
+</body>
+</html>

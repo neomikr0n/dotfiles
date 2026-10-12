@@ -1,0 +1,66 @@
+# Vocabulario para el dictado. Lo lee ~/dotfiles/share/scripts/dictado.sh
+#
+# QUÉ ES
+# Una lista de palabras que se le pasa a whisper antes de transcribir, con --prompt. No cambia
+# lo que oye, solo desempata. Cuando dos palabras suenan parecido y el modelo duda, elige la que
+# está en esta lista. Por eso van aquí los nombres propios, las marcas y la jerga técnica, que
+# son justo las que el modelo destroza.
+#
+# ESTA LISTA ES LA DE n30
+# La dictó él mismo el 2026-10-10 y comprobó el resultado a mano: de todo lo que dictó, la única
+# que falló fue "Radeon", que salió como "Radion". El orden y el contenido son suyos, no
+# inventados, y por eso está tal cual en vez de "mejorada".
+#
+# LA GRAFÍA SÍ SE CORRIGE
+# La escribió de memoria y traía erratas que NO se pueden dejar: "Hyperland" (la marca es
+# Hyprland), "Pipewire" (es PipeWire) y "Gamescope" (es gamescope, en minúscula). Dejarlas tal
+# cual haría que el dictado escribiera mal a propósito, que es lo contrario de lo que se busca.
+# También se unificó "RME" + "ADI-2" + "DAC" en "RME ADI-2 DAC", que contiene las tres, y se
+# quitó el "DAC" duplicado.
+#
+# "RADEON" VA PRIMERO, Y ES A PROPÓSITO
+# Fue la única que falló. Medido el 2026-10-10: con la palabra suelta, sin prompt el modelo
+# escribe "a E.O." y con "Radeon" en el prompt escribe "Radeon". Lo que está delante en la lista
+# pesa más, así que va la primera para darle la mejor posición posible.
+#
+# EL LÍMITE (medido el 2026-10-10, no teórico)
+# Hasta 600 caracteres la transcripción es correcta; a partir de 650 se degrada y vuelve a fallar
+# "H1000" por "HE1000se". Con 2438 caracteres falla casi igual que sin lista. Una lista larga NO
+# es una lista mejor. Esta ocupa 324 caracteres, así que queda margen de sobra.
+#
+# CÓMO SE EDITA
+# Una línea de prosa, con las palabras separadas por comas. Whisper espera una frase, no una
+# lista de una palabra por línea.
+#
+DICTADO_VOCABULARIO="Radeon, Hifiman HE1000se, Aune S17 Pro, RME ADI-2 DAC, DJI Mic, PipeWire, Hyprland, Hyprland.lua, Quickshell, DMS, Waybar, Garuda Linux, Arch Linux, AUR, Genymotion, Waydroid, Android, ADB, Vulkan, RADV, AMD, gamescope, MangoHud, Steam, Proton, Jurassic World Alive, Omarchy, KDE Plasma, kitty, mpv, mpvpaper, S.T.A.L.K.E.R."
+
+# --- Las 10 sugeridas, para pegar si se quieren ---
+# Son las que se quedaron fuera al reemplazar la lista anterior y que sí se usan a diario. No es
+# una cuestión de espacio: las 10 juntas llevan la línea a 430 caracteres, y el tope medido son
+# 600, así que caben de sobra. Se dejan aquí sin aplicar porque la lista de arriba es la que n30
+# probó y pidió, y él decide si quiere las otras.
+#
+# Para aplicarlas, se pega esto al final de la línea de arriba, quitando antes el punto final:
+#   , receptor, transmisor, Wireless Mic Rx, kilohercios, decibelios, milisegundos, DJI Mic Mini, WirePlumber, RDNA, whisper
+#
+# Por qué estas y no otras:
+#   receptor, transmisor, Wireless Mic Rx   el vocabulario del DJI, que es con lo que dicta.
+#   kilohercios, decibelios, milisegundos   las tres unidades de audio que ya fallaban antes.
+#   DJI Mic Mini                            el modelo exacto de sus transmisores.
+#   WirePlumber                             el otro motor de audio de Linux, junto a PipeWire.
+#   RDNA                                    la arquitectura de su GPU, junto a Radeon y RADV.
+#   whisper                                 el motor de reconocimiento que está usando.
+
+# --- Lo que se perdió respecto a la lista anterior ---
+# Queda anotado para que no se pierda de vista. Si algo de esto vuelve a fallar al dictar, se
+# cambia por lo que esté menos en uso, no se añade sin quitar.
+#
+# Audio y equipo:
+# DJI Mic Mini, WirePlumber, DankMaterialShell, Noctalia, RDNA, receptor, transmisor,
+# Wireless Mic Rx, kilohercios, decibelios, milisegundos, RME (suelto), ADI-2 (suelto),
+#
+# Reconocimiento de voz:
+# whisper, faster-whisper, Silero, WhisperX, VAD,
+#
+# Variantes que se perdieron al unificar:
+# Garuda (ahora Garuda Linux), Arch (ahora Arch Linux), AMD Radeon (ahora AMD + Radeon)

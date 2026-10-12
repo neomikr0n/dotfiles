@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Doble de pactl para las suites. Devuelve siempre la misma lista de fuentes, para que las
+# pruebas no dependan de que el receptor DJI este enchufado.
+#
+# Vive en un fichero ejecutable y no en una funcion de shell porque no todas las suites lo
+# llaman desde su propio proceso. La seccion E de 5-vivo.sh pide la fuente con
+# `bash dictado.sh fuente`, que es un proceso hijo. Una funcion definida en la suite no llega
+# hasta ahi, y por eso esa seccion fallaba con "fuente inesperada: []" en cuanto el receptor
+# no estaba conectado. Medido el 2026-10-11.
+#
+# El señuelo va primero y el DJI despues, a proposito, para que `fuente()` tenga que elegir por
+# patron y no quedarse con la primera linea de la lista.
+set -u
+case "${1:-} ${2:-}" in
+"list short")
+    printf '52\talsa_output.pci-0000_00_1f.3.analog-stereo.monitor\tPipeWire\ts32le 2ch 48000Hz\tSUSPENDED\n'
+    printf '53\talsa_input.usb-DJI_Technology_Co.__Ltd._Wireless_Mic_Rx-00.analog-stereo\tPipeWire\ts16le 2ch 48000Hz\tSUSPENDED\n'
+    ;;
+"get-default-source")
+    printf 'alsa_output.pci-0000_00_1f.3.analog-stereo.monitor\n'
+    ;;
+esac
+exit 0

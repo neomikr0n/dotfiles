@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Corregir y normalizar el dictado, lo que dice la medición</title>
+<style>
+  :root{
+    --fondo:#0D0E10; --panel:#14161A; --panel2:#191C21;
+    --borde:rgba(255,255,255,.08); --borde2:rgba(255,255,255,.14);
+    --texto:#E6E7EA; --suave:#9AA0A6; --tenue:#6B7076;
+    --verde:#4ADE80; --rojo:#F87171; --ambar:#FBBF24; --azul:#60A5FA;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--fondo); color:var(--texto);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+    line-height:1.62; font-size:15.5px; -webkit-font-smoothing:antialiased;
+  }
+  .hoja{max-width:1020px;margin:0 auto;padding:56px 28px 96px}
+  header.cabecera{border-bottom:1px solid var(--borde);padding-bottom:26px;margin-bottom:36px}
+  h1{font-size:30px;line-height:1.2;margin:0 0 10px;letter-spacing:-.02em}
+  .sub{color:var(--suave);font-size:16px;margin:0}
+  .meta{color:var(--tenue);font-size:13.5px;margin-top:14px}
+  h2{font-size:21px;margin:48px 0 14px;letter-spacing:-.01em}
+  h3{font-size:16.5px;margin:26px 0 10px;letter-spacing:-.01em}
+  p{margin:0 0 14px}
+  code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+  code{background:rgba(255,255,255,.05);padding:2px 6px;border-radius:5px;color:#D7DAE0}
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 6px}
+  .chip{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:999px;
+    font-size:13px;font-weight:600;border:1px solid var(--borde2);background:var(--panel2);color:var(--suave)}
+  .chip .pt{width:7px;height:7px;border-radius:50%;background:currentColor}
+  .chip.ok{color:var(--verde);border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.08)}
+  .chip.mal{color:var(--rojo);border-color:rgba(248,113,113,.35);background:rgba(248,113,113,.08)}
+  .chip.aviso{color:var(--ambar);border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
+  .chip.info{color:var(--azul);border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.08)}
+  table{width:100%;border-collapse:collapse;margin:18px 0 8px;font-size:14px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--borde);vertical-align:top}
+  th{color:var(--suave);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  tr.mejor td{background:rgba(74,222,128,.07)}
+  tr.peor td{background:rgba(248,113,113,.06)}
+  tr.total td{font-weight:700;border-top:1px solid var(--borde2);background:rgba(255,255,255,.03)}
+  .cero{color:var(--tenue)}
+  pre{background:#08090B;border:1px solid var(--borde);border-radius:10px;padding:14px 16px;
+    overflow-x:auto;margin:12px 0;font-size:12.5px;line-height:1.55;color:#C9CDD3}
+  ul{margin:10px 0 14px;padding-left:22px}
+  li{margin:6px 0}
+  .pista{color:var(--tenue);font-size:13px}
+  .rejilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:20px 0}
+  .dato{background:var(--panel);border:1px solid var(--borde);border-radius:12px;padding:16px 18px}
+  .dato .etq2{color:var(--suave);font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+  .num-grande{font-size:25px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .nota{background:var(--panel);border:1px solid var(--borde);border-left:3px solid var(--ambar);
+    border-radius:10px;padding:14px 18px;margin:18px 0}
+  .nota.ok{border-left-color:var(--verde)}
+  .nota.mal{border-left-color:var(--rojo)}
+  .nota p:last-child{margin-bottom:0}
+  footer{margin-top:64px;padding-top:22px;border-top:1px solid var(--borde);color:var(--tenue);font-size:13px}
+</style>
+</head>
+<body>
+<div class="hoja">
+
+<header class="cabecera">
+  <h1>Corregir y normalizar el dictado, lo que dice la medición</h1>
+  <p class="sub">Las mejoras 5 y 9 de la autocritica, medidas sobre el corpus antes de escribir código de producción.</p>
+  <p class="meta">11 de octubre de 2026 · 12 muestras · 216 palabras · whisper large-v3-turbo · <code>dictado-normalizar-medir.py</code></p>
+</header>
+
+<div class="chips">
+  <span class="chip info"><span class="pt"></span>base 24 errores, 11,1 %</span>
+  <span class="chip aviso"><span class="pt"></span>la corrección baja a 21, sin romper nada</span>
+  <span class="chip mal"><span class="pt"></span>la normalización baja 2, y en su otra dirección sube</span>
+  <span class="chip ok"><span class="pt"></span>medición repetible, sin transcribir</span>
+</div>
+
+<h2>1. Qué se midió y con qué</h2>
+
+<p>Las dos mejoras piden lo mismo antes de tocar producción. Medir sobre el corpus cuánto error quita cada una, y descartar la que no baje. El corpus son doce frases dictadas por n30, 216 palabras en total, con su transcripción de referencia. Las hipótesis del modelo que se usa a diario ya estaban guardadas en <code>informes/dictado-modelos-medidas.json</code>, así que no hizo falta transcribir nada y la medición no depende del micrófono ni del servidor.</p>
+
+<p>El error lo calculan <code>normalizar()</code> y <code>wer()</code> de <code>dictado-bench.py</code>, importadas y no reimplementadas. No es un detalle de estilo. Un medidor paralelo que reescribió esas dos funciones ya dio cifras distintas una vez, 14/16/12/16 frente a 15/16/12/17, y esa es la clase de discrepancia que invalida una medición.</p>
+
+<p>El diccionario general que la mejora 5 pide como filtro es el hunspell español que ya trae el runtime de Flatpak de GNOME, 55 638 palabras en disco. Como guarda para las palabras inglesas se usa <code>cracklib-small</code>, 54 763 palabras, que es una lista de contraseñas y solo sirve de tope basto.</p>
+
+<h2>2. Los 24 errores, por causa</h2>
+
+<p>Antes de probar ninguna capa conviene saber de qué están hechos los errores. Alineando cada referencia con su hipótesis palabra a palabra, los 24 se reparten así.</p>
+
+<div class="rejilla">
+  <div class="dato"><div class="etq2">Números y unidades</div><div class="num-grande">6</div><div class="pista">25 % · objetivo de la mejora 9</div></div>
+  <div class="dato"><div class="etq2">Nombres propios y jerga</div><div class="num-grande">11</div><div class="pista">46 % · objetivo de la mejora 5</div></div>
+  <div class="dato"><div class="etq2">Palabras comunes</div><div class="num-grande">7</div><div class="pista">29 % · ni una capa ni la otra</div></div>
+</div>
+
+<table>
+  <thead><tr><th>Muestra</th><th class="num">Errores</th><th>Qué falló</th></tr></thead>
+  <tbody>
+    <tr><td><code>c2-guarda</code></td><td class="num">1</td><td><code>ciérralo</code> → <code>ciérgalo</code></td></tr>
+    <tr><td><code>c3-abre</code></td><td class="num">3</td><td><code>abre</code> → <code>abra</code>, se come el <code>de</code>, <code>dictado</code> → <code>nebictado</code></td></tr>
+    <tr><td><code>l2-informe</code></td><td class="num">5</td><td>dice <code>537</code> donde la referencia escribe <code>quinientos treinta y siete</code>, y <code>audible</code> → <code>unible</code></td></tr>
+    <tr><td><code>m1-comando</code></td><td class="num">1</td><td><code>Dictado</code> → <code>Conectado</code>, el fallo de la mejora 4</td></tr>
+    <tr><td><code>m2-numeros</code></td><td class="num">2</td><td><code>12,5 por ciento</code> sale como <code>12,5 %</code>, sin las dos palabras</td></tr>
+    <tr><td><code>m3-propios</code></td><td class="num">5</td><td><code>Hifiman</code>, <code>HE1000se</code>, <code>Aune</code> y un verbo</td></tr>
+    <tr><td><code>m4-tecnico</code></td><td class="num">6</td><td><code>PipeWire</code>, <code>kilohercios</code>, <code>RME</code> y compañía</td></tr>
+    <tr><td><code>m5-ingles</code></td><td class="num">1</td><td><code>main</code> → <code>mine</code></td></tr>
+    <tr class="total"><td>Total</td><td class="num">24</td><td>11,1 % de 216 palabras</td></tr>
+  </tbody>
+</table>
+
+<h2>3. Mejora 5, corrección por distancia de edición</h2>
+
+<p>La capa busca, para cada palabra que no esté en un diccionario general, el término del vocabulario más cercano por distancia de edición, y lo sustituye si la distancia no pasa de un tope. Se probaron dos topes y tres filtros.</p>
+
+<table>
+  <thead><tr><th>Filtro</th><th class="num">Tope</th><th class="num">Errores</th><th class="num">Aciertos</th><th class="num">Falsos positivos</th></tr></thead>
+  <tbody>
+    <tr class="peor"><td>Sin filtro</td><td class="num">1</td><td class="num">30</td><td class="num">5</td><td class="num">10</td></tr>
+    <tr class="peor"><td>Sin filtro</td><td class="num">2</td><td class="num">111</td><td class="num">8</td><td class="num">92</td></tr>
+    <tr class="mejor"><td>Español</td><td class="num">1</td><td class="num">21</td><td class="num">4</td><td class="num">0</td></tr>
+    <tr><td>Español</td><td class="num">2</td><td class="num">22</td><td class="num">5</td><td class="num">2</td></tr>
+    <tr class="mejor"><td>Español + inglés</td><td class="num">1</td><td class="num">21</td><td class="num">3</td><td class="num">0</td></tr>
+    <tr><td>Español + inglés</td><td class="num">2</td><td class="num">22</td><td class="num">4</td><td class="num">2</td></tr>
+  </tbody>
+</table>
+
+<p class="pista">Un falso positivo es una sustitución sobre una palabra que ya estaba bien, es decir, que aparece tal cual en la referencia.</p>
+
+<div class="nota mal">
+  <p><strong>Sin filtro la capa es un desastre, y esto no es un matiz.</strong> Cambia <code>de</code> por <code>KDE</code>, <code>y</code> por <code>Rx</code>, <code>pena</code> por <code>RDNA</code>. Sube el error de 24 a 111, casi cinco veces. El filtro de diccionario no es una mejora opcional, es la condición para que la capa exista.</p>
+</div>
+
+<div class="nota ok">
+  <p><strong>Con el filtro español y tope 1, la capa baja de 24 a 21 errores y no rompe ninguna palabra.</strong> Arregla tres cosas concretas: <code>iFIMAN</code> → <code>Hifiman</code>, <code>kiloherzios</code> → <code>kilohercios</code> y <code>RM</code> → <code>RME</code>. Las tres son términos que el prompt ya llevaba y no bastaron.</p>
+</div>
+
+<p>Subir el tope a 2 no baja el error, que se queda en 22, y mete dos falsos positivos. La causa está medida. El fichero <code>.dic</code> de hunspell guarda la forma base, y las flexiones se generan con las reglas del <code>.aff</code>, así que no reconoce <code>abro</code> ni <code>hace</code> como palabras. Al ensanchar el tope, el corrector las toca y las rompe.</p>
+
+<p>La guarda inglesa no cambia el error, que sigue en 21, pero quita una corrección inútil. Sin ella, <code>mine</code> se convierte en <code>Mini</code>, que ni arregla el fallo, porque la referencia dice <code>main</code>, ni deja la palabra como estaba.</p>
+
+<h2>4. Mejora 9, números y unidades</h2>
+
+<p>La capa reescribe números y unidades de una sola forma. Se probaron las dos direcciones.</p>
+
+<table>
+  <thead><tr><th>Dirección</th><th class="num">Errores</th><th class="num">Tasa</th><th>Efecto</th></tr></thead>
+  <tbody>
+    <tr class="mejor"><td>Símbolos a palabras, <code>%</code> → <code>por ciento</code></td><td class="num">22</td><td class="num">10,2 %</td><td>Baja 2</td></tr>
+    <tr class="peor"><td>Dígitos a palabras, <code>537</code> → <code>quinientos treinta y siete</code></td><td class="num">30</td><td class="num">13,9 %</td><td>Sube 6</td></tr>
+    <tr class="peor"><td>Las dos juntas</td><td class="num">29</td><td class="num">13,4 %</td><td>Sube 5</td></tr>
+  </tbody>
+</table>
+
+<p>La dirección de dígitos a palabras se descarta por medida, y la razón se ve en el propio corpus. La referencia de <code>l2-informe</code> escribe <code>quinientos treinta y siete</code> y la de <code>m2-numeros</code> escribe <code>47 320</code>. El corpus no usa un criterio solo para los números, así que ninguna dirección gana en las dos.</p>
+
+<div class="nota">
+  <p><strong>La mitad de esta mejora no se puede medir con la métrica del proyecto.</strong> Los signos dictados, la puntuación, cuestan cero errores por construcción, porque <code>normalizar()</code> tira todo lo que no sea letra, dígito o espacio. Para puntuarlos haría falta una métrica que mirase la puntuación, y el banco no la tiene.</p>
+  <p>El ejemplo que da la autocritica tiene dos partes y solo una cuenta. Que <code>47 320</code> salga como <code>47,320</code> cuesta cero errores, porque los dígitos se unen y la coma se tira. Que <code>12,5 por ciento</code> salga como <code>12,5 %</code> cuesta dos, y esos dos son los únicos que la capa recupera.</p>
+</div>
+
+<h2>5. Veredicto</h2>
+
+<p>Las dos capas bajan el error, así que por el criterio de la autocritica ninguna se descarta. Pero las dos bajan poco, y una lo sube en su dirección principal.</p>
+
+<ul>
+  <li><strong>Mejora 5.</strong> Pasa el listón con la configuración limpia, filtro español e inglés y tope 1, que da 21 errores y cero falsos positivos. Baja 3 errores sobre 216 palabras, 1,4 puntos. El coste de una pasada es de 60 ms de proceso completo, con 20 ms dentro, frente a los 3,3 ms de la ruta de datos del portapapeles.</li>
+  <li><strong>Mejora 9.</strong> Solo sobrevive la regla de símbolos a palabras, que baja 2 errores. La dirección de dígitos a palabras se descarta por medida. La parte de puntuación no se puede medir con esta métrica.</li>
+</ul>
+
+<div class="nota">
+  <p><strong>Recomendación.</strong> Implementar la corrección de la mejora 5 como capa opcional y apagada por defecto, con la guarda de dos diccionarios y tope 1, y meter dentro la única regla que sobrevive de la mejora 9. No encenderla por defecto, porque 3 errores en 216 palabras no pagan el riesgo de que la capa toque una palabra que estaba bien, y el corpus es demasiado corto para medir ese riesgo.</p>
+</div>
+
+<h2>6. Cómo se reproduce</h2>
+
+<pre>cd ~/dotfiles/share/scripts/dictado
+./dictado-normalizar-medir.py --detalle      # desglose de los 24 errores y las dos capas
+./dictado-normalizar-medir.py --coste        # añade la latencia de una pasada</pre>
+
+<p>El medidor no transcribe nada, así que corre en segundos y da el mismo número siempre. Lee las hipótesis de <code>informes/dictado-modelos-medidas.json</code>, que es el resultado del banco, y por eso solo mide el modelo que esté en ese fichero.</p>
+
+<footer>
+  Medición del 11 de octubre de 2026 sobre el corpus de dictado, 12 muestras y 216 palabras. El error lo calculan las funciones del banco del proyecto, importadas. El diccionario general es el hunspell español del runtime de Flatpak de GNOME y la guarda inglesa es <code>cracklib-small</code>, los dos en disco.
+</footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Doble de wl-copy para las suites. El portapapeles de prueba es un fichero y su ruta llega por
+# entorno, en DICTADO_TEST_PORTA.
+#
+# Vive en un fichero ejecutable y no en una funcion de shell porque el pegado cruza una frontera
+# de proceso: dictado-vivo.sh llama a `dictado.sh pegar`, que es un hijo, y una funcion definida
+# en la suite no llega hasta ahi. Es la misma leccion que dejo el doble de pactl.
+#
+# Sin DICTADO_TEST_PORTA se niega a funcionar, a proposito. Si alguna suite lo llama sin querer,
+# prefiero un fallo ruidoso a una escritura silenciosa en el portapapeles de verdad, que en esta
+# maquina ademas lo vigilan dos gestores, cliphist y CopyQ.
+set -u
+[ -n "${DICTADO_TEST_PORTA:-}" ] || { echo "doble wl-copy sin DICTADO_TEST_PORTA" >&2; exit 1; }
+cat >"$DICTADO_TEST_PORTA"
+printf 'copia:%s\n' "$(cat "$DICTADO_TEST_PORTA")" >>"$DICTADO_TEST_PORTA.copias"
+exit 0

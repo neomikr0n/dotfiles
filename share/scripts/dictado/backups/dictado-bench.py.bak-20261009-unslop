@@ -1,0 +1,898 @@
+#!/usr/bin/env python3
+"""dictado-bench — mide latencia y error (WER) de cada modelo de whisper en este equipo.
+
+Compara modelos sobre un conjunto de pares `<nombre>.wav` + `<nombre>.txt` (el .txt es el
+texto de referencia, lo que de verdad se dijo). Calcula:
+
+  - tiempo de pared por muestra y factor de tiempo real (x veces más rápido que el audio)
+  - WER: porcentaje de palabras mal (sustituciones + inserciones + omisiones / palabras reales)
+  - pico de memoria residente del proceso (VmHWM leído de /proc durante la ejecución)
+  - tamaño del fichero del modelo
+
+Uso:
+    dictado-bench.py [--dir CARPETA] [--modelos CARPETA_O_FICHERO ...]
+                     [--json SALIDA.json] [--detalle] [--sin-vad]
+
+Por defecto:
+    --dir      /tmp/bench-es
+    --modelos  ~/.local/share/whisper  y  ~/.local/share/whisper/candidatos
+
+Los flags de whisper son EXACTAMENTE los que usa dictado.sh en producción, para que lo medido
+sea lo que se va a vivir. Con --sin-vad se quita el VAD (útil para ver cuánto recorta).
+"""
+
+import argparse
+import glob
+import json
+import os
+import re
+import subprocess
+import sys
+import time
+
+BIN = os.path.expanduser("~/.local/bin/whisper-cli")
+VAD = os.path.expanduser("~/.local/share/whisper/ggml-silero-v6.2.0.bin")
+IDIOMA = "es"
+
+
+# ---------------------------------------------------------------- texto
+
+def normalizar(s):
+    """Deja solo letras (con acentos), dígitos y espacios simples."""
+    s = s.lower()
+    s = re.sub(r"[^\w\s]", " ", s, flags=re.UNICODE)
+    s = s.replace("_", " ")
+    s = re.sub(r"\s+", " ", s).strip()
+    # «47 320» y «47320» son lo mismo: se unen los dígitos separados por un espacio.
+    s = re.sub(r"(?<=\d) (?=\d)", "", s)
+    return s
+
+
+def levenshtein(a, b):
+    if not a:
+        return len(b)
+    if not b:
+        return len(a)
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        cur = [i]
+        for j, cb in enumerate(b, 1):
+            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb)))
+        prev = cur
+    return prev[-1]
+
+
+def wer(referencia, hipotesis):
+    """Devuelve (tasa, errores, palabras_de_referencia)."""
+    r = normalizar(referencia).split()
+    h = normalizar(hipotesis).split()
+    if not r:
+        return (0.0, 0, 0)
+    d = levenshtein(r, h)
+    return (d / len(r), d, len(r))
+
+
+# ---------------------------------------------------------------- ejecución
+
+def pico_memoria(pid, actual):
+    """VmHWM de /proc/<pid>/status, en kB. Se queda con el mayor visto."""
+    try:
+        with open(f"/proc/{pid}/status") as f:
+            for linea in f:
+                if linea.startswith("VmHWM:"):
+                    return max(actual, int(linea.split()[1]))
+    except (OSError, ValueError, IndexError):
+        pass
+    return actual
+
+
+def correr(modelo, wav, salida, con_vad, prompt=None):
+    """Devuelve (segundos, texto, pico_kb, fallo).
+
+    OJO con el cuarto valor. Antes esta función tiraba el stderr a /dev/null, y eso convertía un
+    modelo que NO CARGA (fichero truncado, por ejemplo) en un modelo que «transcribe nada»: WER
+    100 %, tiempo bajísimo, y encima el más rápido de la tabla. Un fallo de carga tiene que salir
+    como fallo, no como resultado. Por eso ahora el stderr se guarda y se inspecciona.
+    """
+    args = [BIN, "-m", modelo, "-f", wav, "-l", IDIOMA, "-nt", "-np", "-otxt", "-of", salida]
+    if con_vad and os.path.isfile(VAD):
+        args += ["--vad", "-vm", VAD]
+    if prompt:
+        args += ["--prompt", prompt]
+    errlog = salida + ".log"
+    for ext in (".txt", ".log"):
+        try:
+            os.remove(salida + ext)
+        except OSError:
+            pass
+
+    t0 = time.perf_counter()
+    with open(errlog, "wb") as ferr:
+        p = subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=ferr)
+        pico = 0
+        while p.poll() is None:
+            pico = pico_memoria(p.pid, pico)
+            time.sleep(0.02)
+    t1 = time.perf_counter()
+
+    err = ""
+    try:
+        with open(errlog, errors="replace") as f:
+            err = f.read()
+    except OSError:
+        pass
+
+    fallo = None
+    if "failed to initialize whisper context" in err:
+        fallo = "no pudo cargar el modelo (¿fichero incompleto?)"
+    elif p.returncode != 0:
+        for linea in err.splitlines():
+            if "error" in linea.lower():
+                fallo = linea.strip()
+                break
+        if not fallo:
+            fallo = f"código de salida {p.returncode}"
+    elif not os.path.isfile(salida + ".txt"):
+        fallo = "el proceso terminó bien pero no escribió salida"
+
+    texto = ""
+    try:
+        with open(salida + ".txt") as f:
+            texto = f.read().strip()
+    except OSError:
+        pass
+    return t1 - t0, texto, pico, fallo
+
+
+def correr_servidor(url, wav, tiempo_max=120):
+    """Transcribe contra whisper-server. El modelo ya esta cargado, asi que no se paga su carga.
+
+    Se mide el viaje completo (subir el WAV y recibir el JSON), que es lo que se vive de verdad.
+    """
+    t0 = time.perf_counter()
+    resp = ""
+    try:
+        p = subprocess.run(
+            ["curl", "-s", "--max-time", str(tiempo_max),
+             "-F", f"file=@{wav}", "-F", f"language={IDIOMA}", "-F", "response_format=json",
+             f"{url}/inference"],
+            capture_output=True, text=True, check=False,
+        )
+        resp = p.stdout
+    except Exception as e:
+        return 0.0, "", 0, f"curl falló: {e}"
+    t1 = time.perf_counter()
+    texto = ""
+    try:
+        texto = json.loads(resp).get("text", "").strip()
+    except Exception:
+        return t1 - t0, "", 0, f"respuesta no es JSON: {resp[:80]!r}"
+    return t1 - t0, texto, 0, None
+
+
+def duracion(wav):
+    out = subprocess.run(
+        ["sox", "--i", wav], capture_output=True, text=True, check=False
+    ).stdout
+    m = re.search(r"Duration\s*:\s*(\d+):(\d+):([\d.]+)", out)
+    if not m:
+        return 0.0
+    return int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3))
+
+
+def ajuste(filas):
+    """Mínimos cuadrados de tiempo = coste_fijo + pendiente * segundos_de_audio.
+
+    Esto separa dos cosas que se confunden todo el rato:
+      - coste fijo: cargar el modelo en memoria. Se paga UNA vez por dictado, aunque digas
+        una sola palabra. Es lo que más se nota en frases cortas.
+      - pendiente: lo que cuesta cada segundo de audio (velocidad de cálculo).
+    Un modelo grande puede tener mal coste fijo y buena pendiente; para dictado, donde las
+    frases son de 3-10 s, el coste fijo manda.
+    """
+    n = len(filas)
+    if n < 2:
+        return None
+    sx = sum(f["audio"] for f in filas)
+    sy = sum(f["tiempo"] for f in filas)
+    sxx = sum(f["audio"] ** 2 for f in filas)
+    sxy = sum(f["audio"] * f["tiempo"] for f in filas)
+    den = n * sxx - sx * sx
+    if den == 0:
+        return None
+    b = (n * sxy - sx * sy) / den
+    a = (sy - b * sx) / n
+    return a, b
+
+
+def resumir(filas, nombre, tam_mb, total_audio, servidor=False):
+    """Agrega las pasadas de un modelo en una sola fila de resultado.
+
+    De cada muestra se queda con la MEJOR pasada: la primera ejecución paga el arranque del
+    proceso y no representa el coste de régimen.
+    """
+    por_muestra = {}
+    for f in filas:
+        k = f["muestra"]
+        if k not in por_muestra or f["tiempo"] < por_muestra[k]["tiempo"]:
+            por_muestra[k] = f
+    elegidas = list(por_muestra.values())
+
+    t_tot = sum(f["tiempo"] for f in elegidas)
+    err_tot = sum(f["errores"] for f in elegidas)
+    pal_tot = sum(f["palabras"] for f in elegidas)
+    aj = ajuste(elegidas)
+    motivos = [f.get("fallo") for f in elegidas if f.get("fallo")]
+    # Si falla en TODAS las muestras no es un modelo peor: es un modelo que no se puede usar, y su
+    # WER no significa nada. Se marca para que no contamine la tabla ni el veredicto.
+    roto = bool(motivos) and len(motivos) == len(elegidas)
+    return {
+        "modelo": nombre,
+        "mb": tam_mb,
+        "servidor": servidor,
+        "roto": roto,
+        "fallos": len(motivos),
+        "motivo": motivos[0] if motivos else None,
+        "tiempo_total": t_tot,
+        "audio_total": total_audio,
+        "x_tiempo_real": total_audio / t_tot if t_tot else 0,
+        "seg_por_10s": 10 * t_tot / total_audio if total_audio else 0,
+        "wer": err_tot / pal_tot if pal_tot else 0,
+        "errores": err_tot,
+        "palabras": pal_tot,
+        "pico_mb": max(f["pico_kb"] for f in elegidas) / 1024,
+        "fijo_s": aj[0] if aj else None,
+        "pendiente": aj[1] if aj else None,
+        "detalle": elegidas,
+    }
+
+
+# ---------------------------------------------------------------- informe HTML
+
+CSS = """
+  :root {
+    --bg: #0A0A0A; --panel: #16181D; --panel2: #1E2126;
+    --orange: #FF4E00; --red-orange: #FF3300; --amber: #FFB300;
+    --yellow: #FFC821; --text: #F5F1EA; --muted: #9AA0A8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    line-height: 1.6; min-height: 100vh;
+  }
+  code, pre { font-family: "JetBrains Mono", "Fira Code", ui-monospace, monospace; }
+
+  header.hero { position: relative; overflow: hidden; background: var(--bg); padding: 72px 32px 118px; }
+  .hero-inner { position: relative; max-width: 980px; margin: 0 auto; }
+  .hero .kicker {
+    display: inline-block; font-size: 12px; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--yellow); margin-bottom: 10px; font-weight: 700;
+  }
+  .hero h1 { font-size: clamp(28px, 4vw, 44px); font-weight: 800; line-height: 1.15; }
+  .hero h1 .accent { color: var(--orange); }
+  .hero .meta { margin-top: 14px; color: var(--muted); font-size: 14px; }
+  .hero .meta code { background: rgba(255,255,255,.08); padding: 2px 8px; border-radius: 6px;
+    color: var(--amber); font-size: 13px; }
+  .chips { margin-top: 30px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .chip { background: var(--panel); border: 1px solid color-mix(in srgb, var(--chip) 45%, transparent);
+    border-radius: 12px; padding: 10px 18px; min-width: 92px; text-align: center; }
+  .chip-num { font-size: 24px; font-weight: 800; color: var(--chip); display: block; }
+  .chip-label { font-size: 10px; letter-spacing: 1.5px; color: var(--muted); }
+
+  main { max-width: 980px; margin: -68px auto 0; padding: 0 24px 90px; position: relative; }
+  section { margin-top: 52px; }
+  section h2 { font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex: none;
+    box-shadow: 0 0 10px currentColor; }
+  .section-sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+  .card-panel { background: var(--panel); border: 1px solid rgba(255,255,255,.07);
+    border-radius: 16px; padding: 24px 26px; }
+  .card-panel p { color: #C9CDD3; font-size: 14.5px; margin-bottom: 10px; }
+  .card-panel p:last-child { margin-bottom: 0; }
+  .card-panel strong { color: var(--yellow); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: right; font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase;
+    color: var(--muted); padding: 0 10px 10px; border-bottom: 1px solid rgba(255,255,255,.1); font-weight: 700; }
+  th:first-child, td:first-child { text-align: left; }
+  td { text-align: right; padding: 11px 10px; border-bottom: 1px solid rgba(255,255,255,.05);
+    font-variant-numeric: tabular-nums; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr.srv { background: rgba(255,179,0,.05); }
+  tbody tr.roto { background: rgba(255,51,0,.06); }
+  tbody tr.roto td { color: #8A8F96; }
+  .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 13px; }
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11.5px;
+    font-weight: 800; font-variant-numeric: tabular-nums; }
+  .tag-srv { font-size: 10px; letter-spacing: 1.4px; color: var(--amber);
+    background: var(--panel2); border: 1px solid rgba(255,179,0,.3); border-radius: 999px;
+    padding: 1px 8px; margin-left: 8px; vertical-align: 2px; }
+  .win { color: var(--yellow); font-weight: 800; }
+  .tag-var { font-size: 10px; letter-spacing: 1.4px; color: #9AA0A8;
+    background: var(--panel2); border: 1px solid rgba(255,255,255,.14); border-radius: 999px;
+    padding: 1px 8px; margin-left: 8px; vertical-align: 2px; }
+
+  .bars { display: grid; gap: 14px; margin-top: 4px; }
+  .bar-row { display: grid; grid-template-columns: 190px 1fr 96px; gap: 12px; align-items: center; }
+  .bar-name { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12.5px; color: #C9CDD3; }
+  .bar-track { height: 22px; background: #0D0E10; border-radius: 6px; overflow: hidden;
+    display: flex; border: 1px solid rgba(255,255,255,.06); }
+  .bar-fijo { background: #FF3300; }
+  .bar-marg { background: #FFB300; }
+  .bar-val { font-size: 12.5px; color: var(--muted); text-align: right;
+    font-variant-numeric: tabular-nums; }
+  .leyenda { display: flex; gap: 20px; margin-top: 16px; font-size: 12.5px; color: var(--muted); }
+  .leyenda i { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 6px; }
+
+  .finding { background: var(--panel); border: 1px solid rgba(255,255,255,.07);
+    border-left: 4px solid var(--sev); border-radius: 14px; padding: 20px 22px; margin-bottom: 18px; }
+  .finding header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .sev-badge { color: #0A0A0A; font-size: 10.5px; font-weight: 800; letter-spacing: 1.5px;
+    padding: 3px 10px; border-radius: 999px; }
+  .line-badge { font-size: 11px; color: var(--muted); background: var(--panel2);
+    border: 1px solid rgba(255,255,255,.08); border-radius: 999px; padding: 2px 10px; }
+  .finding h3 { font-size: 17px; margin-bottom: 6px; }
+  .finding p { color: #C9CDD3; font-size: 14.5px; }
+  .code-pair { display: grid; gap: 10px; margin-top: 14px; }
+  @media (min-width: 800px) { .code-pair { grid-template-columns: 1fr 1fr; } }
+  .code-wrap { background: #0D0E10; border-radius: 10px; overflow: auto;
+    border: 1px solid rgba(255,255,255,.06); position: relative; }
+  .code-label { position: absolute; top: 8px; right: 10px; font-size: 9px; letter-spacing: 2px;
+    font-weight: 800; padding: 2px 8px; border-radius: 999px; }
+  .code-ref .code-label { background: var(--amber); color: #0A0A0A; }
+  .code-obt .code-label { background: #FF3300; color: #0A0A0A; }
+  .code-ref { border-top: 2px solid rgba(255,179,0,.35); }
+  .code-obt { border-top: 2px solid rgba(255,51,0,.35); }
+  pre { padding: 30px 16px 14px; font-size: 13px; line-height: 1.55; overflow-x: auto;
+    white-space: pre-wrap; word-break: break-word; }
+  .veredicto { border-left-color: var(--yellow); }
+  .veredicto h3 { font-size: 19px; color: var(--yellow); }
+  .aviso { background: rgba(255,179,0,.07); border: 1px solid rgba(255,179,0,.28);
+    border-radius: 12px; padding: 16px 18px; color: #E8DCC4; font-size: 14px; }
+  .aviso strong { color: var(--yellow); }
+  footer { max-width: 980px; margin: 0 auto; padding: 0 24px 60px; color: #6E7681; font-size: 12.5px; }
+  ul { margin: 8px 0 0 20px; color: #C9CDD3; font-size: 14.5px; }
+  li { margin-bottom: 5px; }
+"""
+
+
+def _color_wer(t):
+    if t <= 0.10:
+        return "#FFB300"
+    if t <= 0.25:
+        return "#FFC821"
+    if t <= 0.50:
+        return "#FF4E00"
+    return "#FF3300"
+
+
+def _nombre(n):
+    """Nombre del modelo sin el envoltorio del fichero: ggml-large-v3-turbo.bin -> large-v3-turbo.
+
+    Se usa para MOSTRAR. El nombre del fichero sigue siendo el que se pasa al binario.
+    """
+    if n.startswith("ggml-"):
+        n = n[5:]
+    if n.endswith(".bin"):
+        n = n[:-4]
+    return n
+
+
+def _es_variante(r):
+    """Fila que es el MISMO modelo con otra configuración (p. ej. sin VAD).
+
+    Va en la tabla y en las barras —para poder comparar— pero no en los fallos ni en el veredicto:
+    repetiría las mismas muestras y no es un modelo distinto que elegir.
+    """
+    return bool(r.get("variante"))
+
+
+def _esc(s):
+    return (s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
+
+
+def _equipo():
+    """Descripción corta de la máquina, leída de /proc (nada escrito a mano)."""
+    cpu = "CPU desconocida"
+    try:
+        with open("/proc/cpuinfo") as f:
+            for l in f:
+                if l.startswith("model name"):
+                    cpu = l.split(":", 1)[1].strip()
+                    break
+    except OSError:
+        pass
+    ram = ""
+    try:
+        with open("/proc/meminfo") as f:
+            for l in f:
+                if l.startswith("MemTotal:"):
+                    ram = f"{int(l.split()[1]) / 1048576:.0f} GB"
+                    break
+    except (OSError, ValueError):
+        pass
+    return f"{cpu} · {ram}" if ram else cpu
+
+
+def html_informe(resultados, meta):
+    """Genera el informe completo. Todo lo que afirma sale de `resultados`."""
+    orden = sorted(resultados, key=lambda r: (r["roto"], _es_variante(r), r["wer"]))
+    usables = [r for r in orden if not r["roto"]]
+    reales = [r for r in usables if not _es_variante(r)]
+    rotos = [r for r in resultados if r["roto"]]
+    if not usables:
+        sys.exit("ningún modelo usable: todos fallaron al cargar")
+    mejor_wer = reales[0]
+    mejor_x = max(reales, key=lambda r: r["x_tiempo_real"])
+
+    # --- chips
+    chips = [
+        ("#FFC821", len(reales), "MODELOS"),
+        (_color_wer(mejor_wer["wer"]), f"{mejor_wer['wer']*100:.1f}%", "MEJOR WER"),
+        ("#FF4E00", f"{mejor_x['x_tiempo_real']:.1f}x", "MÁS RÁPIDO"),
+        ("#FFB300", f"{meta['audio']:.0f}s", "AUDIO"),
+    ]
+    if rotos:
+        chips.append(("#FF3300", len(rotos), "NO CARGA"))
+    html_chips = "".join(
+        f'<div class="chip" style="--chip:{c}"><span class="chip-num">{n}</span>'
+        f'<span class="chip-label">{l}</span></div>'
+        for c, n, l in chips
+    )
+
+    # --- tabla principal
+    filas = []
+    for r in orden:
+        mb = "—" if r["mb"] is None else f"{r['mb']:.0f}"
+        marca = ('<span class="tag-srv">SERVIDOR</span>'
+                 if r["servidor"] and "servidor" not in r["modelo"].lower() else "")
+        if _es_variante(r):
+            marca += '<span class="tag-var">VARIANTE</span>'
+        if r["roto"]:
+            filas.append(
+                f'<tr class="roto"><td class="mono">{_esc(_nombre(r["modelo"]))}</td>'
+                f'<td>{mb}</td><td>—</td><td>—</td>'
+                f'<td><span class="badge" style="background:#FF3300;color:#0A0A0A">NO CARGA</span></td>'
+                f'<td>—</td></tr>'
+            )
+            continue
+        pico = "—" if r["servidor"] else f"{r['pico_mb']:.0f}"
+        clase = ' class="srv"' if r["servidor"] else ""
+        col = _color_wer(r["wer"])
+        filas.append(
+            f'<tr{clase}><td class="mono">{_esc(_nombre(r["modelo"]))}{marca}</td>'
+            f'<td>{mb}</td><td>{r["seg_por_10s"]:.2f} s</td>'
+            f'<td>{r["x_tiempo_real"]:.1f}×</td>'
+            f'<td><span class="badge" style="background:{col};color:#0A0A0A">'
+            f'{r["wer"]*100:.1f}%</span></td>'
+            f'<td>{pico}</td></tr>'
+        )
+    tabla = (
+        "<table><thead><tr><th>modelo</th><th>MB</th><th>por 10 s</th>"
+        "<th>× tiempo real</th><th>WER</th><th>pico MB</th></tr></thead><tbody>"
+        + "".join(filas) + "</tbody></table>"
+    )
+
+    # --- barras fijo vs marginal
+    con_ajuste = [r for r in resultados if r["fijo_s"] is not None and not r["roto"]]
+    barras = []
+    if con_ajuste:
+        escala = max(r["fijo_s"] + r["pendiente"] * 10 for r in con_ajuste) or 1
+        for r in sorted(con_ajuste, key=lambda r: (r["mb"] is None, r["mb"] or 0)):
+            fijo = r["fijo_s"]
+            marg = r["pendiente"] * 10
+            pf = 100 * fijo / escala
+            pm = 100 * marg / escala
+            barras.append(
+                f'<div class="bar-row"><div class="bar-name">{_esc(_nombre(r["modelo"]))}</div>'
+                f'<div class="bar-track"><div class="bar-fijo" style="width:{pf:.2f}%"></div>'
+                f'<div class="bar-marg" style="width:{pm:.2f}%"></div></div>'
+                f'<div class="bar-val">{fijo + marg:.2f} s</div></div>'
+            )
+    barras_html = ('<div class="bars">' + "".join(barras) + "</div>"
+                   '<div class="leyenda">'
+                   '<span><i style="background:#FF3300"></i>cargar el modelo (fijo, se paga en cada dictado)</span>'
+                   '<span><i style="background:#FFB300"></i>10 s de audio (marginal)</span></div>')
+
+    # --- dónde falla cada modelo
+    fallos = []
+    for r in orden:
+        if r["roto"]:
+            fallos.append(
+                f'<div class="finding" style="--sev:#FF3300"><header>'
+                f'<span class="sev-badge" style="background:#FF3300">NO CARGA</span>'
+                f'<span class="line-badge">{_esc(_nombre(r["modelo"]))}</span></header>'
+                f'<p>No llegó a transcribir nada: <strong>{_esc(r["motivo"] or "fallo desconocido")}</strong>. '
+                f'Sus tiempos no se usan, porque medir un modelo que no arranca no mide nada. '
+                f'Hay que volver a bajarlo y comprobar el tamaño contra el original.</p></div>'
+            )
+            continue
+        if _es_variante(r):
+            continue
+        malas = sorted([f for f in r["detalle"] if f["wer"] > 0],
+                       key=lambda f: -f["wer"])
+        if not malas:
+            fallos.append(
+                f'<div class="finding" style="--sev:#FFB300"><header>'
+                f'<span class="sev-badge" style="background:#FFB300">SIN FALLOS</span>'
+                f'<span class="line-badge">{_esc(_nombre(r["modelo"]))}</span></header>'
+                f'<p>Transcribió las {len(r["detalle"])} muestras sin un solo error de palabra.</p></div>'
+            )
+            continue
+        peor = malas[0]
+        sev = _color_wer(peor["wer"])
+        etiqueta = "CRÍTICO" if peor["wer"] > 0.5 else ("GRAVE" if peor["wer"] > 0.25 else "MENOR")
+        pares = []
+        for f in malas[:6]:
+            pares.append(
+                f'<div class="code-pair">'
+                f'<div class="code-wrap code-ref"><span class="code-label">SE DIJO</span>'
+                f'<pre>{_esc(f["ref"])}</pre></div>'
+                f'<div class="code-wrap code-obt"><span class="code-label">WER {f["wer"]*100:.0f}% · '
+                f'{f["muestra"]}</span><pre>{_esc(f["texto"]) or "<nada>"}</pre></div></div>'
+            )
+        resto = ""
+        if len(malas) > 6:
+            resto = f'<p style="margin-top:12px">y {len(malas) - 6} muestra(s) más con error.</p>'
+        fallos.append(
+            f'<div class="finding" style="--sev:{sev}"><header>'
+            f'<span class="sev-badge" style="background:{sev}">{etiqueta}</span>'
+            f'<span class="line-badge">{_esc(_nombre(r["modelo"]))}</span>'
+            f'<span class="line-badge">{len(malas)}/{len(r["detalle"])} muestras con error · '
+            f'peor caso WER {peor["wer"]*100:.0f}%</span></header>'
+            f'<p>WER global <strong style="color:{_color_wer(r["wer"])}">{r["wer"]*100:.1f}%</strong> '
+            f'({r["errores"]} errores sobre {r["palabras"]} palabras).</p>'
+            + "".join(pares) + resto + "</div>"
+        )
+
+    # --- veredicto. Son DOS decisiones distintas y no se pueden mezclar:
+    #     (1) qué modelo, comparando binario contra binario
+    #     (2) por qué vía, comparando el mismo modelo servido contra el binario
+    limite = meta.get("limite_s", 3.0)
+    cli = [(r, r["fijo_s"] + r["pendiente"] * 5) for r in resultados
+           if not r["roto"] and not r["servidor"] and not _es_variante(r)
+           and r["fijo_s"] is not None]
+    srv = [(r, r["fijo_s"] + r["pendiente"] * 5) for r in resultados
+           if not r["roto"] and r["servidor"] and r["fijo_s"] is not None]
+
+    bloques = []
+    if cli:
+        aptos = [(r, e) for r, e in cli if e <= limite]
+        mejor_cli, est_cli = min(cli, key=lambda p: p[0]["wer"])
+        if aptos:
+            elegido, est5 = min(aptos, key=lambda p: p[0]["wer"])
+            if elegido is mejor_cli:
+                bloques.append(
+                    f'<strong>{_esc(_nombre(elegido["modelo"]))}</strong> gana en las dos columnas '
+                    f'que importan: el mejor error de todos los binarios '
+                    f'({elegido["wer"]*100:.1f}%) y una frase de 5 s resuelta en {est5:.2f} s. '
+                    f'No hay nada que ceder.'
+                )
+            else:
+                bloques.append(
+                    f'Con un presupuesto de {limite:.0f} s por frase, el mejor modelo utilizable es '
+                    f'<strong>{_esc(_nombre(elegido["modelo"]))}</strong> (error '
+                    f'{elegido["wer"]*100:.1f}%, 5 s → {est5:.2f} s). '
+                    f'<strong>{_esc(_nombre(mejor_cli["modelo"]))}</strong> baja el error a '
+                    f'{mejor_cli["wer"]*100:.1f}% pero cuesta {est_cli:.2f} s, '
+                    f'{est_cli - est5:.2f} s más por frase.'
+                )
+        else:
+            bloques.append("Ningún modelo cabe en el presupuesto de latencia con estas muestras.")
+
+    if srv:
+        # se ordena por el coste de una frase de 5 s, que es la cifra comparable
+        srv_ord = sorted(srv, key=lambda p: p[1])
+        mejor_srv, est_srv = srv_ord[0]
+
+        # Se busca el modelo del binario que corresponde al que sirve el servidor. Se elige la
+        # coincidencia MÁS LARGA: si no, «large-v3» casaría con «large-v3-turbo (servidor)» y
+        # compararía dos modelos distintos como si fueran el mismo.
+        parejas = [(p, _nombre(os.path.basename(p[0]["modelo"]))) for p in cli]
+        parejas = [(p, r) for p, r in parejas if r and r in mejor_srv["modelo"]]
+        pareja = max(parejas, key=lambda pr: len(pr[1]))[0] if parejas else None
+        if pareja:
+            r_cli, est_cli5 = pareja
+            bloques.append(
+                f'Y hay una segunda palanca, independiente del modelo: '
+                f'<strong>{_esc(_nombre(r_cli["modelo"]))}</strong> por binario resuelve una frase de 5 s en '
+                f'{est_cli5:.2f} s, pero servido la resuelve en <strong>{est_srv:.2f} s</strong> '
+                f'({est_cli5 / est_srv:.1f}× más rápido). El coste fijo cae de '
+                f'{r_cli["fijo_s"]:.2f} s a {mejor_srv["fijo_s"]:.2f} s, porque el modelo ya está '
+                f'cargado y no se paga su carga en cada dictado.'
+            )
+        else:
+            bloques.append(
+                f'Servido, la frase de 5 s se resuelve en <strong>{est_srv:.2f} s</strong>: '
+                f'el modelo ya está cargado y su carga no se paga en cada dictado.'
+            )
+
+        # Con dos servidores medidos, el modelo SIGUE importando: quitado el coste fijo, lo que
+        # queda es la velocidad de cálculo, y ahí la diferencia se ve mejor, no peor.
+        if len(srv_ord) >= 2:
+            peor_srv, est_peor = srv_ord[-1]
+            bloques.append(
+                f'Y el servidor no vuelve irrelevante al modelo, al contrario. Con los dos '
+                f'servidos, <strong>{_esc(_nombre(peor_srv["modelo"]))}</strong> tarda '
+                f'{est_peor:.2f} s y <strong>{_esc(_nombre(mejor_srv["modelo"]))}</strong> '
+                f'{est_srv:.2f} s ({est_peor / est_srv:.1f}× de diferencia). Sin el coste fijo lo '
+                f'que queda es la velocidad de cálculo, y ahí la ventaja de turbo se ve más clara '
+                f'que con el binario.'
+            )
+    texto_v = "</p><p>".join(bloques)
+
+    con_mb = sorted((r["mb"], _nombre(r["modelo"])) for r in usables
+                    if r["mb"] is not None and not _es_variante(r))
+    coste_disco = ", ".join(f"{n} {m:.0f} MB" for m, n in con_mb) if con_mb else "—"
+
+    return f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Informe — comparación de modelos de dictado</title>
+<style>{CSS}</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero-inner">
+    <span class="kicker">Dictado · comparación medida</span>
+    <h1>Qué modelo conviene en <span class="accent">esta máquina</span></h1>
+    <div class="meta">
+      {meta['fecha']} · <code>{_esc(meta['equipo'])}</code><br>
+      {meta['muestras']} muestras de voz · {meta['audio']:.1f} s de audio · VAD
+      {'activado' if meta['vad'] else 'desactivado'} · binario <code>{_esc(meta['binario'])}</code>
+    </div>
+    <div class="chips">{html_chips}</div>
+  </div>
+</header>
+
+<main>
+  <section>
+    <h2><span class="dot" style="color:#FFC821;background:#FFC821"></span>Los números</h2>
+    <div class="section-sub">Todo medido en esta máquina, un modelo por ejecución. Ordenado por error.</div>
+    <div class="card-panel">{tabla}</div>
+  </section>
+
+  <section>
+    <h2><span class="dot" style="color:#FF3300;background:#FF3300"></span>Por qué el modelo grande no es lo caro que parece</h2>
+    <div class="section-sub">El tiempo de un dictado no es «lo grande que sea el modelo», es cuánto de ese tiempo se paga una vez.</div>
+    <div class="card-panel">
+      <p>Cargar el modelo en memoria es un coste <strong>fijo</strong>: se paga entero aunque dictes
+      una sola palabra. El audio es un coste <strong>marginal</strong>: crece con los segundos que hablas.
+      En dictado las frases son de 3 a 10 segundos, así que el fijo manda.</p>
+      {barras_html}
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="dot" style="color:#FF4E00;background:#FF4E00"></span>Dónde falla cada uno</h2>
+    <div class="section-sub">Solo se listan las muestras con error. Lo que no aparece, lo clavó.</div>
+    {"".join(fallos)}
+  </section>
+
+  <section>
+    <h2><span class="dot" style="color:#FFC821;background:#FFC821"></span>Veredicto</h2>
+    <div class="finding veredicto" style="--sev:#FFC821">
+      <h3>Qué poner</h3>
+      <p>{texto_v}</p>
+    </div>
+    <div class="card-panel" style="margin-top:18px">
+      <p><strong>Cómo se cambia.</strong> El modelo en uso es un enlace simbólico, así que cambiar
+      de modelo es un solo comando y no toca ninguna configuración:</p>
+      <pre style="padding:14px 16px;background:#0D0E10;border-radius:10px;border:1px solid rgba(255,255,255,.06)">ln -sfn ~/.local/share/whisper/candidatos/ggml-large-v3-turbo.bin \\
+        ~/.local/share/whisper/actual.bin
+systemctl --user restart dictado-servidor</pre>
+      <p style="margin-top:12px">Coste en disco de lo medido:
+      {coste_disco}. Los ficheros de modelo no se cargan enteros en RAM: el pico residente medido
+      está en la tabla.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="dot" style="color:#9AA0A8;background:#9AA0A8"></span>Qué mide esto y qué no</h2>
+    <div class="aviso">
+      <strong>Sesgo conocido:</strong> si las muestras salen de un sintetizador de voz, son más
+      fáciles que una voz real y las diferencias entre modelos aparecen <em>atenuadas</em>. Para que
+      el número valga, hay que rehacerlo con voz propia.
+      <ul>
+        <li>El <strong>WER</strong> es la tasa de error de palabra: (sustituciones + inserciones +
+        omisiones) / palabras dichas, por distancia de Levenshtein.</li>
+        <li>El <strong>×tiempo real</strong> dice cuántas veces más rápido que el audio va el modelo.
+        Un 8× transcribe 10 s de voz en 1.25 s.</li>
+        <li>El <strong>pico de memoria</strong> es el máximo residente del proceso (VmHWM), no una estimación.</li>
+        <li>La separación <strong>fijo / marginal</strong> sale de un ajuste por mínimos cuadrados
+        sobre las muestras reales, no de una tabla del fabricante.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer>Generado por <span class="mono">dictado-bench.py</span> · volver a correrlo basta para actualizar
+este informe cuando cambies de modelo.</footer>
+</body>
+</html>
+"""
+
+
+# ---------------------------------------------------------------- principal
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--dir", default=os.path.expanduser("~/.local/share/dictado/corpus"))
+    ap.add_argument("--modelos", nargs="*", default=None)
+    ap.add_argument("--json", default=None)
+    ap.add_argument("--detalle", action="store_true")
+    ap.add_argument("--sin-vad", action="store_true")
+    ap.add_argument("--prompt", default=None,
+                    help="prompt inicial de whisper: sesga el vocabulario hacia estas palabras")
+    ap.add_argument("--repetir", type=int, default=1)
+    ap.add_argument("--servidor", default=None,
+                    help="URL de whisper-server, p. ej. http://127.0.0.1:8123")
+    ap.add_argument("--etiqueta-servidor", default="(servidor)")
+    ap.add_argument("--html", default=None, help="escribir el informe HTML en esta ruta")
+    ap.add_argument("--desde-json", default=None,
+                    help="regenerar las tablas y el informe desde un JSON ya medido, sin volver a medir")
+    a = ap.parse_args()
+
+    con_vad = not a.sin_vad
+
+    # Volver a medir cuesta minutos. Si ya hay un JSON, se reutiliza: así se puede retocar el
+    # informe sin pagar otra vez la medición.
+    if a.desde_json:
+        with open(a.desde_json) as f:
+            resultados = json.load(f)
+        if not resultados:
+            sys.exit(f"{a.desde_json} no tiene resultados")
+        total_audio = resultados[0]["audio_total"]
+        n_muestras = len(resultados[0]["detalle"])
+        return emitir(resultados, total_audio, n_muestras, con_vad, a)
+
+    muestras = []
+    for wav in sorted(glob.glob(os.path.join(a.dir, "*.wav"))):
+        ref_txt = wav[:-4] + ".txt"
+        if not os.path.isfile(ref_txt):
+            continue
+        with open(ref_txt) as f:
+            muestras.append((os.path.basename(wav)[:-4], wav, f.read().strip()))
+    if not muestras:
+        sys.exit(f"no hay pares .wav/.txt en {a.dir}")
+
+    if a.modelos is None:
+        fuentes = [
+            os.path.expanduser("~/.local/share/whisper"),
+            os.path.expanduser("~/.local/share/whisper/candidatos"),
+        ]
+    else:
+        fuentes = a.modelos
+
+    modelos = []
+    for f in fuentes:
+        if os.path.isdir(f):
+            modelos += glob.glob(os.path.join(f, "ggml-*.bin"))
+        elif os.path.isfile(f):
+            modelos.append(f)
+    modelos = sorted(set(m for m in modelos if "silero" not in m))
+    if not modelos:
+        sys.exit("no encontré ningún modelo ggml-*.bin")
+
+    dur = {n: duracion(w) for n, w, _ in muestras}
+    total_audio = sum(dur.values())
+    dmin, dmax = min(dur.values()), max(dur.values())
+
+    print(f"binario : {BIN}")
+    print(f"muestras: {len(muestras)}  ({total_audio:.1f} s de audio, {dmin:.1f} s a {dmax:.1f} s)")
+    print(f"VAD     : {'sí' if con_vad else 'no'}   repeticiones: {a.repetir}")
+    if dmin > 0 and dmax / dmin < 3:
+        print("  AVISO: las muestras duran casi lo mismo. El ajuste fijo/marginal no se puede")
+        print("         separar con este rango y dará números sin sentido. Ver dictado-corpus.sh.")
+    print()
+
+    resultados = []
+    for modelo in modelos:
+        nombre = os.path.basename(modelo)
+        tam = os.path.getsize(modelo) / 1048576
+        filas = []
+        for rep in range(a.repetir):
+            for n, wav, ref in muestras:
+                t, texto, pico, fallo = correr(modelo, wav, "/tmp/bench-out", con_vad, a.prompt)
+                tasa, err, nref = wer(ref, texto)
+                filas.append(
+                    {"muestra": n, "rep": rep, "tiempo": t, "audio": dur[n],
+                     "wer": tasa, "errores": err, "palabras": nref,
+                     "pico_kb": pico, "texto": texto, "ref": ref, "fallo": fallo}
+                )
+        # Se queda con la mejor pasada de cada muestra (la primera ejecución paga el arranque)
+        etiqueta = nombre + (" (con prompt)" if a.prompt else "")
+        resultados.append(resumir(filas, etiqueta, tam, total_audio))
+
+    # ---- servidor (opcional): el modelo ya está cargado, así que no se paga su carga
+    if a.servidor:
+        filas = []
+        for rep in range(a.repetir):
+            for n, wav, ref in muestras:
+                t, texto, _, fallo = correr_servidor(a.servidor, wav)
+                tasa, err, nref = wer(ref, texto)
+                filas.append(
+                    {"muestra": n, "rep": rep, "tiempo": t, "audio": dur[n],
+                     "wer": tasa, "errores": err, "palabras": nref,
+                     "pico_kb": 0, "texto": texto, "ref": ref, "fallo": fallo}
+                )
+        resultados.append(
+            resumir(filas, a.etiqueta_servidor, None, total_audio, servidor=True)
+        )
+
+    return emitir(resultados, total_audio, len(muestras), con_vad, a)
+
+
+def emitir(resultados, total_audio, n_muestras, con_vad, a):
+    """Imprime las tablas y escribe los ficheros de salida. No mide nada."""
+    # ---- tabla
+    print(f"{'modelo':<28}{'MB':>7}{'10 s':>8}{'x real':>8}{'WER':>8}{'pico MB':>9}")
+    print("-" * 68)
+    for r in sorted(resultados, key=lambda r: (r["roto"], r["wer"])):
+        mb = "—" if r["mb"] is None else f"{r['mb']:.0f}"
+        if r["roto"]:
+            print(f"{r['modelo']:<28}{mb:>7}{'—':>8}{'—':>8}{'ROTO':>8}{'—':>9}")
+            continue
+        pico = "—" if r["servidor"] else f"{r['pico_mb']:.0f}"
+        print(f"{r['modelo']:<28}{mb:>7}{r['seg_por_10s']:>7.2f}s"
+              f"{r['x_tiempo_real']:>7.1f}x{r['wer']*100:>7.1f}%{pico:>9}")
+
+    rotos = [r for r in resultados if r["roto"]]
+    if rotos:
+        print()
+        for r in rotos:
+            print(f"!! {r['modelo']}: NO SIRVE — {r['motivo']}")
+        print("   Un modelo que no carga no tiene WER ni velocidad: sus cifras no se usan.")
+
+    print()
+    print("Desglose del tiempo (ajuste por mínimos cuadrados sobre las muestras):")
+    print(f"{'modelo':<28}{'fijo':>9}{'por s de audio':>17}{'estimado 5 s':>14}")
+    print("-" * 68)
+    for r in sorted(resultados, key=lambda r: (r["mb"] is None, r["mb"] or 0)):
+        if r["fijo_s"] is None or r["roto"]:
+            continue
+        est = r["fijo_s"] + r["pendiente"] * 5
+        print(f"{r['modelo']:<28}{r['fijo_s']:>8.2f}s{r['pendiente']:>16.3f}s"
+              f"{est:>13.2f}s")
+
+    if a.detalle:
+        print()
+        for r in sorted(resultados, key=lambda r: (r["roto"], r["wer"])):
+            print(f"### {r['modelo']}")
+            if r["roto"]:
+                print(f"  no transcribió nada: {r['motivo']}")
+                print()
+                continue
+            for f in sorted(r["detalle"], key=lambda f: -f["wer"]):
+                if f["wer"] == 0:
+                    continue
+                print(f"  [{f['muestra']}] WER {f['wer']*100:.0f}%  ({f['errores']}/{f['palabras']})")
+                print(f"    ref: {f['ref']}")
+                print(f"    obt: {f['texto'] or '<nada>'}")
+            print()
+
+    if a.json:
+        with open(a.json, "w") as f:
+            json.dump(resultados, f, ensure_ascii=False, indent=1)
+        print(f"json -> {a.json}")
+
+    if a.html:
+        meta = {
+            "fecha": time.strftime("%d/%m/%Y %H:%M"),
+            "equipo": _equipo(),
+            "muestras": n_muestras,
+            "audio": total_audio,
+            "vad": con_vad,
+            "binario": os.path.basename(BIN),
+        }
+        with open(a.html, "w") as f:
+            f.write(html_informe(resultados, meta))
+        print(f"html -> {a.html}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

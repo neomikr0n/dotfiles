@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>¿Conviene cambiar el medidor de nivel del dictado en vivo?</title>
+<style>
+  :root{
+    --fondo:#0D0E10; --panel:#14161A; --panel2:#191C21;
+    --borde:rgba(255,255,255,.08); --borde2:rgba(255,255,255,.14);
+    --texto:#E6E7EA; --suave:#9AA0A6; --tenue:#6B7076;
+    --verde:#4ADE80; --rojo:#F87171; --ambar:#FBBF24; --azul:#60A5FA;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--fondo); color:var(--texto);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+    line-height:1.62; font-size:15.5px; -webkit-font-smoothing:antialiased;
+  }
+  .hoja{max-width:1020px;margin:0 auto;padding:56px 28px 96px}
+  header.cabecera{border-bottom:1px solid var(--borde);padding-bottom:26px;margin-bottom:36px}
+  h1{font-size:30px;line-height:1.2;margin:0 0 10px;letter-spacing:-.02em}
+  .sub{color:var(--suave);font-size:16px;margin:0}
+  .meta{color:var(--tenue);font-size:13.5px;margin-top:14px}
+  h2{font-size:21px;margin:48px 0 14px;letter-spacing:-.01em}
+  h3{font-size:16.5px;margin:26px 0 10px;letter-spacing:-.01em}
+  p{margin:0 0 14px}
+  code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+  code{background:rgba(255,255,255,.05);padding:2px 6px;border-radius:5px;color:#D7DAE0}
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 6px}
+  .chip{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:999px;
+    font-size:13px;font-weight:600;border:1px solid var(--borde2);background:var(--panel2);color:var(--suave)}
+  .chip .pt{width:7px;height:7px;border-radius:50%;background:currentColor}
+  .chip.ok{color:var(--verde);border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.08)}
+  .chip.mal{color:var(--rojo);border-color:rgba(248,113,113,.35);background:rgba(248,113,113,.08)}
+  .chip.aviso{color:var(--ambar);border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
+  .chip.info{color:var(--azul);border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.08)}
+  table{width:100%;border-collapse:collapse;margin:18px 0 8px;font-size:14px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--borde);vertical-align:top}
+  th{color:var(--suave);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  tr.mejor td{background:rgba(74,222,128,.07)}
+  tr.peor td{background:rgba(248,113,113,.06)}
+  tr.total td{font-weight:700;border-top:1px solid var(--borde2);background:rgba(255,255,255,.03)}
+  .cero{color:var(--tenue)}
+  pre{background:#08090B;border:1px solid var(--borde);border-radius:10px;padding:14px 16px;
+    overflow-x:auto;margin:12px 0;font-size:12.5px;line-height:1.55;color:#C9CDD3}
+  ul{margin:10px 0 14px;padding-left:22px}
+  li{margin:6px 0}
+  .pista{color:var(--tenue);font-size:13px}
+  .rejilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:20px 0}
+  .dato{background:var(--panel);border:1px solid var(--borde);border-radius:12px;padding:16px 18px}
+  .dato .etq2{color:var(--suave);font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+  .num-grande{font-size:25px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .nota{background:var(--panel);border:1px solid var(--borde);border-left:3px solid var(--ambar);
+    border-radius:10px;padding:14px 18px;margin:18px 0}
+  .nota.ok{border-left-color:var(--verde)}
+  .nota.mal{border-left-color:var(--rojo)}
+  .nota p:last-child{margin-bottom:0}
+  footer{margin-top:64px;padding-top:22px;border-top:1px solid var(--borde);color:var(--tenue);font-size:13px}
+  @media(max-width:620px){table{font-size:12.5px}th,td{padding:8px 7px}}
+</style>
+</head>
+<body>
+<div class="hoja">
+
+<header class="cabecera">
+  <h1>¿Conviene cambiar el medidor de nivel del dictado en vivo?</h1>
+  <p class="sub">Medición de <code>PwNodePeakMonitor</code>, el medidor nativo de Quickshell, frente al medidor de <code>parec</code> que usa hoy el dictado en vivo. Sale más barato y más suave, y quita un proceso, pero la barra cambia de calibración y la curva no se puede igualar.</p>
+  <p class="meta">11 de octubre de 2026 · Quickshell 0.3.1 · PipeWire a 48 kHz, quantum de 1024 · corpus del proyecto reproducido a un sumidero nulo · ventana de 60 s para el coste de CPU</p>
+</header>
+
+<div class="chips">
+  <span class="chip ok"><span class="pt"></span>la mitad de CPU</span>
+  <span class="chip ok"><span class="pt"></span>el doble de refresco en el micro</span>
+  <span class="chip ok"><span class="pt"></span>quita un proceso y 10 escrituras por segundo</span>
+  <span class="chip aviso"><span class="pt"></span>la barra queda más llena</span>
+  <span class="chip aviso"><span class="pt"></span>la curva no se puede igualar</span>
+  <span class="chip info"><span class="pt"></span>medido, sin implementar</span>
+</div>
+
+<h2>La respuesta corta</h2>
+
+<p>Sale a cuenta, pero no por la CPU. El ahorro de CPU es real y es la mitad, aunque en números absolutos es pequeño, menos de medio punto porcentual de un núcleo. Lo que de verdad cambia es la forma. El medidor de Quickshell vive dentro del proceso que ya dibuja la capa, así que desaparece el proceso <code>parec</code>, desaparece el bucle de RMS en Python y el nivel deja de pasar por <code>estado.json</code>, que hoy se reescribe diez veces por segundo solo para mover una barra.</p>
+
+<p>El precio es cosmético y no se puede esquivar. Los dos medidores no miden lo mismo. El de hoy mide el valor eficaz en decibelios y el de Quickshell mide el pico, con una raíz cúbica encima para que la barra se lea. La forma de la curva coincide casi exactamente, con una correlación de 0,964, pero la escala no. Con la señal del corpus, la barra llegaría a 0,93 en los picos donde hoy llega a 0,80.</p>
+
+<div class="nota">
+  <p><strong>Decisión pendiente.</strong> No se ha tocado nada. El medidor sigue siendo <code>parec</code> y la barra se comporta como hasta ahora. Esto es la medición que faltaba para poder decidir.</p>
+</div>
+
+<h2>Cómo se midió</h2>
+
+<p>Los dos medidores se pusieron a leer la misma señal al mismo tiempo. La señal son dos frases del corpus del proyecto reproducidas a un sumidero nulo, que es un dispositivo de audio que no sale por ningún altavoz, así que la medición no hizo ruido. El sumidero se crea y se destruye dentro de la propia medición.</p>
+
+<p>El banco está en <code>dictado/dictado-nivel-medir.sh</code> y se reproduce con una orden.</p>
+
+<pre>~/dotfiles/share/scripts/dictado/dictado-nivel-medir.sh          # unos 40 s
+~/dotfiles/share/scripts/dictado/dictado-nivel-medir.sh --cpu    # añade el coste, unos 5 min</pre>
+
+<p>El medidor de Quickshell se lee desde un <code>Scope</code> de QML sin ventanas, registrando cada emisión con marca de tiempo. El medidor de hoy se replica tal cual está en <code>dictado-vivo.py</code>, con <code>parec</code> a 16 kHz mono y bloques de 1600 bytes, y se registra igual. Con las dos series en el mismo eje de tiempo se pueden alinear y comparar.</p>
+
+<h2>El refresco</h2>
+
+<p>El dato no es una constante del widget, es el periodo de proceso del nodo. Quickshell recibe un bloque y calcula el pico, así que la frecuencia de actualización es la del quantum de PipeWire. Con el reloj a 48 kHz y un quantum de 1024, eso son 21,33 ms.</p>
+
+<table>
+  <thead>
+    <tr><th>Nodo y situación</th><th class="num">Intervalo mediano</th><th class="num">p10</th><th class="num">p90</th><th class="num">Refresco</th></tr>
+  </thead>
+  <tbody>
+    <tr class="mejor"><td>receptor DJI, solo el monitor</td><td class="num">21,0 ms</td><td class="num">21</td><td class="num">22</td><td class="num">47,6 Hz</td></tr>
+    <tr><td>receptor DJI, con <code>parec</code> capturando a la vez</td><td class="num">43,0 ms</td><td class="num">42</td><td class="num">43</td><td class="num">23,3 Hz</td></tr>
+    <tr><td>sumidero nulo, con audio</td><td class="num">43,0 ms</td><td class="num">42</td><td class="num">43</td><td class="num">23,3 Hz</td></tr>
+    <tr><td><code>parec</code>, el medidor de hoy</td><td class="num">43,0 ms</td><td class="num">42</td><td class="num"><strong>85</strong></td><td class="num">23,3 Hz</td></tr>
+  </tbody>
+</table>
+
+<p>Dos cosas que conviene leer bien. La primera es que en el receptor DJI, cuando nadie más lo está capturando, el monitor va al doble de velocidad que el medidor de hoy. La segunda es que esa ventaja desaparece en cuanto hay un cliente pidiendo más latencia en el mismo nodo, porque el quantum del nodo crece y el monitor lo sigue. Durante un dictado en vivo <code>whisper-stream</code> está capturando el mismo micro, así que el ritmo real será el de esa situación, entre 23 y 48 Hz según lo que pida SDL.</p>
+
+<p>El medidor de hoy tiene un defecto que no salta a la vista y que esta medición deja al descubierto. Su p90 es de 85 ms, o sea que una de cada diez lecturas llega con un periodo de más de retraso. El código pide bloques de 1600 bytes, que son 50 ms, pero <code>read()</code> sobre una tubería devuelve lo que haya, no lo que se pide. El monitor de Quickshell no tiene ese escalón, su p90 es igual que su mediana.</p>
+
+<div class="nota ok">
+  <p><strong>Medido.</strong> Los cuatro ritmos, sobre la señal real, con los percentiles. Que el monitor siga el quantum del nodo no es una suposición, se ve en las dos primeras filas de la tabla, que son el mismo nodo con y sin otro cliente encima.</p>
+</div>
+
+<div class="nota">
+  <p><strong>No medido.</strong> El ritmo exacto durante un dictado en vivo. Depende de la latencia que pida SDL en <code>whisper-stream</code>, y eso no se ha medido. Lo que sí está medido es la horquilla, entre 23 y 48 Hz, y que en el peor caso empata con el medidor de hoy.</p>
+</div>
+
+<h2>El formato</h2>
+
+<p>El monitor solo acepta muestras en coma flotante de 32 bits. Si el nodo entrega otra cosa, Quickshell descarta el formato, deja los picos vacíos y avisa en su registro. El receptor DJI entrega <code>s24le</code> de 24 bits, así que era el riesgo serio de todo esto.</p>
+
+<p>No se materializó. PipeWire convierte al vuelo y el monitor negoció F32 sin una sola queja, con los canales en <code>[3,4]</code>, que son izquierdo y derecho. Cero avisos de formato en el registro. La prueba es directa, porque los canales solo se llenan si el formato se acepta.</p>
+
+<h2>La curva</h2>
+
+<p>Aquí está el precio real del cambio. El medidor de hoy calcula el valor eficaz y lo pasa a decibelios, de forma que 60 dB por debajo del fondo son un cero y el fondo son un uno. Quickshell calcula el pico de cada canal y le aplica una raíz cúbica, que es un ajuste para que la barra se lea bien a ojo. Son dos cosas distintas.</p>
+
+<p>La raíz cúbica del pico está confirmada por partida doble. En el código, donde la línea es <code>std::cbrt(peak)</code>, y sobre la señal, porque el pico real del <code>m1-comando.wav</code> es 0,8069 y su raíz cúbica es 0,9310, mientras que el máximo que emitió el monitor fue 0,935. Un 0,4 % de diferencia, que es la conversión a 48 kHz.</p>
+
+<table>
+  <thead>
+    <tr><th>Serie, misma señal y misma ventana</th><th class="num">Mínimo</th><th class="num">Máximo</th><th class="num">Media</th><th class="num">&gt; 0,5</th><th class="num">&gt; 0,8</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>parec</code>, el medidor de hoy</td><td class="num">0,000</td><td class="num">0,798</td><td class="num">0,396</td><td class="num">146</td><td class="num">0</td></tr>
+    <tr class="mejor"><td>Quickshell, valor tal cual</td><td class="num">0,000</td><td class="num">0,935</td><td class="num">0,420</td><td class="num">146</td><td class="num">20</td></tr>
+    <tr class="peor"><td>Quickshell, pico pasado a decibelios</td><td class="num">0,000</td><td class="num">0,971</td><td class="num">0,525</td><td class="num">192</td><td class="num">103</td></tr>
+  </tbody>
+</table>
+
+<p>La forma coincide. La correlación entre el medidor de hoy y el valor de Quickshell es de 0,964, y el número de muestras por encima de 0,5 es el mismo, 146 en los dos. Donde se separan es en el extremo alto, donde el pico tira más que el valor eficaz.</p>
+
+<p>La tentación era remapear el valor de Quickshell con la misma fórmula de decibelios del medidor actual, y así conservar el aspecto. Medido, sale peor. Pasar un pico a decibelios lo deja diez decibelios por encima del valor eficaz de la misma señal, así que la barra se llena muchísimo más, con 103 muestras por encima de 0,8 donde hoy no hay ninguna. El valor tal cual, sin tocarlo, es lo más parecido a lo de hoy de las tres opciones.</p>
+
+<div class="nota mal">
+  <p><strong>Lo que no se puede.</strong> Reproducir exactamente la curva actual. Un pico no se puede convertir en un valor eficaz, hace falta la señal entera y el monitor no la da. El cambio de medidor implica aceptar una barra algo más llena en los picos, o elegir a ojo otra curva en QML. Es una decisión de aspecto, no un defecto.</p>
+</div>
+
+<h2>El coste</h2>
+
+<p>Ventana de 60 segundos, con audio sonando en el sumidero todo el rato, midiendo el tiempo de CPU de <code>/proc</code>. El reloj del sistema va a 100 tics por segundo, así que cada tic es una centésima de segundo y el error de la medida es de una décima de punto.</p>
+
+<table>
+  <thead>
+    <tr><th>Proceso</th><th class="num">CPU de un núcleo</th><th class="num">Tics en 60 s</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>quickshell con <code>PwNodePeakMonitor</code></td><td class="num">0,42 %</td><td class="num">25</td></tr>
+    <tr><td>quickshell vacío, como control</td><td class="num cero">0,00 %</td><td class="num cero">0</td></tr>
+    <tr><td>python del medidor de hoy, el bucle de RMS</td><td class="num">0,78 %</td><td class="num">47</td></tr>
+    <tr><td><code>parec</code></td><td class="num">0,08 %</td><td class="num">5</td></tr>
+    <tr class="total"><td>hoy, entre los dos</td><td class="num">0,86 %</td><td class="num">52</td></tr>
+  </tbody>
+</table>
+
+<p>El control vacío sirve para saber que los 25 tics son del monitor y no del proceso. La alternativa gasta la mitad, y el gasto se concentra en el proceso que ya está corriendo para dibujar la capa.</p>
+
+<p>Al margen de la CPU, hay tres cosas que dejan de existir o dejan de costar.</p>
+
+<ul>
+  <li>El proceso <code>parec</code>, con su tubería y su hilo. El monitor no lo sustituye por nada, pero sí por un objeto dentro del proceso que ya estaba.</li>
+  <li>El bucle de RMS en Python, que recorre 800 muestras a mano cada 43 ms.</li>
+  <li>Las diez escrituras por segundo a <code>estado.json</code>. El nivel se escribe con reemplazo atómico, o sea fichero temporal y <code>rename</code>, diez veces por segundo solo para mover una barra. Con el monitor, el valor no sale del proceso de QML.</li>
+</ul>
+
+<h2>Lo que hay que saber antes de decidir</h2>
+
+<p><strong>El monitor no es gratis.</strong> Es un cliente de captura de verdad, y aparece en el grafo como tal. Se ve en <code>pactl list source-outputs</code> con <code>application.name</code> «Quickshell Peak Detect» y <code>media.name</code> «Peak detect», uno por nodo vigilado. Ocupa el mismo sitio que ocupaba <code>parec</code>.</p>
+
+<p><strong>Despierta el micro.</strong> Con el monitor puesto, el receptor DJI pasa de <code>SUSPENDED</code> a <code>RUNNING</code> y se queda así aunque no haya sonido. Conviene saberlo, pero no es un argumento en contra, porque <code>parec</code> hace exactamente lo mismo, medido en esta misma sesión. Cualquier cliente de captura despierta el dispositivo. En producción da igual, porque la capa solo existe mientras se dicta.</p>
+
+<p><strong>Los dos conviven sin problema.</strong> Se probó el monitor de Quickshell y <code>parec</code> capturando el mismo micro a la vez. El micro se puso en <code>RUNNING</code>, <code>parec</code> sacó sus 7,95 segundos de audio en 8 segundos y el monitor emitió sus 186 picos. PipeWire reparte una fuente entre varios clientes sin quejarse, que es lo que ya hace hoy con <code>whisper-stream</code> y <code>parec</code>.</p>
+
+<p><strong>La capa pasa a depender del servicio de PipeWire de Quickshell.</strong> Es el mismo paquete que ya se usa, así que no añade nada que instalar, pero sí una dependencia más del módulo <code>Quickshell.Services.Pipewire</code>.</p>
+
+<p><strong>El nodo hay que resolverlo por nombre.</strong> En QML se busca en <code>Pipewire.nodes</code> filtrando por el patrón de la fuente, que es el mismo <code>Wireless_Mic_Rx</code> que ya usa <code>dictado.sh</code>. El nombre que ve Quickshell es el de PipeWire, el mismo que ve <code>pactl</code>, no el de SDL. Eso está comprobado en esta medición.</p>
+
+<h2>Lo que no está medido</h2>
+
+<div class="nota">
+  <p><strong>El aspecto final de la barra.</strong> Las cifras dicen que la curva queda más llena en los picos, pero nadie ha visto la barra moverse con el medidor nuevo. Es lo único que hace falta mirar antes de dar el cambio por bueno, y no se puede medir, hay que verlo.</p>
+</div>
+
+<div class="nota">
+  <p><strong>El comportamiento con la voz de n30 y no con el corpus.</strong> El corpus son doce frases cortas grabadas. La voz en vivo, con sus pausas y su ruido de fondo, podría dar otra cosa. El ruido de fondo del receptor, medido de pasada, deja la barra en torno a 0,15 con el monitor nuevo.</p>
+</div>
+
+<div class="nota">
+  <p><strong>El efecto en la suite.</strong> Si el nivel deja de pasar por <code>estado.json</code>, la clave <code>nivel</code> sobra y el bloque 5 de la suite comprueba que el fichero tiene cuatro claves. El cambio obliga a tocar esa comprobación. No se ha hecho, y no se hará hasta que se decida.</p>
+</div>
+
+<h2>Cómo se implementaría, si se decide</h2>
+
+<ol>
+  <li>En <code>dictado-vivo.qml</code>, resolver el nodo de la fuente por el patrón de siempre y colgarle un <code>PwNodePeakMonitor</code>. La barra pasa a leer <code>mon.peak</code> en vez de la clave <code>nivel</code> del fichero de estado.</li>
+  <li>En <code>dictado-vivo.py</code>, borrar <code>medidor_nivel()</code> y el arranque de <code>parec</code>. El nivel deja de estar en la lista de lo que publica el motor.</li>
+  <li>Quitar la clave <code>nivel</code> de <code>estado.json</code> y ajustar la comprobación del bloque 5 que cuenta las claves.</li>
+  <li>Correr la batería entera y el banco de nivel, antes y después, para dejar la comparación escrita.</li>
+</ol>
+
+<p>El paso 4 es el que no se puede saltar. El medidor nuevo no tiene por qué dar los mismos números que el viejo, pero sí tiene que dar los mismos que dio en esta medición.</p>
+
+<footer>
+  Medición del 11 de octubre de 2026 sobre Quickshell 0.3.1, PipeWire a 48 kHz con quantum de 1024, y el corpus de <code>~/.local/share/dictado/corpus</code>. Banco reproducible en <code>dictado/dictado-nivel-medir.sh</code>. El coste de CPU se leyó de <code>/proc/PID/stat</code> en ventanas de 60 s, con el reloj del sistema a 100 tics por segundo. La forma de la curva de Quickshell se confirmó además contra el código fuente de la versión instalada. Nada de esto se ha implementado.
+</footer>
+
+</div>
+</body>
+</html>

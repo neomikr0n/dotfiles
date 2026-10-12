@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JWA en landscape: cómo se consigue de verdad — investigación profunda</title>
+<style>
+  :root {
+    --bg: #0A0A0A; --panel: #16181D; --panel2: #1E2126;
+    --orange: #FF4E00; --red-orange: #FF3300; --amber: #FFB300;
+    --yellow: #FFC821; --text: #F5F1EA; --muted: #9AA0A8;
+    --good: #7ED957;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif; line-height: 1.6; min-height: 100vh; }
+  code, pre { font-family: "JetBrains Mono", "Fira Code", ui-monospace, monospace; }
+
+  header.hero { position: relative; overflow: hidden; background: var(--bg); padding: 72px 32px 120px; }
+  .waves { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hero-inner { position: relative; max-width: 1000px; margin: 0 auto; }
+  .hero .kicker { display: inline-block; font-size: 12px; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--yellow); margin-bottom: 10px; font-weight: 700; }
+  .hero h1 { font-size: clamp(27px, 4vw, 42px); font-weight: 800; line-height: 1.15; }
+  .hero h1 .accent { color: var(--orange); }
+  .hero .meta { margin-top: 14px; color: var(--muted); font-size: 14px; }
+  .hero .meta code { background: rgba(255,255,255,.08); padding: 2px 8px; border-radius: 6px; color: var(--amber); font-size: 13px; }
+  .chips { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 32px; }
+  .chip { background: var(--panel); border: 1px solid color-mix(in srgb, var(--chip) 45%, transparent);
+    border-radius: 12px; padding: 10px 18px; min-width: 92px; text-align: center; }
+  .chip-num { font-size: 23px; font-weight: 800; color: var(--chip); display: block; }
+  .chip-label { font-size: 10px; letter-spacing: 1.4px; color: var(--muted); }
+
+  main { max-width: 1000px; margin: -70px auto 0; padding: 0 24px 80px; position: relative; }
+  section { margin-top: 54px; }
+  section h2 { font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex: none; box-shadow: 0 0 10px currentColor; }
+  .section-sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+  .card-panel { background: var(--panel); border: 1px solid rgba(255,255,255,.07); border-radius: 16px; padding: 22px 24px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid rgba(255,255,255,.07); vertical-align: top; }
+  th { color: var(--amber); font-size: 11px; letter-spacing: 1.3px; text-transform: uppercase; font-weight: 800; }
+  td code { background: rgba(255,255,255,.06); padding: 1px 6px; border-radius: 5px; color: var(--yellow); font-size: 12.5px; }
+  tr.hl td { background: rgba(255,179,0,.07); }
+  tr.dim td { color: var(--muted); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .finding { background: var(--panel); border: 1px solid rgba(255,255,255,.07);
+    border-left: 4px solid var(--sev); border-radius: 14px; padding: 18px 22px; margin-bottom: 16px; }
+  .finding header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 9px; }
+  .sev-badge { color: #0A0A0A; font-size: 10.5px; font-weight: 800; letter-spacing: 1.4px; padding: 3px 10px; border-radius: 999px; }
+  .src-badge { font-size: 11px; color: var(--muted); background: var(--panel2); border: 1px solid rgba(255,255,255,.08); border-radius: 999px; padding: 2px 10px; }
+  .finding h3 { font-size: 16.5px; margin-bottom: 6px; }
+  .finding p { color: #C9CDD3; font-size: 14.5px; margin-bottom: 7px; }
+  .finding p:last-child { margin-bottom: 0; }
+  .finding strong { color: var(--yellow); }
+
+  .grid { display: grid; gap: 16px; }
+  @media (min-width: 820px) { .grid { grid-template-columns: 1fr 1fr; } }
+  .creative-card { background: linear-gradient(160deg, rgba(255,178,0,.10), rgba(255,78,0,.05));
+    border: 1px solid #FFB30044; border-radius: 14px; padding: 18px 20px; }
+  .creative-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .creative-card h3 { font-size: 15.5px; }
+  .effort { margin-left: auto; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--yellow); border: 1px solid #FFB30066; border-radius: 999px; padding: 1px 9px; }
+  .creative-card p { font-size: 14px; color: #C9CDD3; }
+  .creative-card ul { margin: 6px 0 0 18px; font-size: 14px; color: #C9CDD3; }
+  .creative-card li { margin-bottom: 4px; }
+
+  .blind-card { background: linear-gradient(160deg, rgba(255,51,0,.09), rgba(255,78,0,.04));
+    border: 1px solid #FF330055; border-radius: 14px; padding: 18px 20px; margin-bottom: 14px; }
+  .blind-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+  .blind-card h3 { font-size: 15.5px; }
+  .blind-card p { font-size: 14px; color: #C9CDD3; }
+
+  .warn-card { background: linear-gradient(160deg, rgba(255,51,0,.14), rgba(255,78,0,.06));
+    border: 1px solid #FF330088; border-radius: 14px; padding: 20px 22px; margin-bottom: 16px; }
+  .warn-card h3 { font-size: 17px; margin-bottom: 8px; color: var(--red-orange); }
+  .warn-card p { font-size: 14.5px; color: #C9CDD3; margin-bottom: 7px; }
+
+  figure { background: var(--panel); border: 1px solid rgba(255,255,255,.07); border-radius: 16px; padding: 18px; margin: 0 0 16px; }
+  figure figcaption { color: var(--muted); font-size: 12.5px; margin-top: 10px; text-align: center; }
+
+  pre { background: #0D0E10; border: 1px solid rgba(255,255,255,.06); border-radius: 10px; padding: 14px 16px; font-size: 13px; overflow-x: auto; line-height: 1.55; }
+  .c-comment { color: #6E7681; font-style: italic; }
+
+  footer { max-width: 1000px; margin: 0 auto; padding: 0 48px 48px; color: var(--muted); font-size: 12.5px; text-align: center; }
+  footer .brand { color: var(--orange); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+<svg class="waves" viewBox="0 0 1440 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF4E00"/><stop offset="1" stop-color="#FFB300"/></linearGradient>
+    <linearGradient id="g2" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#FF3300"/><stop offset="1" stop-color="#FF4E00"/></linearGradient>
+    <linearGradient id="g3" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFC821"/><stop offset="1" stop-color="#FFB300"/></linearGradient>
+  </defs>
+  <path fill="url(#g2)" opacity="0.55" d="M0,300 C240,120 420,420 720,260 C960,120 1180,380 1440,180 L1440,420 L0,420 Z"/>
+  <path fill="url(#g1)" d="M0,180 C260,340 520,40 780,160 C1040,280 1200,60 1440,220 L1440,420 L0,420 Z"/>
+  <path fill="url(#g3)" opacity="0.9" d="M0,360 C300,240 560,420 860,320 C1120,235 1260,360 1440,300 L1440,420 L0,420 Z"/>
+</svg>
+<div class="hero-inner">
+  <span class="kicker">Investigación profunda · 9 líneas de ataque · 5 investigadores · 11-oct-2026</span>
+  <h1>JWA en landscape:<br><span class="accent">cómo se consigue y qué está descartado</span></h1>
+  <p class="meta">
+    La palanca no es la resolución ni el tamaño de ventana. Es <code>setRequestedOrientation</code>.
+    Todo lo de abajo sale de medir el APK, el código fuente de AOSP y el vídeo de ViperX.
+  </p>
+  <div class="chips">
+    <div class="chip" style="--chip: var(--orange)"><span class="chip-num">6</span><span class="chip-label">rutas descartadas</span></div>
+    <div class="chip" style="--chip: var(--good)"><span class="chip-num">1</span><span class="chip-label">ruta recomendada</span></div>
+    <div class="chip" style="--chip: var(--yellow)"><span class="chip-num">10 min</span><span class="chip-label">la prueba más barata</span></div>
+    <div class="chip" style="--chip: var(--red-orange)"><span class="chip-num">bajo</span><span class="chip-label">riesgo de baneo</span></div>
+  </div>
+</div>
+</header>
+
+<main>
+
+<section id="respuesta">
+  <h2><span class="dot" style="background: var(--good); color: var(--good);"></span> La respuesta, en una línea</h2>
+  <p class="section-sub">Si solo lees una cosa, es esta.</p>
+  <div class="warn-card">
+    <h3>El landscape no se consigue con resolución. Se consigue anulando la petición de orientación de la app.</h3>
+    <p>JWA fija <code style="color:var(--yellow)">Screen.orientation = Portrait</code> <strong>en tiempo de ejecución</strong> desde Unity. Esa llamada baja por JNI hasta
+    <code style="color:var(--yellow)">android.app.Activity.setRequestedOrientation(1)</code>. Todo lo que actúe por encima —tamaño de ventana, resolución, ajustes del sistema,
+    Android más moderno— la app lo ignora, y el resultado es <strong>letterbox</strong> (ventana vertical centrada con bandas negras), nunca landscape.</p>
+    <p>La única intervención que toca el sitio exacto es un <strong style="color:var(--yellow)">hook de <code style="color:var(--yellow)">setRequestedOrientation</code> dentro del proceso de la app</strong>, que sustituya el argumento
+    por <code style="color:var(--yellow)">0</code> (SCREEN_ORIENTATION_LANDSCAPE). En la máquina de n30 se hace con <strong style="color:var(--yellow)">Frida</strong> sobre el root adb que Genymotion ya da, sin tocar el APK ni la VM.</p>
+  </div>
+</section>
+
+<section id="descartadas">
+  <h2><span class="dot" style="background: var(--red-orange); color: var(--red-orange);"></span> Las seis rutas descartadas</h2>
+  <p class="section-sub">Todas probadas contra código fuente o contra la medición propia. Ninguna sirve, y ninguna se parece a «cambiar la resolución».</p>
+
+  <div class="card-panel" style="padding:14px 18px;">
+  <table>
+    <thead><tr><th>Ruta</th><th>Por qué falla</th><th>Nivel</th><th>Veredicto</th></tr></thead>
+    <tbody>
+      <tr class="dim">
+        <td><code>wm set-ignore-orientation-request</code></td>
+        <td>No existe en Android 11: se introdujo en <strong>Android 12</strong> (verificado contra el tag <code>android-12.0.0_r1</code>). Donde existe, su efecto medido es <strong>letterbox</strong>, no landscape.</td>
+        <td>medido</td><td>descartada</td>
+      </tr>
+      <tr class="dim">
+        <td><code>wm set-fix-to-user-rotation</code>, <code>settings user_rotation</code>, <code>content insert</code></td>
+        <td>Fijan la rotación del <em>usuario</em>, no lo que la app pide. La app sigue pidiendo portrait y gana.</td>
+        <td>medido</td><td>descartada</td>
+      </tr>
+      <tr class="dim">
+        <td><code>am start</code> con flag de orientación</td>
+        <td>No existe. Verificado en <code>ActivityManagerShellCommand.java</code>: ni un flag de orientación.</td>
+        <td>medido</td><td>descartada</td>
+      </tr>
+      <tr class="dim">
+        <td>Genymotion ventana libre (freeform)</td>
+        <td>La geometría de ventana no vence un <code>Screen.orientation</code> fijado en código. Además la premisa estaba invertida: en Android 11 <code>--windowingMode 1</code> es <strong>FULLSCREEN</strong> y freeform es el <strong>5</strong>; y el ajuste real es <code>enable_freeform_support</code>, porque <code>development_enable_freeform_windows</code> <strong>no existe en AOSP</strong>.</td>
+        <td>medido</td><td>descartada como vía única</td>
+      </tr>
+      <tr class="dim">
+        <td>Waydroid multi-ventana</td>
+        <td>La ventana <strong>hereda</strong> la orientación que la app pide (issues #70, #584, #1660). No fuerza landscape. Y hay bugs documentados en Hyprland (issue #976, doble ventana negra).</td>
+        <td>medido</td><td>descartada como vía de landscape</td>
+      </tr>
+      <tr class="dim">
+        <td>MOD APK de landscape</td>
+        <td><strong>No existe.</strong> Los MODs que circulan de JWA 3.23.x son menús de trampas (batería infinita, dardos infinitos, aim bot, map hack) y ninguno toca la orientación. Parchear el APK reventaría además la firma de Ludia.</td>
+        <td>medido</td><td>descartada</td>
+      </tr>
+      <tr class="dim">
+        <td>Emuladores de Windows (BlueStacks, LDPlayer)</td>
+        <td><strong>La propiedad existe y funciona por app</strong>: BlueStacks (icono Rotar → Landscape, Ctrl+Shift+4) y LDPlayer (resolución tableta + casilla «forzar landscape»). Pero no son ejecutables en Garuda: sobre Wine no van, y una VM de Windows pide 60-80 GB cuando hay 28 GB libres.</td>
+        <td>medido</td><td>descartada por coste</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="recomendada">
+  <h2><span class="dot" style="background: var(--good); color: var(--good);"></span> La ruta que sí toca el sitio correcto</h2>
+  <p class="section-sub">Frida sobre Genymotion Android 11. No toca el APK, no toca la VM, se apaga matando el servidor.</p>
+
+  <div class="finding" style="--sev: var(--good);">
+    <header>
+      <span class="sev-badge" style="background: var(--good);">RECOMENDADA</span>
+      <span class="src-badge">mecanismo: inferido con respaldo alto · punto de convergencia: medido por Eco</span>
+    </header>
+    <h3>Hookear <code style="color:var(--yellow)">Activity.setRequestedOrientation</code> en el proceso de JWA</h3>
+    <p>Unity no tiene una puerta propia de orientación: traduce <code>Screen.orientation</code> a la llamada Java <code>setRequestedOrientation</code>. Interceptarla sustituyendo el argumento por <code>0</code> (LANDSCAPE) anula el candado <strong>en el sitio exacto donde n30 midió que Unity converge</strong>. Es el mismo patrón que ya implementa y mantiene el módulo LSPosed <em>AppRotation</em> (commit del 8-oct-2026), así que no es una invención: es un mecanismo con implementación viva.</p>
+    <p>Frida va en la versión <strong>17.23.3</strong> (del 9-oct-2026). Genymotion Android 11 da <strong>root adb por defecto</strong>, así que no hace falta Magisk — y eso importa, porque Magisk oficial solo soporta Android 12+.</p>
+  </div>
+
+  <h3 style="font-size:16px; margin:22px 0 10px;">Secuencia ejecutable</h3>
+  <pre>adb root                                    <span class="c-comment"># Genymotion ya es root</span>
+getprop ro.product.cpu.abilist                <span class="c-comment"># debe decir x86_64 (o x86)</span>
+
+<span class="c-comment"># 1. servidor frida en /data/local/tmp (nunca en /system)</span>
+curl -LO https://github.com/frida/frida/releases/download/17.23.3/frida-server-17.23.3-android-x86_64.xz
+unxz frida-server-17.23.3-android-x86_64.xz
+adb push frida-server-17.23.3-android-x86_64 /data/local/tmp/
+adb shell "chmod 755 /data/local/tmp/frida-server"
+
+<span class="c-comment"># 2. levantarlo en segundo plano (si SELinux estorba: adb shell setenforce 0)</span>
+adb shell "/data/local/tmp/frida-server &amp;"
+adb shell "ps -A | grep frida-server"        <span class="c-comment"># confirmar que vive</span>
+
+<span class="c-comment"># 3. lanzar el juego y engancharse</span>
+frida-ps -U | grep ludia                     <span class="c-comment"># el paquete es com.ludia.jw2</span>
+frida -U -n com.ludia.jw2 -l landscape.js</pre>
+
+  <figure>
+<pre style="border:none; background:transparent; padding:0;"><span class="c-comment">// landscape.js — el hook, y solo el hook</span>
+Java.perform(function () {
+  var Activity = Java.use('android.app.Activity');
+  <span class="c-comment">// sobrecarga exacta: setRequestedOrientation(int)</span>
+  Activity.setRequestedOrientation.overload('int').implementation = function (v) {
+    <span class="c-comment">// sustituir 1 (PORTRAIT) por 0 (LANDSCAPE)</span>
+    return this.setRequestedOrientation(0);
+  };
+});</pre>
+    <figcaption>Patrón de tres líneas equivalente al del módulo AppRotation. Si Frida se queja de la sobrecarga, usar
+    <code>.overload('int')</code> o recorrer <code>Activity.setRequestedOrientation.overloads</code> hasta dar con la firma.</figcaption>
+  </figure>
+
+  <div class="grid">
+    <div class="creative-card">
+      <div class="creative-head"><h3>Antes, la prueba de 10 minutos</h3><span class="effort">gratis</span></div>
+      <p>Apps de override de orientación sin root: <strong>Rotation Control</strong> o <strong>Screen Orientation Control</strong>. Su mecanismo está medido en código: una ventana overlay de 0×0 píxeles con <code>LayoutParams.screenOrientation</code> como fuente de orientación del display.</p>
+      <ul>
+        <li>Si funciona, resuelto sin Frida.</li>
+        <li>Pero: <strong>ninguna fuente pública afirma que venzan un lock fijado en runtime</strong>, y los propios desarrolladores admiten apps que no rotan. No cuentes con ello.</li>
+      </ul>
+    </div>
+    <div class="creative-card" style="border-color:#FF330055; background:linear-gradient(160deg, rgba(255,51,0,.10), rgba(255,78,0,.04));">
+      <div class="creative-head"><h3>Y lo que no hay que hacer</h3><span class="effort">evitar</span></div>
+      <ul>
+        <li><strong>No instales Magisk casero en la VM Android 11.</strong> Magisk 23.0 flashea el sistema y la documentación oficial avisa de que puede corromper el dispositivo. Si algún día hace falta LSPosed, toca recrear la VM con Android 12 o superior.</li>
+        <li><strong>No toques el APK.</strong> Re-firmar rompe la firma de Ludia: login de Google imposible y las compras quedan fuera.</li>
+        <li><strong>Cuenta desechable</strong> para todo el experimento, no la principal.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="riesgo-resizer">
+  <h2><span class="dot" style="background: var(--amber); color: var(--amber);"></span> El aviso que hay que dar antes de celebrar nada</h2>
+  <p class="section-sub">Quitar el candado puede no ser suficiente. Esto es el punto ciego más grande de toda la investigación.</p>
+
+  <div class="warn-card">
+    <h3>Con el candado fuera, el juego podría seguir encajonando el lienzo</h3>
+    <p>Eco midió que <code>AspectRatioResizer.cs</code> encajona el lienzo a <code>min(r, 1/r)</code>, siendo r = ancho/alto. Aplicado sin pensar a 1920×1080 daría <strong>607×1080</strong>, o sea una ventana vertical centrada con bandas negras: paisaje de marco, paisaje de juego. Si eso ocurre, el vídeo de ViperX ya no cuadra —y hay que explicar por qué.</p>
+    <p>La lectura coherente es que el resizer <strong>conserva la orientación de la actividad</strong>: con la app en vertical encaja un lienzo vertical (medido: 602×1440 en 3440×1440); con la app en landscape deja que el lienzo sea landscape. El vídeo de ViperX —16:9 lleno de borde a borde, sin estirar— es la prueba de que <em>con su setup</em> llena. Pero no es la prueba de que llenará en el de n30.</p>
+    <p><strong style="color:var(--yellow)">Consecuencia práctica: esta es una prueba de diez minutos con resultado visible a simple vista.</strong> Si al quitar el candado salen bandas negras, el siguiente sospechoso es el propio <code>AspectRatioResizer</code>, y ahí ya no valen ajustes del sistema: haría falta parchear el binario (la metadata de il2cpp no está cifrada, se pudo leer con <code>strings</code>), lo que reabre el problema de la firma.</p>
+  </div>
+
+  <div class="blind-card">
+    <div class="blind-head"><h3>Lo que esta investigación no puede decir</h3></div>
+    <p><strong>Qué emulador usa ViperX.</strong> Se midió que su imagen es 1920×1080 16:9 sin estirar, sin voz reveladora y sin cromo de ventana, y la propiedad necesaria es que su Android no rota a vertical cuando la app lo pide. Pero el emulador concreto <strong>no se puede determinar</strong>, y esta investigación no lo adivinó. Con una corrección medida al contexto anterior: <strong>BlueStacks 5 no trae 1920×1080 por defecto</strong> (su paisaje por defecto es 1600×900; 1920×1080 es la personalizada recomendada). Y un móvil real con app de rotación forzada produciría exactamente la misma imagen: ambas ramas son indistinguibles con los datos públicos.</p>
+  </div>
+
+  <div class="blind-card">
+    <div class="blind-head"><h3>Otras lagunas declaradas</h3></div>
+    <p>· Si <code>/system/xbin/su</code> existe en la imagen de n30: no se ha abierto la VM para comprobarlo (para Frida no hace falta).<br>
+    · El <code>set-ignore-orientation-request</code> de Android 12+ solo se ha visto producir letterbox en casos públicos: no se ha medido con JWA.<br>
+    · Si el modo de BlueStacks que fuerza landscape a todas las apps sigue existiendo hoy: solo aparece en fuente secundaria.<br>
+    · La protección anti-trampas de Ludia no tiene nombre público ni un solo reporte de detección de root o de Xposed, en ninguno de los dos sentidos. Eso es un silencio, no una garantía.</p>
+  </div>
+</section>
+
+<section id="ludia">
+  <h2><span class="dot" style="background: var(--yellow); color: var(--yellow);"></span> El hallazgo que nadie esperaba: Ludia lo reconoce</h2>
+  <p class="section-sub">Y no es una inferencia: está en las notas de versión oficiales, verificadas hoy palabra por palabra.</p>
+
+  <div class="finding" style="--sev: var(--yellow);">
+    <header>
+      <span class="sev-badge" style="background: var(--yellow);">MEDIDO · fuentes primarias</span>
+      <span class="src-badge">jurassicworldalive.com/release-notes/update-3-0-30/ · 15-jun-2023</span>
+    </header>
+    <h3>«During a raid session, the game can switch to landscape mode on some devices—causing UI issues. This is not intended, as the game is supposed to stay in portrait mode.»</h3>
+    <p>Texto literal, bajo el epígrafe <em>«We're currently working on solutions for the following issues»</em> de la actualización 3.0.30. Traducción del contenido, no de la frase: <strong>durante una raid el juego puede pasar a landscape en algunos dispositivos, provocando problemas de interfaz; Ludia lo considera no intencionado y quiere eliminarlo.</strong></p>
+    <p>Tres consecuencias directas, y ninguna es pequeña:</p>
+    <p><strong>1. El juego dibuja landscape de verdad, y Ludia lo sabe.</strong> No es letterbox: dice «causing UI issues», que es lo que se lee cuando una interfaz diseñada para vertical se estira apaisada. Eso reconcilia de golpe el vídeo de ViperX con la medición del resizer.</p>
+    <p><strong>2. Es un comportamiento dependiente del dispositivo, no de la resolución.</strong> «On some devices». El juego tiene una heurística que en según qué terminales elige landscape. Eso abre una hipótesis que esta investigación no puede cerrar y que conviene anotar: <strong>puede que no haga falta forzar nada, puede bastar con parecerse al dispositivo que dispara la heurística.</strong> Qué dispositivos son esos, no está publicado.</p>
+    <p><strong>3. Ludia lleva desde 2023 intentando cerrar ese camino.</strong> Si 3.23.49 ya lo tapó, forzar la orientación será la única salida. Si no lo tapó del todo, puede haber un atajo que ninguna app de override consigue y que ningún ajuste del sistema da.</p>
+  </div>
+
+  <div class="blind-card">
+    <div class="blind-head"><h3>Cómo se comprueba esa hipótesis en la VM, en un minuto</h3></div>
+    <p>Sin instalar nada: abrir una raid en la VM actual y ver si el juego cambia solo. Después, con el Frida hook puesto, ver si ocurre lo mismo. Y, antes de tirar la toalla con la orientación, mirar qué propiedad del dispositivo leería el juego para decidir: candidatos razonables son aspect ratio, tamaño de pantalla en pulgadas, <code>form_factor</code>, o la combinación de ambos. Eso es investigación nueva, no está resuelta aquí.</p>
+  </div>
+</section>
+
+<section id="balance">
+  <h2><span class="dot" style="background: var(--orange); color: var(--orange);"></span> Coste y riesgo de cada ruta</h2>
+  <p class="section-sub">Lo que cuesta intentarlo, y lo que se puede perder si sale mal.</p>
+
+  <div class="card-panel" style="padding:14px 18px;">
+  <table>
+    <thead><tr><th>Ruta</th><th>Coste</th><th>Riesgo de cuenta</th><th>Qué toca</th><th>Estado</th></tr></thead>
+    <tbody>
+      <tr class="hl">
+        <td>Frida + hook de <code>setRequestedOrientation</code></td>
+        <td>bajo · ~30 min</td>
+        <td><strong>bajo</strong></td>
+        <td>nada: proceso vivo, reversible matando el servidor</td>
+        <td><strong>recomendada</strong></td>
+      </tr>
+      <tr>
+        <td>Rotation Control / Screen Orientation Control</td>
+        <td>bajo · ~10 min</td>
+        <td>bajo</td>
+        <td>una app instalada en la VM</td>
+        <td>probar primero</td>
+      </tr>
+      <tr>
+        <td>Entrar en raid y ver si cambia solo</td>
+        <td>cero</td>
+        <td>nulo</td>
+        <td>nada</td>
+        <td>probar primero</td>
+      </tr>
+      <tr>
+        <td>Recrear VM con Android 12+ y LSPosed</td>
+        <td>alto · VM nueva</td>
+        <td>bajo</td>
+        <td>la VM actual</td>
+        <td>solo si Frida falla</td>
+      </tr>
+      <tr class="dim">
+        <td>Genymotion freeform / resolución</td>
+        <td>bajo</td>
+        <td>bajo</td>
+        <td>la VM</td>
+        <td>no sirve para landscape</td>
+      </tr>
+      <tr class="dim">
+        <td>Waydroid multi-ventana</td>
+        <td>alto · 4-6 GB</td>
+        <td>bajo</td>
+        <td>nada de Genymotion</td>
+        <td>no sirve para landscape</td>
+      </tr>
+      <tr class="dim">
+        <td>Emulador Windows (BlueStacks/LDPlayer)</td>
+        <td>muy alto · 60-80 GB en VM de Windows</td>
+        <td>bajo-moderado</td>
+        <td>nada de Genymotion</td>
+        <td>descartada por disco</td>
+      </tr>
+      <tr class="dim">
+        <td>MOD APK</td>
+        <td>medio</td>
+        <td><strong>alto</strong> · reportes reales de baneo</td>
+        <td>el APK y la firma de Ludia</td>
+        <td>descartada</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="finding" style="--sev: var(--amber); margin-top:16px;">
+    <header>
+      <span class="sev-badge" style="background: var(--amber);">SOBRE EL BANEO</span>
+      <span class="src-badge">ToS y directrices de Ludia citados textualmente</span>
+    </header>
+    <h3>La palabra «emulador» no aparece en ningún documento de Ludia</h3>
+    <p>Los ToS y las directrices de fair play castigan el spoofing, los bugs y el software de terceros; no hay lenguaje de baneo de dispositivo (se castiga el User ID). Los reportes reales de baneo son de spoofers y de usuarios de MOD APK: <strong>ninguno por emulador</strong> y ninguno por orientación. Eso ordena el riesgo: tocar el cliente es lo peligroso, ejecutar el juego en otro sitio no lo está.</p>
+    <p>Aun así, una advertencia que no se puede cuantificar: la cláusula de «servicio no controlado o autorizado por Ludia» es lo bastante amplia como para que un emulador entre dentro. Es <strong>inferencia</strong>, no hecho. Y un silencio de Ludia sobre el root y los hooks no es una garantía de que no los detecte: es un silencio.</p>
+  </div>
+</section>
+
+<section id="fuentes">
+  <h2><span class="dot" style="background: var(--muted); color: var(--muted);"></span> Fuentes</h2>
+  <p class="section-sub">Las que sostienen una afirmación de las de arriba. El resto, en los JSON de resultados.</p>
+  <div class="card-panel" style="padding:16px 20px; font-size:13.5px; color:#C9CDD3;">
+    <p style="margin-bottom:8px;"><strong style="color:var(--yellow)">Oficial / fuente primaria</strong></p>
+    <p style="margin-bottom:10px;">
+      · <a href="https://jurassicworldalive.com/release-notes/update-3-0-30/" style="color:var(--amber)">Notas de Ludia 3.0.30</a> — el juego pasa a landscape en algunos dispositivos, «no intencionado».<br>
+      · <a href="https://developer.android.com/reference/android/app/Activity#setRequestedOrientation" style="color:var(--amber)">Activity.setRequestedOrientation</a> — semántica de la petición de orientación.<br>
+      · <a href="https://developer.android.com/guide/practices/device-compatibility-mode" style="color:var(--amber)">Device compatibility mode</a> — el letterbox oficial cuando la app fija orientación.<br>
+      · <a href="https://android.googlesource.com/platform/frameworks/base/+/refs/heads/android11-release/" style="color:var(--amber)">Código fuente AOSP, rama android11-release</a> — dónde existe y dónde no <code>set-ignore-orientation-request</code>, y los valores de <code>WindowConfiguration</code>.<br>
+      · <a href="https://docs.genymotion.com/features/root/" style="color:var(--amber)">Genymotion: root</a> — Android 11 rooteado por defecto.<br>
+      · <a href="https://docs.genymotion.com/usage/desktop/vd_settings/" style="color:var(--amber)">Genymotion: ajustes de pantalla</a> y <a href="https://docs.genymotion.com/tools/desktop/gmtool/" style="color:var(--amber)">gmtool</a>.<br>
+      · <a href="https://docs.waydro.id/usage/waydroid-prop-options" style="color:var(--amber)">Waydroid: propiedades</a> y <a href="https://docs.waydro.id/usage/install-on-desktops" style="color:var(--amber)">instalación</a>.<br>
+      · <a href="https://frida.re/docs/android/" style="color:var(--amber)">Frida para Android</a> — instalación de frida-server; <a href="https://github.com/frida/frida/releases" style="color:var(--amber)">versionado</a>.<br>
+      · <a href="https://docs.unity3d.com/6000.0/Documentation/Manual/android-screen-configuration.html" style="color:var(--amber)">Unity: configuración de pantalla en Android</a>.
+    </p>
+    <p style="margin-bottom:8px;"><strong style="color:var(--yellow)">Mecanismo del hook</strong></p>
+    <p style="margin-bottom:10px;">
+      · <a href="https://github.com/HyotmakFin/AppRotation" style="color:var(--amber)">AppRotation (LSPosed, commit 8-oct-2026)</a> — hookea <code>setRequestedOrientation</code>/<code>onCreate</code>/<code>onResume</code>.<br>
+      · <a href="https://github.com/vaginessa/orientation-faker" style="color:var(--amber)">orientation-faker</a> — el overlay 0×0 y <code>OrientationHelper.kt</code>, mecanismo medido en código.<br>
+      · <a href="https://modules.lsposed.org/module/com.fankes.forcerotate/" style="color:var(--amber)">Force Rotate</a> y <a href="https://github.com/hamzahrmalik/ForceLandscape" style="color:var(--amber)">ForceLandscape</a> — precedentes del mismo patrón.<br>
+      · <a href="https://github.com/LSPosed/LSPosed/wiki" style="color:var(--amber)">LSPosed</a> — por qué no cabe en Android 11 sin Magisk.
+    </p>
+    <p style="margin-bottom:8px;"><strong style="color:var(--yellow)">Rutas descartadas</strong></p>
+    <p style="margin-bottom:10px;">
+      · <a href="https://github.com/waydroid/waydroid/issues/70" style="color:var(--amber)">issues #70</a>, <a href="https://github.com/waydroid/waydroid/issues/584" style="color:var(--amber)">#584</a>, <a href="https://github.com/waydroid/waydroid/issues/1660" style="color:var(--amber)">#1660</a> de Waydroid — la ventana hereda la orientación.<br>
+      · <a href="https://github.com/waydroid/waydroid/issues/976" style="color:var(--amber)">issue #976</a> y <a href="https://github.com/hyprwm/Hyprland/discussions/4206" style="color:var(--amber)">discusión #4206</a> de Hyprland — bugs de multi-ventana.<br>
+      · <a href="https://www.howtogeek.com/force-android-app-into-landscape-mode-with-this-simple-app/" style="color:var(--amber)">How-To Geek (29-nov-2025)</a> — el límite declarado de las apps de override.<br>
+      · <a href="https://github.com/Charles-3Ready/rotation-control" style="color:var(--amber)">Rotation Control</a> — «Some apps hard-code their own orientation».
+    </p>
+    <p><strong style="color:var(--yellow)">Datos completos</strong> — nueve fichas JSON con 168 fuentes en
+    <code style="color:var(--yellow)">~/.workbuddy-ai/research/jwa-landscape/results/</code>.</p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p>Investigación de <span class="brand">Eco</span> para n30 · 11-oct-2026 · todo medido o etiquetado como inferido,
+  y lo que no se sabe está dicho donde toca.</p>
+</footer>
+
+</body>
+</html>

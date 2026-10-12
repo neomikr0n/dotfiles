@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+# Prueba de las tres ramas de resolver_whisper()/correr_whisper(), con el binario de verdad.
+# No toca el escritorio: solo transcribe un WAV ya existente.
+S=/home/n30/dotfiles/share/scripts/dictado.sh
+WAV="$HOME/Documentos/investigacion-dictado/prueba/jfk.wav"
+RAW="$HOME/.local/share/dictado/bin/whisper-cli"
+
+ok=0; mal=0
+comprobar() { if [ "$2" = "$3" ]; then echo "  OK   $1"; ok=$((ok + 1)); else echo "  MAL  $1"; echo "        esperado [$3]"; echo "        obtenido [$2]"; mal=$((mal + 1)); fi; }
+
+ramas() {
+    local etiqueta="$1" cual="$2" esperado="$3"
+    local r
+    r="$(DICTADO_WHISPER="$cual" DICTADO_RUNTIME=/tmp/dw-prueba bash -c "
+        source <(head -n -1 '$S')
+        resolver_whisper" 2>&1)"
+    comprobar "$etiqueta -> resuelve" "$r" "$esperado"
+}
+
+echo "=== A. que rama elige resolver_whisper() ==="
+ramas "por defecto (nombre suelto)" "whisper-cli" "$HOME/.local/bin/whisper-cli"
+ramas "ruta absoluta al binario crudo" "$RAW" "$RAW"
+ramas "ruta inexistente cae al respaldo" "/no/existe/whisper-cli" "$RAW"
+ramas "nombre suelto inexistente cae al respaldo" "whisper-cli-que-no-existe" "$RAW"
+
+echo
+echo "=== B. ¿transcribe de verdad cada rama? (con el binario real) ==="
+transcribir() {
+    local etiqueta="$1" cual="$2"
+    local t
+    t="$(DICTADO_WHISPER="$cual" DICTADO_RUNTIME=/tmp/dw-prueba bash -c "
+        source <(head -n -1 '$S')
+        W=\"\$(resolver_whisper)\" || { echo 'sin binario'; exit 1; }
+        args=(-m \"\$MODELO\" -f '$WAV' -l en -nt -np -otxt -of /tmp/dw-out)
+        [ -f \"\$VAD\" ] && args+=(--vad -vm \"\$VAD\")
+        correr_whisper \"\$W\" \"\${args[@]}\" >/dev/null 2>&1
+        printf '%s' \"\$(cat /tmp/dw-out.txt 2>/dev/null)\"" 2>&1)"
+    case "$t" in
+    *"ask not what your country"*) echo "  OK   $etiqueta -> transcribió bien"; ok=$((ok + 1)) ;;
+    *) echo "  MAL  $etiqueta -> [$t]"; mal=$((mal + 1)) ;;
+    esac
+}
+
+transcribir "via puente (~/.local/bin)" "whisper-cli"
+transcribir "via binario crudo (necesita LD_LIBRARY_PATH)" "$RAW"
+transcribir "via respaldo automatico" "/no/existe/whisper-cli"
+
+echo
+echo "=== C. el binario crudo y LD_LIBRARY_PATH ==="
+# El binario compilado lleva un RUNPATH ABSOLUTO al directorio donde se compiló. Si ese árbol
+# existe, las bibliotecas se resuelven solas y la variable parece innecesaria; si se borra
+# (que es lo normal, son 400 MB), pasa a ser obligatoria. Por eso NO se comprueba «¿falla sin
+# la variable?» —eso depende del estado del disco— sino «¿funciona CON ella?», que es lo único
+# que tiene que cumplirse siempre y lo que hace correr_whisper().
+if env -u LD_LIBRARY_PATH "$RAW" --help >/dev/null 2>&1; then
+    echo "  INFO arranca sin LD_LIBRARY_PATH: el arbol de compilacion sigue en disco"
+    echo "       (RUNPATH -> /home/n30/.local/share/dictado/fuente/whisper.cpp/build/bin)"
+    echo "       Al borrarlo, la variable pasa a ser OBLIGATORIA."
+else
+    echo "  INFO no arranca sin LD_LIBRARY_PATH: el arbol de compilacion ya no esta"
+fi
+if LD_LIBRARY_PATH="$HOME/.local/share/dictado/bin" "$RAW" --help >/dev/null 2>&1; then
+    echo "  OK   con LD_LIBRARY_PATH funciona (que es lo que hace correr_whisper)"; ok=$((ok + 1))
+else
+    echo "  MAL  no funciona ni con LD_LIBRARY_PATH"; mal=$((mal + 1))
+fi
+
+echo
+echo "RESUMEN: $ok correctos, $mal fallidos"
+[ "$mal" -eq 0 ]

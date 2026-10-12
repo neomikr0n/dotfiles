@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Prueba del entorno de Hyprland: reproduce su PATH exacto y comprueba si el script
+# encuentra y EJECUTA whisper-cli. Antes de la corrección esto fallaba en los dos pasos.
+S=/home/n30/dotfiles/share/scripts/dictado.sh
+HPID="$(pgrep -x Hyprland | head -1)"
+HPATH="$(tr '\0' '\n' < "/proc/$HPID/environ" 2>/dev/null | sed -n 's/^PATH=//p' | head -1)"
+
+echo "=== PATH de Hyprland (el que ve el bind) ==="
+echo "$HPATH"
+echo
+
+ok=0; mal=0
+comprobar() { if [ "$2" = "$3" ]; then echo "  OK   $1"; ok=$((ok + 1)); else echo "  MAL  $1"; echo "        esperado [$3]"; echo "        obtenido [$2]"; mal=$((mal + 1)); fi; }
+
+echo "=== 1. resolver_whisper() con el entorno de Hyprland ==="
+R="$(env -i HOME="$HOME" PATH="$HPATH" XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp}" \
+    bash -c "source <(head -n -1 '$S'); resolver_whisper" 2>&1)"
+echo "  devuelve: ${R:-<nada>}"
+comprobar "encuentra whisper-cli" "$R" "$HOME/.local/bin/whisper-cli"
+
+echo
+echo "=== 2. el PATH del script tras anteponerse los puentes ==="
+P="$(env -i HOME="$HOME" PATH="$HPATH" bash -c "source <(head -n -1 '$S'); printf '%s' \"\$PATH\"" 2>&1)"
+echo "  $P"
+case "$P" in "$HOME/.local/bin:"*) echo "  OK   ~/.local/bin va delante"; ok=$((ok + 1));; *) echo "  MAL  no se antepuso"; mal=$((mal + 1));; esac
+case "$P" in *:/usr/bin:*) echo "  OK   conserva /usr/bin"; ok=$((ok + 1));; *) echo "  MAL  perdió /usr/bin"; mal=$((mal + 1));; esac
+
+echo
+echo "=== 3. wtype, que antes tampoco se encontraba ==="
+W="$(env -i HOME="$HOME" PATH="$HPATH" bash -c "source <(head -n -1 '$S'); command -v wtype" 2>&1)"
+comprobar "encuentra wtype" "$W" "$HOME/.local/bin/wtype"
+
+echo
+echo "=== 4. el binario de verdad ARRANCA con ese entorno (no solo aparece) ==="
+# Es la prueba que distingue «está en el PATH» de «funciona»: se ejecuta y se mira que responda.
+H="$(env -i HOME="$HOME" PATH="$HPATH" "$HOME/.local/bin/whisper-cli" --help 2>&1 | head -3)"
+echo "$H" | sed 's/^/  | /'
+case "$H" in *whisper*|*usage*|*Usage*) echo "  OK   whisper-cli responde"; ok=$((ok + 1));; *) echo "  MAL  whisper-cli no arrancó"; mal=$((mal + 1));; esac
+
+echo
+echo "=== 5. ¿cargan las bibliotecas de Vulkan sin LD_LIBRARY_PATH externo? ==="
+L="$(env -i HOME="$HOME" PATH="$HPATH" LD_LIBRARY_PATH="$HOME/.local/share/dictado/bin" \
+    ldd "$HOME/.local/share/dictado/bin/whisper-cli" 2>&1 | awk '/not found/{print $1}')"
+if [ -z "$L" ]; then echo "  OK   ninguna biblioteca sin resolver"; ok=$((ok + 1)); else echo "  MAL  sin resolver: $L"; mal=$((mal + 1)); fi
+V="$(env -i HOME="$HOME" PATH="$HPATH" LD_LIBRARY_PATH="$HOME/.local/share/dictado/bin" \
+    ldd "$HOME/.local/share/dictado/bin/libggml-vulkan.so" 2>&1 | awk '/not found/{print $1}')"
+if [ -z "$V" ]; then echo "  OK   libggml-vulkan sin dependencias rotas"; ok=$((ok + 1)); else echo "  MAL  sin resolver: $V"; mal=$((mal + 1)); fi
+
+echo
+echo "=== 6. control: sin la corrección, ¿fallaba de verdad? ==="
+# Se simula el comportamiento viejo, que era buscar whisper-cli con el PATH crudo de Hyprland.
+VIEJO="$(env -i PATH="$HPATH" sh -c 'command -v whisper-cli' 2>/dev/null)"
+comprobar "el PATH crudo NO lo encuentra (confirma el diagnóstico)" "$VIEJO" ""
+
+echo
+echo "RESUMEN: $ok correctos, $mal fallidos"
+[ "$mal" -eq 0 ]

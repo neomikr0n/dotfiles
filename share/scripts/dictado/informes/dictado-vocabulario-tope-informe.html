@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>El tope del vocabulario de dictado</title>
+<style>
+  :root{
+    --fondo:#0D0E10; --panel:#14161A; --panel2:#191C21;
+    --borde:rgba(255,255,255,.08); --borde2:rgba(255,255,255,.14);
+    --texto:#E6E7EA; --suave:#9AA0A6; --tenue:#6B7076;
+    --verde:#4ADE80; --rojo:#F87171; --ambar:#FBBF24; --azul:#60A5FA;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--fondo); color:var(--texto);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+    line-height:1.62; font-size:15.5px; -webkit-font-smoothing:antialiased;
+  }
+  .hoja{max-width:1020px;margin:0 auto;padding:56px 28px 96px}
+  header.cabecera{border-bottom:1px solid var(--borde);padding-bottom:26px;margin-bottom:36px}
+  h1{font-size:30px;line-height:1.2;margin:0 0 10px;letter-spacing:-.02em}
+  .sub{color:var(--suave);font-size:16px;margin:0}
+  .meta{color:var(--tenue);font-size:13.5px;margin-top:14px}
+  h2{font-size:21px;margin:48px 0 14px;letter-spacing:-.01em}
+  h3{font-size:16.5px;margin:26px 0 10px;letter-spacing:-.01em}
+  p{margin:0 0 14px}
+  code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+  code{background:rgba(255,255,255,.05);padding:2px 6px;border-radius:5px;color:#D7DAE0}
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 6px}
+  .chip{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:999px;
+    font-size:13px;font-weight:600;border:1px solid var(--borde2);background:var(--panel2);color:var(--suave)}
+  .chip .pt{width:7px;height:7px;border-radius:50%;background:currentColor}
+  .chip.ok{color:var(--verde);border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.08)}
+  .chip.mal{color:var(--rojo);border-color:rgba(248,113,113,.35);background:rgba(248,113,113,.08)}
+  .chip.aviso{color:var(--ambar);border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
+  .chip.info{color:var(--azul);border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.08)}
+  table{width:100%;border-collapse:collapse;margin:18px 0 8px;font-size:14px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--borde);vertical-align:top}
+  th{color:var(--suave);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  tr.mejor td{background:rgba(74,222,128,.07)}
+  tr.peor td{background:rgba(248,113,113,.06)}
+  tr.total td{font-weight:700;border-top:1px solid var(--borde2);background:rgba(255,255,255,.03)}
+  .cero{color:var(--tenue)}
+  pre{background:#08090B;border:1px solid var(--borde);border-radius:10px;padding:14px 16px;
+    overflow-x:auto;margin:12px 0;font-size:12.5px;line-height:1.55;color:#C9CDD3}
+  ul{margin:10px 0 14px;padding-left:22px}
+  li{margin:6px 0}
+  .pista{color:var(--tenue);font-size:13px}
+  .rejilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:20px 0}
+  .dato{background:var(--panel);border:1px solid var(--borde);border-radius:12px;padding:16px 18px}
+  .dato .etq2{color:var(--suave);font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+  .num-grande{font-size:25px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .nota{background:var(--panel);border:1px solid var(--borde);border-left:3px solid var(--ambar);
+    border-radius:10px;padding:14px 18px;margin:18px 0}
+  .nota.ok{border-left-color:var(--verde)}
+  .nota.mal{border-left-color:var(--rojo)}
+  .nota p:last-child{margin-bottom:0}
+  footer{margin-top:64px;padding-top:22px;border-top:1px solid var(--borde);color:var(--tenue);font-size:13px}
+  @media(max-width:620px){table{font-size:12.5px}th,td{padding:8px 7px}}
+</style>
+</head>
+<body>
+<div class="hoja">
+
+<header class="cabecera">
+  <h1>¿Conviene llenar el vocabulario hasta los 600 caracteres?</h1>
+  <p class="sub">Medición del presupuesto de prompt de whisper sobre el corpus real. La respuesta medida es que no, y el mejor tamaño no está en el tope sino bastante antes.</p>
+  <p class="meta">10 de octubre de 2026 · corpus de 12 frases, 89,54 s, 216 palabras, voz de n30 · whisper large-v3-turbo con VAD · dos pasadas completas idénticas</p>
+</header>
+
+<div class="chips">
+  <span class="chip mal"><span class="pt"></span>llenar a 600 empeora</span>
+  <span class="chip ok"><span class="pt"></span>óptimo medido: 444 caracteres</span>
+  <span class="chip info"><span class="pt"></span>aplicado al fichero</span>
+  <span class="chip aviso"><span class="pt"></span>la ventaja son 3 errores</span>
+</div>
+
+<h2>La respuesta corta</h2>
+
+<p>No conviene. Llenar hasta el tope de 600 caracteres no mejora la transcripción, la empeora. Sobre el corpus completo, la lista actual de 324 caracteres deja 15 errores de 216 palabras y una lista de 583 caracteres deja 17. El mejor tamaño medido no está en el tope, está antes, en 444 caracteres, con 12 errores.</p>
+
+<p>Lo que decide no es cuántas palabras caben sino cuáles. La curva no sube al añadir palabras ni baja de forma ordenada, así que el tope de caracteres no sirve como criterio de nada. Es un límite técnico, no un objetivo.</p>
+
+<h2>Cómo se midió</h2>
+
+<p>Se usó el corpus que ya existía en <code>~/.local/share/dictado/corpus</code>, doce frases dictadas con la voz de n30, 89,54 segundos de audio y 216 palabras de referencia. El modelo es el que está en uso, <code>large-v3-turbo</code>, y los ajustes son los mismos que aplica <code>dictado.sh</code>, con el VAD de silero activado.</p>
+
+<p>Cada variante se transcribe doce veces, una por frase, y se compara contra la referencia contando palabras con distancia de Levenshtein. El recuento y el WER salen de <code>dictado-bench.py</code>, el banco del propio proyecto, para que las cifras sean comparables con las mediciones de modelos que ya existían.</p>
+
+<p>Whisper a temperatura cero es determinista, así que la medición se repitió dos veces completas y las dos dieron los mismos totales, celda por celda. Esa repetición es lo que permite comparar variantes sin atribuir a la lista lo que solo es ruido.</p>
+
+<div class="nota mal">
+  <p>La normalización importa y no es un detalle. La primera pasada la hice con un arnés propio que quitaba los acentos y no unía los dígitos separados por espacio, y daba 14, 16, 12 y 16 errores en vez de 15, 16, 12 y 17. La diferencia estaba en <code>c3-abre</code>, donde «lánzame» contra «lanzame» cuenta como error si se conservan los acentos. Las cifras de esta página son las del banco del proyecto, que es el criterio que hay que usar.</p>
+</div>
+
+<h2>La curva</h2>
+
+<table>
+  <thead>
+    <tr><th>Variante del prompt</th><th class="num">Caracteres</th><th class="num">Errores</th><th class="num">WER</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>sin lista</td><td class="num">0</td><td class="num">22</td><td class="num">10,2 %</td></tr>
+    <tr><td>base, la que estaba puesta</td><td class="num">324</td><td class="num">15</td><td class="num">6,9 %</td></tr>
+    <tr><td>base + las 3 unidades</td><td class="num">363</td><td class="num">16</td><td class="num">7,4 %</td></tr>
+    <tr class="mejor"><td>base + las 10 palabras</td><td class="num">444</td><td class="num">12</td><td class="num">5,6 %</td></tr>
+    <tr class="peor"><td>base + 24 palabras</td><td class="num">583</td><td class="num">17</td><td class="num">7,9 %</td></tr>
+  </tbody>
+</table>
+
+<p class="pista">La variante de 583 caracteres es la que se acercaría a llenar el tope. Queda por debajo de la lista de 324, así que rellenar el hueco que falta hasta 600 no es neutro, cuesta precisión.</p>
+
+<h2>Qué frase cambia en cada variante</h2>
+
+<p>El total esconde de dónde sale cada error. Esta tabla los abre por frase.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Frase</th><th class="num">pal.</th>
+      <th class="num">sin lista</th><th class="num">324</th><th class="num">363</th><th class="num">444</th><th class="num">583</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>c1-vale</td><td class="num">1</td><td class="num cero">0</td><td class="num cero">0</td><td class="num">2</td><td class="num cero">0</td><td class="num cero">0</td></tr>
+    <tr><td>c2-guarda</td><td class="num">5</td><td class="num">1</td><td class="num cero">0</td><td class="num cero">0</td><td class="num cero">0</td><td class="num cero">0</td></tr>
+    <tr class="mejor"><td>c3-abre</td><td class="num">9</td><td class="num">1</td><td class="num">2</td><td class="num">2</td><td class="num cero">0</td><td class="num">1</td></tr>
+    <tr><td>l1-reunion</td><td class="num">30</td><td class="num cero">0</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">1</td></tr>
+    <tr><td>l2-informe</td><td class="num">35</td><td class="num">5</td><td class="num">5</td><td class="num">5</td><td class="num">5</td><td class="num">5</td></tr>
+    <tr><td>l3-lista</td><td class="num">43</td><td class="num cero">0</td><td class="num cero">0</td><td class="num cero">0</td><td class="num cero">0</td><td class="num cero">0</td></tr>
+    <tr><td>m1-comando</td><td class="num">13</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">1</td></tr>
+    <tr><td>m2-numeros</td><td class="num">14</td><td class="num">2</td><td class="num">2</td><td class="num">2</td><td class="num">2</td><td class="num">2</td></tr>
+    <tr class="mejor"><td>m3-propios</td><td class="num">12</td><td class="num">5</td><td class="num cero">0</td><td class="num cero">0</td><td class="num cero">0</td><td class="num">4</td></tr>
+    <tr class="mejor"><td>m4-tecnico</td><td class="num">18</td><td class="num">6</td><td class="num">3</td><td class="num">2</td><td class="num">2</td><td class="num">2</td></tr>
+    <tr><td>m5-ingles</td><td class="num">19</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">1</td></tr>
+    <tr><td>m6-plano</td><td class="num">17</td><td class="num cero">0</td><td class="num cero">0</td><td class="num cero">0</td><td class="num cero">0</td><td class="num cero">0</td></tr>
+    <tr class="total"><td>total</td><td class="num">216</td><td class="num">22</td><td class="num">15</td><td class="num">16</td><td class="num">12</td><td class="num">17</td></tr>
+  </tbody>
+</table>
+
+<p>Diez de los 22 errores sin lista son idénticos en las cinco variantes, y el prompt no los toca. Están en las cifras (l1-reunion escribe «3» donde la referencia dice «tres», l2-informe escribe «537» donde dice «quinientos treinta y siete»), en el cierre de una frase (m2-numeros se come «por ciento») y en una palabra inglesa (m5-ingles escribe «mine» por «main»).</p>
+
+<p>Los doce errores restantes son todo el terreno donde el prompt juega, y la mejor variante los baja a 2. Casi todo el efecto está en cuatro frases. c2-guarda, c3-abre y m3-propios pasan a cero, y m4-tecnico baja de 6 a 2.</p>
+
+<h2>Por qué más palabras empeoran</h2>
+
+<p>Un nombre propio suelto se transcribe bien cuando el prompt lo empuja. Si a la lista se le suman palabras comunes de relleno, ese empujón se reparte y el nombre propio pierde. La frase m3-propios lo muestra sin ambigüedad, porque es la misma grabación en las cinco variantes.</p>
+
+<pre>referencia   Escucho música con los Hifiman HE1000se conectados al amplificador Aune S17 Pro.
+sin lista    Escucho música con los iFIMAN H1000 se conectamos al amplificador AUN S17 Pro.
+444 car.     Escucho música con los Hifiman HE1000se conectados al amplificador AUNE S17 Pro.
+583 car.     Escucho música con los iFIMAN H1000 C conectamos al amplificador AUN S17 Pro.</pre>
+
+<p>Con 444 caracteres los dos nombres salen bien. Con 583 vuelven a romperse, igual que sin lista. Las catorce palabras que se añadieron de más (systemd, VAD, ggml, pactl y compañía) no aparecen en ninguna frase de este corpus, y aun así estropean la que sí importaba.</p>
+
+<p>Hay un segundo efecto, más incómodo de explicar. Añadir solo las tres unidades a la lista actual, 39 caracteres, empeora el total y destroza una frase de una sola palabra. <code>c1-vale</code>, que dice «Vale.», se transcribe como «ba-le.» en esa variante. Con la lista de 444 caracteres, que contiene esas tres unidades y siete palabras más, eso no ocurre. Una palabra del prompt no actúa por su cuenta, cambia el resultado de las demás.</p>
+
+<div class="nota mal">
+  <p>La consecuencia práctica es que no se puede razonar el prompt palabra a palabra. Solo se puede medir el conjunto entero. Cualquier palabra que se añada o se quite hay que volver a medirla dentro de la lista donde va a vivir.</p>
+</div>
+
+<h2>Lo que se aplicó</h2>
+
+<p>Se aplicó la variante de 444 caracteres. Se eligió esa y no la de 583 por dos razones. La primera es que da menos errores. La segunda pesa más, y es que domina a la lista anterior frase por frase: en las doce frases da lo mismo o mejor, y en ninguna peor. Una bajada del total que empeorara alguna frase sería un intercambio, no una mejora, y aquí no la hay.</p>
+
+<div class="rejilla">
+  <div class="dato"><div class="etq2">Antes</div><div class="num-grande">324 car.</div><p class="pista" style="margin:6px 0 0">32 términos · 15 errores</p></div>
+  <div class="dato"><div class="etq2">Ahora</div><div class="num-grande">444 car.</div><p class="pista" style="margin:6px 0 0">42 términos · 12 errores</p></div>
+  <div class="dato"><div class="etq2">Al tope</div><div class="num-grande">600 car.</div><p class="pista" style="margin:6px 0 0">no se llegó · habría dado 17</p></div>
+</div>
+
+<p>Las diez palabras añadidas son <code>receptor</code>, <code>transmisor</code>, <code>Wireless Mic Rx</code>, <code>kilohercios</code>, <code>decibelios</code>, <code>milisegundos</code>, <code>DJI Mic Mini</code>, <code>WirePlumber</code>, <code>RDNA</code> y <code>whisper</code>. El orden de las palabras de n30 no se tocó, y <code>Radeon</code> sigue la primera.</p>
+
+<p>De las diez, la única con un efecto rastreable es <code>kilohercios</code>, que en m4-tecnico cambia «192 kHz» por «192 kilohercios». Las otras nueve entran sin un efecto individual identificable, y su justificación es el resultado del conjunto junto con la comprobación frase por frase.</p>
+
+<p>Copia previa en <code>dictado-vocabulario.txt.bak-20261010-las10</code>, verificada con <code>sha256sum</code> contra el original antes de escribir. Para volver atrás basta copiarla encima.</p>
+
+<h2>Nivel de confianza</h2>
+
+<div class="nota ok">
+  <p><strong>Medido y reproducido.</strong> Los cinco totales, dos pasadas completas idénticas, y el detalle por frase. Que llenar hasta 600 empeore respecto a la lista actual no es una opinión, es el resultado de las dos pasadas.</p>
+</div>
+
+<div class="nota">
+  <p><strong>Medido, con reserva.</strong> Que 444 sea el punto óptimo. El corpus tiene 216 palabras y la ventaja sobre la lista anterior son tres errores en dos frases. La dirección está clara, más no es mejor. El punto exacto depende de estas doce frases y podría moverse con otras.</p>
+</div>
+
+<div class="nota">
+  <p><strong>No medido.</strong> Casi todo el vocabulario. De los 42 términos, el corpus solo ejerce Hifiman, HE1000se, Aune, S17 Pro, RME, ADI-2, PipeWire, receptor, kilohercios y milisegundos. Los otros treinta y dos, entre ellos <code>Radeon</code>, <code>Genymotion</code>, <code>Waydroid</code> o <code>Hyprland.lua</code>, no aparecen en ninguna frase. Su efecto no está medido aquí y no hay forma de medirlo sin grabarlos. El buen comportamiento que n30 observa al dictar es la prueba que falta, no esta medición.</p>
+</div>
+
+<footer>
+  Medición sobre <code>~/.local/share/dictado/corpus</code>, 12 frases, 89,54 s, 216 palabras. Modelo <code>large-v3-turbo</code>, VAD de silero, temperatura cero. Dos pasadas completas. WER y normalización de <code>dictado-bench.py</code>. Cambio aplicado a <code>dictado-vocabulario.txt</code>, de 324 a 444 caracteres.
+</footer>
+
+</div>
+</body>
+</html>

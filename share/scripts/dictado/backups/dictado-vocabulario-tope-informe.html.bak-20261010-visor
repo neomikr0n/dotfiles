@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es" data-page-node-id="Rha6vbE6X3w6JRmaDg8WsC">
+<head data-page-node-id="IMCDG69Utnl7z6M2Jvksp1">
+<meta charset="utf-8" data-page-node-id="xYL2Ol9hj6DtJs0Gcr0h5F">
+<meta name="viewport" content="width=device-width, initial-scale=1" data-page-node-id="FsNGkW5MhXWvC2L6p8IDLx">
+<title>El tope del vocabulario de dictado</title>
+<style>
+  :root{
+    --fondo:#0D0E10; --panel:#14161A; --panel2:#191C21;
+    --borde:rgba(255,255,255,.08); --borde2:rgba(255,255,255,.14);
+    --texto:#E6E7EA; --suave:#9AA0A6; --tenue:#6B7076;
+    --verde:#4ADE80; --rojo:#F87171; --ambar:#FBBF24; --azul:#60A5FA;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--fondo); color:var(--texto);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+    line-height:1.62; font-size:15.5px; -webkit-font-smoothing:antialiased;
+  }
+  .hoja{max-width:1020px;margin:0 auto;padding:56px 28px 96px}
+  header.cabecera{border-bottom:1px solid var(--borde);padding-bottom:26px;margin-bottom:36px}
+  h1{font-size:30px;line-height:1.2;margin:0 0 10px;letter-spacing:-.02em}
+  .sub{color:var(--suave);font-size:16px;margin:0}
+  .meta{color:var(--tenue);font-size:13.5px;margin-top:14px}
+  h2{font-size:21px;margin:48px 0 14px;letter-spacing:-.01em}
+  h3{font-size:16.5px;margin:26px 0 10px;letter-spacing:-.01em}
+  p{margin:0 0 14px}
+  code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+  code{background:rgba(255,255,255,.05);padding:2px 6px;border-radius:5px;color:#D7DAE0}
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 6px}
+  .chip{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:999px;
+    font-size:13px;font-weight:600;border:1px solid var(--borde2);background:var(--panel2);color:var(--suave)}
+  .chip .pt{width:7px;height:7px;border-radius:50%;background:currentColor}
+  .chip.ok{color:var(--verde);border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.08)}
+  .chip.mal{color:var(--rojo);border-color:rgba(248,113,113,.35);background:rgba(248,113,113,.08)}
+  .chip.aviso{color:var(--ambar);border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
+  .chip.info{color:var(--azul);border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.08)}
+  table{width:100%;border-collapse:collapse;margin:18px 0 8px;font-size:14px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--borde);vertical-align:top}
+  th{color:var(--suave);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  tr.mejor td{background:rgba(74,222,128,.07)}
+  tr.peor td{background:rgba(248,113,113,.06)}
+  tr.total td{font-weight:700;border-top:1px solid var(--borde2);background:rgba(255,255,255,.03)}
+  .cero{color:var(--tenue)}
+  pre{background:#08090B;border:1px solid var(--borde);border-radius:10px;padding:14px 16px;
+    overflow-x:auto;margin:12px 0;font-size:12.5px;line-height:1.55;color:#C9CDD3}
+  ul{margin:10px 0 14px;padding-left:22px}
+  li{margin:6px 0}
+  .pista{color:var(--tenue);font-size:13px}
+  .rejilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:20px 0}
+  .dato{background:var(--panel);border:1px solid var(--borde);border-radius:12px;padding:16px 18px}
+  .dato .etq2{color:var(--suave);font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+  .num-grande{font-size:25px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .nota{background:var(--panel);border:1px solid var(--borde);border-left:3px solid var(--ambar);
+    border-radius:10px;padding:14px 18px;margin:18px 0}
+  .nota.ok{border-left-color:var(--verde)}
+  .nota.mal{border-left-color:var(--rojo)}
+  .nota p:last-child{margin-bottom:0}
+  footer{margin-top:64px;padding-top:22px;border-top:1px solid var(--borde);color:var(--tenue);font-size:13px}
+  @media(max-width:620px){table{font-size:12.5px}th,td{padding:8px 7px}}
+</style>
+</head>
+<body data-page-node-id="VJTXbuQFWUiWDmfbkKBSRI">
+<div class="hoja" data-page-node-id="SFQ4d0DKSFy8Soxk4AUidi">
+
+<header class="cabecera" data-page-node-id="BJpx8sdSlEHWZtE7S9FPOF">
+  <h1 data-page-node-id="rQ0pBXQucgGIX6Qpa7B22C">¿Conviene llenar el vocabulario hasta los 600 caracteres?</h1>
+  <p class="sub" data-page-node-id="yQyWfYuB5ganR2vjUjRBIB">Medición del presupuesto de prompt de whisper sobre el corpus real. La respuesta medida es que no, y el mejor tamaño no está en el tope sino bastante antes.</p>
+  <p class="meta" data-page-node-id="eN0a6bgbJKpc0ffqUTlOXt">10 de octubre de 2026 · corpus de 12 frases, 89,54 s, 216 palabras, voz de n30 · whisper large-v3-turbo con VAD · dos pasadas completas idénticas</p>
+</header>
+
+<div class="chips" data-page-node-id="pmDhcAmC2rbRjV5BE1ZCto">
+  <span class="chip mal" data-page-node-id="YIhcooxHUinyulCyrjMyYY"><span class="pt" data-page-node-id="Pl9Q27fsPq5TGXmzrMMmdp"></span>llenar a 600 empeora</span>
+  <span class="chip ok" data-page-node-id="9l3DjmDOEnciIr8XmLa8UK"><span class="pt" data-page-node-id="Y0CMa25p9pPXmwrGHlw2Af"></span>óptimo medido: 444 caracteres</span>
+  <span class="chip info" data-page-node-id="FTWvzfZNiGgVuhpieT5uy8"><span class="pt" data-page-node-id="q1PpSvSwV1jdycyAobUQTl"></span>aplicado al fichero</span>
+  <span class="chip aviso" data-page-node-id="oFyUzfR8yWIODndbIqJC0G"><span class="pt" data-page-node-id="r5YeRRYYyaoFJpuxE5QG92"></span>la ventaja son 3 errores</span>
+</div>
+
+<h2 data-page-node-id="ttPMHMvgZl3bCo6R8G1pKk">La respuesta corta</h2>
+
+<p data-page-node-id="9G8ZYblxIcR7zGDDs9QYb6">No conviene. Llenar hasta el tope de 600 caracteres no mejora la transcripción, la empeora. Sobre el corpus completo, la lista actual de 324 caracteres deja 15 errores de 216 palabras y una lista de 583 caracteres deja 17. El mejor tamaño medido no está en el tope, está antes, en 444 caracteres, con 12 errores.</p>
+
+<p data-page-node-id="ja6wGBsLy4XEWmpzubsFtZ">Lo que decide no es cuántas palabras caben sino cuáles. La curva no sube al añadir palabras ni baja de forma ordenada, así que el tope de caracteres no sirve como criterio de nada. Es un límite técnico, no un objetivo.</p>
+
+<h2 data-page-node-id="tQwx0eDNMgIU3gvYEIm4Lz">Cómo se midió</h2>
+
+<p data-page-node-id="hBg4KCFVgbz6KA5FOeCj9y">Se usó el corpus que ya existía en <code data-page-node-id="FdlAbnhpgATy7fGL9W77Lc">~/.local/share/dictado/corpus</code>, doce frases dictadas con la voz de n30, 89,54 segundos de audio y 216 palabras de referencia. El modelo es el que está en uso, <code data-page-node-id="cJxt8dG67VcOcT5R89j2Bc">large-v3-turbo</code>, y los ajustes son los mismos que aplica <code data-page-node-id="WPeurwMBPrdHPQ0w6qtKvW">dictado.sh</code>, con el VAD de silero activado.</p>
+
+<p data-page-node-id="aCvdS5EElR08upMG1BRv3M">Cada variante se transcribe doce veces, una por frase, y se compara contra la referencia contando palabras con distancia de Levenshtein. El recuento y el WER salen de <code data-page-node-id="m8BFRSlb2O1C0agAqQWGnF">dictado-bench.py</code>, el banco del propio proyecto, para que las cifras sean comparables con las mediciones de modelos que ya existían.</p>
+
+<p data-page-node-id="6xnvrvaHwmHIMvCcCl0J18">Whisper a temperatura cero es determinista, así que la medición se repitió dos veces completas y las dos dieron los mismos totales, celda por celda. Esa repetición es lo que permite comparar variantes sin atribuir a la lista lo que solo es ruido.</p>
+
+<div class="nota mal" data-page-node-id="11TRrgpWMGAbd9mZPusAmI">
+  <p data-page-node-id="bAJb3gUVP29fFrWTHVxel3">La normalización importa y no es un detalle. La primera pasada la hice con un arnés propio que quitaba los acentos y no unía los dígitos separados por espacio, y daba 14, 16, 12 y 16 errores en vez de 15, 16, 12 y 17. La diferencia estaba en <code data-page-node-id="xKYteKJE2S9Bxsrs148jFc">c3-abre</code>, donde «lánzame» contra «lanzame» cuenta como error si se conservan los acentos. Las cifras de esta página son las del banco del proyecto, que es el criterio que hay que usar.</p>
+</div>
+
+<h2 data-page-node-id="sBpc6skVsd3BRYrXh3wedo">La curva</h2>
+
+<table data-page-node-id="30ewaeT5ORfVFlbcJGFVLt">
+  <thead data-page-node-id="KDNnYhn3GFcacIT5FGDb5h">
+    <tr data-page-node-id="mYAn9JSAB6f7aQhSCyKNVk"><th data-page-node-id="KCt5j9EXKidRYqX0ewrALB">Variante del prompt</th><th class="num" data-page-node-id="5QChL2oC3UTWCU70FBsLOv">Caracteres</th><th class="num" data-page-node-id="cTkZSQEfCqFhQLdBfdltUu">Errores</th><th class="num" data-page-node-id="NHOVB7iG80LWueCEo6mAZp">WER</th></tr>
+  </thead>
+  <tbody data-page-node-id="POizKjimFqHg4zY9fJh8B6">
+    <tr data-page-node-id="7fdOtSfUJMT4gE1RuhhqiO"><td data-page-node-id="QsN3Ky60P0w8xTn2BDhTKo">sin lista</td><td class="num" data-page-node-id="mmf2RQpP8oCiYKU8EXfNWk">0</td><td class="num" data-page-node-id="6qPZqC8xnDpjkfFjT4CcT5">22</td><td class="num" data-page-node-id="pgLif1VuNOKwDYwdZSgzjx">10,2 %</td></tr>
+    <tr data-page-node-id="4NEp4kKT6rjW03bCrrKXE0"><td data-page-node-id="FKYiBl5upiVyUvcVc8mQMf">base, la que estaba puesta</td><td class="num" data-page-node-id="SJRcXXxjPkTuBzCTkfCaIX">324</td><td class="num" data-page-node-id="H9Z2ame7lA5pNnFIfUGriO">15</td><td class="num" data-page-node-id="6w4PEc5RXxBrSyCC57fRzC">6,9 %</td></tr>
+    <tr data-page-node-id="KpHfo6jhRugGHJw9Lve2WM"><td data-page-node-id="X6unN8T8j1kYXqyr4fO4kA">base + las 3 unidades</td><td class="num" data-page-node-id="hluSr3JiasP4BPUec1cGh3">363</td><td class="num" data-page-node-id="2Zkv0ooIyXL0LuOwD0vunM">16</td><td class="num" data-page-node-id="owtNtYfFDCg3rksF5donJv">7,4 %</td></tr>
+    <tr class="mejor" data-page-node-id="sd49yCvpjBUWbloM6jDmzE"><td data-page-node-id="8pqu5ENmFWIzS42kAeuOuk">base + las 10 palabras</td><td class="num" data-page-node-id="R0pUvz5fAHzQdPFL0IzPL2">444</td><td class="num" data-page-node-id="IndZBXOksC3MIUbvG57m0T">12</td><td class="num" data-page-node-id="o6SuOG2C0LCLG1sEmFCb6x">5,6 %</td></tr>
+    <tr class="peor" data-page-node-id="5Sam4lex4AXUFLx4OblRzw"><td data-page-node-id="1QKqa4CcfmZb0qFIt0R8cN">base + 24 palabras</td><td class="num" data-page-node-id="y9ZK4HWGmsy3yKpOAY19wP">583</td><td class="num" data-page-node-id="jD1P91s3HWkqyHunYHJXTF">17</td><td class="num" data-page-node-id="c89Xp0rrchi8DI3hpf0VBs">7,9 %</td></tr>
+  </tbody>
+</table>
+
+<p class="pista" data-page-node-id="xVRlG51qYEEU4HiEmLBwpi">La variante de 583 caracteres es la que se acercaría a llenar el tope. Queda por debajo de la lista de 324, así que rellenar el hueco que falta hasta 600 no es neutro, cuesta precisión.</p>
+
+<h2 data-page-node-id="iKLWlVJEQPMzN1ZstBZEK8">Qué frase cambia en cada variante</h2>
+
+<p data-page-node-id="1XhquJHCnPl92HqGI79KuT">El total esconde de dónde sale cada error. Esta tabla los abre por frase.</p>
+
+<table data-page-node-id="vTwJsvWYVZSF3TDC3ALTIQ">
+  <thead data-page-node-id="s1D9Rvhp9tcOBEDS3gUjTh">
+    <tr data-page-node-id="EFKg9XnN8NabD2DZnfi4Cx">
+      <th data-page-node-id="CmQn0CFyZ5BUS65A9sHjcU">Frase</th><th class="num" data-page-node-id="I5K66gukp6E7zhR1GTX9UF">pal.</th>
+      <th class="num" data-page-node-id="jDRrng1AKizsOScXIL8I4D">sin lista</th><th class="num" data-page-node-id="2jOmGR3FDM74cEYhh3jzV2">324</th><th class="num" data-page-node-id="ZGshnBL6qnzPdaa8W4BsGi">363</th><th class="num" data-page-node-id="HsCbtRqcBi3nwLAbCmiBIf">444</th><th class="num" data-page-node-id="gFicAzqU0LYErUm9DEbZEz">583</th>
+    </tr>
+  </thead>
+  <tbody data-page-node-id="IDGONMWXPjJKUNK6CEcjyz">
+    <tr data-page-node-id="nDDRx1L2rukBZBpsYDSLYH"><td data-page-node-id="S93SpLLAjOGDjEbDJ4r0R1">c1-vale</td><td class="num" data-page-node-id="KIZDVQqACrit6qCpOP3KK5">1</td><td class="num cero" data-page-node-id="XedLHu1kwwQV84ORo8DsfU">0</td><td class="num cero" data-page-node-id="1izvlxy4aLk06xgx1CngIq">0</td><td class="num" data-page-node-id="0QHT9x9lztMyHrJMu7kjeR">2</td><td class="num cero" data-page-node-id="NtLU664qJcEmZ9ZnkdsC7E">0</td><td class="num cero" data-page-node-id="tFaFWtRCoCjdY2N8aBShf1">0</td></tr>
+    <tr data-page-node-id="WKIAEuPef6TXI6cJlBpcHO"><td data-page-node-id="kTfoxB7fe8CkapGQYx78m5">c2-guarda</td><td class="num" data-page-node-id="zCjQoq0kSY7HUWxCq0HC9o">5</td><td class="num" data-page-node-id="6IVLYHfdR6dlNDfx9KaJat">1</td><td class="num cero" data-page-node-id="xTtP28Iqjr5sGE222oTC3G">0</td><td class="num cero" data-page-node-id="yytTlXAcRMLoJRZcCvpAUc">0</td><td class="num cero" data-page-node-id="czC4oYG2c025IMdzIfrxQ3">0</td><td class="num cero" data-page-node-id="UmVtRdK8gxyc9yHyXvNMtZ">0</td></tr>
+    <tr class="mejor" data-page-node-id="qbhuuWDWPmWvgZq6P8u8K6"><td data-page-node-id="yT1AuEH9AdaJBsoLGKRpKL">c3-abre</td><td class="num" data-page-node-id="6MrlWyoB87qA72MmSIb5Ry">9</td><td class="num" data-page-node-id="YRKayGHm2OIa0QvwdE2GZd">1</td><td class="num" data-page-node-id="vD28cz91EmbpWHA5ZxznEd">2</td><td class="num" data-page-node-id="whOiGgYr6wVyCn84SG8BFE">2</td><td class="num cero" data-page-node-id="iFFbhFsE0wf2Lx6igavlss">0</td><td class="num" data-page-node-id="M5BrPYGDhM3t3RAtAkm1lO">1</td></tr>
+    <tr data-page-node-id="KePkihmdz1GR6KhkSzZf9C"><td data-page-node-id="CLBfM2RfXnYUxqFgU4uPgW">l1-reunion</td><td class="num" data-page-node-id="ZSPkUVl9y9nMrACwFW7VgC">30</td><td class="num cero" data-page-node-id="GCZTyw660v8Hh5YVaYP8tD">0</td><td class="num" data-page-node-id="9ORVH2YEX3PqFxNEkEFuYN">1</td><td class="num" data-page-node-id="eURGjpNdUh6Cj2llLrtBtf">1</td><td class="num" data-page-node-id="6Ke4mOupXBMP8M2zcCbTuT">1</td><td class="num" data-page-node-id="RHGSe7hECNS8mSLjtT4sFf">1</td></tr>
+    <tr data-page-node-id="yBeV20M6lWmqdPiWN0unBl"><td data-page-node-id="3UHcEFgxO4vMc8LQpgnMDq">l2-informe</td><td class="num" data-page-node-id="pn0vx9EPFOxwxVWXzJPB1y">35</td><td class="num" data-page-node-id="A7PHQTUoZZoHp5OXsEkVNB">5</td><td class="num" data-page-node-id="FYY58UVGeAvqjXKZmctXD6">5</td><td class="num" data-page-node-id="DII42x8LGMUjnVNdKE9rQW">5</td><td class="num" data-page-node-id="unMCbHs9rIQY4SSH8eoGhN">5</td><td class="num" data-page-node-id="E4SUOhhiEQH6KEBuGTKQ82">5</td></tr>
+    <tr data-page-node-id="xFFtCPS0AaKKa9gncWiOIn"><td data-page-node-id="iEntrt597rGDcaxQbSYyFv">l3-lista</td><td class="num" data-page-node-id="hR1Y9gL3GVB4Rmf2UTxARw">43</td><td class="num cero" data-page-node-id="Rdk4OUdxsndTU0PkitIMAH">0</td><td class="num cero" data-page-node-id="lJK3k3KXWvQmjJFfDRttn1">0</td><td class="num cero" data-page-node-id="afpAKFclmy1XP2lxnKCTW0">0</td><td class="num cero" data-page-node-id="LVsgKpprbJxicHqzqtmPMm">0</td><td class="num cero" data-page-node-id="qGy2DfIaarWFi8f80AJW3y">0</td></tr>
+    <tr data-page-node-id="BumLlkfN2zCevn4B2lvsr0"><td data-page-node-id="gBRXBVIopoI5yHZYUc0FES">m1-comando</td><td class="num" data-page-node-id="KrMglZKroAtZi98c3nnPlx">13</td><td class="num" data-page-node-id="E8Z7mLk7ScARmoh8o7DGCI">1</td><td class="num" data-page-node-id="6DTAnxJZvbYOTbZPpx9Zvm">1</td><td class="num" data-page-node-id="p4iNelCuqXUoAlfP5gIOaZ">1</td><td class="num" data-page-node-id="QkCq1wZpabwYwoe6D003Dt">1</td><td class="num" data-page-node-id="e8rPQd6xJVmxVzyVDiG27l">1</td></tr>
+    <tr data-page-node-id="8ZmhEYO0sp6of7kgH4RYjD"><td data-page-node-id="ZxVmb7Rhyj4jujutf9SNTC">m2-numeros</td><td class="num" data-page-node-id="fH2LPuKpJcEANIoq5m88l9">14</td><td class="num" data-page-node-id="BqF4pgYV4Y6fPbCF2APKWy">2</td><td class="num" data-page-node-id="ostKCUAx2h1tPfZBtNBLIu">2</td><td class="num" data-page-node-id="Dh8KFe100ZHFY5I7NwPej7">2</td><td class="num" data-page-node-id="yUcMXdDv8BPE46XHYj5bMm">2</td><td class="num" data-page-node-id="AaqGyEosOhrtbBmPWnLZGO">2</td></tr>
+    <tr class="mejor" data-page-node-id="OY7DVtUbOa5v5m20PoS5o6"><td data-page-node-id="Altwq4v85hvfB0xiqHYw0u">m3-propios</td><td class="num" data-page-node-id="CknEWloEysFkwMwPLX2g8H">12</td><td class="num" data-page-node-id="VVXaT0pfCIjiOv7Tb5BWal">5</td><td class="num cero" data-page-node-id="ttdJsRReytlW4dXUwpA26y">0</td><td class="num cero" data-page-node-id="lzhlztNLKlpmzuvv0VQPrT">0</td><td class="num cero" data-page-node-id="VY60qHSYuut0dH6QGOMury">0</td><td class="num" data-page-node-id="g9XgB1ORfhAerkhpYG6XaA">4</td></tr>
+    <tr class="mejor" data-page-node-id="ukLrLDYzJO4kpRByfqx0z6"><td data-page-node-id="70u47OdchnOCtUvBR5X0rC">m4-tecnico</td><td class="num" data-page-node-id="A00mayv76jIEahdUuSfu7j">18</td><td class="num" data-page-node-id="6IAdmolHQlyGGEYVK7cdud">6</td><td class="num" data-page-node-id="rEB5eNE2LhWJcORNZqg8Fe">3</td><td class="num" data-page-node-id="YHwyh74T9lvaXEqB0HqhHD">2</td><td class="num" data-page-node-id="qbxvuFzPHzpMHPwawfrXP8">2</td><td class="num" data-page-node-id="ywXyKaplefuhuiUORPFm8f">2</td></tr>
+    <tr data-page-node-id="auEO03SiCchL85umrgnKOl"><td data-page-node-id="gKpX8SvHlEFzLuV99jsjvG">m5-ingles</td><td class="num" data-page-node-id="IoLk8iu7BF95H5wBZKbOmT">19</td><td class="num" data-page-node-id="BSwmxC40WTslEUdF1OFCD7">1</td><td class="num" data-page-node-id="jDBFwKBRg239IWITSI1B5X">1</td><td class="num" data-page-node-id="DCPpDPuK99o63JIJFJN7kH">1</td><td class="num" data-page-node-id="QdmHxspp7nhr6SvHAFaQQ5">1</td><td class="num" data-page-node-id="SJGfaNrviADDG2aIYLbwdF">1</td></tr>
+    <tr data-page-node-id="yCT98niCXyPIG65hMNZEgh"><td data-page-node-id="p5yRbGp2HHXdf6TCnJ6C5J">m6-plano</td><td class="num" data-page-node-id="6G5tEejZPytyOtWjW9VCVD">17</td><td class="num cero" data-page-node-id="BrJ81Wffp9eAUG84LWgLc2">0</td><td class="num cero" data-page-node-id="CupPsuIwaLzGHtPftjF4A4">0</td><td class="num cero" data-page-node-id="BvLXvr0vHWZH0Gc2NpTB1y">0</td><td class="num cero" data-page-node-id="VIUDEUBHjnlHeSALWqHhSh">0</td><td class="num cero" data-page-node-id="lNlnVL3l1dpnL3Lq0o4NJT">0</td></tr>
+    <tr class="total" data-page-node-id="BGBRY92xjYzeyOwgDRnnU3"><td data-page-node-id="eeG4ZHUuFi8rBDVnuKDSbX">total</td><td class="num" data-page-node-id="iPswg4tDLGGWta5RRHonUa">216</td><td class="num" data-page-node-id="mfDDEgPjILpU5MFx6AGBEI">22</td><td class="num" data-page-node-id="TBwErcYQpjzMfP19WHltK1">15</td><td class="num" data-page-node-id="CTp6SjfwOw3ezU4DtxXzwC">16</td><td class="num" data-page-node-id="4loSVjkeo2yYwNincaMVJ2">12</td><td class="num" data-page-node-id="sm8ulOLFwm8DgG0fsB0toH">17</td></tr>
+  </tbody>
+</table>
+
+<p data-page-node-id="zxgkSUesd3Fj65uCwRaJ3F">Diez de los 22 errores sin lista son idénticos en las cinco variantes, y el prompt no los toca. Están en las cifras (l1-reunion escribe «3» donde la referencia dice «tres», l2-informe escribe «537» donde dice «quinientos treinta y siete»), en el cierre de una frase (m2-numeros se come «por ciento») y en una palabra inglesa (m5-ingles escribe «mine» por «main»).</p>
+
+<p data-page-node-id="L0YnVyPH3P7CECcBpqnHQ0">Los doce errores restantes son todo el terreno donde el prompt juega, y la mejor variante los baja a 2. Casi todo el efecto está en cuatro frases. c2-guarda, c3-abre y m3-propios pasan a cero, y m4-tecnico baja de 6 a 2.</p>
+
+<h2 data-page-node-id="GGk3kupUjGyHtbCGud4xG4">Por qué más palabras empeoran</h2>
+
+<p data-page-node-id="kJRNctvPRKHr8xhkyzwfQ4">Un nombre propio suelto se transcribe bien cuando el prompt lo empuja. Si a la lista se le suman palabras comunes de relleno, ese empujón se reparte y el nombre propio pierde. La frase m3-propios lo muestra sin ambigüedad, porque es la misma grabación en las cinco variantes.</p>
+
+<pre data-page-node-id="ruCAvhs7McCJRfPdH36KQb">referencia   Escucho música con los Hifiman HE1000se conectados al amplificador Aune S17 Pro.
+sin lista    Escucho música con los iFIMAN H1000 se conectamos al amplificador AUN S17 Pro.
+444 car.     Escucho música con los Hifiman HE1000se conectados al amplificador AUNE S17 Pro.
+583 car.     Escucho música con los iFIMAN H1000 C conectamos al amplificador AUN S17 Pro.</pre>
+
+<p data-page-node-id="DCnH1fhGiVNyXdjfc4ICdy">Con 444 caracteres los dos nombres salen bien. Con 583 vuelven a romperse, igual que sin lista. Las catorce palabras que se añadieron de más (systemd, VAD, ggml, pactl y compañía) no aparecen en ninguna frase de este corpus, y aun así estropean la que sí importaba.</p>
+
+<p data-page-node-id="0Ia1WGMtEeQO2favSdqugR">Hay un segundo efecto, más incómodo de explicar. Añadir solo las tres unidades a la lista actual, 39 caracteres, empeora el total y destroza una frase de una sola palabra. <code data-page-node-id="8ZuI2l7KiNkwS11uCtnar0">c1-vale</code>, que dice «Vale.», se transcribe como «ba-le.» en esa variante. Con la lista de 444 caracteres, que contiene esas tres unidades y siete palabras más, eso no ocurre. Una palabra del prompt no actúa por su cuenta, cambia el resultado de las demás.</p>
+
+<div class="nota mal" data-page-node-id="oN91bgh8Mkt0mxTwnwSnCx">
+  <p data-page-node-id="rSIDj97t5AB9a3H2jMESjU">La consecuencia práctica es que no se puede razonar el prompt palabra a palabra. Solo se puede medir el conjunto entero. Cualquier palabra que se añada o se quite hay que volver a medirla dentro de la lista donde va a vivir.</p>
+</div>
+
+<h2 data-page-node-id="5TgETV57MsumVx7EsFn713">Lo que se aplicó</h2>
+
+<p data-page-node-id="WO3ySi5iz90q4oDnv8RRM4">Se aplicó la variante de 444 caracteres. Se eligió esa y no la de 583 por dos razones. La primera es que da menos errores. La segunda pesa más, y es que domina a la lista anterior frase por frase: en las doce frases da lo mismo o mejor, y en ninguna peor. Una bajada del total que empeorara alguna frase sería un intercambio, no una mejora, y aquí no la hay.</p>
+
+<div class="rejilla" data-page-node-id="MV5aL2Tr3XlsOUHtIZe0so">
+  <div class="dato" data-page-node-id="TyUCAV1rXq5x2iBt7RHWES"><div class="etq2" data-page-node-id="XOMpRtQ2WXiIVK6IT1Ictg">Antes</div><div class="num-grande" data-page-node-id="ojTxDhncFtxNpWcWbkLsq5">324 car.</div><p class="pista" style="margin:6px 0 0" data-page-node-id="SVWneHPkwC2wFH1ZgutwR9">32 términos · 15 errores</p></div>
+  <div class="dato" data-page-node-id="INC3G0ZfMqhPHmQ1pYbH4o"><div class="etq2" data-page-node-id="Ep2o3N3CNfFIF2cFNnpT7U">Ahora</div><div class="num-grande" data-page-node-id="DtkfNh11vmrCTNegdE0Bpy">444 car.</div><p class="pista" style="margin:6px 0 0" data-page-node-id="oI1pB2bUiI787Qyuyyebna">42 términos · 12 errores</p></div>
+  <div class="dato" data-page-node-id="dFmAGNKKgqz6S54lYyBD7I"><div class="etq2" data-page-node-id="vVcg0uc6WNS9JgXPge28Ek">Al tope</div><div class="num-grande" data-page-node-id="uCfXSsNrPm2pdPBaltDBO9">600 car.</div><p class="pista" style="margin:6px 0 0" data-page-node-id="df01nA2hc5Fv4GT91jjiyg">no se llegó · habría dado 17</p></div>
+</div>
+
+<p data-page-node-id="ZUu124zi0aMgPCyGHclQXQ">Las diez palabras añadidas son <code data-page-node-id="ZIM7YpSh1g8S5oNUII03tg">receptor</code>, <code data-page-node-id="4DbnGvhm6dbSTjgyitiqtA">transmisor</code>, <code data-page-node-id="MLJfilnyIhDiimJxjzIGoo">Wireless Mic Rx</code>, <code data-page-node-id="wb5JI49bKQ668kGAoXyVGf">kilohercios</code>, <code data-page-node-id="xTVxxoOHW3RQOz1EFEJWbc">decibelios</code>, <code data-page-node-id="5W2sn3MD8jhyQKjewrVrPJ">milisegundos</code>, <code data-page-node-id="QrXCFTCM1DPUBnOSSvIBRO">DJI Mic Mini</code>, <code data-page-node-id="54gnFyJ4MEMqPswdDUEGSG">WirePlumber</code>, <code data-page-node-id="8jIzxVN0rWf6BUu9a0o2Ts">RDNA</code> y <code data-page-node-id="2Wciwicweo7tOKBMraPz4U">whisper</code>. El orden de las palabras de n30 no se tocó, y <code data-page-node-id="h1tIZJqVGfKiAJiq3exsnA">Radeon</code> sigue la primera.</p>
+
+<p data-page-node-id="JxfyEyZfvcFdLOl2RwYran">De las diez, la única con un efecto rastreable es <code data-page-node-id="ZlW8fkC6E1GOvAcz50fiqU">kilohercios</code>, que en m4-tecnico cambia «192 kHz» por «192 kilohercios». Las otras nueve entran sin un efecto individual identificable, y su justificación es el resultado del conjunto junto con la comprobación frase por frase.</p>
+
+<p data-page-node-id="GWyBTdY6vVKE4qGxUyBuGo">Copia previa en <code data-page-node-id="ZjEuNPIFZxSshqFcPXT4eH">dictado-vocabulario.txt.bak-20261010-las10</code>, verificada con <code data-page-node-id="r0lz0qEB45Gsk9tqeFg3ZH">sha256sum</code> contra el original antes de escribir. Para volver atrás basta copiarla encima.</p>
+
+<h2 data-page-node-id="JXQMFSg8kqJ1z1JSGDlUJv">Nivel de confianza</h2>
+
+<div class="nota ok" data-page-node-id="IXLPvK5Ji543uDheTHyhrF">
+  <p data-page-node-id="I3NskOynJEqTDGe6Q2G6r9"><strong data-page-node-id="5IknmTKfBeJa2EcZEOsgZw">Medido y reproducido.</strong> Los cinco totales, dos pasadas completas idénticas, y el detalle por frase. Que llenar hasta 600 empeore respecto a la lista actual no es una opinión, es el resultado de las dos pasadas.</p>
+</div>
+
+<div class="nota" data-page-node-id="ECSb7kSppSRx8gHbb7R7eq">
+  <p data-page-node-id="JeN05IZkqGufMK8ffDm9T3"><strong data-page-node-id="GwjaEFFswPTAKts222dHb6">Medido, con reserva.</strong> Que 444 sea el punto óptimo. El corpus tiene 216 palabras y la ventaja sobre la lista anterior son tres errores en dos frases. La dirección está clara, más no es mejor. El punto exacto depende de estas doce frases y podría moverse con otras.</p>
+</div>
+
+<div class="nota" data-page-node-id="97jcpJV8TiBjYqpujgEJwu">
+  <p data-page-node-id="eFCmyeS4fHWOGamboRYn5m"><strong data-page-node-id="ra62Na5sTQykJo6kDmhNXi">No medido.</strong> Casi todo el vocabulario. De los 42 términos, el corpus solo ejerce Hifiman, HE1000se, Aune, S17 Pro, RME, ADI-2, PipeWire, receptor, kilohercios y milisegundos. Los otros treinta y dos, entre ellos <code data-page-node-id="Hwi63fh9uHFjjqAnBLV0hD">Radeon</code>, <code data-page-node-id="mbHoAQQpcl160XOHfYA03r">Genymotion</code>, <code data-page-node-id="uWTlX9TQQ2BUfdHxijAYVO">Waydroid</code> o <code data-page-node-id="fVkB4UmQsDXZX2KQRDAZ8p">Hyprland.lua</code>, no aparecen en ninguna frase. Su efecto no está medido aquí y no hay forma de medirlo sin grabarlos. El buen comportamiento que n30 observa al dictar es la prueba que falta, no esta medición.</p>
+</div>
+
+<footer data-page-node-id="ZTxdo2cF4mFF6GUjyQ29ul">
+  Medición sobre <code data-page-node-id="OzrosRnZEdvQt8H5yWOhzu">~/.local/share/dictado/corpus</code>, 12 frases, 89,54 s, 216 palabras. Modelo <code data-page-node-id="UjuwXURaIIYxarBrmhkHzw">large-v3-turbo</code>, VAD de silero, temperatura cero. Dos pasadas completas. WER y normalización de <code data-page-node-id="cppsunEgaCr19wiZDZ0fHl">dictado-bench.py</code>. Cambio aplicado a <code data-page-node-id="RsBM3h0F6iDOX6PbJkgl85">dictado-vocabulario.txt</code>, de 324 a 444 caracteres.
+</footer>
+
+</div>
+</body>
+</html>

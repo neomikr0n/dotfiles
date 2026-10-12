@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Doble de wl-paste para las suites. Lee el mismo fichero que escribe el doble de wl-copy.
+#
+# Los dos existen para que la bateria no toque el portapapeles de la sesion. Ademas de ensuciar
+# el historial de cliphist y de CopyQ, una prueba que leyera el portapapeles de verdad daria un
+# resultado distinto en cada pasada, porque depende de lo que el usuario tuviera copiado.
+#
+# DICTADO_TEST_TIPOS sirve para fingir que lo copiado no es texto. Es lo que prueba que la
+# devolucion del portapapeles se planta cuando lo que hay es una imagen.
+set -u
+[ -n "${DICTADO_TEST_PORTA:-}" ] || { echo "doble wl-paste sin DICTADO_TEST_PORTA" >&2; exit 1; }
+case " $* " in
+*" --list-types "*)
+    if [ -n "${DICTADO_TEST_TIPOS:-}" ]; then
+        printf '%s\n' "$DICTADO_TEST_TIPOS"
+    else
+        printf 'text/plain\ntext/plain;charset=utf-8\n'
+    fi
+    exit 0
+    ;;
+esac
+[ -f "$DICTADO_TEST_PORTA" ] || exit 1
+cat "$DICTADO_TEST_PORTA"
+exit 0

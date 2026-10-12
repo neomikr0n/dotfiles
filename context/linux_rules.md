@@ -55,7 +55,15 @@ Tono:
 	Memory Subsystem Controller Manufacturer ID: Unknown
 	Velocidad: Certificada por **mbw -t0 1024** con picos de 25.2 GB/s.
 
-*   **Monitor**: LG ULTRAGEAR+ (3440x1440@240Hz).
+*   **Monitor**: LG UltraGear OLED **45GS96QB-B** (GSM; nombre en EDID «LG ULTRAGEAR+», product
+    code 40602; fabricado semana 11 de 2024). Panel OLED 44.5" 21:9, 3440x1440, curvatura 800R,
+    48-240 Hz, 0.03 ms GtG, 275 cd/m² típ. / 1300 cd/m² pico, contraste 1.5M:1, DisplayHDR True
+    Black 400, FreeSync Premium Pro + G-SYNC Compatible, 2x HDMI 2.1 + 1x DP 1.4 + 1x USB-C
+    (PD 65 W), altavoces 7 W x 2, VESA 100x100. Sin peana: 992.7x457x218 mm y 9.0 kg. Conectado
+    por DP-2 a 3440x1440@240.09.
+*   **AVISO — la respuesta DDC de este monitor es INCORRECTA**: `ddcutil capabilities` declara
+    `Model: WK95U`, que no es su modelo. Es texto de firmware heredado de LG (un 34WK95U es un 34"
+    5120x2160 IPS de 60 Hz). **No usar ese campo para identificar el monitor.**
 *   **Teclado**: Logitech  MX Mechanical Keys con retroiluminación estatica activada con fn + iluminación.
 *   **Mouse**: Logitech Lift Mouse Ergonómico Vertical, Inalámbrico.
 *   **Fuente**: Corsair RM750x 80 PLUS Gold. https://www.amazon.com.mx/dp/B08R5W27JS

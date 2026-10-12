@@ -1,0 +1,133 @@
+#!/usr/bin/env bash
+# dji-bateria-aviso. Avisa cuando la batería de un transmisor DJI Mic baja de escalón.
+#
+# POR QUÉ UN AVISO Y NO UN PORCENTAJE
+# El receptor publica 7 escalones (1 = llena ... 6 = aviso de batería baja, 7 = lectura terminal
+# antes de apagarse). No publica ningún porcentaje. Este script avisa en los escalones 6 y 7, que
+# son los dos que el propio receptor marca como "baja" y "crítica". Inventarse un porcentaje a
+# partir de 7 escalones sería mentir con más cifras.
+#
+# USO
+#   dji-bateria-aviso.sh              una comprobación (para un temporizador de systemd)
+#   dji-bateria-aviso.sh --vigilar    se queda escuchando y avisa al empeorar
+#   dji-bateria-aviso.sh --estado     enseña lo que hay ahora, sin avisar de nada
+#   dji-bateria-aviso.sh --olvidar    borra la memoria de avisos (vuelve a avisar desde cero)
+#
+# Para probarlo SIN el receptor, pon  DJI_BATERIA_ORDEN=/ruta/a/un/falso dji-bateria-aviso.sh
+#   El falso solo tiene que imprimir la línea «version=2 tx1=N:C tx2=N:C» y salir.
+# Para probarlo SIN que salte nada en pantalla, pon  DJI_BATERIA_SIN_NOTIFICAR=1
+set -u
+
+BIN="${DJI_BATERIA_ORDEN:-$HOME/.local/bin/dji-bateria}"
+MEMO="${DJI_BATERIA_MEMO:-$HOME/.cache/dji-bateria/escalones}"
+ESPERA="${DJI_BATERIA_ESPERA:-4}"
+
+# Escalones que merecen aviso, de menos a más grave.
+UMBRAL=6
+
+avisar() {  # avisar <urgencia> <titulo> <texto>
+    if [ -z "${DJI_BATERIA_SIN_NOTIFICAR:-}" ] && command -v notify-send >/dev/null 2>&1; then
+        notify-send -u "$1" -a "DJI Mic" "$2" "$3" 2>/dev/null || true
+    fi
+    printf '%s — %s\n' "$2" "$3"
+}
+
+leer_memo() {  # deja en MEMO_TX1 y MEMO_TX2 el último escalón AVISADO (0 = ninguno)
+    MEMO_TX1=0; MEMO_TX2=0
+    [ -r "$MEMO" ] || return 0
+    # shellcheck source=/dev/null
+    . "$MEMO" 2>/dev/null || true
+}
+
+guardar_memo() {
+    mkdir -p "$(dirname "$MEMO")" 2>/dev/null || return 0
+    printf 'MEMO_TX1=%s\nMEMO_TX2=%s\n' "$1" "$2" >"$MEMO"
+}
+
+# Una comprobación. Devuelve 0 si fue bien, 3 si no hay permiso, 1 si no está el receptor.
+comprobar() {
+    local salida codigo
+    salida="$("$BIN" --simple --esperar "$ESPERA" 2>&1)"
+    codigo=$?
+
+    if [ "$codigo" -eq 3 ]; then
+        # Sin la regla de udev. Avisar UNA vez, no en cada pasada.
+        leer_memo
+        if [ "${MEMO_PERM:-0}" != "1" ]; then
+            guardar_memo "$MEMO_TX1" "$MEMO_TX2"; printf 'MEMO_PERM=1\n' >>"$MEMO"
+            avisar normal "DJI Mic: falta permiso" "Ejecuta: $BIN y sigue las instrucciones"
+        fi
+        return 3
+    fi
+    [ "$codigo" -eq 0 ] || return 1
+
+    # Limpiar el recuerdo de "falta permiso" en cuanto funcione.
+    case "$(cat "$MEMO" 2>/dev/null)" in *MEMO_PERM=1*)
+        printf 'MEMO_TX1=0\nMEMO_TX2=0\n' >"$MEMO";; esac
+
+    local version="" tx1="" tx2=""
+    for campo in $salida; do
+        case "$campo" in
+            version=*) version="${campo#version=}";;
+            tx1=*)     tx1="${campo#tx1=}";;
+            tx2=*)     tx2="${campo#tx2=}";;
+        esac
+    done
+
+    if [ "$version" = "1" ]; then
+        avisar normal "DJI Mic: sin dato de batería" \
+            "El receptor habla protocolo v1, que no publica batería. Requiere firmware v2."
+        return 0
+    fi
+
+    leer_memo
+    local nuevos1="$MEMO_TX1" nuevos2="$MEMO_TX2"
+
+    for par in "1:${tx1:-0:0}" "2:${tx2:-0:0}"; do
+        local unidad="${par%%:*}" resto="${par#*:}"
+        local nivel="${resto%%:*}" cargando="${resto#*:}"
+        [ "$nivel" -ge 1 ] 2>/dev/null || continue
+
+        local previo
+        [ "$unidad" = "1" ] && previo="$MEMO_TX1" || previo="$MEMO_TX2"
+
+        if [ "$nivel" -ge "$UMBRAL" ] && [ "$nivel" != "$previo" ]; then
+            local urgencia="normal" como="batería baja"
+            if [ "$nivel" -ge 7 ]; then urgencia="critical"; como="batería crítica"; fi
+            local extra=""
+            [ "$cargando" = "1" ] && extra=" (en la base, cargando)"
+            avisar "$urgencia" "DJI Mic TX$unidad: $como" \
+                "Escalón $nivel de 7$extra. Cambia la pila o ponla a cargar."
+            [ "$unidad" = "1" ] && nuevos1="$nivel" || nuevos2="$nivel"
+        elif [ "$nivel" -lt "$UMBRAL" ]; then
+            # Volvió a estar por encima del umbral, así que se olvida el aviso para que vuelva a avisar.
+            [ "$unidad" = "1" ] && nuevos1=0 || nuevos2=0
+        fi
+    done
+
+    guardar_memo "$nuevos1" "$nuevos2"
+    return 0
+}
+
+case "${1:-}" in
+--estado)
+    "$BIN" --esperar "$ESPERA" || true
+    ;;
+--olvidar)
+    rm -f "$MEMO" 2>/dev/null || true
+    echo "Memoria de avisos borrada."
+    ;;
+--vigilar)
+    # Se delega en el propio binario, que ya avisa al empeorar, y se convierte en notificación.
+    "$BIN" --vigilar 2>/dev/null | while IFS= read -r linea; do
+        avisar normal "DJI Mic" "$linea"
+    done
+    ;;
+"")
+    comprobar
+    ;;
+*)
+    echo "uso: $(basename "$0") [--vigilar|--estado|--olvidar]" >&2
+    exit 2
+    ;;
+esac

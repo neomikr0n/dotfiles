@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Doble de whisper-stream, solo para el parser de la lista de dispositivos de SDL.
+#
+# El motor pregunta al binario que le imprima los dispositivos de captura y elige por indice,
+# porque SDL no deja elegir por nombre. Esa lista cambia segun lo que haya enchufado, asi que la
+# prueba del parser no puede depender del receptor DJI. Este doble imprime una lista sintetica
+# con la misma forma que la real y deja la prueba determinista.
+#
+# El nombre NO imita al de un comando real a proposito. Su carpeta va en el PATH de las suites,
+# y un fichero llamado `whisper-stream` ahi seria una trampa: bastaria que algo lo resolviera por
+# PATH para que devolviera una lista de mentira sin que nadie se enterara. La prueba lo llama por
+# ruta explicita, que es lo unico que necesita.
+set -u
+cat >&2 <<'FIN'
+init: found 2 capture devices:
+init:    - Capture device #0: 'ADI-2 DAC (51100523) Pro'
+init:    - Capture device #1: 'Wireless Mic Rx Estéreo analógico'
+init: attempt to open capture device 99999 : '(null)' ...
+FIN
+exit 0

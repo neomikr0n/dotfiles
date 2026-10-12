@@ -1,0 +1,53 @@
+# Vocabulario para el dictado. Lo lee ~/dotfiles/share/scripts/dictado.sh
+#
+# QUÉ ES
+# Una lista de palabras que se le pasa a whisper antes de transcribir, con --prompt. No cambia
+# lo que oye, solo desempata. Cuando dos palabras suenan parecido y el modelo duda, elige la que
+# está en esta lista. Por eso van aquí los nombres propios, las marcas y la jerga técnica, que
+# son justo las que el modelo destroza. Medido en este equipo: 11,1 % de error sin lista,
+# 5,1 % con lista.
+#
+# EL LÍMITE, QUE NO ES OPCIONAL (medido el 2026-10-10, no teórico)
+# whisper solo mira una parte del prompt (n_text_ctx/2, unos 224 tokens en turbo). Pero el tope
+# REAL, comprobado palabra por palabra en este equipo, es mucho más bajo: hasta 600 caracteres
+# la transcripción es correcta, y a partir de 650 se degrada y vuelve a fallar "H1000" por
+# "HE1000se". Con 2438 caracteres falla casi igual que sin lista. O sea, una lista larga NO es
+# una lista mejor: es una lista peor que desperdicia el presupuesto.
+#
+# Por eso aquí hay UNA línea de vocabulario, no veinte, y va ORDENADA POR IMPORTANCIA. Lo de
+# delante gana el presupuesto, así que lo que más se equivoca va primero. Si vas a añadir algo,
+# quita algo del final o acortarás el sesgo de lo que ya estaba.
+#
+# CÓMO SE EDITA
+# Una línea de prosa, con las palabras separadas por comas. Whisper espera una frase, no una
+# lista de una por línea.
+#
+DICTADO_VOCABULARIO="Hifiman HE1000se, Aune S17 Pro, RME ADI-2, ADI-2 DAC, DJI Mic, DJI Mic Mini, receptor, transmisor, Wireless Mic Rx, PipeWire, WirePlumber, Hyprland, Quickshell, DankMaterialShell, DMS, Waybar, Noctalia, Garuda Linux, Arch Linux, AUR, Genymotion, Waydroid, Android, ADB, Vulkan, RADV, AMD Radeon, RDNA, gamescope, MangoHud, Steam, Proton, Jurassic World Alive, whisper, faster-whisper, Silero, kilohercios, decibelios, milisegundos"
+
+# --- Las que quedaron fuera por el límite de 600 caracteres ---
+# No están en uso. Se dejaron aquí a propósito, ordenadas por si algún día hay que cambiar algo
+# de la línea de arriba: se cambia por lo que esté aquí, no se añade sin quitar.
+#
+# Instrumentos y audio:
+# Babyface, Fiio, Topping, Schiit, amplificador, auriculares, impedancia, sensibilidad,
+# balanceado, XLR, jack, coaxial, óptica, xrun, remuestreo, búfer, latencia, muestreo,
+#
+# Escritorio y terminal:
+# swayosd, SwayOSD, Omarchy, KDE Plasma, kitty, mpv, mpvpaper, GameMode, KTimer, eco-aviso,
+# Scran, screenlock, layer-shell, binds, keybind, bash, zsh, Rust, binario, dependencia,
+# compilador, traza, refactorizar, despliegue, SHA-256, socket, demonio, variable de entorno,
+#
+# Hardware y sistema:
+# NVIDIA, Intel, APU, VRAM, NVMe, SSD, ventilador, refrigeración, temperatura, vatios,
+#
+# Voz y reconocimiento:
+# WhisperX, VAD, prompt, transcripción, dicción, dictado, voz a texto, modelo, turbo, medium,
+# small, tiny, large-v3, WER, vocabulario, GGML, cuantización, servidor, cliente,
+#
+# Juegos:
+# S.T.A.L.K.E.R., Heart of Chornobyl, Steam Deck, DXVK, VKD3D, FidelityFX, FSR, HDR, vsync,
+# fotogramas, tasa de refresco,
+#
+# México y vida diaria:
+# pesos, quincena, oficio, factura, presupuesto, descuento, impuesto, garantía, envío,
+# paquetería, sucursal, farmacia, veterinario, consulta, receta, dosis,

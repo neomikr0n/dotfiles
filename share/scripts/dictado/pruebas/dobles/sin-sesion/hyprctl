@@ -1,0 +1,7 @@
+#!/bin/sh
+# hyprctl que no ve ninguna capa. Mismo uso que el pgrep de esta carpeta.
+#
+# El puente pregunta a Hyprland si la capa existe. Sin capa visible y sin motor, el estado que
+# toca es "parado". Este doble devuelve una lista vacia para que la comprobacion no dependa de
+# lo que haya abierto en la sesion.
+exit 0

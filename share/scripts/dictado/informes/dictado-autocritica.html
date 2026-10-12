@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Autocrítica del sistema de dictado</title>
+<style>
+  :root{
+    --fondo:#0D0E10; --panel:#14161A; --panel2:#191C21;
+    --borde:rgba(255,255,255,.08); --borde2:rgba(255,255,255,.14);
+    --texto:#E6E7EA; --suave:#9AA0A6; --tenue:#6B7076;
+    --verde:#4ADE80; --rojo:#F87171; --ambar:#FBBF24; --azul:#60A5FA;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--fondo); color:var(--texto);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+    line-height:1.62; font-size:15.5px; -webkit-font-smoothing:antialiased;
+  }
+  .hoja{max-width:1020px;margin:0 auto;padding:56px 28px 96px}
+  header.cabecera{border-bottom:1px solid var(--borde);padding-bottom:26px;margin-bottom:36px}
+  h1{font-size:30px;line-height:1.2;margin:0 0 10px;letter-spacing:-.02em}
+  .sub{color:var(--suave);font-size:16px;margin:0}
+  .meta{color:var(--tenue);font-size:13.5px;margin-top:14px}
+  h2{font-size:21px;margin:48px 0 14px;letter-spacing:-.01em}
+  h3{font-size:17px;margin:0;letter-spacing:-.01em}
+  p{margin:0 0 14px}
+  code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+  code{background:rgba(255,255,255,.05);padding:2px 6px;border-radius:5px;color:#D7DAE0}
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 6px}
+  .chip{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:999px;
+    font-size:13px;font-weight:600;border:1px solid var(--borde2);background:var(--panel2);color:var(--suave)}
+  .chip .pt{width:7px;height:7px;border-radius:50%;background:currentColor}
+  .chip.ok{color:var(--verde);border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.08)}
+  .chip.mal{color:var(--rojo);border-color:rgba(248,113,113,.35);background:rgba(248,113,113,.08)}
+  .chip.aviso{color:var(--ambar);border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
+  .chip.info{color:var(--azul);border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.08)}
+  table{width:100%;border-collapse:collapse;margin:18px 0 8px;font-size:14px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--borde);vertical-align:top}
+  th{color:var(--suave);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  .mejora{background:var(--panel);border:1px solid var(--borde);border-radius:14px;padding:20px 22px;margin:16px 0}
+  .mejora .cab{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+  .mejora .n{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;
+    border-radius:8px;background:rgba(255,255,255,.07);font-weight:700;font-size:14px;flex:0 0 auto}
+  .pri{margin-left:auto;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:6px;letter-spacing:.05em}
+  .pri.critica{background:rgba(248,113,113,.16);color:var(--rojo)}
+  .pri.alta{background:rgba(251,191,36,.16);color:var(--ambar)}
+  .pri.media{background:rgba(96,165,250,.16);color:var(--azul)}
+  .pri.baja{background:rgba(255,255,255,.08);color:var(--suave)}
+  .campo{display:grid;grid-template-columns:170px 1fr;gap:14px;padding:9px 0;border-top:1px solid rgba(255,255,255,.05)}
+  .campo:first-of-type{border-top:0}
+  .etq{color:var(--suave);font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;padding-top:3px}
+  .campo p{margin:0}
+  pre{background:#08090B;border:1px solid var(--borde);border-radius:10px;padding:14px 16px;
+    overflow-x:auto;margin:12px 0;font-size:12.5px;line-height:1.55;color:#C9CDD3}
+  ul{margin:10px 0 14px;padding-left:22px}
+  li{margin:6px 0}
+  .pista{color:var(--tenue);font-size:13px}
+  .dato{background:var(--panel);border:1px solid var(--borde);border-radius:12px;padding:16px 18px}
+  .dato .etq2{color:var(--suave);font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+  .num-grande{font-size:25px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .rejilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin:20px 0}
+  footer{margin-top:64px;padding-top:22px;border-top:1px solid var(--borde);color:var(--tenue);font-size:13px}
+  @media(max-width:620px){.campo{grid-template-columns:1fr;gap:2px}.etq{padding-top:6px}}
+</style>
+</head>
+<body>
+<div class="hoja">
+
+<header class="cabecera">
+  <h1>Autocrítica del sistema de dictado</h1>
+  <p class="sub">Revisión de lo aprendido en el desarrollo, los errores que cometí, y diez mejoras concretas con su impacto y su recomendación.</p>
+  <p class="meta">10 de octubre de 2026 · 306 líneas en <code>dictado.sh</code>, 348 en <code>dictado-tecla.py</code>, 899 en el arnés · suite en 38/38 · disco al 96 %</p>
+</header>
+
+<div class="chips">
+  <span class="chip ok"><span class="pt"></span>funciona y está medido</span>
+  <span class="chip mal"><span class="pt"></span>5 mejoras principales</span>
+  <span class="chip info"><span class="pt"></span>5 puntos adicionales</span>
+  <span class="chip aviso"><span class="pt"></span>1 error de diagnóstico mío, ya corregido</span>
+</div>
+
+<h2>1. La base sobre la que se construye</h2>
+
+<p>Antes de la crítica conviene decir qué está bien, porque no todo el proyecto es deuda. Estas cosas no se tocan.</p>
+
+<ul>
+  <li>El modelo se eligió midiendo, no por gusto. Turbo da 6.9 % de error de palabra sobre el corpus propio, frente al 23.6 % de medium y el 69.0 % de tiny.</li>
+  <li>El vocabulario es tuyo y está medido. Tu lista baja el error al 6.9 % frente al 8.7 % de la que escribí yo y al 9.6 % sin lista. La medición desmintió mi criterio.</li>
+  <li>El banco de pruebas de modelos es reproducible: 12 frases, 89.55 s, 218 palabras, y un arnés que mide error, velocidad, pico de memoria y los dos coeficientes de un ajuste lineal.</li>
+  <li>Los diagnósticos se cierran con hash. Así se descubrió que <code>ggml-large-v3.bin</code> estaba corrupto, algo que ningún síntoma del día a día habría delatado.</li>
+  <li>La suite funcional está en 38/38 y, desde hoy, es hermética respecto a <code>/tmp</code>.</li>
+</ul>
+
+<h2>2. Autocrítica: los errores que cometí en este proyecto</h2>
+
+<p>Esta es la parte incómoda y la que más vale, porque cada error dejó una lección que ya está escrita en alguna skill.</p>
+
+<table>
+  <thead>
+    <tr><th>Error</th><th>Cómo se detectó</th><th>Estado</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Atribuí los dos fallos de <code>4-servidor.sh</code> al recorte del VAD.</td>
+      <td>Al auditar la causa raíz: el fichero de audio que usaba la prueba vivía en <code>/tmp</code> y no existía.</td>
+      <td>Corregido y documentado. El recorte del VAD existe, pero no era eso.</td>
+    </tr>
+    <tr>
+      <td>Comparé tu lista de vocabulario por coincidencia literal y dije que faltaban RME, ADI-2 y DAC.</td>
+      <td>Al rehacerlo por subcadena: estaban dentro de «RME ADI-2» y «ADI-2 DAC».</td>
+      <td>Corregido. Faltaban 6 de verdad, no 9.</td>
+    </tr>
+    <tr>
+      <td>Escribí un vocabulario de 2438 caracteres que degradaba el resultado por debajo de no usar lista.</td>
+      <td>Al medirlo: el tope real son 600, y a 650 ya empeora.</td>
+      <td>Corregido. Ahora la lista son 310 caracteres.</td>
+    </tr>
+    <tr>
+      <td>Una edición dejó el prefijo <code>#</code> en la línea de la variable y el vocabulario se cargaba en silencio con 0 caracteres.</td>
+      <td>Al imprimir la variable en lugar de suponer que estaba puesta.</td>
+      <td>Corregido. La lección es imprimir lo que el script declara.</td>
+    </tr>
+    <tr>
+      <td>Cinco ediciones en paralelo sobre el mismo fichero se pisaron entre sí y solo sobrevivió la última.</td>
+      <td>El corrector seguía viendo los textos viejos.</td>
+      <td>Corregido. Ya estaba en la skill <code>edicion-multiple-mismo-fichero</code> y volvió a pasar.</td>
+    </tr>
+    <tr>
+      <td>Escribí 57 skills con 2145 hallazgos de estilo acumulados, y no las pasé por el corrector al crearlas.</td>
+      <td>Al contar hoy los hallazgos con <code>unslop-revisar.py</code>.</td>
+      <td>Pendiente. Los peores: <code>mac-apple-silicon-para-linux</code> con 544.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>El patrón de todos ellos es el mismo y conviene nombrarlo. En cada caso afirmé antes de medir, y la medición me desmintió. El proyecto ha salido bien porque cada afirmación acabó comprobándose, no porque acertara a la primera.</p>
+
+<h2>3. Las cinco mejoras principales</h2>
+
+<p>Ordenadas por relación entre impacto y coste. La latencia va primera porque afecta a cada dictado y cuesta dos líneas.</p>
+
+<div class="mejora">
+  <div class="cab">
+    <span class="n">1</span>
+    <h3>El servidor residente está apagado y es el mayor ahorro medido que tienes sin usar</h3>
+    <span class="pri critica">CRÍTICA</span>
+  </div>
+  <div class="campo"><span class="etq">Problema u oportunidad</span><p><code>dictado-servidor.service</code> está <code>disabled</code> y en <code>dictado.conf</code> la línea del servidor sigue comentada. Cada dictado pasa por <code>whisper-cli</code>, que paga la carga del modelo en cada llamada. Medido: 0.73 s de tiempo fijo por el binario frente a 0.10 s por el servidor, y 8.51 veces el tiempo real frente a 49.4. El propio fichero de configuración dice «descomentar cuando el servicio esté activo», así que la intención quedó a medias.</p></div>
+  <div class="campo"><span class="etq">Impacto esperado</span><p>Quita alrededor de seis décimas de segundo de latencia a cada frase que dictas, sin tocar la precisión. Es el cambio con mejor relación entre efecto y esfuerzo de toda la lista.</p></div>
+  <div class="campo"><span class="etq">Recomendación</span><p>Habilitar el servicio, descomentar <code>DICTADO_SERVIDOR</code> y añadir a la suite una comprobación de que el servidor responde y de que la caída al binario sigue funcionando. La prueba C ya cubre la caída. Antes de dejarlo fijo, medir el consumo de memoria en reposo, porque el modelo queda residente.</p></div>
+</div>
+
+<div class="mejora">
+  <div class="cab">
+    <span class="n">2</span>
+    <h3>Interfaz de dictado en vivo para ver el texto mientras se forma</h3>
+    <span class="pri alta">ALTA</span>
+  </div>
+  <div class="campo"><span class="etq">Problema u oportunidad</span><p>Hoy no ves nada hasta que sueltas la tecla. El único aviso es un <code>notify-send</code> que aparece y se va. Durante la grabación no sabes si el receptor está captando, si el modelo te está oyendo o si va a salir algo. Es el hueco más grande de experiencia de uso, y es justo la pieza que sí tiene la herramienta que comparamos, <code>hyprwhspr</code>.</p></div>
+  <div class="campo"><span class="etq">Impacto esperado</span><p>Convierte el dictado de «a ciegas» en algo visible. Permite abortar a mitad si ves que va mal, y responde a la pregunta de si el micro está vivo antes de gastar la frase entera. Es la mejora que más cambia la sensación de uso.</p></div>
+  <div class="campo"><span class="etq">Recomendación</span><p>Diseño concreto en la sección 4. Resumen: capa de Quickshell sin foco, texto parcial atenuado, y compilar <code>whisper-stream</code>, que ya está en tu árbol de fuentes.</p></div>
+</div>
+
+<div class="mejora">
+  <div class="cab">
+    <span class="n">3</span>
+    <h3>Nada verifica la integridad de los modelos</h3>
+    <span class="pri alta">ALTA</span>
+  </div>
+  <div class="campo"><span class="etq">Problema u oportunidad</span><p>Has tenido en disco un modelo corrupto de 2.88 GiB con el tamaño exacto del oficial y el contenido cambiado, y producía galimatías. Lo encontró una auditoría a mano, no el proyecto. No hay ni una comprobación de hash en los scripts de dictado. Un modelo a medio descargar o con un bit mal se comporta como un modelo tonto, y el síntoma es «hoy reconoce peor», que es indistinguible de una mala pronunciación.</p></div>
+  <div class="campo"><span class="etq">Impacto esperado</span><p>Cubre una clase de fallo que ya se materializó una vez. Convierte un misterio difuso en un mensaje claro del tipo «este modelo no es el que debería ser».</p></div>
+  <div class="campo"><span class="etq">Recomendación</span><p>Un script <code>dictado-verificar-modelo.sh</code> con la tabla de hashes oficiales, que corra en tres sitios: tras cada descarga, al arrancar el servicio del servidor, y como prueba de la suite. Los hashes ya están calculados en el informe de auditoría.</p></div>
+</div>
+
+<div class="mejora">
+  <div class="cab">
+    <span class="n">4</span>
+    <h3>El detector de voz se come la primera sílaba de las frases cortas</h3>
+    <span class="pri alta">ALTA</span>
+  </div>
+  <div class="campo"><span class="etq">Problema u oportunidad</span><p>Medido y determinista. Con <code>--vad</code>, una frase corta que empieza con oclusiva pierde el arranque: «Dictado activado» sale como «Conectado activado», y «Abre la terminal» como «Abra la terminal». Se reproduce cinco de cinco, con el vocabulario y sin él. Las banderas actuales son las de fábrica, con umbral 0.50 y relleno de 30 ms.</p></div>
+  <div class="campo"><span class="etq">Impacto esperado</span><p>Es el defecto más visible que queda, porque no se manifiesta como una palabra rara sino como una frase que empieza mal. Afecta sobre todo a órdenes cortas, que son las más frecuentes.</p></div>
+  <div class="campo"><span class="etq">Recomendación</span><p>Medir tres variantes sobre el corpus antes de tocar nada: sin <code>--vad</code>, con <code>--vad-speech-pad-ms</code> más alto, y con <code>--vad-threshold</code> más bajo. Elegir por error de palabra, no por intuición. Añadir la frase corta que falla al corpus si no está ya, y dejar la prueba en la suite para que no vuelva.</p></div>
+</div>
+
+<div class="mejora">
+  <div class="cab">
+    <span class="n">5</span>
+    <h3>El vocabulario sesga, pero no corrige, así que falta una capa de corrección</h3>
+    <span class="pri media">MEDIA</span>
+  </div>
+  <div class="campo"><span class="etq">Problema u oportunidad</span><p>El <code>--prompt</code> inclina al decodificador hacia tus palabras, y funciona, pero no garantiza nada. «Radeon» sigue saliendo como «Radion» aunque esté la primera de la lista. La medición lo dice claro: con la palabra en el prompt el modelo la escribe bien en aislamiento, así que el mecanismo actúa y el fallo está en la señal de voz.</p></div>
+  <div class="campo"><span class="etq">Impacto esperado</span><p>Ataca el error residual, el 6.9 % que queda. Un diccionario propio aplicado después de transcribir cierra esa clase de fallo sin tocar el modelo ni el prompt.</p></div>
+  <div class="campo"><span class="etq">Recomendación</span><p>Un paso de post-proceso con tus términos conocidos que busque por distancia de edición sobre las palabras que no existan en un diccionario general. Empezar por una lista de veinte términos y medir el error antes y después sobre el mismo corpus. Si no baja, se descarta y se queda el prompt solo.</p></div>
+</div>
+
+<h2>4. La interfaz en vivo, en detalle</h2>
+
+<p>Es la mejora número 2 y la pediste con ejemplo, así que va con diseño. La pieza técnica existe y no hay que inventarla.</p>
+
+<h3 style="margin-top:22px">Base técnica</h3>
+
+<p>El árbol de fuentes de whisper.cpp está en <code>~/.local/share/dictado/fuente/whisper.cpp</code> y trae <code>examples/stream/stream.cpp</code>. Ese ejemplo hace transcripción continua desde el micrófono con ventana deslizante y detector de voz, e imprime hipótesis parciales que se van corrigiendo. Con <code>cmake</code> y <code>g++</code> instalados, compilarlo da un <code>whisper-stream</code> que no tienes. Es el camino corto.</p>
+
+<p>El camino sin compilar pasa por el servidor que ya usas, con una llamada a <code>/inference</code> cada 300 ms sobre el audio acumulado. Es viable porque turbo resuelve en 0.10 s por el servidor, pero gasta mucho más cómputo para el mismo resultado. Se elige el primero.</p>
+
+<h3>La capa de Quickshell</h3>
+
+<p>Ya usas Quickshell para el aviso de KTimer, así que la tecnología es la misma. Una ventana de capa con tres estados:</p>
+
+<ul>
+  <li><strong>Escuchando.</strong> Un punto que late y una barra de nivel de audio en vivo. Esto solo ya responde a la pregunta de si el receptor está captando.</li>
+  <li><strong>Transcribiendo.</strong> El texto parcial en gris, y la última palabra confirmada en blanco. Es el efecto de «se va corrigiendo sobre la marcha» que se ve en Claude.</li>
+  <li><strong>Listo.</strong> El texto final un instante, y la capa se retira.</li>
+</ul>
+
+<div class="mejora" style="margin-top:18px">
+  <div class="cab"><h3>Tres trampas que hay que evitar en el diseño</h3></div>
+  <div class="campo"><span class="etq">El foco</span><p>La capa debe ir sin foco. Quickshell lo llama <code>focusable</code> y hay que dejarlo en falso. El pegado se hace con <code>wtype</code>, que escribe en la ventana con foco. Si la capa roba el foco, el texto acaba dentro de la propia capa.</p></div>
+  <div class="campo"><span class="etq">La memoria</span><p>Si el servidor residente está activo y además se compila <code>whisper-stream</code>, hay dos copias del modelo cargadas. Con turbo son unos 200 MB cada una. Hay que decidir si conviven o si el servidor se apaga durante el dictado en vivo.</p></div>
+  <div class="campo"><span class="etq">El portapapeles</span><p>El dictado actual pisa el portapapeles con <code>wl-copy</code> antes de pegar. La capa no debe añadir una segunda escritura, o el historial de copia se ensucia.</p></div>
+</div>
+
+<h3>Referencias para copiar el patrón</h3>
+
+<ul>
+  <li><code>nerd-dictation</code>, en Linux, con whisper.cpp y salida incremental por consola. Es la referencia más cercana a lo que ya tienes montado.</li>
+  <li><code>hyprwhspr</code>, la herramienta que comparamos, que ya trae la capa en vivo. Es exactamente la pieza que tu script no tiene.</li>
+  <li>La interfaz de dictado de Claude, donde el texto parcial aparece y se reescribe encima mientras hablas.</li>
+</ul>
+
+<h2>5. Los cinco puntos adicionales</h2>
+
+<div class="mejora">
+  <div class="cab"><span class="n">6</span><h3>Historial y deshacer</h3><span class="pri media">MEDIA</span></div>
+  <div class="campo"><span class="etq">Problema u oportunidad</span><p>Solo existe <code>ultimo.txt</code>, y se sobrescribe en cada dictado. Si el pegado sale mal o cae en la ventana equivocada, no hay vuelta atrás y lo dicho se pierde.</p></div>
+  <div class="campo"><span class="etq">Impacto esperado</span><p>Red de seguridad barata. Permite recuperar una frase sin volver a dictarla, y arreglar a mano el error residual cuando aparece.</p></div>
+  <div class="campo"><span class="etq">Recomendación</span><p>Guardar las últimas treinta transcripciones con marca de tiempo en un fichero de texto, y un atajo para re-pegar la última o abrir la lista.</p></div>
+</div>
+
+<div class="mejora">
+  <div class="cab"><span class="n">7</span><h3>El portapapeles se destruye en cada dictado</h3><span class="pri media">MEDIA</span></div>
+  <div class="campo"><span class="etq">Problema u oportunidad</span><p>Para pegar, el script copia el texto con <code>wl-copy</code> y luego simula Control V. El efecto colateral es que pierdes lo que tuvieras copiado antes. Si estabas a punto de pegar otra cosa, la has perdido.</p></div>
+  <div class="campo"><span class="etq">Impacto esperado</span><p>Deja de romper estado que no es suyo. Es la clase de detalle que no se nota hasta que molesta en mal momento.</p></div>
+  <div class="campo"><span class="etq">Recomendación</span><p>Guardar el contenido anterior del portapapeles y restaurarlo después de pegar, con una espera corta. Alternativa más limpia: inyectar el texto sin portapapeles cuando el destino lo permita, y reservar la copia para cuando no.</p></div>
+</div>
+
+<div class="mejora">
+  <div class="cab"><span class="n">8</span><h3>La suite depende de que el receptor DJI esté conectado</h3><span class="pri media">MEDIA</span></div>
+  <div class="campo"><span class="etq">Problema u oportunidad</span><p>La prueba de lógica resuelve la fuente de audio por PipeWire contra el hardware real. Si el receptor está apagado o cargando, la suite falla por el entorno y no por el código, y eso entrena a desconfiar del rojo.</p></div>
+  <div class="campo"><span class="etq">Impacto esperado</span><p>Una suite que corre siempre y en cualquier sitio, incluido un equipo sin el micrófono. El rojo vuelve a significar algo.</p></div>
+  <div class="campo"><span class="etq">Recomendación</span><p>Un doble de <code>pactl</code> que devuelva un nombre de fuente fijo, igual que ya se hace con <code>pw-record</code> y <code>wtype</code>. El patrón ya está en el banco de pruebas, solo falta aplicarlo a la resolución de la fuente.</p></div>
+</div>
+
+<div class="mejora">
+  <div class="cab"><span class="n">9</span><h3>El texto sale crudo, sin normalizar</h3><span class="pri media">MEDIA</span></div>
+  <div class="campo"><span class="etq">Problema u oportunidad</span><p>Lo que devuelve el modelo va tal cual al portapapeles y a la ventana. En el corpus se ve el efecto: «47 320 pesos» sale como «47,320» y «12,5 por ciento» como «12,5%». La puntuación dictada no existe, y no hay forma de decir «dos puntos» o «comillas».</p></div>
+  <div class="campo"><span class="etq">Impacto esperado</span><p>Menos corrección manual después de dictar. Es la diferencia entre escribir y tener que repasar.</p></div>
+  <div class="campo"><span class="etq">Recomendación</span><p>Una capa de normalización opcional y desactivable: números y unidades, y un pequeño conjunto de signos dictados. Medir sobre el corpus cuántos errores quita antes de dejarla encendida por defecto.</p></div>
+</div>
+
+<div class="mejora">
+  <div class="cab"><span class="n">10</span><h3>Higiene del repositorio y deuda de estilo</h3><span class="pri baja">BAJA</span></div>
+  <div class="campo"><span class="etq">Problema u oportunidad</span><p>Tres frentes medidos. Hay 59 ficheros <code>.bak</code> mezclados con los scripts en <code>~/dotfiles/share/scripts</code>. El disco está al 96 % con 3.47 GiB de modelos muertos que se pueden borrar sin tocar nada en uso. Y las 57 skills acumulan 2145 hallazgos de estilo, con <code>mac-apple-silicon-para-linux</code> a la cabeza con 544.</p></div>
+  <div class="campo"><span class="etq">Impacto esperado</span><p>Menos ruido al buscar un fichero, espacio recuperado, y coherencia con la regla de estilo de la casa. No mejora el dictado, mejora el taller.</p></div>
+  <div class="campo"><span class="etq">Recomendación</span><p>Podar los <code>.bak</code> y quedarse con los de las últimas dos semanas. Borrar los modelos muertos con copia previa. Y ejecutar el plan que ya está escrito en <code>unslop-plan-skills.md</code>, con los tres peores ficheros primero. Falta también un <code>README</code> del proyecto de dictado, que hoy no existe.</p></div>
+</div>
+
+<h2>6. Orden de ejecución sugerido</h2>
+
+<table>
+  <thead>
+    <tr><th>Tramo</th><th>Qué entra</th><th>Por qué en ese orden</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Primero</td>
+      <td>1, 3 y 10 en su parte de modelos</td>
+      <td>Son las tres de coste bajo y efecto medido. La 1 y la 3 se apoyan en mediciones que ya están hechas, así que no hay nada que averiguar antes.</td>
+    </tr>
+    <tr>
+      <td>Después</td>
+      <td>4 y 8</td>
+      <td>Las dos piden medir sobre el corpus antes de decidir, y la 8 hace que esa medición se pueda repetir sin depender del hardware.</td>
+    </tr>
+    <tr>
+      <td>Luego</td>
+      <td>2, con 6 y 7 detrás</td>
+      <td>La capa en vivo es la que más trabajo tiene y la que más se apoya en las demás. El historial y el portapapeles son baratos y encajan con ella.</td>
+    </tr>
+    <tr>
+      <td>Al final</td>
+      <td>5, 9 y el resto de la 10</td>
+      <td>Las tres son opcionales y desactivables. Se miden, y si no bajan el error, se descartan sin daño.</td>
+    </tr>
+  </tbody>
+</table>
+
+<footer>
+  Todo lo que aparece aquí está medido en este equipo el 10 de octubre de 2026, salvo lo que se marca como propuesta. Las cifras de latencia y de error salen de <code>dictado-modelos-medidas.json</code> y de la medición de hoy sobre el corpus. Los recuentos de ficheros, hashes, disco y hallazgos de estilo salen de comandos ejecutados durante esta revisión.
+</footer>
+
+</div>
+</body>
+</html>

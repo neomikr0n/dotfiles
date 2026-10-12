@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+# Pruebas de dji-bateria y dji-bateria-aviso.
+#
+# Se prueban DOS cosas que se pueden probar sin el receptor:
+#   1. El decodificador del binario, contra tramas construidas a mano y contra los CRC que la
+#      documentación del protocolo publica. (dji-bateria --autotest)
+#   2. La lógica de avisos del script, con un receptor FALSO que emite lo que le pidamos.
+#      Incluye el anti-repetición, que es donde se rompen estos avisos: si no se prueba, acabas
+#      con una notificación cada 30 segundos.
+#
+# NO se prueba la lectura USB real: eso necesita el receptor y la regla de udev. Se prueba aparte,
+# a mano, con `dji-bateria`.
+#
+# Uso:  dji-bateria-pruebas.sh [ruta-al-binario]
+set -u
+
+AQUI="$(dirname "$(readlink -f "$0")")"
+BIN="${1:-$AQUI/dji-bateria}"
+[ -x "$BIN" ] || BIN="${1:-$HOME/.local/bin/dji-bateria}"
+
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+
+FALLOS=0
+ok()    { printf '  OK   %s\n' "$1"; }
+falla() { printf '  FALLA %s\n' "$1"; FALLOS=$((FALLOS + 1)); }
+
+# ---------------------------------------------------------------- 1. el binario
+echo "=== 1. decodificador y CRC del binario ==="
+if [ ! -x "$BIN" ]; then
+    falla "no encuentro el binario en $BIN (pásalo como primer argumento)"
+else
+    salida="$("$BIN" --autotest 2>&1)"
+    if printf '%s' "$salida" | grep -q "todo correcto"; then
+        n=$(printf '%s' "$salida" | grep -c '^  OK')
+        ok "autotest del binario: $n comprobaciones correctas"
+    else
+        falla "autotest del binario"
+        printf '%s\n' "$salida" | sed 's/^/       /'
+    fi
+fi
+
+# ---------------------------------------------------------------- 2. la lógica de avisos
+echo
+echo "=== 2. lógica de avisos (receptor falso) ==="
+
+cat >"$TMP/falso" <<'EOF'
+#!/usr/bin/env bash
+[ -n "${DJI_FALSO_CODIGO:-}" ] && exit "$DJI_FALSO_CODIGO"
+printf '%s\n' "${DJI_FALSO:-version=2 tx1=0:0 tx2=0:0}"
+EOF
+chmod +x "$TMP/falso"
+
+export DJI_BATERIA_ORDEN="$TMP/falso"
+export DJI_BATERIA_MEMO="$TMP/memo"
+export DJI_BATERIA_SIN_NOTIFICAR=1     # que no salte nada en pantalla mientras se prueba
+export DJI_FALSO DJI_FALSO_CODIGO
+AVISO="$AQUI/dji-bateria-aviso.sh"
+
+comprobar() {  # comprobar <descripción> <texto esperado | vacío = no debe avisar>
+    local salida
+    salida="$("$AVISO" 2>&1)"
+    if [ -z "$2" ]; then
+        if [ -z "$salida" ]; then ok "$1 (sin aviso)"; else falla "$1 -> avisó: $salida"; fi
+    else
+        case "$salida" in
+        *"$2"*) ok "$1" ;;
+        *) falla "$1 -> '$salida' no contiene '$2'" ;;
+        esac
+    fi
+}
+
+rm -f "$DJI_BATERIA_MEMO"
+export DJI_FALSO="version=2 tx1=3:0 tx2=2:0"; comprobar "escalones 3 y 2: no avisa" ""
+export DJI_FALSO="version=2 tx1=6:0 tx2=2:0"; comprobar "TX1 baja a 6: avisa" "TX1: batería baja"
+export DJI_FALSO="version=2 tx1=6:0 tx2=2:0"; comprobar "sigue en 6: NO repite" ""
+export DJI_FALSO="version=2 tx1=7:0 tx2=2:0"; comprobar "TX1 baja a 7: avisa crítico" "TX1: batería crítica"
+export DJI_FALSO="version=2 tx1=7:1 tx2=2:0"; comprobar "sigue en 7: NO repite" ""
+export DJI_FALSO="version=2 tx1=2:0 tx2=2:0"; comprobar "vuelve a 2: no avisa" ""
+export DJI_FALSO="version=2 tx1=6:0 tx2=2:0"; comprobar "y vuelve a bajar a 6: avisa de nuevo" "TX1: batería baja"
+export DJI_FALSO="version=2 tx1=1:0 tx2=6:1"; comprobar "TX2 a 6 estando en la base" "TX2: batería baja"
+export DJI_FALSO="version=1 tx1=0:0 tx2=0:0"; comprobar "receptor v1: dice que no hay batería" "protocolo v1"
+export DJI_FALSO_CODIGO=3;                   comprobar "sin permiso de udev: avisa" "falta permiso"
+                                      comprobar "sin permiso otra vez: NO repite" ""
+unset DJI_FALSO_CODIGO
+export -n DJI_FALSO_CODIGO 2>/dev/null || true
+export DJI_FALSO="version=2 tx1=3:0 tx2=3:0"; comprobar "vuelve a funcionar: olvida el aviso de permiso" ""
+export DJI_FALSO_CODIGO=1;                   comprobar "receptor ausente: silencio" ""
+
+echo
+if [ "$FALLOS" -eq 0 ]; then echo "RESUMEN: todo correcto"; else echo "RESUMEN: $FALLOS fallo(s)"; fi
+exit $((FALLOS > 0))

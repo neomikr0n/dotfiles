@@ -55,31 +55,26 @@ GENY_TITLE_PREFIX="Google Pixel 6 ("
 # ------------------------------------------------------------
 # TAMAÑO DEL TILE
 #
-# CAMBIO DEL 2026-10-02 (pedido por n30): el tile pasa a ser fijo,
-# 1012x1440. Hasta esa fecha el ancho salía de la fórmula y el alto se
-# leía en vivo del tile; ahora los dos son fijos.
+# CAMBIO DEL 2026-10-02 (pedido por n30): el tile pasa a ser fijo.
+# Hasta esa fecha el ancho salía de la fórmula y el alto se leía en vivo
+# del tile; ahora los dos son fijos (ver GENY_WIDTH y GENY_HEIGHT).
 #
 # El motivo del cambio es que la barra de herramientas del reproductor
 # está OCULTA (Ctrl+T), así que el contenido ya no pierde 48 px de
 # ancho. Ver TOOLBAR_WIDTH.
 #
-# La fórmula sigue viva para -portrait / -landscape:
+# La fórmula sigue viva para los perfiles con nombre:
 #
 #     ancho_tile = alto_util * (perfil_ancho / perfil_alto) + TOOLBAR_WIDTH
 #
 # donde alto_util es la altura útil del workspace: 1436 px en un monitor
 # de 1440 con 2 px de borde arriba y abajo.
 #
-# Medidas del 2026-09-30, hechas con la barra VISIBLE (TOOLBAR_WIDTH=48):
-#
-#     1080x2160 (1:2) -> 1436 * 0,5 + 48 =  766   (medido: dibuja 718x1436)
-#     2160x2160 (1:1) -> 1436 * 1,0 + 48 = 1484   (medido: dibuja 1436x1436)
-#
-# Con el tile de 767 y un perfil cuadrado el dibujo se quedaría en
-# 719x719, la MITAD de área que en vertical. Por eso -portrait y
-# -landscape cambian las dos cosas a la vez: el perfil del dispositivo
-# y el ancho del tile. Cuando se pasa uno de esos flags, el ancho no se
-# toma de aquí: se calcula al vuelo en tile_width_for_profile().
+# Con un ancho fijo el dibujo de un perfil cuadrado se quedaría en la
+# MITAD de área que en vertical. Por eso un perfil cambia las dos cosas a
+# la vez, el tamaño del dispositivo y el ancho del tile. Cuando se pide un
+# perfil, el ancho no se toma de aquí: se calcula al vuelo en
+# tile_width_for_profile().
 # ------------------------------------------------------------
 
 # Ancho de la ventana. 1416 es el que n30 tiene AHORA (medido el
@@ -87,14 +82,14 @@ GENY_TITLE_PREFIX="Google Pixel 6 ("
 # lo reproduzca.
 #
 # OJO: 1464 fue un valor anterior del mismo día; n30 lo volvió a ajustar
-# a 1416. No es una constante que se pueda deducir de la fórmula: es lo
+# a 1416. No es una constante que se pueda deducir de la fórmula. Es lo
 # que él elige a mano. Cuando lo cambie, se mide y se actualiza aquí.
 GENY_WIDTH=1416
 
 # Alto de la ventana. Fijo desde el 2026-10-02. Vacío = leerlo en vivo,
 # que es lo que hacía antes.
 #
-# 1415 NO es un número elegido: es el TECHO mientras el reproductor está
+# 1415 NO es un número elegido. Es el TECHO mientras el reproductor está
 # agrupado. Medido en su ejecución real del 2026-10-02 (log del .desktop):
 # con GENY_HEIGHT=1440 el script pedía 1012x1440, Hyprland respondía `ok`
 # y la ventana se quedaba en 1415. El grupo reserva 21 px para su barra de
@@ -124,7 +119,7 @@ TOOLBAR_WIDTH=0
 #
 # CÓMO, y por qué así (medido el 2026-10-02):
 #
-# El reproductor es XWayland (hyprctl clients: xwayland=true), así que
+# El reproductor es XWayland (hyprctl clients, xwayland=true), así que
 # `xdotool key --clearmodifiers ctrl+t` con la ventana ENFOCADA le llega
 # de verdad. Verificado con capturas: la primera pulsación quita los 14
 # iconos de la derecha y la segunda los devuelve.
@@ -132,16 +127,16 @@ TOOLBAR_WIDTH=0
 # NO se usa `hl.dsp.send_shortcut`, aunque exista y devuelva ok=true. Se
 # probó a fondo el 2026-10-02 (9 variantes de `mods`, con selector de
 # objeto, con selector de cadena, sin selector, y contra un bind propio
-# de Hyprland que debía escribir en un fichero): SIEMPRE devolvía ok=true
+# de Hyprland que debía escribir en un fichero). SIEMPRE devolvía ok=true
 # y NUNCA entregaba la tecla. `send_shortcut` envuelve Actions::pass(),
 # que está pensado para reenviar un evento DENTRO del ciclo de input, no
 # para inyectarlo desde IPC.
 #
-# Tampoco hay API externa: el toggle vive en ToggleToolbarAction /
+# Tampoco hay API externa. El toggle vive en ToggleToolbarAction /
 # toggleToolBar() de libgmplayerplugin.so, sin D-Bus ni CLI.
 HIDE_TOOLBAR=1
 
-# Cuántas vueltas da el bucle de la barra lateral: medir -> decidir ->
+# Cuántas vueltas da el bucle de la barra lateral. Medir -> decidir ->
 # enviar -> volver a medir. Medido el 2026-10-03: un envío suelto puede no
 # llegar (la barra se quedó visible tras un Ctrl+T), así que se comprueba
 # y se reintenta. Como es un toggle, solo se reintenta mientras el
@@ -158,9 +153,9 @@ TOOLBAR_HIDE_ATTEMPTS=4
 #     0 -> no lo toca
 #
 # CÓMO (medido el 2026-10-02): es la MISMA vía que la barra lateral, y
-# por la misma razón — el reproductor es XWayland, así que
+# por la misma razón, el reproductor es XWayland, así que
 # `xdotool key --clearmodifiers ctrl+alt+g` con la ventana enfocada le
-# llega. Comprobado en los dos sentidos: con el panel abierto lo cierra
+# llega. Comprobado en los dos sentidos. Con el panel abierto lo cierra
 # y con el panel cerrado lo abre, devolviendo la ventana a su sitio
 # (466x306 en 887,-202, que es la regla `genymotion-gps` de Hyprland).
 #
@@ -170,7 +165,7 @@ TOOLBAR_HIDE_ATTEMPTS=4
 # libgmplayerplugin.so. No hay IPC que lo dispare.
 #
 # A diferencia de la barra, aquí SÍ se puede saber el estado sin capturar
-# pantalla: el panel es una ventana propia con título "GPS - Genymotion",
+# pantalla: el panel es una ventana propia con el título de la ventana de GPS,
 # así que se mira en hyprctl clients.
 SHOW_GPS_PANEL=1
 
@@ -178,14 +173,14 @@ SHOW_GPS_PANEL=1
 #
 # MEDIDO el 2026-10-03: el script intentaba abrir el panel en el paso
 # [2/7], con la VM TODAVÍA ARRANCANDO, y ahí el reproductor no atiende el
-# atajo — 6 s de espera y nada. Con la VM ya lista, el mismo Ctrl+Alt+G
+# atajo (6 s de espera y nada). Con la VM ya lista, el mismo Ctrl+Alt+G
 # funciona a la primera. Por eso la llamada se movió AL FINAL del script.
 #
 # El 2026-10-04 falló igual en un arranque EN FRÍO, ya estando al final:
 # dos envíos y el panel no apareció. Desde entonces cada intento vuelve a
 # comprobar el panel ANTES de enviar (ver show_gps_panel), así que un
 # panel que se abre tarde se detecta en vez de cerrarse, y subir este
-# número ya no tiene el riesgo de antes. Se paga solo cuando falla: si el
+# número ya no tiene el riesgo de antes. Se paga solo cuando falla. Si el
 # panel aparece al primer envío, el bucle sale en menos de un segundo.
 GPS_PANEL_ATTEMPTS=8
 
@@ -197,10 +192,10 @@ GPS_PANEL_WAIT_S=6
 # Vueltas que se dan para dejar el foco en el reproductor antes de enviar
 # una tecla.
 #
-# MEDIDO el 2026-10-04, en una ejecución real: el foco estaba en otra
+# MEDIDO el 2026-10-04, en una ejecución real. El foco estaba en otra
 # ventana justo en el hueco entre dos pasos, y con UNA sola comprobación el
 # script se rendía sin abrir el panel. `hl.dsp.focus` recupera el foco de
-# sobra (comprobado a mano: pasó de Zen Browser al reproductor), así que se
+# sobra (comprobado a mano, pasó de Zen Browser al reproductor), así que se
 # insiste unas veces antes de darse por vencido.
 FOCUS_ATTEMPTS=3
 
@@ -224,8 +219,8 @@ TOOLBAR_VERIFY_READS=4
 #
 # No hace falta envolverlo en `setsid` ni comprobar antes si está abierto:
 # el propio script ya se desengancha por dentro (`setsid quickshell ...`)
-# y ya es idempotente —si está abierto imprime "ya esta abierto" y sale
-# con 0—. Aquí solo se llama y se recoge lo que diga.
+# y ya es idempotente (si está abierto imprime "ya esta abierto" y sale
+# con 0). Aquí solo se llama y se recoge lo que diga.
 JWA_TIMER=1
 JWA_TIMER_SCRIPT="$HOME/Proyectos/jwa-timer/jwa-timer.sh"
 
@@ -239,21 +234,24 @@ GENY_LEFT_MAX_SWAPS=32
 # Medido el 2026-10-02: la clase exacta de WorkBuddy AI es "WorkBuddy AI"
 # (Wayland nativa, no XWayland) y sólo hay una ventana con esa clase.
 #
-# El reproductor se agrupa SIEMPRE (pedido por n30 el 2026-10-02): si este
+# El reproductor se agrupa SIEMPRE (pedido por n30 el 2026-10-02). Si este
 # socio está corriendo van los dos en el mismo grupo; si no, el reproductor
 # queda en un grupo de un solo miembro. Vacío = no busca socio y agrupa el
 # reproductor solo.
 GENY_GROUP_PARTNER="WorkBuddy AI"
 
 # ------------------------------------------------------------
-# Resolución pedida por parámetro (vacío = no tocar nada)
+# Perfil de pantalla pedido por parámetro (vacío = no tocar nada)
 # ------------------------------------------------------------
 
 PROFILE_W=""
 PROFILE_H=""
 PROFILE_LABEL=""
+PROFILE_DENSITY=""
+PROFILE_HOOK=0
 TILE_WIDTH_APPLIED=""
 RESOLUTION_ONLY=0
+DENSITY_GIVEN=0
 
 # De dónde salió la posición GPS que se aplicó en este arranque
 # ("recordada" o "de estreno"). Lo rellena set_gps() para el resumen.
@@ -266,14 +264,13 @@ GPS_APPLIED_ORIGIN=""
 # MEDIDO el 2026-10-04: el resumen imprimía «oculta con Ctrl+T» y «abierto
 # con Ctrl+Alt+G» como texto FIJO, sin mirar el resultado. En el arranque en
 # frío que falló, el resumen decía que todo estaba hecho mientras la barra
-# seguía puesta — que es justo lo que hizo difícil ver el fallo.
+# seguía puesta, que es justo lo que hizo difícil ver el fallo.
 TOOLBAR_RESULT=""
 GPS_PANEL_RESULT=""
 
-# Densidad Android. El perfil declara 320, pero aquí se fuerza 240 desde
-# el 2026-09-30: con 2160x2160 da 1440x1440 dp (sw1440dp, tableta) en vez
-# de 1080x1080 dp (sw1080dp). Es una incoherencia heredada; se cambia con
-# -d <dpi>.
+# Densidad Android por defecto. Con 2160x2160 da 1440x1440 dp (sw1440dp,
+# tableta) en vez de 1080x1080 dp (sw1080dp). Un perfil puede traer la
+# suya (ver set_profile_by_name); -d <dpi> manda sobre las dos.
 DENSITY=240
 
 # ------------------------------------------------------------
@@ -289,6 +286,22 @@ ADB_SERIAL="${ADB_HOST}:${ADB_PORT}"
 # ------------------------------------------------------------
 
 JWA_PACKAGE="com.ludia.jw2"
+
+# ------------------------------------------------------------
+# Hook de orientación (sólo el perfil landscape)
+#
+# JWA pide vertical él solo: llama a setRequestedOrientation(1) cuatro
+# veces al arrancar. Frida lo sustituye por 0 (LANDSCAPE). El cambio
+# persiste tras soltar Frida, pero no hay memoria entre arranques: cada
+# arranque necesita el hook.
+# ------------------------------------------------------------
+
+FRIDA_BIN="$HOME/.local/bin/frida"
+[[ -x "$FRIDA_BIN" ]] || FRIDA_BIN="$(command -v frida 2>/dev/null || true)"
+
+FRIDA_SEG=30
+FRIDA_SERVER="/data/local/tmp/frida-server"
+HOOK_DIR="/tmp/jwa-frida"
 
 # ------------------------------------------------------------
 # GPS
@@ -402,10 +415,10 @@ lua_close() {
 #   - sin él                          -> grupo SOLO con el reproductor.
 #
 # Antes, sin socio, se quedaba suelto para no crear un grupo de un solo
-# miembro. n30 pidió lo contrario: quiere el reproductor siempre en modo
+# miembro. n30 pidió lo contrario. Quiere el reproductor siempre en modo
 # grupo, esté o no WorkBuddy.
 #
-# OJO, medido el 2026-10-02: los despachadores de grupo IGNORAN el selector
+# OJO, medido el 2026-10-02. Los despachadores de grupo IGNORAN el selector
 # en forma de cadena (`window = "address:0x..."`) y el id numérico; SÓLO
 # aceptan el OBJETO de ventana. Por eso esto no puede usar lua_focus ni
 # lua_resize, que sí pasan cadena (y para ellos la cadena vale).
@@ -463,6 +476,12 @@ check_dependencies() {
         echo "   Se omitirá el ajuste automático de ventana."
     fi
 
+    if (( PROFILE_HOOK )); then
+
+        [[ -n "$FRIDA_BIN" && -x "$FRIDA_BIN" ]] ||
+            die "El perfil landscape necesita frida, y no lo encuentro."
+    fi
+
     # Para la barra lateral y el panel de GPS. No son críticos: si faltan,
     # el script avisa y sigue, dejándole la tecla a mano a n30.
     if [[ "$HIDE_TOOLBAR" == "1" || "$SHOW_GPS_PANEL" == "1" ]]; then
@@ -489,7 +508,7 @@ check_dependencies() {
 
 
 # ============================================================
-# HYPRLAND - BUSCAR PIXEL
+# HYPRLAND: BUSCAR PIXEL
 # ============================================================
 
 find_pixel_window() {
@@ -513,11 +532,11 @@ find_pixel_window() {
 
 
 # ============================================================
-# HYPRLAND - ESPERAR PIXEL
+# HYPRLAND: ESPERAR PIXEL
 #
 # IMPORTANTE:
 # Todos los mensajes van a stderr.
-# stdout contiene EXCLUSIVAMENTE la address.
+# stdout contiene únicamente la address.
 #
 # $1 (opcional): PID del player. Si el proceso muere antes de que
 # aparezca la ventana, se sale con 2 en vez de agotar el timeout.
@@ -575,7 +594,7 @@ wait_for_pixel_window() {
 
 
 # ============================================================
-# HYPRLAND - LLEVAR PIXEL AL EXTREMO IZQUIERDO
+# HYPRLAND: LLEVAR PIXEL AL EXTREMO IZQUIERDO
 #
 # Dwindle decide dónde insertar una ventana nueva según el foco/cursor.
 # Para no depender de esa decisión, intercambiamos el tile con el vecino
@@ -675,10 +694,10 @@ move_pixel_window_left() {
 
 
 # ============================================================
-# HYPRLAND - ANCHO DE TILE PARA UN PERFIL DADO
+# HYPRLAND: ANCHO DE TILE PARA UN PERFIL DADO
 #
 # El contenido se dibuja escalado al rectángulo del perfil dentro del
-# área de la ventana, y esa área es (ancho - TOOLBAR_WIDTH) x alto,
+# área de la ventana, y esa área es (ancho-TOOLBAR_WIDTH) x alto,
 # porque el reproductor gasta TOOLBAR_WIDTH px de barra de herramientas
 # a la derecha. Para que el contenido llene la altura disponible:
 #
@@ -688,7 +707,7 @@ move_pixel_window_left() {
 #     1080x2160 -> 1436 * 0,5 + 48 =  766   (dibujó 718x1436)
 #     2160x2160 -> 1436 * 1,0 + 48 = 1484   (dibujó 1436x1436)
 #
-# Desde el 2026-10-02 TOOLBAR_WIDTH=0 (barra oculta con Ctrl+T): con el
+# Desde el 2026-10-02 TOOLBAR_WIDTH=0 (barra oculta con Ctrl+T). Con el
 # perfil cuadrado y un alto de 1415, el ancho que llena la altura es
 # 1415, no 1463.
 #
@@ -717,15 +736,15 @@ tile_width_for_profile() {
 
 
 # ============================================================
-# HYPRLAND - MODO GRUPO (PESTAÑAS)
+# HYPRLAND: MODO GRUPO (PESTAÑAS)
 #
 # Deja el reproductor dentro del grupo de GENY_GROUP_PARTNER, para
 # arrancar ya en modo pestañas. Si esa ventana no está corriendo NO se
-# crea un grupo de un solo miembro: sólo añadiría una barra de pestañas
+# crea un grupo de un solo miembro. Sólo añadiría una barra de pestañas
 # que se come 21 px de alto sin dar nada a cambio.
 #
 # Va DESPUÉS de que exista la ventana del reproductor y ANTES del
-# movimiento y del resize, porque agrupar re-reparte la geometría: el
+# movimiento y del resize, porque agrupar re-reparte la geometría. El
 # tamaño que se fije antes de agrupar se pierde.
 #
 # La pertenencia se comprueba en el JSON de hyprctl, no por el valor
@@ -746,7 +765,7 @@ group_pixel_window() {
     echo
     echo "🗂️ Modo grupo..."
 
-    # Sin socio configurado la función sigue viva: agrupa el reproductor
+    # Sin socio configurado la función sigue viva. Agrupa el reproductor
     # consigo mismo (grupo de un miembro). Sólo se salta si el usuario la
     # desactiva del todo.
     if [[ -z "$GENY_GROUP_PARTNER" ]]; then
@@ -797,14 +816,14 @@ group_pixel_window() {
 
 
 # ============================================================
-# HYPRLAND - OCULTAR LA BARRA LATERAL DEL REPRODUCTOR
+# HYPRLAND: OCULTAR LA BARRA LATERAL DEL REPRODUCTOR
 #
 # El reproductor dibuja una barra vertical de 48 px pegada al borde
 # derecho con 14 iconos. Ctrl+T la muestra/oculta. Sin esto, n30 tenía
 # que pulsarlo a mano en cada arranque.
 #
 # Vía: xdotool sobre XWayland (ver HIDE_TOOLBAR). Funciona sin importar
-# qué sesión dejó la barra: es un TOGGLE, así que hay que saber el estado
+# qué sesión dejó la barra. Es un TOGGLE, así que hay que saber el estado
 # de partida.
 #
 # PROBLEMA: no se puede preguntar el estado. La barra está DENTRO del
@@ -828,8 +847,8 @@ group_pixel_window() {
 # el juego debajo tiene antialiasing y degradados y dispara el conteo.
 # Cuatro muestras de cada estado, en la misma sesión:
 #
-#     barra VISIBLE:  293, 293, 293, 293   (idéntico: la barra es estática)
-#     barra OCULTA:  1209, 1204, 1194, 1169 (varía: el juego se mueve)
+#     barra VISIBLE:  293, 293, 293, 293   (idéntico, la barra es estática)
+#     barra OCULTA:  1209, 1204, 1194, 1169 (varía, el juego se mueve)
 #
 # La separación es de 4 a 1 y sin zona gris. El umbral 700 cae en medio.
 # ============================================================
@@ -884,7 +903,7 @@ player_toolbar_visible() {
     #     barra OCULTA  -> 0,002 a 0,09
     # Separación >10x. El umbral 0,5 cae en medio y no depende del juego.
     #
-    # OJO CON EL FUZZ: el #1A1A1A de la barra es EXACTO (medido 04-oct:
+    # OJO CON EL FUZZ. El #1A1A1A de la barra es EXACTO (medido 04-oct:
     # 64 802 px de 67 824). Cuanto más ancho el fuzz, más contenido del
     # emulador entra en la cuenta. Con 3% un fondo oscuro llegaba a 0,33
     # (banda dudosa) estando la barra OCULTA; con 1% se queda en 0,03. No
@@ -893,7 +912,7 @@ player_toolbar_visible() {
     # El criterio anterior (contar COLORES ÚNICOS con umbral 700) se
     # descartó: depende del CONTENIDO de la pantalla. El 2026-10-02 dio
     # 293 vs 1169 (4x de separación), pero el 2026-10-03 el mismo par dio
-    # 285 vs 370 — LOS DOS por debajo del umbral, así que el detector
+    # 285 vs 370, LOS DOS por debajo del umbral, así que el detector
     # decía "oculta" siempre y la barra se quedaba puesta al arrancar.
     # Ese fue el fallo que n30 reportó.
     # --------------------------------------------------------
@@ -925,13 +944,13 @@ player_toolbar_visible() {
     # Separación >20x. El umbral 0,5 cae en medio.
     #
     # MEDIDO el 2026-10-04: con el -fuzz 3% anterior, un contenido OSCURO
-    # del emulador daba 0,333 con la barra OCULTA — la banda dudosa, que
+    # del emulador daba 0,333 con la barra OCULTA, la banda dudosa, que
     # hasta ese momento no había dado ningún estado. El fuzz ancho
     # mezclaba #101010/#111111 del emulador con #1A1A1A. Con 1% ese mismo
     # contenido da 0,032. El fallo era el fuzz, no la banda.
     #
-    # El tramo 0,15-0,5 sigue siendo «no lo sé»: si aparece es que la
-    # captura no vale (ventana a medio pintar). Ahí NO se decide: quien
+    # El tramo 0,15-0,5 sigue siendo «no lo sé». Si aparece es que la
+    # captura no vale (ventana a medio pintar). Ahí NO se decide. Quien
     # llama espera y remide.
     awk -v f="$frac" 'BEGIN {
         if (f > 0.5) exit 0
@@ -952,13 +971,13 @@ player_toolbar_visible() {
 #   - el de X, con `xdotool windowfocus --sync`, que es al que llega la
 #     tecla.
 #
-# MEDIDO el 2026-10-04, con la sesión ya asentada: los dos apuntaban al
+# MEDIDO el 2026-10-04, con la sesión ya asentada. Los dos apuntaban al
 # reproductor (`xdotool getwindowfocus` devolvía su ventana). Pero el
 # script solo comprobaba el de Hyprland, así que en un arranque en frío no
 # había forma de saber si la tecla tenía destino. Ahora se pone el de X a
 # mano antes de cada envío.
 #
-# OJO al resolver la ventana X: el proceso del reproductor tiene VARIAS
+# OJO al resolver la ventana X. El proceso del reproductor tiene VARIAS
 # ventanas X11 (la principal, el panel de GPS y una tercera llamada
 # "Genymotion"). Se busca por TÍTULO EXACTO, nunca por clase a secas.
 # ============================================================
@@ -995,7 +1014,7 @@ player_x11_id() {
 # no un requisito: quien llama sigue comprobando el foco de Hyprland, que
 # es el que `hl.dsp.focus` controla de verdad. Si esta función devuelve 1
 # (por ejemplo porque `xdotool getwindowfocus` falla, cosa que se ha visto
-# hacer de forma intermitente), la tecla se envía igual: es lo que se hacía
+# hacer de forma intermitente), la tecla se envía igual. Es lo que se hacía
 # antes y funciona con la sesión asentada.
 focus_player_for_keys() {
 
@@ -1025,9 +1044,9 @@ focus_player_for_keys() {
 }
 
 
-# Deja el foco en el reproductor Y LO CONFIRMA por Hyprland, insistiendo.
+# Deja el foco en el reproductor Y LO CONFIRMA por Hyprland, y lo repite si hace falta.
 #
-# Medido el 2026-10-04, en una ejecución real: el foco estaba en otra
+# Medido el 2026-10-04, en una ejecución real. El foco estaba en otra
 # ventana justo en el hueco entre dos pasos, y con UNA sola comprobación el
 # script se rendía sin abrir el panel. Ver FOCUS_ATTEMPTS.
 focus_player_checked() {
@@ -1074,27 +1093,27 @@ hide_player_toolbar() {
     # --------------------------------------------------------
     # POR QUÉ ESTO ES UN BUCLE Y NO UNA LECTURA SUELTA
     #
-    # MEDIDO el 2026-10-04, en el arranque en frío que reportó n30: la
-    # versión anterior leía la franja UNA vez y decidía. Leyó "oculta"
-    # cuando la barra estaba visible, así que no envió nada y n30 se la
-    # encontró puesta.
+    # MEDIDO el 2026-10-04: la versión anterior leía la franja UNA vez y
+    # decidía. Leyó "oculta" con la barra puesta, no envió nada y n30 se la
+    # encontró puesta. No era el detector: era medir demasiado pronto, en
+    # [2/7], con la ventana recién mapeada. Ahora se llama al final, con la
+    # VM ya arrancada (ver main), y se remide.
     #
-    # No fue un fallo del detector, fue medir demasiado pronto: ese paso
-    # corría en [2/7], con la ventana recién mapeada y la VM arrancando.
-    # En ese instante la barra todavía no está dibujada, así que la franja
-    # era fondo y la lectura "oculta" era cierta... para un estado que
-    # dejó de serlo un segundo después. Ahora se llama al final, con la VM
-    # ya arrancada (ver main), y además se remide.
+    # Genymotion NO guarda el estado de la barra en ningún sitio. Su
+    # settings.json solo tiene las 6 claves widget.gps.*. En cada arranque
+    # en frío la barra empieza VISIBLE, y este script es lo único que la
+    # oculta.
     #
-    # Genymotion NO guarda el estado de la barra en ningún sitio: su
-    # settings.json solo tiene las 6 claves widget.gps.*. Así que en cada
-    # arranque en frío la barra empieza VISIBLE, y este script es lo único
-    # que la puede ocultar.
+    # El bucle: medir -> decidir -> enviar -> VOLVER A MEDIR. Solo se
+    # reintenta el envío mientras el objetivo NO se haya cumplido, que es
+    # lo único seguro con un toggle.
     #
-    # El bucle: medir -> decidir -> enviar -> VOLVER A MEDIR. Con lectura
-    # dudosa (2) no se envía nada y se espera. Solo se reintenta el envío
-    # mientras el objetivo NO se haya cumplido, que es lo único seguro con
-    # un toggle.
+    # Y MEDIDO el 2026-10-11, el OTRO modo de fallo, que era el que
+    # quedaba: `grim` captura la PANTALLA, no la ventana. El reproductor va
+    # agrupado con WorkBuddy AI, las dos pestañas tienen geometría exacta,
+    # y con la otra pestaña delante la franja que se mide es SU interfaz,
+    # no la barra del emulador. Medido: 0,965 con el reproductor delante y
+    # 0,715 con WorkBuddy AI delante. Por eso ahora se ENFOCA antes de leer.
     # --------------------------------------------------------
 
     local intento
@@ -1102,16 +1121,15 @@ hide_player_toolbar() {
     local enviados=0
     local confirmacion
 
+    # Enfocar ANTES de leer, y no es un detalle: sin esto la franja puede
+    # ser la de la pestaña vecina del grupo (ver arriba). No cuesta nada,
+    # porque show_gps_panel() enfoca justo después y para enviar Ctrl+T hay
+    # que enfocar de todas formas.
+    focus_player_checked "$address" ||
+        echo "   ⚠️ No conseguí enfocar el reproductor; la lectura puede no ser fiable."
+
     for ((intento = 1; intento <= TOOLBAR_HIDE_ATTEMPTS; intento++)); do
 
-        # Se lee ANTES de tocar el foco. La captura recorta por la geometría
-        # que da hyprctl, así que NO necesita foco; enfocar antes de leer
-        # robaría el foco de la ventana activa aunque la barra ya estuviera
-        # oculta y no hubiera nada que enviar. Se enfoca solo si hay que
-        # pulsar, más abajo.
-        #
-        # Sin captura no sé si la barra está puesta. Si ya está oculta,
-        # pulsar la MOSTRARÍA, así que ante la duda no se toca.
         player_toolbar_visible "$address"
         estado=$?
 
@@ -1127,22 +1145,34 @@ hide_player_toolbar() {
         fi
 
         if (( estado == 2 )); then
-            echo "   Lectura dudosa (la ventana aún no está pintada); espero."
-            sleep 1
-            continue
+
+            # Con el reproductor ya enfocado, una lectura dudosa es
+            # transitoria (franja a medio cambiar), no una pestaña
+            # equivocada. Se espera y se remide.
+            if (( intento < TOOLBAR_HIDE_ATTEMPTS )); then
+                echo "   Lectura dudosa; espero y remido."
+                sleep 1
+                continue
+            fi
+
+            # Último intento y sigue dudoso. Se intenta igualmente: dejarla
+            # puesta es peor, porque el estado no se guarda y un arranque en
+            # frío empieza con ella VISIBLE. Si el envío sale equivocado
+            # (estaba oculta y la muestra), la verificación de abajo lo ve.
+            echo "   Lectura dudosa en el último intento; la oculto igualmente."
         fi
 
         # estado = 0: la barra está visible y hay que ocultarla.
         #
         # Medido el 2026-10-03: con el foco correcto Ctrl+T funciona 3 de
-        # 3, pero un envío suelto puede no llegar (pasó de verdad: tras un
+        # 3, pero un envío suelto puede no llegar (pasó de verdad, tras un
         # Ctrl+T la barra seguía puesta). Por eso se comprueba después.
         #
         # xdotool manda la tecla al FOCO, no a una ventana concreta. Se
         # enfoca por Hyprland (que es el dueño del foco), se pone el foco de
-        # X y se confirma, insistiendo si hace falta.
+        # X y se confirma, y se repite si hace falta.
         if ! focus_player_checked "$address"; then
-            # Sin foco, Ctrl+T iría a la ventana equivocada: mejor no enviarlo.
+            # Sin foco, Ctrl+T iría a la ventana equivocada. Mejor no enviarlo.
             TOOLBAR_RESULT="sin tocar: no conseguí enfocar el reproductor"
             echo "⚠️ No conseguí enfocar el reproductor; no envío Ctrl+T."
             return 0
@@ -1161,7 +1191,7 @@ hide_player_toolbar() {
         sleep 1
 
         # Se vuelve a medir. Si la lectura sale DUDOSA se remide unas veces
-        # más en vez de darlo por perdido: medido el 2026-10-04, justo
+        # más en vez de darlo por perdido. Medido el 2026-10-04, justo
         # después de ocultar la barra la franja puede estar a medio cambiar
         # y una sola lectura cae en la banda dudosa aunque el objetivo YA
         # esté cumplido. Remedir es seguro: no se envía nada más.
@@ -1195,13 +1225,13 @@ hide_player_toolbar() {
         fi
     done
 
-    # Si no se envió nada, es que TODAS las lecturas fueron dudosas: no se
-    # puede afirmar que la barra esté visible. Se dice tal cual, y sobre
-    # todo NO se manda a n30 a pulsar Ctrl+T: si ya estaba oculta, ese
-    # Ctrl+T la MOSTRARÍA. Ese consejo solo vale si de verdad se vio.
+    # Solo se llega aquí sin haber enviado nada si no se pudo enfocar el
+    # reproductor o xdotool falló. Con el reproductor enfocado la lectura ya
+    # es fiable, así que una lectura dudosa NO deja el caso abierto: el
+    # último intento envía igualmente (ver arriba).
     if (( enviados == 0 )); then
         TOOLBAR_RESULT="no pude determinar el estado de la barra"
-        echo "   ⚠️ No pude leer el estado de la barra (¿ventana sin pintar?)."
+        echo "   ⚠️ No pude enfocar el reproductor ni enviar Ctrl+T."
         echo "   Mírala tú: si está puesta, púlsala con Ctrl+T."
         return 0
     fi
@@ -1216,15 +1246,16 @@ hide_player_toolbar() {
 
 
 # ============================================================
-# HYPRLAND - PANEL DE GPS
+# HYPRLAND: PANEL DE GPS
 #
 # Abre el panel de GPS del reproductor si está cerrado. Ver SHOW_GPS_PANEL.
 #
-# El panel es una ventana PROPIA de Genymotion Player con el título exacto
-# "GPS - Genymotion" (no una pestaña del grupo, ni parte del reproductor).
+# El panel es una ventana PROPIA de Genymotion Player, con un título exacto
+# formado por las palabras "GPS" y "Genymotion" y un guion entre las dos
+# (no una pestaña del grupo, ni parte del reproductor).
 # Por eso su estado SÍ se puede leer de hyprctl clients, sin capturas.
 #
-# Ctrl+Alt+G es un TOGGLE, así que hay que mirar antes: enviarlo con el
+# Ctrl+Alt+G es un TOGGLE, así que hay que mirar antes. Enviarlo con el
 # panel ya abierto lo CERRARÍA, que es justo lo contrario de lo pedido.
 # ============================================================
 
@@ -1270,12 +1301,12 @@ show_gps_panel() {
 
     # Se envía y, si el panel no aparece, se VUELVE A ENVIAR.
     #
-    # Es un toggle, así que reintentar tiene riesgo: si el primer envío
+    # Es un toggle, así que reintentar tiene riesgo. Si el primer envío
     # llegó tarde, el segundo lo cerraría. La defensa está en comprobar el
-    # panel ARRIBA de cada vuelta, antes de enviar: un panel que aparece
+    # panel ARRIBA de cada vuelta, antes de enviar. Un panel que aparece
     # tarde se DETECTA y se sale sin enviar nada más.
     #
-    # MEDIDO el 2026-10-04, en el arranque en frío que reportó n30: la
+    # MEDIDO el 2026-10-04, en el arranque en frío que reportó n30. La
     # versión anterior comprobaba el panel solo UNA vez, antes del bucle.
     # El log de ese arranque dice «El envío 1 no bastó; reintento» y luego
     # «no apareció tras 2 envíos», que es exactamente lo que pasa cuando el
@@ -1295,7 +1326,7 @@ show_gps_panel() {
             return 0
         fi
 
-        # El foco se comprueba ANTES DE CADA ENVÍO: el panel que se acaba
+        # El foco se comprueba ANTES DE CADA ENVÍO. El panel que se acaba
         # de abrir (o cerrar) puede habérselo llevado, y medido el
         # 2026-10-04 basta un cambio de foco ajeno para que una sola
         # comprobación falle.
@@ -1311,7 +1342,7 @@ show_gps_panel() {
             return 0
         }
 
-        # El panel tarda en dibujarse: se espera a que aparezca, sin dar
+        # El panel tarda en dibujarse. Se espera a que aparezca, sin dar
         # por hecho que aparecerá.
         for ((espera = 1; espera <= GPS_PANEL_WAIT_S * 2; espera++)); do
             sleep 0.5
@@ -1338,7 +1369,7 @@ show_gps_panel() {
 
 
 # ============================================================
-# HYPRLAND - RESIZE TILE
+# HYPRLAND: RESIZE TILE
 # ============================================================
 
 resize_pixel_window() {
@@ -1426,6 +1457,26 @@ resize_pixel_window() {
     else
         echo "⚠️ Hyprland dejó el ancho en ${final_width}px."
         TILE_WIDTH_APPLIED="$final_width"
+
+        # Causa medida el 2026-10-10. Si el grupo es el ÚNICO tile de su
+        # escritorio, Dwindle lo obliga a llenar y el resize no prende. Se
+        # COMPRUEBA en vez de suponerlo. Se cuentan los tiles (ventanas no
+        # flotantes) del escritorio del reproductor.
+        if have hyprctl && have jq; then
+            local tiles_del_ws
+            tiles_del_ws="$(
+                hyprctl clients -j 2>/dev/null |
+                    jq --arg addr "$address" '
+                        ([ .[] | select(.address == $addr) | .workspace.id ][0]) as $ws
+                        | [ .[] | select(.workspace.id == $ws and (.floating | not)) ]
+                        | length
+                    '
+            )"
+            if [[ "$tiles_del_ws" == "1" ]]; then
+                echo "   Causa: es el ÚNICO tile de su escritorio, y Dwindle lo"
+                echo "   obliga a llenar. El ancho prende si hay otra ventana."
+            fi
+        fi
     fi
 
     # El ALTO sí puede no aplicarse, y en SILENCIO: `resizewindowpixel`
@@ -1442,10 +1493,10 @@ resize_pixel_window() {
 
 
 # ============================================================
-# GENYMOTION - FLAG DE CRASH
+# GENYMOTION: FLAG DE CRASH
 #
 # El player crea el fichero ".flag" dentro de la carpeta de la VM
-# al arrancar, y lo borra al salir limpiamente (CrashFlag::create
+# al arrancar, y lo borra al salir de forma limpia (CrashFlag::create
 # / CrashFlag::remove en el binario).
 #
 # Si la máquina se apaga con la VM encendida, systemd manda SIGTERM
@@ -1458,12 +1509,12 @@ resize_pixel_window() {
 # llamando a QObject::property() sobre un objeto nulo.
 #
 # El crash ocurre ANTES de CrashFlag::remove, así que el flag nunca
-# se limpia y TODOS los arranques posteriores fallan igual: el
+# se limpia y TODOS los arranques posteriores fallan igual. El
 # emulador no vuelve a abrir hasta apartar el flag a mano.
 #
 # Verificado el 2026-09-24 con coredumpctl + timestamps del fichero.
 #
-# Se RENOMBRA, no se borra: queda como .flag.stale-<fecha> por si
+# Se RENOMBRA, no se borra. Queda como .flag.stale-<fecha> por si
 # hace falta la recuperación nativa.
 # ============================================================
 
@@ -1482,7 +1533,7 @@ clear_stale_crash_flag() {
     backup="${flag}.stale-$(date +%Y%m%d-%H%M%S)"
 
     if mv "$flag" "$backup" 2>/dev/null; then
-        echo "⚠️ La VM no cerró limpiamente la última vez (flag de crash)." >&2
+        echo "⚠️ La VM no cerró de forma limpia la última vez (flag de crash)." >&2
         echo "   Lo aparto para esquivar el SEGV del player:" >&2
         echo "   $backup" >&2
     else
@@ -1503,7 +1554,7 @@ clear_stale_crash_flag() {
 #   ruta "GET patterns/os-images" (red)         37 arranques, 76% fallos
 #   ruta con flag de crash                     123 arranques, 33% fallos
 #
-# Por eso un solo intento no basta: aquí se relanza el player
+# Por eso un solo intento no basta. Aquí se relanza el player
 # mientras muera sin llegar a mostrar ventana. Cuando un intento
 # consigue completar la consulta, Genymotion deja la lista en
 # cache/osimage/osimages.list y los arranques siguientes usan la
@@ -1549,8 +1600,8 @@ start_genymotion() {
             return 0
         fi
 
-        # rc=2 -> el player murió: tiene sentido reintentar.
-        # rc=1 -> timeout con el player vivo: relanzar no ayudaría.
+        # rc=2 -> el player murió. Tiene sentido reintentar.
+        # rc=1 -> timeout con el player vivo. Relanzar no ayudaría.
         if (( rc != 2 )); then
             break
         fi
@@ -1569,7 +1620,7 @@ start_genymotion() {
 
 
 # ============================================================
-# ADB - ESPERAR DISPOSITIVO
+# ADB: ESPERAR DISPOSITIVO
 # ============================================================
 
 wait_for_adb() {
@@ -1608,7 +1659,7 @@ wait_for_adb() {
 
 
 # ============================================================
-# ANDROID - ESPERAR BOOT COMPLETO
+# ANDROID: ESPERAR BOOT COMPLETO
 # ============================================================
 
 wait_for_android_boot() {
@@ -1628,7 +1679,7 @@ wait_for_android_boot() {
         )"
 
         if [[ "$boot_completed" == "1" ]]; then
-            echo "✅ Android completamente iniciado."
+            echo "✅ Android iniciado del todo."
 
             # Servicios Android terminan de estabilizarse
             sleep 2
@@ -1698,14 +1749,14 @@ wait_for_genyshell() {
 
 
 # ============================================================
-# PERFIL DEL DISPOSITIVO - TAMAÑO DE PANTALLA
+# PERFIL DEL DISPOSITIVO: TAMAÑO DE PANTALLA
 #
 # MEDIDO el 2026-09-30: el reproductor de Genymotion encuadra el
 # TAMAÑO DE PANTALLA DEL PERFIL del dispositivo (el número que sale en
 # el título de la ventana, "Google Pixel 6 (2160x2160, 320dpi)"), NO el
 # framebuffer vivo de Android.
 #
-#     rect_dibujado = perfil * min( (ancho_ventana - TOOLBAR_WIDTH)
+#     rect_dibujado = perfil * min( (ancho_ventana-TOOLBAR_WIDTH)
 #                                   / perfil_ancho,
 #                                   alto_ventana / perfil_alto )
 #
@@ -1713,7 +1764,7 @@ wait_for_genyshell() {
 # porque la barra del reproductor está oculta. Ver la cabecera del
 # script.)
 #
-# Consecuencia contraintuitiva y comprobada: poner el framebuffer
+# Consecuencia contraintuitiva y comprobada. Poner el framebuffer
 # cuadrado con "wm size 2160x2160" no agranda el dibujo, lo ENCOGE a la
 # mitad, porque el rect sigue siendo el del perfil.
 #
@@ -1764,11 +1815,11 @@ profile_set_size() {
 
     # Reescribe SÓLO las dos líneas del tamaño. Antes de escribir nada
     # compara el antes y el después, y aborta si el diff no son
-    # exactamente esas dos líneas: así un cambio de formato de la app no
+    # exactamente esas dos líneas. Así un cambio de formato de la app no
     # puede colarse como efecto colateral. Escribe en un temporal del
     # mismo directorio y hace os.replace, que es atómico.
     #
-    # El heredoc va a columna 0 a propósito: es lo que exige bash.
+    # El heredoc va a columna 0 a propósito. Es lo que exige bash.
     python3 - "$DEVICE_CONFIG" "$width" "$height" <<'PY'
 import difflib
 import json
@@ -1784,9 +1835,9 @@ try:
         original = handle.read()
     data = json.loads(original)
 except OSError as error:
-    sys.exit(f"no pude leer el perfil {path}: {error}")
+    sys.exit(f"no pude leer el perfil {path}, {error}")
 except ValueError as error:
-    sys.exit(f"el perfil {path} no es JSON válido: {error}")
+    sys.exit(f"el perfil {path} no es JSON válido, {error}")
 
 try:
     displays = data["hardware_profile"]["display_settings"]["displays"]
@@ -1820,7 +1871,7 @@ if len(changed) > 4 or not all(
 ):
     sys.exit(
         "abortado: reescribir el perfil tocaría líneas que no son el "
-        f"ancho y el alto ({len(changed)}): {changed[:6]}"
+        f"ancho y el alto ({len(changed)}), {changed[:6]}"
     )
 
 directory = os.path.dirname(path) or "."
@@ -1864,9 +1915,9 @@ genymotion_running() {
 
 
 # ¿Está abierta la app de Genymotion (el lanzador)?
-# Es IMPORTANTE antes de tocar el perfil: la app es la escritora normal
+# Es IMPORTANTE antes de tocar el perfil. La app es la escritora normal
 # de device.json y lo reescribe al apagar la VM, normalizando el orden de
-# algunas listas (medido el 30-sep-2026: cambió el orden de
+# algunas listas (medido el 30-sep-2026, cambió el orden de
 # "supported_form_factors"). Si está abierta puede revertir el cambio con
 # su propia copia en memoria.
 genymotion_app_running() {
@@ -2029,8 +2080,8 @@ configure_display() {
     echo "🖥️ Ajustando pantalla Android..."
 
     # El tamaño dibujado lo manda el PERFIL del dispositivo, que se
-    # cambia con -portrait / -landscape ANTES de arrancar (ver "PERFIL
-    # DEL DISPOSITIVO"). Aquí no se escribe un "wm size" a mano: se
+    # cambia con slim / square / landscape ANTES de arrancar (ver "PERFIL
+    # DEL DISPOSITIVO"). Aquí no se escribe un "wm size" a mano. Se
     # RESETEA, para que Android componga a su tamaño físico, que es
     # justo el del perfil. Así un override viejo de otra resolución no
     # puede quedarse pegado y meter bandas negras.
@@ -2039,7 +2090,7 @@ configure_display() {
     #   240 dpi -> 1440x1440 dp (sw1440dp, cubo xlarge, interfaz de tableta)
     #   320 dpi -> 1080x1080 dp (sw1080dp, tableta pequeña)
     # El juego ignora la densidad para el HUD; esto afecta a la interfaz
-    # de Android y a las métricas dp. Se cambia con -d <dpi>.
+    # de Android y a las métricas dp. La elige el perfil, o -d <dpi>.
 
     adb -s "$ADB_SERIAL" shell wm size reset >/dev/null 2>&1 || true
 
@@ -2088,7 +2139,7 @@ configure_gpu() {
 
 
 # ============================================================
-# GPS - EXTRAER NÚMERO DE RESPUESTA
+# GPS: EXTRAER NÚMERO DE RESPUESTA
 # ============================================================
 
 extract_number() {
@@ -2099,7 +2150,7 @@ extract_number() {
 
 
 # ============================================================
-# GPS - COMPARACIÓN NUMÉRICA CON TOLERANCIA
+# GPS: COMPARACIÓN NUMÉRICA CON TOLERANCIA
 # ============================================================
 
 number_close() {
@@ -2124,7 +2175,7 @@ number_close() {
 
 
 # ============================================================
-# GPS - CONFIGURACIÓN ROBUSTA
+# GPS: CONFIGURACIÓN ROBUSTA
 #
 # El script NO impone una posición fija. Comprobado con n30 el
 # 2026-10-02: si el emulador YA tiene posición, no se toca; sólo se pone
@@ -2150,20 +2201,20 @@ number_close() {
 # El emulador SÍ escribe la posición en `widget.gps.latitude/longitude`
 # del settings.json de la VM, y lo hace EN VIVO (se vio el fichero
 # actualizarse a la vez que JWA movía el GPS). Pero al ARRANCAR la VM,
-# `gps getlatitude` devuelve 0 0 0: el player NO la restaura. Así que el
+# `gps getlatitude` devuelve 0 0 0. El player NO la restaura. Así que el
 # dato está en disco y el script puede leerlo, que es justo lo que pedía
 # n30 ("que se guarde la última posición gps utilizada").
 #
 # Ojo, esto NO es el fichero de estado propio que se descartó el
-# 2026-10-02 (ver el diario): aquí no se mantiene nada por nuestra
+# 2026-10-02 (ver el diario). Aquí no se mantiene nada por nuestra
 # cuenta, se LEE un registro que el emulador ya lleva solo. Por eso no
-# sufre el problema de ir "un arranque por detrás": no escribimos, solo
+# sufre el problema de ir "un arranque por detrás". No escribimos, solo
 # leemos lo último que el emulador guardó.
 # ============================================================
 
 # Cierto (exit 0) si el número es cero o no es un número.
 #
-# Sirve para tratar "0" como "sin dato": en el GPS de Genymotion el cero
+# Sirve para tratar "0" como "sin dato". En el GPS de Genymotion el cero
 # es el valor por defecto, no una coordenada.
 numero_es_cero() {
 
@@ -2260,7 +2311,7 @@ set_gps() {
 
     if (( hay_posicion )); then
 
-        # El GPS tiene que estar ACTIVO: una posición puesta con el GPS
+        # El GPS tiene que estar ACTIVO. Una posición puesta con el GPS
         # apagado no la ve Android, así que eso sí se arregla.
         if grep -qi "enabled" <<< "$seen_status"; then
 
@@ -2408,7 +2459,7 @@ set_gps() {
         then
 
             echo
-            echo "✅ GPS verificado correctamente."
+            echo "✅ GPS verificado."
             echo "   Latitud real : $current_lat"
             echo "   Longitud real: $current_lon"
 
@@ -2448,6 +2499,104 @@ check_jwa_installed() {
 
 
 # ============================================================
+# HOOK DE ORIENTACIÓN (sólo el perfil landscape)
+#
+# Ver "Hook de orientación" arriba. El JS se reescribe en cada arranque:
+# así no hay un fichero suelto que se pueda perder o quedar obsoleto.
+# ============================================================
+
+write_orientation_hook() {
+
+    mkdir -p "$HOOK_DIR" || return 1
+
+    cat > "$HOOK_DIR/landscape.js" <<'JSEOF'
+// Anula el candado vertical que Unity pone en tiempo de ejecución.
+Java.perform(function () {
+  var Activity = Java.use('android.app.Activity');
+  Activity.setRequestedOrientation.overload('int').implementation = function (v) {
+    return this.setRequestedOrientation(0);   // 0 = SCREEN_ORIENTATION_LANDSCAPE
+  };
+});
+JSEOF
+}
+
+
+# frida-server no arranca solo en esta VM: se muere con cada reinicio de la
+# máquina. Y `nohup ... &` por adb deja colgado el shell; `setsid` no.
+frida_server_up() {
+
+    local running
+    local present
+
+    running="$(
+        adb -s "$ADB_SERIAL" shell \
+            "ps -A | grep -c '[f]rida-server'" 2>/dev/null | tr -d '\r'
+    )"
+
+    if [[ "${running:-0}" -gt 0 ]]; then
+        echo "   frida-server ya estaba corriendo."
+        return 0
+    fi
+
+    present="$(
+        adb -s "$ADB_SERIAL" shell \
+            "ls $FRIDA_SERVER 2>/dev/null | wc -l" 2>/dev/null | tr -d '\r'
+    )"
+
+    if [[ "${present:-0}" -eq 0 ]]; then
+        echo "⚠️ No encuentro $FRIDA_SERVER en la VM." >&2
+        return 1
+    fi
+
+    adb -s "$ADB_SERIAL" shell \
+        "setsid $FRIDA_SERVER >/dev/null 2>&1 </dev/null &" \
+        >/dev/null 2>&1
+
+    sleep 3
+
+    running="$(
+        adb -s "$ADB_SERIAL" shell \
+            "ps -A | grep -c '[f]rida-server'" 2>/dev/null | tr -d '\r'
+    )"
+
+    if [[ "${running:-0}" -gt 0 ]]; then
+        echo "   frida-server arrancado."
+        return 0
+    fi
+
+    echo "⚠️ frida-server no arrancó." >&2
+    return 1
+}
+
+
+# Arranca JWA con Frida puesto. A los ${FRIDA_SEG}s se suelta Frida y el
+# juego sigue apaisado: la orientación ya está aplicada y persiste.
+launch_jwa_hooked() {
+
+    local pid
+
+    write_orientation_hook || return 1
+
+    frida_server_up || return 1
+
+    echo "   Arrancando con el hook; suelto Frida en ${FRIDA_SEG}s..."
+
+    "$FRIDA_BIN" -U -f "$JWA_PACKAGE" \
+        -l "$HOOK_DIR/landscape.js" \
+        >"$HOOK_DIR/boot.log" 2>&1 &
+
+    pid=$!
+
+    sleep "$FRIDA_SEG"
+
+    kill "$pid" 2>/dev/null
+    wait "$pid" 2>/dev/null
+
+    echo "   Frida suelto; el juego sigue apaisado solo."
+}
+
+
+# ============================================================
 # LANZAR JWA
 # ============================================================
 
@@ -2473,17 +2622,24 @@ launch_jwa() {
 
     echo "🦖 Abriendo Jurassic World Alive..."
 
-    local output
+    if (( PROFILE_HOOK )); then
 
-    output="$(
-        adb -s "$ADB_SERIAL" shell monkey \
-            -p "$JWA_PACKAGE" \
-            -c android.intent.category.LAUNCHER \
-            1 \
-            2>&1
-    )"
+        launch_jwa_hooked || return 1
 
-    echo "$output"
+    else
+
+        local output
+
+        output="$(
+            adb -s "$ADB_SERIAL" shell monkey \
+                -p "$JWA_PACKAGE" \
+                -c android.intent.category.LAUNCHER \
+                1 \
+                2>&1
+        )"
+
+        echo "$output"
+    fi
 
     # Dar tiempo a Android para crear la actividad
     sleep 2
@@ -2495,7 +2651,7 @@ launch_jwa() {
         return 0
     fi
 
-    echo "⚠️ Monkey terminó pero no encuentro proceso de JWA."
+    echo "⚠️ No encuentro el proceso de JWA."
     return 1
 }
 
@@ -2503,7 +2659,7 @@ launch_jwa() {
 # ============================================================
 # LANZAR EL TEMPORIZADOR DE JWA
 #
-# Ver JWA_TIMER. Nunca devuelve error a propósito: el temporizador es un
+# Ver JWA_TIMER. Nunca devuelve error a propósito. El temporizador es un
 # extra, y que no arranque no debe tumbar el arranque del emulador.
 # ============================================================
 
@@ -2539,30 +2695,106 @@ launch_jwa_timer() {
 # no toca el perfil del dispositivo.
 # ============================================================
 
+# ============================================================
+# PERFILES CON NOMBRE
+#
+# Tres tamaños de pantalla del dispositivo, pensados para JWA. El nombre
+# dice la FORMA; el número es el tamaño de pantalla del PERFIL, que es lo
+# que manda en el encuadre (ver "PERFIL DEL DISPOSITIVO").
+#
+# El ancho de la VENTANA no se escribe aquí. Lo calcula
+# tile_width_for_profile() para que el contenido llene el alto del tile.
+# Por eso un perfil cambia las dos cosas a la vez (forma y ancho). Con el
+# ancho de otro perfil el dibujo encogería.
+#
+#                        perfil      forma          dibuja (tile 1415)
+#   slim       1080x2160  vertical 1:2  celular        708x1415
+#   square     2160x2160  cuadrado 1:1                1415x1415
+#   landscape  2560x1440  apaisado 16:9               2516x1415
+#
+# MEDIDO el 2026-10-10 con siete tamaños de pantalla, y matizado el
+# 2026-10-11: SIN tocar la orientación, el lienzo de JWA tiene aspecto
+# min(r, 1/r) con r = ancho/alto, así que por encima de 1:1 se ENCOGE.
+# Contando columnas negras del framebuffer:
+#
+#     2560x1440 -> deja 810x1440 de juego   (68,4 % del ancho en negro)
+#     3440x1440 -> deja 602x1440 de juego   (82,5 % del ancho en negro)
+#     2160x2160 -> deja 2160x2160           (lleno)
+#
+# Ese encogimiento NO es del lienzo: es el bloqueo vertical que Unity pone
+# en tiempo de ejecución (setRequestedOrientation(1), cuatro veces al
+# arrancar). Con el hook que lo anula (perfil landscape) el juego LLENA
+# 2560x1440: medido el 2026-10-11, 0 filas y 0 columnas negras. Sin hook,
+# apaisado da MENOS juego con MÁS carga de GPU.
+#
+# Las barras las dibuja el juego, no Android: no hay ventana de letterbox
+# y la app es de pantalla completa y resizeable.
+#
+# Los «dibuja» son con el reproductor agrupado (tile de 1415 de alto) y su
+# barra lateral oculta (TOOLBAR_WIDTH=0). El método y las trampas están en
+# la skill emulador-resolucion-modo-tablet.
+# ============================================================
+
+set_profile_by_name() {
+
+    case "$1" in
+
+        slim)
+            PROFILE_W=1080
+            PROFILE_H=2160
+            PROFILE_LABEL="vertical 1:2 (celular)"
+            ;;
+
+        square)
+            PROFILE_W=2160
+            PROFILE_H=2160
+            PROFILE_LABEL="cuadrado 1:1"
+            ;;
+
+        landscape)
+            PROFILE_W=2560
+            PROFILE_H=1440
+            PROFILE_LABEL="apaisado 16:9 (con hook)"
+            # 320 x 2560/1920 = 426,7. Así el número de dp no cambia
+            # respecto a 1920x1080@320 y la maqueta del juego es la
+            # misma; sólo hay más píxeles. No es un cambio de diseño.
+            PROFILE_DENSITY=427
+            PROFILE_HOOK=1
+            ;;
+
+        *)
+            return 1
+            ;;
+
+    esac
+}
+
+
 show_usage() {
 
     cat <<EOF
-Uso: $(basename "$0") [opción]
+Uso: $(basename "$0") [perfil] [opciones]
 
-Sin opción, no se toca el perfil del dispositivo: se usa el que haya.
+Sin perfil no se toca el tamaño del dispositivo: se usa el que haya.
 
-Resolución (cambia de verdad el tamaño dibujado):
-  -portrait,  --portrait,  -p   Perfil 1080x2160 (vertical 1:2)
-  -landscape, --landscape, -l   Perfil 2160x2160 (CUADRADO 1:1)
-  --square                      Lo mismo que -landscape, con el nombre
-                                que sí describe lo que es
+Perfiles (cambian de verdad el tamaño dibujado; exigen parar la VM):
+  slim        1080x2160  vertical 1:2  (celular)
+  square      2160x2160  cuadrado 1:1
+  landscape   2560x1440  apaisado 16:9 (lanza el juego con un hook de
+                         orientación, porque JWA se bloquea en vertical)
+
+  Los tres se aceptan con guion o sin él: square y --square dan lo mismo.
+  El perfil se escribe en device.json con copia previa y hash.
 
 Otras:
-  -d, --densidad <dpi>          Densidad Android (por defecto ${DENSITY})
-  -r, --solo-resolucion         Aplica la resolución y sale, sin arrancar
+  -d, --densidad <dpi>          Densidad Android. Por defecto ${DENSITY}, y
+                                427 en landscape
+  -r, --solo-resolucion         Aplica el perfil y sale, sin arrancar
   -h, --help                    Esta ayuda
 
-Aviso de etiqueta: 2160x2160 es un cuadrado, no un apaisado. Si lo que
-quieres es apaisado de verdad, el tamaño sería 2160x1080.
-
 El tamaño dibujado lo manda el PERFIL del dispositivo, no el framebuffer
-de Android (medido el 2026-09-30), así que el flag escribe el perfil con
-copia previa y hash. Si la VM está encendida hay que pararla.
+de Android (medido el 2026-09-30). El ancho de la ventana se calcula para
+que el contenido llene el alto del tile.
 EOF
 }
 
@@ -2573,16 +2805,19 @@ parse_args() {
 
         case "$1" in
 
-            -portrait|--portrait|-p)
-                PROFILE_W=1080
-                PROFILE_H=2160
-                PROFILE_LABEL="vertical 1:2"
+            # El nombre del perfil se acepta con guion o sin él: `--square`
+            # y `square` hacen lo mismo. Lo que NO se acepta es ningún otro
+            # nombre (big, max, ultrawide, portrait): ésos dan error.
+            slim|-slim|--slim)
+                set_profile_by_name slim
                 ;;
 
-            -landscape|--landscape|-l|--square|-square)
-                PROFILE_W=2160
-                PROFILE_H=2160
-                PROFILE_LABEL="cuadrado 1:1"
+            square|-square|--square)
+                set_profile_by_name square
+                ;;
+
+            landscape|-landscape|--landscape)
+                set_profile_by_name landscape
                 ;;
 
             -d|--densidad|--density)
@@ -2592,6 +2827,7 @@ parse_args() {
                     exit 1
                 fi
                 DENSITY="$1"
+                DENSITY_GIVEN=1
                 ;;
 
             -r|--solo-resolucion)
@@ -2614,8 +2850,13 @@ parse_args() {
         shift
     done
 
+    # La densidad del perfil sólo manda si no se pidió una con -d.
+    if [[ -n "$PROFILE_DENSITY" && "$DENSITY_GIVEN" == "0" ]]; then
+        DENSITY="$PROFILE_DENSITY"
+    fi
+
     if (( RESOLUTION_ONLY )) && [[ -z "$PROFILE_W" ]]; then
-        echo "❌ --solo-resolucion necesita -portrait o -landscape." >&2
+        echo "❌ --solo-resolucion necesita un perfil (slim, square, landscape)." >&2
         exit 1
     fi
 }
@@ -2636,7 +2877,7 @@ main() {
     # --------------------------------------------------------
     # PERFIL DEL DISPOSITIVO
     #
-    # Va antes de arrancar: el player lee el perfil al iniciarse, así
+    # Va antes de arrancar. El player lee el perfil al iniciarse, así
     # que cambiarlo con la VM en marcha no tendría efecto hasta el
     # siguiente arranque. Si ya está en el tamaño pedido, no se toca.
     # --------------------------------------------------------
@@ -2686,7 +2927,7 @@ main() {
             # nada; n30 se la encontraba puesta. (Su estado no se guarda
             # en ningún sitio: ver hide_player_toolbar.)
             #
-            # El panel de GPS: MEDIDO el 2026-10-03, con la VM todavía
+            # El panel de GPS. MEDIDO el 2026-10-03, con la VM todavía
             # arrancando el reproductor no atiende Ctrl+Alt+G.
             #
             # Los dos se hacen al final, con la VM ya lista (ver más abajo,
@@ -2798,7 +3039,7 @@ main() {
     # --------------------------------------------------------
     # TEMPORIZADOR DE JWA
     #
-    # Al final, con la app ya lanzada: es su compañero de partida. No
+    # Al final, con la app ya lanzada. Es su compañero de partida. No
     # depende de la ventana del reproductor, así que va FUERA del `if`
     # del panel de GPS y se intenta siempre.
     # --------------------------------------------------------

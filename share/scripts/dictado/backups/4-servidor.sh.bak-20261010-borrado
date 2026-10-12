@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# Comprueba que dictado.sh usa el servidor cuando está, y que cae al binario cuando no.
+# Lo segundo importa más que lo primero, porque si el servidor se cae el dictado NO puede quedarse mudo.
+#
+# No abre ventanas ni reproduce sonido. El servidor de prueba se levanta y se tumba aquí mismo.
+set -u
+S="$(cd "$(dirname "$0")/.." && pwd)/dictado.sh"
+BIN="$HOME/.local/share/dictado/bin"
+# El audio de prueba se toma del corpus permanente y NO de /tmp. Medido el 2026-10-10: aquí
+# ponía /tmp/bench-es/comando.wav, que no sobrevive a un reinicio, así que las pruebas C, D y E
+# daban tres fallos falsos (transcribía el vacío y comparaba tiempos de dos fallos instantáneos).
+WAV="$HOME/.local/share/dictado/corpus/m1-comando.wav"
+MODELO="$HOME/.local/share/whisper/ggml-medium.bin"
+PUERTO=8177
+
+ok=0; mal=0
+comprobar() { if [ "$2" = "$3" ]; then echo "  OK   $1"; ok=$((ok + 1)); else echo "  MAL  $1"; echo "        esperado [$3]"; echo "        obtenido [$2]"; mal=$((mal + 1)); fi; }
+
+export DICTADO_RUNTIME=/tmp/dictado-srv-test
+rm -rf "$DICTADO_RUNTIME"; mkdir -p "$DICTADO_RUNTIME"
+
+echo "=== A. sin servidor configurado, usa el binario ==="
+r="$(DICTADO_SERVIDOR="" bash -c "
+    source <(head -n -1 '$S')
+    if servidor_vivo; then echo 'dice que esta vivo'; else echo 'no hay servidor'; fi" 2>&1)"
+comprobar "servidor_vivo() es falso sin URL" "$r" "no hay servidor"
+
+echo
+echo "=== B. servidor configurado pero apagado: cae al binario ==="
+# El puerto 8177 no tiene nada escuchando a proposito.
+r="$(DICTADO_SERVIDOR="http://127.0.0.1:$PUERTO" bash -c "
+    source <(head -n -1 '$S')
+    if servidor_vivo; then echo 'vivo'; else echo 'muerto -> usara el binario'; fi" 2>&1)"
+comprobar "detecta que el servidor no responde" "$r" "muerto -> usara el binario"
+
+echo
+echo "=== C. el texto sale por el binario cuando el servidor esta caido ==="
+r="$(DICTADO_SERVIDOR="http://127.0.0.1:$PUERTO" bash -c "
+    source <(head -n -1 '$S')
+    WAV='$WAV'
+    transcribir" 2>&1)"
+case "$r" in
+*[Tt]ranscribe\ esto*) echo "  OK   transcribio por el binario: ${r:0:60}"; ok=$((ok + 1));;
+*) echo "  MAL  no transcribio: [$r]"; mal=$((mal + 1));;
+esac
+
+echo
+echo "=== D. con servidor de verdad, la respuesta sale del servidor ==="
+export LD_LIBRARY_PATH="$BIN${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+"$BIN/whisper-server" -m "$MODELO" --host 127.0.0.1 --port "$PUERTO" >/tmp/srv-test.log 2>&1 &
+SRV=$!
+listo=0
+for _ in $(seq 1 80); do
+    if curl -s -o /dev/null --max-time 1 "http://127.0.0.1:$PUERTO/" 2>/dev/null; then listo=1; break; fi
+    if ! kill -0 "$SRV" 2>/dev/null; then break; fi
+    sleep 0.5
+done
+if [ "$listo" != 1 ]; then
+    echo "  MAL  el servidor de prueba no arranco"; mal=$((mal + 1))
+else
+    r="$(DICTADO_SERVIDOR="http://127.0.0.1:$PUERTO" bash -c "
+        source <(head -n -1 '$S')
+        WAV='$WAV'
+        if servidor_vivo; then echo -n 'vivo: '; else echo -n 'muerto: '; fi
+        transcribir" 2>&1)"
+    case "$r" in
+    "vivo: "*[Tt]ranscribe\ esto*) echo "  OK   respondio el servidor: ${r:0:70}"; ok=$((ok + 1));;
+    *) echo "  MAL  respuesta inesperada: [$r]"; mal=$((mal + 1));;
+    esac
+
+    echo
+    echo "=== E. el servidor es mas rapido que el binario en una frase corta ==="
+    t0=$(date +%s.%N)
+    DICTADO_SERVIDOR="http://127.0.0.1:$PUERTO" bash -c "
+        source <(head -n -1 '$S'); WAV='$WAV'; transcribir" >/dev/null 2>&1
+    t1=$(date +%s.%N)
+    ts=$(awk -v a="$t0" -v b="$t1" 'BEGIN{printf "%.3f", b-a}')
+    t0=$(date +%s.%N)
+    LD_LIBRARY_PATH="$BIN" "$BIN/whisper-cli" -m "$MODELO" -f "$WAV" -l es -nt -np \
+        -otxt -of /tmp/srv-test-cli >/dev/null 2>&1
+    t1=$(date +%s.%N)
+    tc=$(awk -v a="$t0" -v b="$t1" 'BEGIN{printf "%.3f", b-a}')
+    echo "  servidor: ${ts}s   binario: ${tc}s"
+    if awk -v a="$ts" -v b="$tc" 'BEGIN{exit !(a < b)}'; then
+        echo "  OK   el servidor es mas rapido (x$(awk -v a="$tc" -v b="$ts" 'BEGIN{printf "%.1f", a/b}'))"
+        ok=$((ok + 1))
+    else
+        echo "  MAL  el servidor no fue mas rapido"; mal=$((mal + 1))
+    fi
+fi
+
+kill -INT "$SRV" 2>/dev/null; sleep 0.4; kill -9 "$SRV" 2>/dev/null
+
+echo
+echo "RESUMEN: $ok correctos, $mal fallidos"
+[ "$mal" -eq 0 ]

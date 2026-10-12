@@ -1,0 +1,117 @@
+# Plan: pasar unslop por las skills propias
+
+Medido hoy con `unslop-revisar.py`, **2193 hallazgos en 55 ficheros**. Es el trabajo
+que queda fuera del corpus de hoy, que ya está en cero.
+
+## Fuera de la cuenta, a propósito
+
+`unslop_ESPAÑOL/SKILL.md` sale con 114 hallazgos y no se toca. Su contenido son las listas de
+palabras prohibidas y los ejemplos de lo que hay que evitar, así que se señala a sí misma. El
+fichero que define las reglas no se pasa por las reglas.
+
+## De qué son los hallazgos
+
+| Clase | Cuántos | Qué es |
+|---|---|---|
+| `rayas` | 744 | Raya o guion medio en prosa. Se cierra la frase o se pone coma. |
+| `dos-puntos` | 712 | Dos puntos a mitad de frase. Pasan a coma o a punto. |
+| `negrita-encabezado` | 382 | Una etiqueta en negrita con dos puntos. Pasa a negrita con punto. |
+| `adverbios-mente` | 128 | Adverbio en -mente. Se corta o se usa un verbo más fuerte. |
+| `vocabulario-ia` | 75 | Palabra de jerga. Se cambia por una llana. |
+| `emoji` | 68 | Emoji decorativo. n30 no los usa. |
+| `negrita-excesiva` | 42 | Negrita en cada nombre propio o sigla. |
+| `gerundio-decorativo` | 17 | Gerundio al final de frase. |
+| `sustantivo-metaforico` | 14 | Sustantivo abstracto. Se busca el concreto. |
+| `atribucion-vaga` | 5 | Se cita una fuente sin nombrarla. |
+| `conclusiones-vacias` | 3 | Cierre genérico. Se cambia por hechos. |
+| `formas-rebuscadas` | 3 | Rodeo para decir «es» o «tiene». |
+
+Las tres primeras clases suman **1838 de 2193**, o sea el 83 %.
+Son cambios de puntuación, con una regla clara cada uno. El resto pide reescribir la frase, y ahí
+sí hay que pensar cada caso.
+
+## Por dónde empezar
+
+Ordenados de más a menos. Los primeros 3 ficheros son el 40 % del trabajo.
+
+| # | Fichero | Hallazgos | Los tres principales |
+|---|---|---|---|
+| 1 | `mac-apple-silicon-para-linux` | 544 | rayas 253 dos-puntos 143 negrita-encabezado 62 |
+| 2 | `hyprland-lua-keybinds` | 231 | dos-puntos 91 negrita-encabezado 58 rayas 54 |
+| 3 | `stalker2-gear-lookup` | 146 | rayas 41 dos-puntos 34 emoji 29 |
+| 4 | `pipewire-grafo-y-codec-streaming` | 142 | rayas 65 dos-puntos 38 negrita-encabezado 27 |
+| 5 | `coste-ia-suscripcion-vs-api` | 96 | rayas 40 dos-puntos 27 negrita-encabezado 13 |
+| 6 | `protein-quality-assessment` | 75 | rayas 33 dos-puntos 18 adverbios-mente 13 |
+| 7 | `emulador-resolucion-modo-tablet` | 73 | dos-puntos 31 rayas 24 negrita-encabezado 12 |
+| 8 | `ktimer-comando-perceptible` | 67 | dos-puntos 28 negrita-encabezado 27 rayas 7 |
+| 9 | `video-wallpaper-horneado-mpv` | 55 | dos-puntos 29 negrita-encabezado 19 rayas 4 |
+| 10 | `scripts` | 54 | rayas 30 dos-puntos 9 negrita-encabezado 8 |
+| 11 | `tiktok-video-desaparecido` | 40 | rayas 14 dos-puntos 13 negrita-encabezado 10 |
+| 12 | `docx-oficios-to-pdf-calendar` | 36 | rayas 30 dos-puntos 5 negrita-encabezado 1 |
+| 13 | `ddc-brillo-monitor-seguro` | 36 | dos-puntos 14 negrita-encabezado 10 rayas 8 |
+| 14 | `antiparasitarios-veterinarios-mexico` | 34 | rayas 17 dos-puntos 5 negrita-excesiva 4 |
+| 15 | `modelo-local-apple-silicon` | 33 | rayas 15 dos-puntos 12 negrita-encabezado 3 |
+| 16 | `html-animation-debug-firefox` | 32 | rayas 19 dos-puntos 10 negrita-encabezado 2 |
+| 17 | `scripts` | 31 | emoji 14 dos-puntos 6 adverbios-mente 5 |
+| 18 | `scripts` | 25 | dos-puntos 13 rayas 8 adverbios-mente 2 |
+| 19 | `transparencia-real-wayland-hyprland` | 21 | dos-puntos 7 rayas 4 negrita-encabezado 4 |
+| 20 | `scripts` | 21 | emoji 7 dos-puntos 6 adverbios-mente 6 |
+| 21 | `scripts` | 20 | dos-puntos 11 rayas 8 adverbios-mente 1 |
+| 22 | `kitty-keybind-regression-check` | 20 | negrita-encabezado 8 dos-puntos 7 adverbios-mente 2 |
+| 23 | `zen-firefox-localstorage-forense` | 19 | dos-puntos 10 negrita-encabezado 7 rayas 2 |
+| 24 | `probar-logica-script-sin-tocar-escritorio` | 19 | dos-puntos 10 rayas 7 negrita-encabezado 1 |
+| 25 | `pdf-normativo-a-html-legible` | 19 | dos-puntos 10 rayas 3 negrita-encabezado 3 |
+| 26 | `informe-html-a-markdown` | 18 | rayas 11 dos-puntos 5 gerundio-decorativo 2 |
+| 27 | `verificar-bug-app-movil` | 17 | dos-puntos 7 negrita-encabezado 6 rayas 2 |
+| 28 | `modelo-local-amd-linux` | 17 | dos-puntos 8 rayas 4 negrita-encabezado 2 |
+| 29 | `genymotion-player-flag-crash` | 17 | dos-puntos 7 negrita-encabezado 6 adverbios-mente 2 |
+| 30 | `artefacto-generado-contaminado` | 17 | negrita-encabezado 7 dos-puntos 7 rayas 2 |
+| 31 | `scripts` | 16 | emoji 6 dos-puntos 5 rayas 2 |
+| 32 | `promodescuentos-graphql` | 16 | rayas 7 negrita-encabezado 6 dos-puntos 3 |
+| 33 | `escaneo-pdf-a-html-cotejado` | 15 | dos-puntos 8 negrita-encabezado 6 rayas 1 |
+| 34 | `linux-dos-uplinks-por-app` | 14 | dos-puntos 5 rayas 3 vocabulario-ia 3 |
+| 35 | `capa-quickshell-no-vuelve-tras-monitor` | 14 | dos-puntos 6 negrita-encabezado 4 adverbios-mente 2 |
+| 36 | `hdr-juegos-hyprland-gamescope` | 13 | dos-puntos 3 rayas 3 negrita-encabezado 2 |
+| 37 | `pdf-extraer-imagenes-max-res-y-rehacer` | 12 | dos-puntos 4 negrita-encabezado 4 rayas 2 |
+| 38 | `dms-ajustes-ocultos-notificaciones` | 12 | dos-puntos 8 negrita-encabezado 3 gerundio-decorativo 1 |
+| 39 | `dms-plugins-dankmaterialshell` | 11 | dos-puntos 6 rayas 2 emoji 2 |
+| 40 | `scripts` | 9 | dos-puntos 4 negrita-encabezado 4 rayas 1 |
+| 41 | `identificar-barra-o-ventana-desconocida` | 9 | negrita-encabezado 5 dos-puntos 2 vocabulario-ia 1 |
+| 42 | `hyprshade-shaders-hyprland` | 9 | negrita-encabezado 6 dos-puntos 3 |
+| 43 | `quickshell-posicion-persistente-de-capa` | 8 | dos-puntos 6 negrita-encabezado 2 |
+| 44 | `comparar-moviles-datos-verificados` | 8 | rayas 6 dos-puntos 1 negrita-encabezado 1 |
+| 45 | `android-en-linux-emulador-waydroid` | 8 | dos-puntos 3 rayas 2 negrita-encabezado 2 |
+| 46 | `edicion-multiple-mismo-fichero` | 7 | dos-puntos 4 negrita-encabezado 3 |
+| 47 | `scripts` | 6 | adverbios-mente 2 vocabulario-ia 1 gerundio-decorativo 1 |
+| 48 | `scripts` | 6 | adverbios-mente 3 dos-puntos 2 vocabulario-ia 1 |
+| 49 | `cotejo-ediciones-documento-html` | 6 | dos-puntos 5 vocabulario-ia 1 |
+| 50 | `unslop_EN` | 4 | dos-puntos 2 vocabulario-ia 1 sustantivo-metaforico 1 |
+| 51 | `pages-no-publica-tras-push` | 4 | dos-puntos 4 |
+| 52 | `jwa-datos-y-costes-adn` | 4 | dos-puntos 2 vocabulario-ia 1 rayas 1 |
+| 53 | `dms-lanzador-entradas-desktop` | 4 | rayas 2 dos-puntos 2 |
+| 54 | `verificar-lectura-ocr-contra-facsimil` | 2 | dos-puntos 2 |
+| 55 | `zapzap-whatsappweb-css` | 1 | rayas 1 |
+
+## Cómo se hace cada uno
+
+El método está en la skill `unslop-corpus-documentacion`. En corto, por fichero:
+
+```sh
+cp -p SKILL.md SKILL.md.bak-$(date +%Y%m%d)-unslop
+sha256sum -c <(sha256sum SKILL.md.bak-*-unslop | sed "s# .*/#  #")
+python3 unslop-revisar.py SKILL.md        # lista lo que hay
+# lote de sustituciones que aborta si una cadena no casa exactamente una vez
+python3 unslop-revisar.py SKILL.md        # tiene que decir limpio
+```
+
+Y al terminar, dos comprobaciones que no son de estilo:
+
+1. `yaml.safe_load` del frontmatter, porque un cambio de prosa puede dejar una comilla suelta en
+   el `description`.
+2. Números y tramos entre comillas invertidas idénticos antes y después, para demostrar que no se
+   perdió ningún dato.
+
+## Lo que no conviene hacer
+
+Los 55 ficheros de una tacada. Es un diff que no se puede revisar, y si una reescritura cambia el
+sentido de una instrucción el fallo se descubre cuando la skill se usa mal.

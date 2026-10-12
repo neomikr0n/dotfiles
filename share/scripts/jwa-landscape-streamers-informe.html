@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es" data-page-node-id="d0o1epOB4dtzFNYxbHG9p1">
+<head data-page-node-id="phEEBcM4lIl3fKlRAUEFvg">
+<meta charset="utf-8" data-page-node-id="SPiWq9VHksSp8L9TBApBOE">
+<meta name="viewport" content="width=device-width, initial-scale=1" data-page-node-id="spebuRasLDLzR23Fjv9p4H">
+<title>El JWA apaisado de los streamers — qué es exactamente y qué falta para reproducirlo</title>
+<style>
+  :root {
+    --bg: #0A0A0A; --panel: #16181D; --panel2: #1E2126;
+    --orange: #FF4E00; --red-orange: #FF3300; --amber: #FFB300;
+    --yellow: #FFC821; --text: #F5F1EA; --muted: #9AA0A8;
+    --good: #7ED957;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif; line-height: 1.6; min-height: 100vh; }
+  code, pre { font-family: "JetBrains Mono", "Fira Code", ui-monospace, monospace; }
+
+  header.hero { position: relative; overflow: hidden; background: var(--bg); padding: 72px 32px 120px; }
+  .waves { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hero-inner { position: relative; max-width: 1000px; margin: 0 auto; }
+  .hero .kicker { display: inline-block; font-size: 12px; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--yellow); margin-bottom: 10px; font-weight: 700; }
+  .hero h1 { font-size: clamp(27px, 4vw, 42px); font-weight: 800; line-height: 1.15; }
+  .hero h1 .accent { color: var(--orange); }
+  .hero .meta { margin-top: 14px; color: var(--muted); font-size: 14px; }
+  .hero .meta code { background: rgba(255,255,255,.08); padding: 2px 8px; border-radius: 6px; color: var(--amber); font-size: 13px; }
+  .chips { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 32px; }
+  .chip { background: var(--panel); border: 1px solid color-mix(in srgb, var(--chip) 45%, transparent);
+    border-radius: 12px; padding: 10px 18px; min-width: 92px; text-align: center; }
+  .chip-num { font-size: 23px; font-weight: 800; color: var(--chip); display: block; }
+  .chip-label { font-size: 10px; letter-spacing: 1.4px; color: var(--muted); }
+
+  main { max-width: 1000px; margin: -70px auto 0; padding: 0 24px 80px; position: relative; }
+  section { margin-top: 54px; }
+  section h2 { font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex: none; box-shadow: 0 0 10px currentColor; }
+  .section-sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+  .card-panel { background: var(--panel); border: 1px solid rgba(255,255,255,.07); border-radius: 16px; padding: 22px 24px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid rgba(255,255,255,.07); vertical-align: top; }
+  th { color: var(--amber); font-size: 11px; letter-spacing: 1.3px; text-transform: uppercase; font-weight: 800; }
+  td code { background: rgba(255,255,255,.06); padding: 1px 6px; border-radius: 5px; color: var(--yellow); font-size: 12.5px; }
+  tr.hl td { background: rgba(255,179,0,.07); }
+  tr.dim td { color: var(--muted); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .finding { background: var(--panel); border: 1px solid rgba(255,255,255,.07);
+    border-left: 4px solid var(--sev); border-radius: 14px; padding: 18px 22px; margin-bottom: 16px; }
+  .finding header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 9px; }
+  .sev-badge { color: #0A0A0A; font-size: 10.5px; font-weight: 800; letter-spacing: 1.4px; padding: 3px 10px; border-radius: 999px; }
+  .src-badge { font-size: 11px; color: var(--muted); background: var(--panel2); border: 1px solid rgba(255,255,255,.08); border-radius: 999px; padding: 2px 10px; }
+  .finding h3 { font-size: 16.5px; margin-bottom: 6px; }
+  .finding p { color: #C9CDD3; font-size: 14.5px; margin-bottom: 7px; }
+  .finding p:last-child { margin-bottom: 0; }
+  .finding strong { color: var(--yellow); }
+
+  .grid { display: grid; gap: 16px; }
+  @media (min-width: 820px) { .grid { grid-template-columns: 1fr 1fr; } }
+  .creative-card { background: linear-gradient(160deg, rgba(255,178,0,.10), rgba(255,78,0,.05));
+    border: 1px solid #FFB30044; border-radius: 14px; padding: 18px 20px; }
+  .creative-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .bulb { color: var(--yellow); font-size: 18px; }
+  .creative-card h3 { font-size: 15.5px; }
+  .effort { margin-left: auto; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--yellow); border: 1px solid #FFB30066; border-radius: 999px; padding: 1px 9px; }
+  .creative-card p { font-size: 14px; color: #C9CDD3; }
+
+  .blind-card { background: linear-gradient(160deg, rgba(255,51,0,.09), rgba(255,78,0,.04));
+    border: 1px solid #FF330055; border-radius: 14px; padding: 18px 20px; margin-bottom: 14px; }
+  .blind-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+  .eye { color: var(--red-orange); font-size: 18px; }
+  .blind-card h3 { font-size: 15.5px; }
+  .blind-card p { font-size: 14px; color: #C9CDD3; }
+
+  .warn-card { background: linear-gradient(160deg, rgba(255,51,0,.14), rgba(255,78,0,.06));
+    border: 1px solid #FF330088; border-radius: 14px; padding: 20px 22px; margin-bottom: 16px; }
+  .warn-card h3 { font-size: 17px; margin-bottom: 8px; color: var(--red-orange); }
+  .warn-card p { font-size: 14.5px; color: #C9CDD3; margin-bottom: 7px; }
+
+  figure { background: var(--panel); border: 1px solid rgba(255,255,255,.07); border-radius: 16px; padding: 18px; margin: 0 0 16px; }
+  figure figcaption { color: var(--muted); font-size: 12.5px; margin-top: 10px; text-align: center; }
+
+  pre { background: #0D0E10; border: 1px solid rgba(255,255,255,.06); border-radius: 10px; padding: 14px 16px; font-size: 13px; overflow-x: auto; line-height: 1.55; }
+  .c-comment { color: #6E7681; font-style: italic; }
+
+  footer { max-width: 1000px; margin: 0 auto; padding: 0 48px 48px; color: var(--muted); font-size: 12.5px; text-align: center; }
+  footer .brand { color: var(--orange); font-weight: 700; }
+</style>
+</head>
+<body data-page-node-id="AAYmsuZBrEcE82tDLKaDgA">
+
+<header class="hero" data-page-node-id="HUvNvYw5dbYPXXwAomUKt5">
+<svg class="waves" viewBox="0 0 1440 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true" data-page-node-id="m3ckWQS2GQIMjZAbKpHkxN">
+  <defs data-page-node-id="C7s1WDbOyZeYtR3Z93UApi">
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1" data-page-node-id="iFmgZOEbfc3t6CJbxpYBlO"><stop offset="0" stop-color="#FF4E00" data-page-node-id="nDx9UeOgVYkN048bAweFzz"/><stop offset="1" stop-color="#FFB300" data-page-node-id="SAOZ2t1ZsjeIYhPtnF9299"/></linearGradient>
+    <linearGradient id="g2" x1="0" y1="1" x2="1" y2="0" data-page-node-id="eTBN1TlqG8ie74QQ3UvaP3"><stop offset="0" stop-color="#FF3300" data-page-node-id="wyhDG45akWBEJhcPyDptxE"/><stop offset="1" stop-color="#FF4E00" data-page-node-id="RklHdg6A20ITKiyHN9ef2I"/></linearGradient>
+    <linearGradient id="g3" x1="0" y1="0" x2="1" y2="0" data-page-node-id="RoFlfSsH7aE9qs9jJFkEK6"><stop offset="0" stop-color="#FFC821" data-page-node-id="RLEafi1cYhYohrqqyGTe8R"/><stop offset="1" stop-color="#FFB300" data-page-node-id="PBpUQ1g3c9myvdUjCptWL1"/></linearGradient>
+  </defs>
+  <path fill="url(#g2)" opacity="0.55" d="M0,300 C240,120 420,420 720,260 C960,120 1180,380 1440,180 L1440,420 L0,420 Z" data-page-node-id="w8rZ4EAMgy7IJmAg459wC4"/>
+  <path fill="url(#g1)" d="M0,180 C260,340 520,40 780,160 C1040,280 1200,60 1440,220 L1440,420 L0,420 Z" data-page-node-id="NAOcWAhzZ45BPApx52Z32m"/>
+  <path fill="url(#g3)" opacity="0.9" d="M0,360 C300,240 560,420 860,320 C1120,235 1260,360 1440,300 L1440,420 L0,420 Z" data-page-node-id="78PBggDZSKtKAgVnlPRcxi"/>
+</svg>
+<div class="hero-inner" data-page-node-id="fuDEzZv9fcrIfmhD58mO9S">
+  <span class="kicker" data-page-node-id="EQS1LE5eRNDoYkuf2gE0xH">Investigación medida · vídeo de ViperX · JWA 3.23.49 · 10-oct-2026</span>
+  <h1 data-page-node-id="LYPTtmOdr7GcNWORWv2HHT">El JWA apaisado de los streamers:<br data-page-node-id="HKmXc9RLfP0YwhyrOiPfEi"><span class="accent" data-page-node-id="Wig45NB5jB5Bxg1uKai4RK">qué es exactamente y qué falta para reproducirlo</span></h1>
+  <p class="meta" data-page-node-id="oa3QaPrarC1B2oqFgWqJBv">
+    Sobre dos capturas de <code data-page-node-id="ekQtDUhD1kf3Z8XzwPw4pi">youtube.com/watch?v=OCvmYLt_mNo</code> · canal <code data-page-node-id="PXxH4NBjCoawxQZ838325t">ViperX (@ViperX1129)</code> ·
+    todo lo de abajo sale de medir el vídeo y el APK, no de suponerlo.
+  </p>
+  <div class="chips" data-page-node-id="4u7BtMF2bUY9inbIgEcCBr">
+    <div class="chip" style="--chip:#FFB300" data-page-node-id="fVit1ebIyJ0KPOGpxOKY7o"><span class="chip-num" data-page-node-id="K59qJnccAE5Kdf8AWHm7KJ">1920x1080</span><span class="chip-label" data-page-node-id="A3li9bh0n5hLbmSGvdyGsc">VÍDEO DEL STREAMER</span></div>
+    <div class="chip" style="--chip:#FF4E00" data-page-node-id="OIBvOfI6Fs6jGnFtXfEXso"><span class="chip-num" data-page-node-id="NIZ8anHdhv2JrtijVNYJjg">1,778</span><span class="chip-label" data-page-node-id="1kYyTd9v3uW2ZEJ6YOvgnq">ASPECTO (16:9)</span></div>
+    <div class="chip" style="--chip:#FF3300" data-page-node-id="FHHlbBBs4ioJ0eWwd4p3dx"><span class="chip-num" data-page-node-id="FKDYZExokOZoPfCcicPb63">0</span><span class="chip-label" data-page-node-id="OABAlGUe2dmmKoZadg6abB">SEGMENTOS DE VOZ</span></div>
+    <div class="chip" style="--chip:#7ED957" data-page-node-id="ztJzbyQNVJgBxxDVGhEytm"><span class="chip-num" data-page-node-id="4eUwn19LHrKLnhu3iD23Pf">1,00</span><span class="chip-label" data-page-node-id="OxKGOOaeVQCK9CY7QE4CQT">SIN ESTIRAMIENTO</span></div>
+  </div>
+</div>
+</header>
+
+<main data-page-node-id="krZPjjsj4Sc2JEZvgUGuYr">
+
+<section data-page-node-id="aMZAEkGhiw5CGqvyRKAvf3">
+  <h2 data-page-node-id="zWMNJuDeGQHFxgGx1MmtXx"><span class="dot" style="color:#FF4E00" data-page-node-id="OLDWdpCAwhdBdhmxD7O4MO"></span>1 · La respuesta en una línea</h2>
+  <p class="section-sub" data-page-node-id="m7HfJ3tTg2eQgzJ0kOzdas">Antes del detalle, la conclusión, para que se pueda discutir sin leer el resto.</p>
+
+  <div class="warn-card" data-page-node-id="FPaajkmU5TGtmlZXRJpf05">
+    <h3 data-page-node-id="FseR4Uz2riIqdABERsps9X">El juego es el mismo y el HUD es el mismo. Lo único que cambia es el aspecto del lienzo, y eso lo decide la orientación de la app.</h3>
+    <p data-page-node-id="SrqX8HPYDnAs9DFl7Xr6eq">Tu JWA corre <strong data-page-node-id="r3ruAboJlBL0mEURbaKlLe">bloqueado en vertical</strong>. Mientras lo esté, el juego acota su lienzo a una proporción vertical y lo encajona en cualquier pantalla ancha. El streamer tiene el <strong data-page-node-id="U1la7oCqELtgjFf8dkrGyc">mismo</strong> juego, el <strong data-page-node-id="O9MLGYHoUKx1pdKPKo9yhQ">mismo</strong> HUD y la <strong data-page-node-id="XXofy8rWiND1UKX0OtWUwe">misma</strong> barra inferior; lo que tiene distinto es que su JWA corre en <strong data-page-node-id="VRFEMZKG2ZsILi4wJaHPWY">apaisado</strong>, y entonces el lienzo es la pantalla entera.</p>
+    <p data-page-node-id="h4Q5tzZZqMswAu8Q8Pvrfk">Por eso ningún perfil de resolución te ha dado un juego más ancho: la palanca no es la resolución, es la orientación.</p>
+  </div>
+</section>
+
+<section data-page-node-id="VaLqg6cNCR5muebZREvAeH">
+  <h2 data-page-node-id="QoCPd6FPK2aRTacKwBfwBj"><span class="dot" style="color:#FFB300" data-page-node-id="cbKf36GErFPALOwysWJCb3"></span>2 · Lo que se midió en el vídeo</h2>
+  <p class="section-sub" data-page-node-id="f91g8BcQOCt9yQnsnySbgq">Cada fila está medida sobre el fichero, no deducida de la ficha del vídeo.</p>
+
+  <div class="card-panel" data-page-node-id="fJTFul1H3Svdm1Z71Dv8Gg">
+    <table data-page-node-id="zTnz7VBBNk8JmoMbaWBqbj">
+      <thead data-page-node-id="jPbSi2V649E5GlX6mUV8cQ"><tr data-page-node-id="3oEVTmXzXbrZDrFFCT5Ps8"><th data-page-node-id="CBNESy4AavLGpdt16CJjAQ">Dato</th><th data-page-node-id="Aent8IPAXzr7OQl8XVXflk">Valor medido</th><th data-page-node-id="vzhlpAn4j74ME2b8LDxZpS">Cómo</th></tr></thead>
+      <tbody data-page-node-id="kBGHucKUPa6to8Nw9QKrRN">
+        <tr data-page-node-id="zl4pI80vSxhfyq754tAJmB"><td data-page-node-id="8a8zTddRRJdvDnzbSwbAL3">Canal y vídeo</td><td data-page-node-id="MQRhRo7U8s1cyyqQtYbpO4"><code data-page-node-id="T7Wl2rhEMY3wFvZjQRtgW8">ViperX</code> · <code data-page-node-id="QEdEPZ6Eg2nI7GTaBJTKxu">OCvmYLt_mNo</code> · «TURN 25… and EMBER Becomes a NIGHTMARE! || Jurassic World Alive || V3.23»</td><td data-page-node-id="NV4AF69NmCd1CUhUD5YNRh">Metadatos de la página del vídeo</td></tr>
+        <tr data-page-node-id="YYyzhs4UeQwJLQ5vAMnDw2"><td data-page-node-id="Kr52W5hYnWO5NRWDV7Wja0">Juego</td><td data-page-node-id="Pb9Kl5kgXz7f0JP5AbvSPP">Jurassic World Alive, V3.23</td><td data-page-node-id="ppR4X2Ac9rSjSlS3iOjRM4">Dos vías: «Ember» es <em data-page-node-id="s0C5D86JFalnGwRf7IhfPi">Rebirth T. rex</em> en JWA (3.18) y la 3.23 es la actualización vigente</td></tr>
+        <tr data-page-node-id="DCd3gJanUe2wD8iWCHfkBO"><td data-page-node-id="hmKKAnBob2n1oksOuTCv5A">Subida</td><td data-page-node-id="8T7BhNmVws6W4PGw0PxLd8"><code data-page-node-id="sw0h2tRNwKbJRWUmDB5OZn">1920x1080</code> · <code data-page-node-id="gCPLBzEicoQa4v5iaB45nH">60 fps</code> · SDR · AV1 · 22:49</td><td data-page-node-id="vT2j3tnZ4HYqgTJv2WF093">Formatos del vídeo</td></tr>
+        <tr class="hl" data-page-node-id="JxKOlZHquY2c5fQIWsHCz8"><td data-page-node-id="fzhvIBOd1VWCTs16lwDrwg">Tus dos capturas</td><td data-page-node-id="zYAFFC6mPOldPjy7YLVcPN"><code data-page-node-id="ILTjHRy9ZjqjHyBpO6DB86">1920x1077</code>, aspecto <code data-page-node-id="Hx6KQGpoNJEgTPLPWJwhAn">1,7827</code>, <strong data-page-node-id="P1aVEx37J5sSIh7CjSnwss">0 filas y 0 columnas oscuras</strong></td><td data-page-node-id="3oHEvFPU3QK2oTD6TDxgyn">Recuento de píxeles casi negros con numpy</td></tr>
+        <tr class="hl" data-page-node-id="AeJS9J0hlOUJs0FcxHHO93"><td data-page-node-id="hNlwFdq5EBK3R09DXALu5b">¿Estirado desde un móvil 20:9?</td><td data-page-node-id="671vnH1As8SwK5ZVruM777"><strong data-page-node-id="eL0nywbn3LzHpjEFxi5bUv">No.</strong> La insignia de nivel «35» mide 53 px de ancho con ~57 px de alto → <code data-page-node-id="CqEB5RnOLck9vybGfEGdYk">w/h ≈ 0,93</code></td><td data-page-node-id="U4SxTZOgHtxJTzY7pXbmtw">Perfil fila a fila del anillo cian. Un estirado 20:9→16:9 daría <code data-page-node-id="byPa36cTGjY7yrSy5kyYD5">≈1,25</code></td></tr>
+        <tr data-page-node-id="HffVj4Er6nw5JH9jWof2pU"><td data-page-node-id="xzQd1qTiuybvvsEm9bvRrD">Otros vídeos de JWA</td><td data-page-node-id="ZbNqPCSS1FaVplIj2SCfpO"><strong data-page-node-id="IOAfibSQLmt4cFDfeBHbiC">8 de 8</strong> a 1920x1080 16:9; 7 de 8 a 60 fps</td><td data-page-node-id="QXgcRwh5cayi7DZBSBtYdD">ViperX, Kaiju Capi, Bagoyee, Angustino. No es un caso raro: es la norma</td></tr>
+        <tr class="dim" data-page-node-id="hMPUJwfNxzi4Eh7QcRpeHy"><td data-page-node-id="SLpbhZhZU8NvA9mzXMvc68">Voz en el vídeo</td><td data-page-node-id="rxGM6MqGHH1igHHTOUHRPH"><strong data-page-node-id="LiBBB8zHCJyY0DFfXV69wE">Cero.</strong> 0 segmentos de voz en 21.897.718 muestras</td><td data-page-node-id="H1iWxXby3n33B44LwDbP23">whisper con VAD (silero)</td></tr>
+        <tr class="dim" data-page-node-id="4TwLzIxf9IH5dHtGQQe4Xd"><td data-page-node-id="mlgG81LCa2rvcN8RV8AIUf">Descripción y comentarios</td><td data-page-node-id="PHy2an0WoDCHW5uZxx3QVD">Descripción SEO sin mención del emulador; comentarios no accesibles sin cookies</td><td data-page-node-id="6keuAv87fjnjLoETLYXvBn">Metadatos y descarga de comentarios</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="finding" style="--sev:#FF4E00; margin-top:16px" data-page-node-id="COeC2zgdPdtGqzrTzfdplw">
+    <header data-page-node-id="25tTb5zYP64xQyXZKAXptc"><span class="sev-badge" style="background:#FF4E00" data-page-node-id="fSy2cBaXlqXyCXFmGAKzLG">MEDIDO</span><h3 data-page-node-id="zO29XwQAT2OkYlVN1AMRfq">El HUD del streamer es idéntico al tuyo, elemento por elemento</h3></header>
+    <p data-page-node-id="weRPYQbfTkGCDQcA5yArER">En sus dos capturas y en tus propias capturas aparecen los mismos: insignia de nivel «35» arriba a la izquierda, sobre de mensajes debajo, píldoras de recursos centradas arriba, botón <strong data-page-node-id="7ge4HRqNn5PmG6cr2o9EPg">MAP</strong> en el centro de la barra inferior, botón <strong data-page-node-id="1pKCJ402wktw1JLxUhEvpO">BONUS</strong>, los dos temporizadores (05h 26m / 01h 32m en tu caso) y las cinco pestañas repartidas a lo ancho.</p>
+    <p data-page-node-id="ODR5JSzmQCLgWbY0PsxZLr">No hay un «HUD apaisado» distinto del tuyo. Es el mismo layout, dibujado sobre un lienzo de otra proporción.</p>
+  </div>
+</section>
+
+<section data-page-node-id="Hu1uhF7walW1qvRot86SOO">
+  <h2 data-page-node-id="gTXvokR6bQ4Z9O6quAenj7"><span class="dot" style="color:#FFC821" data-page-node-id="5YyaHMNajk3IU6lkoR7CdE"></span>3 · La pieza que faltaba: por qué se encajona</h2>
+  <p class="section-sub" data-page-node-id="wPLJE7ZMsvEyjTGffwjI4R">La ley del lienzo ya la medimos; ahora sabemos qué la produce.</p>
+
+  <div class="finding" style="--sev:#FFC821" data-page-node-id="PBKBcUS8IFj58I7u0QbYLq">
+    <header data-page-node-id="ZfjMmTV7mICSZWeS5iN3H7"><span class="sev-badge" style="background:#FFC821" data-page-node-id="FtLuzHEFixNesCF0yk34rm">MEDIDO</span><h3 data-page-node-id="icBrS4n8PTeNxHjNAA9UJG">La ley del lienzo: aspecto = min(r, 1/r)</h3></header>
+    <p data-page-node-id="s3tqr5AZCGErJoY9lCuRFL">Con <code data-page-node-id="XoM8RT6SzAeK41J6MxXNSU">r = ancho/alto</code> de la pantalla, el juego dibuja un lienzo cuyo aspecto es <code data-page-node-id="9v7HWOjhsImifPn5v1nFAv">min(r, 1/r)</code>. Verificado en siete tamaños; la predicción <code data-page-node-id="wyEp7z9TB0Zv69U9aM5uC0">alto²/ancho</code> daba 603 px a 3440x1440 y se midieron 602.</p>
+    <p data-page-node-id="F2RCfYuU0WO7wcglQMrFaj">Traducido: <strong data-page-node-id="sxw0BtbKQvhKdyPalqo5nR">el lienzo nunca pasa de 1</strong>. En pantalla cuadrada llena; en pantalla ancha se acota a un rectángulo vertical y el resto se queda negro.</p>
+  </div>
+
+  <div class="finding" style="--sev:#7ED957" data-page-node-id="Ef0z6ehGHeBEChzWK8aisK">
+    <header data-page-node-id="aGFHROoxr6YnHSSxbeVIYV"><span class="sev-badge" style="background:#7ED957" data-page-node-id="oGh9KqZ0bSO1DuR2jTlChx">MEDIDO</span><h3 data-page-node-id="FF3zSKA4AFB8ySz3JDnjBG">El responsable está en el APK: <code data-page-node-id="HLk3HXjabQ5N6WpVXhCj3M">AspectRatioResizer.cs</code></h3></header>
+    <p data-page-node-id="wiUOgGG7BJ7LZ8dYacK33y">En los metadatos il2cpp del APK aparece la ruta <code data-page-node-id="5oMRrcRklglbAY2LBfThwW">Assets\Scripts\Ui\Device\AspectRatioResizer.cs</code>, junto a <code data-page-node-id="nboKegHRkyfZFlbMZikeZC">SquareAspectCanvasReference.cs</code>, <code data-page-node-id="PPM1Cal0thKUm0CjBkFGFM">FoldableCanvasReference.cs</code>, <code data-page-node-id="caQqYSVEHQmotCQRcWEA2H">SafeAreaApplierForAnchor/Offset/RectTransformSize.cs</code>, <code data-page-node-id="Lwn8n82rRNnbivDkgQB2cn">ScreenMetricsWatcher.cs</code> y <code data-page-node-id="Y6gIH9gtCgiktv8Oj2onrh">CanvasReferenceAutoAttacher.cs</code>.</p>
+    <p data-page-node-id="yd8bpbBl9cD9e9TS3uBfKH">Es decir: el juego tiene <strong data-page-node-id="4o7Dp9xPCHcptqQUavGITD">un solo layout responsive</strong> más un encajonador de aspecto y un aplicador de área segura. Y en todo el código del juego <strong data-page-node-id="Vy3qBAlX5Xea9GArPkOZhw">no hay ni una referencia a «landscape»</strong> — solo los nombres del enum de Unity. No hay dos interfaces; hay una que se adapta al lienzo que le den.</p>
+  </div>
+
+  <figure data-page-node-id="xuo20oIhKi1IoSIvwP0kIn">
+    <svg viewBox="0 0 680 250" width="100%" role="img" aria-label="Comparación de lienzos: cuadrado, apaisado encajonado y apaisado del streamer" data-page-node-id="kYvY0DUnN5tg74105cGE7V">
+      <rect x="0" y="0" width="680" height="250" fill="#16181D" rx="12" data-page-node-id="o2oNz6HNq6LjksNL8c9EHa"/>
+      <text x="24" y="30" fill="#FFC821" font-family="Segoe UI, sans-serif" font-size="13" font-weight="700" data-page-node-id="OU3eDI93ucmIaJZXIBlyKu">TU PANTALLA CUADRADA 2160x2160</text>
+      <rect x="24" y="44" width="170" height="170" fill="#2B2140" stroke="#FFB300" stroke-width="2" rx="4" data-page-node-id="s6Rps0hHRR3AyMSaPMQDtH"/>
+      <text x="109" y="134" fill="#F5F1EA" font-family="Segoe UI, sans-serif" font-size="13" text-anchor="middle" data-page-node-id="dpgWeRpnTnZmL18g2ipLA2">lienzo 1:1</text>
+      <text x="109" y="154" fill="#9AA0A8" font-family="Segoe UI, sans-serif" font-size="11" text-anchor="middle" data-page-node-id="3BGDqHed4uQZ0QsAooo1K0">llena el 100 %</text>
+
+      <text x="248" y="30" fill="#FF3300" font-family="Segoe UI, sans-serif" font-size="13" font-weight="700" data-page-node-id="FLG6vxmxbCNGedeYmrEGEK">TU PANTALLA APAISADA 2560x1440</text>
+      <rect x="248" y="44" width="170" height="170" fill="#0A0A0A" stroke="#FF3300" stroke-width="2" rx="4" data-page-node-id="LBPQRUEMjLomJ5Jmcc8M3Z"/>
+      <rect x="296" y="44" width="74" height="170" fill="#2B2140" stroke="#FFB300" stroke-width="1.5" rx="3" data-page-node-id="cFrInPSPSpB9fP4u1YxvOQ"/>
+      <text x="333" y="134" fill="#F5F1EA" font-family="Segoe UI, sans-serif" font-size="11" text-anchor="middle" data-page-node-id="KK8kwOpcXx3KeGIiyIYDQN">lienzo</text>
+      <text x="333" y="150" fill="#F5F1EA" font-family="Segoe UI, sans-serif" font-size="11" text-anchor="middle" data-page-node-id="9dCw3evpQRUyrQktwYzf5T">0,5625</text>
+      <text x="272" y="70" fill="#FF3300" font-family="Segoe UI, sans-serif" font-size="10" text-anchor="middle" data-page-node-id="mzsHvqAgmmEf5kYlt05buX">negro</text>
+      <text x="394" y="70" fill="#FF3300" font-family="Segoe UI, sans-serif" font-size="10" text-anchor="middle" data-page-node-id="AHCrPSnFNCR4SUMDxXo3YQ">negro</text>
+
+      <text x="472" y="30" fill="#7ED957" font-family="Segoe UI, sans-serif" font-size="13" font-weight="700" data-page-node-id="GCB2vGSTq5hiizrB0CYePt">EL STREAMER 1920x1080</text>
+      <rect x="472" y="44" width="170" height="170" fill="#2B2140" stroke="#7ED957" stroke-width="2" rx="4" data-page-node-id="7GHobiZwUITgNEk12dnw0v"/>
+      <text x="557" y="134" fill="#F5F1EA" font-family="Segoe UI, sans-serif" font-size="13" text-anchor="middle" data-page-node-id="nW6SGRUogSycdtjXE2dvHE">lienzo 1,78</text>
+      <text x="557" y="154" fill="#9AA0A8" font-family="Segoe UI, sans-serif" font-size="11" text-anchor="middle" data-page-node-id="dZg5FQFiuhdlUKCR9diwzH">llena el 100 %</text>
+
+      <text x="340" y="238" fill="#9AA0A8" font-family="Segoe UI, sans-serif" font-size="11.5" text-anchor="middle" data-page-node-id="RGRfozHsDB4tVdQmYftMpy">Mismo juego, mismo HUD. Lo único distinto: la app del streamer no está bloqueada en vertical.</text>
+    </svg>
+    <figcaption data-page-node-id="k4sIgdzI2jJVRpKh0wEhls">El encajonado no es del emulador ni de tu monitor: es del juego, y solo ocurre mientras la app está en vertical.</figcaption>
+  </figure>
+</section>
+
+<section data-page-node-id="wV5OliFEZSjvl4XIIRDDvE">
+  <h2 data-page-node-id="nWthU3PuN9NU67gEkgFKsM"><span class="dot" style="color:#FF3300" data-page-node-id="isLOp6XmrSvbcVRWqwJvzf"></span>4 · Corrección: yo dije que JWA no dibuja apaisado</h2>
+  <p class="section-sub" data-page-node-id="VaPzyspBy5EEvqCMlJEkyU">Va antes que el resto porque condiciona todo lo demás.</p>
+
+  <div class="warn-card" data-page-node-id="LOTyww5yF1QFMiQ0NWBDEy">
+    <h3 data-page-node-id="i9BWF9edJUQaQwHsaFHjlz">Era falso, y era mío.</h3>
+    <p data-page-node-id="g9eaOmWthSVj5o8WiB2BxR">El 10-oct concluí, con siete medidas detrás, que «JWA no dibuja apaisado». La parte medida era correcta: con la app en vertical, el lienzo se acota y se encajona. La conclusión que saqué de ahí — que el juego <em data-page-node-id="FZvXRvrCXxN2pT6laOlB7j">no puede</em> dibujar apaisado — no se sostenía: yo nunca vi la app en apaisado, solo vi el resultado de tenerla en vertical sobre una pantalla ancha.</p>
+    <p data-page-node-id="RPBrdhBc35Fwa3WSMEp2go">El vídeo del streamer demuestra lo contrario: con la app en apaisado el lienzo es la pantalla entera, con el mismo HUD. Queda corregido en la skill <code data-page-node-id="BXQU9eeGULMKZfQhjwrDse">emulador-resolucion-modo-tablet</code> y en la memoria del proyecto.</p>
+  </div>
+</section>
+
+<section data-page-node-id="w7vJfYnRsqLHbIjY0008BN">
+  <h2 data-page-node-id="KXQwdETarkv1KNAFHkX4uY"><span class="dot" style="color:#7ED957" data-page-node-id="fxoRXlC5tK2NCo2QegXg94"></span>5 · Qué emulador y qué sistema: lo que se puede afirmar</h2>
+  <p class="section-sub" data-page-node-id="GwjhK63Zva4s3SSwypgdIq">Aquí conviene separar lo medido de lo inferido, porque la pregunta era justo esa.</p>
+
+  <div class="finding" style="--sev:#7ED957" data-page-node-id="vjaiSnft0hmzAOodlBm0rA">
+    <header data-page-node-id="tLu3UupU7bbdcltNpA5UIP"><span class="sev-badge" style="background:#7ED957" data-page-node-id="OpCID7AUjEPfuZcRL0bMZa">MEDIDO</span><h3 data-page-node-id="PhqfyV2acRtdj45eyyDE2w">Su pantalla es 16:9 a 1920x1080</h3></header>
+    <p data-page-node-id="RD2cADDPYyObhbGwpDtfsb">El juego llena el marco de borde a borde, sin una sola fila ni columna oscura, y los elementos del HUD llegan a las esquinas. Ese 16:9 no es el de un móvil moderno (19,5:9 a 20:9) ni el de un iPad (4:3).</p>
+  </div>
+
+  <div class="finding" style="--sev:#FFB300" data-page-node-id="fGrnJWoKc8lfVJtoVA0rCv">
+    <header data-page-node-id="bGAlHnEuiAxCjIR4BPMwnY"><span class="sev-badge" style="background:#FFB300" data-page-node-id="rbRxtVTHYXFrb73LKWYFnf">INFERIDO</span><h3 data-page-node-id="LjIFGz7Ik1x5yghU8klNKd">Un PC con Windows y un emulador Android a 1920x1080</h3></header>
+    <p data-page-node-id="2OU0S3kTGBHfGiZc78bNhA">1920x1080 apaisado es la resolución de instancia por defecto de todos los emuladores Android grandes de escritorio (BlueStacks, LDPlayer, MuMu, Nox, GameLoop), y los cinco son Windows de forma mayoritaria. Encaja con el 16:9, con los 60 fps y con que <strong data-page-node-id="FPmkzauW3OEnJHq4nYljds">ocho de ocho</strong> vídeos de JWA que muestreé estén en 1920x1080 16:9.</p>
+  </div>
+
+  <div class="finding" style="--sev:#FF3300" data-page-node-id="S88gwikj6Ixm8QRmdZwVFu">
+    <header data-page-node-id="TAyXpYGsm241GIHCapb0XR"><span class="sev-badge" style="background:#FF3300" data-page-node-id="KA5L1DXr66kYnR0waq3quF">NO LO SÉ</span><h3 data-page-node-id="EMgtBlJfERGHvH9nNEI6iW">Cuál de ellos, y con qué ajustes</h3></header>
+    <p data-page-node-id="Ta94JFPXvuVN9Sx2JjEgKq">El vídeo no lo dice y no lo puedo deducir: no hay ni un píxel de chrome de emulador, no se ve cursor de ratón, la descripción no lo menciona, no hay voz que lo diga y los comentarios no son accesibles sin cookies. Cualquier nombre que te diera sería una conjetura con un envoltorio de dato.</p>
+    <p data-page-node-id="sdrfbQgHykqmBSIqDKfYbN">Lo que sí se deduce del propio juego es <strong data-page-node-id="4K4wSGmaIHTIaz24Evxt7Y">qué propiedad tiene que tener ese emulador</strong>: su Android no debe rotar la pantalla cuando la app pide vertical. Genymotion (AOSP) sí la honra, y por eso te encajona.</p>
+  </div>
+
+  <div class="card-panel" style="margin-top:6px" data-page-node-id="Gy5xXIESVen2NtD4n0HKeI">
+    <table data-page-node-id="YgV2TH2mxN1vjhT1eIDvFv">
+      <thead data-page-node-id="A0O7a5NzbHuxiMpjDNVB53"><tr data-page-node-id="BU4Ru0JOFPb2ImG9Br3KPv"><th data-page-node-id="8yuAZnE7nnNF8RCADlu27c">Comprobación en tu máquina</th><th data-page-node-id="BoFQv1vYvIBtBQWsw10JAD">Resultado</th></tr></thead>
+      <tbody data-page-node-id="cHFC7HBIIh2fYe3iPzeWAZ">
+        <tr data-page-node-id="DXefTYuGEyFQJx2ZbNyxSQ"><td data-page-node-id="0UTPwIoB2DciWkQDYj5lhu">Orientación pedida por el juego</td><td data-page-node-id="jVATFekjMPeR9l56ot4zQV"><code data-page-node-id="0a5F2acFRFAAsPvh4YlGrI">mOrientation=1</code> (vertical) en <code data-page-node-id="d6XS34fX9kHB7dSoVPPL6r">GameActivity</code></td></tr>
+        <tr data-page-node-id="nlUIzNFTO7djswJaNz0zGn"><td data-page-node-id="jKHHqUwxkQdBKsHTqodv8I">Orientación natural de tu display</td><td data-page-node-id="2VJb0xzQTjTWPH3au4YLnR"><code data-page-node-id="X2YiqeZX6eRnyWss428gNL">real 2160x2160</code>, <code data-page-node-id="aVaS35HHzWtc8K6FEaqtbI">rotation 0</code>, <code data-page-node-id="b9OvmqJoZAi2RKFdv995Tb">mPortraitRotation=ROTATION_0</code></td></tr>
+        <tr class="hl" data-page-node-id="Yr3rLPPAKNIZwXGQ17zlMg"><td data-page-node-id="aBA0XD9u9oc6LqrrdKcLSC">¿Está el bloqueo en el manifiesto?</td><td data-page-node-id="AVj9GyBdBKglkYsIvUc1Gh"><strong data-page-node-id="f9V14ABnNxwTmmpNExzmWa">No.</strong> <code data-page-node-id="2VrViO0Czrrl2GG7BnQOFI">screenOrientation</code> solo aparece en las actividades de anuncios (Vast, Static, Mraid = 10 = fullSensor). <code data-page-node-id="PYlvXzMiD1yhmYn3OJ8PPv">GameActivity</code> no lo declara → <strong data-page-node-id="FgbMSbGh5iTT7ZLIq0STdG">lo pone Unity en tiempo de ejecución</strong></td></tr>
+        <tr data-page-node-id="8CegUKfEigKdFXcRIDe3g8"><td data-page-node-id="oF8XE8aCnkPIu2W6y5eLNz">Palancas de orientación en Android 11</td><td data-page-node-id="dITdmzPRsVgN0Wi0WnR5nE">Solo <code data-page-node-id="qZLzPgYw04SOWbQFFJr0wy">set-user-rotation</code> y <code data-page-node-id="bRgVQmj8fDiGODuEH5X4zl">set-fix-to-user-rotation</code>. No existe <code data-page-node-id="kB4IXZmZtidcOFivUYCh1b">set-ignore-orientation-request</code></td></tr>
+        <tr data-page-node-id="kMdy1jNJpGwpN7oMWnr4XS"><td data-page-node-id="cmLxUGYinsVrNrIcvsAVzb"><code data-page-node-id="ntyqIb3PnGx3HqCKd9OY0B">am start</code></td><td data-page-node-id="ll7S5CQepI3BaUhETr7RAI">Sin opción de orientación</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="finding" style="--sev:#FF3300; margin-top:16px" data-page-node-id="vAHEPUnm9M734iFhqEtEqv">
+    <header data-page-node-id="BK1NpwP2P3D7rjZfIRB8iq"><span class="sev-badge" style="background:#FF3300" data-page-node-id="JAmm7j5VUXrDTdv1di6FrN">CONSECUENCIA</span><h3 data-page-node-id="cppV3HWGdO4e1yC3g5FOTe">Parchear el manifiesto no serviría</h3></header>
+    <p data-page-node-id="lcccrEkuXNLw5ejgpeRc4n">Como el bloqueo vertical no está en el XML sino que lo aplica Unity al arrancar, cambiar <code data-page-node-id="Om4mBF8JRTXE4z17i5RTs1">android:screenOrientation</code> en el manifiesto no toca nada. Habría que cambiar la petición de la propia app, y eso no está al alcance de un <code data-page-node-id="tW4d2jv0QEULiDm12tw7b6">wm size</code>.</p>
+  </div>
+</section>
+
+<section data-page-node-id="QOUn5ucEmqlRcQ9TB44YI8">
+  <h2 data-page-node-id="pak6t5p5ZBYHdwF8SZIjxf"><span class="dot" style="color:#FFB300" data-page-node-id="T8PPdEHRSa9fstIACDCdKn"></span>6 · Qué palancas quedan, con su coste</h2>
+  <p class="section-sub" data-page-node-id="u0kNHBMIHtnVzMlzkOablO">Ninguna está probada todavía. Las ordeno por lo que prometen, no por lo fáciles que son.</p>
+
+  <div class="grid" data-page-node-id="4ijYgkrJrD4eBITzAsbpGq">
+    <div class="creative-card" data-page-node-id="qQ7m09tSXf3n4zT9kHlaA6">
+      <div class="creative-head" data-page-node-id="r7oSDrE0G16rHNzoZ2MgQj"><span class="bulb" data-page-node-id="LlGINYhbYLvA5AO2Ufdxi6">◆</span><h3 data-page-node-id="hVjAIVAv74LebArF9lyhko">Waydroid en modo multi-ventana</h3><span class="effort" data-page-node-id="jIi4lPNxGO1mcDeUbe2RGI">sin probar</span></div>
+      <p data-page-node-id="gIVCJuZPsHLkgz3i9iaosZ"><code data-page-node-id="uJOaNrpjuxMwTVrcxvko23">persist.waydroid.multi_windows true</code> da a cada app su propia ventana de Wayland, redimensionable. Si Waydroid tampoco honra la petición de orientación, una ventana ancha daría lienzo ancho. Es lo único que corre en Linux y no toca tu Genymotion.</p>
+    </div>
+    <div class="creative-card" data-page-node-id="nGj12ibLYTd3CRMHhduE7P">
+      <div class="creative-head" data-page-node-id="1nBIVkvxLXxmHDRVcfAXim"><span class="bulb" data-page-node-id="twZAK2rRshV4E5R03aQOPA">◆</span><h3 data-page-node-id="HRlxkWhVyUkLnEegIK4Mzy">Emulador que ignore la petición</h3><span class="effort" data-page-node-id="S83E2yiqO5V4MzMQhGkKuf">fuera de Linux</span></div>
+      <p data-page-node-id="CTgNrY9Hjlbty4UmPpibcM">Es la vía que usan los creadores, casi seguro. BlueStacks, LDPlayer, MuMu y GameLoop son Windows: en tu Garuda no están. Implicaría una máquina Windows o una VM con GPU.</p>
+    </div>
+    <div class="creative-card" data-page-node-id="1QzXAFZebrnDl2QYSCze9B">
+      <div class="creative-head" data-page-node-id="EZN5lG5jlhtxMc3BwUqG8v"><span class="bulb" data-page-node-id="PsTm0IWcQyG7UOtHy7F5lm">◆</span><h3 data-page-node-id="6DysWdnvKs0xcHpahcalk2">Ventana freeform en Genymotion</h3><span class="effort" data-page-node-id="kqBmk2wpg72DxFgknwasA1">sin probar</span></div>
+      <p data-page-node-id="5iHHKkDBqQnrMNOxwC3W1d">Con <code data-page-node-id="knMssu5446eXUNtYO21L3B">development_enable_freeform_windows</code> y <code data-page-node-id="XLsJHjr7OM2cwqw3ZJd6Hf">enable_freeform_support</code> activos, lanzar con <code data-page-node-id="aqjeNGMjDrrxmcQ02rmqCA">am start --windowingMode 1</code> y redimensionar la ventana. Depende de si el gestor freeform respeta la petición de orientación; puede que sí y entonces no sirva.</p>
+    </div>
+    <div class="creative-card" data-page-node-id="uH4zALIYAQYDaZCQDRC1LL">
+      <div class="creative-head" data-page-node-id="SeriG7WaDibbFJ2B13ZzCH"><span class="bulb" data-page-node-id="jbS6mvJBOsGwnwZ9fB6yah">◆</span><h3 data-page-node-id="6jsXRf5KTYkOajfJsvDp16">Tocar la app</h3><span class="effort" data-page-node-id="gm6ICKGt6Z4zXAByfYNij5">caro</span></div>
+      <p data-page-node-id="hDCHsdthceCFqA4X4YdCFa">Cambiar la orientación por defecto exige tocar el código il2cpp o reconstruir con otro Player Settings. Es lo más lejos de un ajuste de resolución que hay.</p>
+    </div>
+  </div>
+</section>
+
+<section data-page-node-id="FniXbeWYrP4NiXEXaLy1YJ">
+  <h2 data-page-node-id="QEt82DyeL7S9suVtvaq6Fm"><span class="dot" style="color:#FF3300" data-page-node-id="meiTpbkxIRLgVbvyk7ieNg"></span>7 · Puntos ciegos</h2>
+  <p class="section-sub" data-page-node-id="ekanWUgx8HbzVZjoe7l6Li">Lo que no sé, para que no se confunda con lo que sé.</p>
+
+  <div class="blind-card" data-page-node-id="Arcuaezbzmm4iz9G2ujxLf">
+    <div class="blind-head" data-page-node-id="o3IDBYzFlh5TvTDNWfjtnW"><span class="eye" data-page-node-id="APKPLVdyYvWhMBmAF4Sd9P">◆</span><h3 data-page-node-id="b7cCO0Baq5jaTmxxmvmRPE">No sé qué emulador usa ViperX</h3></div>
+    <p data-page-node-id="mNDqHdfK9ftrUlHTfiqbj4">Ni él ni el vídeo lo dicen, y no hay rastro visual. Lo único que puedo afirmar es la propiedad que debe tener, no su nombre.</p>
+  </div>
+  <div class="blind-card" data-page-node-id="WWjQxvsWbvo3mD0r7QvIbr">
+    <div class="blind-head" data-page-node-id="E7yjrZOUaivNX94sS4bVGl"><span class="eye" data-page-node-id="G3T1DLhMYkFzACsfBLHFTf">◆</span><h3 data-page-node-id="ZHtN2ASFnBikEgaU2yAvg0">No sé si es el APK oficial o un mod</h3></div>
+    <p data-page-node-id="U1jA0qaVcmy5QlCmGOsCiZ">Los tags de sus vídeos incluyen «jurassic world alive mod apk» y en tu historial hay dos APKs mod de la 3.23.49. No he podido comprobar qué usa él.</p>
+  </div>
+  <div class="blind-card" data-page-node-id="e3ZSRGX5lYVCr4dLOMyXLf">
+    <div class="blind-head" data-page-node-id="DGzcihM71CMgZ2MkJIfREc"><span class="eye" data-page-node-id="tEFfaduoVqgbFge04LQaV4">◆</span><h3 data-page-node-id="hoGNj4G3bsMg4mzUnYe098">No medí los fps reales del juego en el vídeo</h3></div>
+    <p data-page-node-id="kjoVkmqQzrqgQiW9cewBxC">El tramo que muestreé era casi estático (un popup), así que la comparación de fotogramas no distingue 30 de 60. El contenedor es 60 fps; el contenido, sin medir.</p>
+  </div>
+  <div class="blind-card" data-page-node-id="24v1rpBqVF9juwMldCWWH6">
+    <div class="blind-head" data-page-node-id="OpDF82k9fAexY3xjsKj8eR"><span class="eye" data-page-node-id="EB05Jg1IbsWZgxkFEGcFJI">◆</span><h3 data-page-node-id="K9OFexQpGxtuNkhTh8bIsv">Ninguna de las palancas está probada</h3></div>
+    <p data-page-node-id="26EgokkhNs2DBTo3vBEey6">Las cuatro de la sección 6 son hipótesis. La primera que probaría es Waydroid en multi-ventana, por ser la única que corre en Linux y no toca tu emulador actual.</p>
+  </div>
+</section>
+
+</main>
+
+<footer data-page-node-id="jd9tHXIw1BqoLB0ADYWdjP">
+  Medido el 10-oct-2026 sobre <span class="brand" data-page-node-id="OjKA0TG46zSFWF0CS9YWz3">Genymotion Desktop</span> (Google Pixel 6, Android 11) y sobre el APK <code data-page-node-id="XmVU7LD5wXgC9iS0yAiEQC">3.23.49</code>.
+  El vídeo de referencia es <code data-page-node-id="Go6zUId75EBVHfqv2wIgWW">OCvmYLt_mNo</code>, de ViperX. Sin nombre de emulador atribuido: no hay dato.
+</footer>
+
+</body>
+</html>

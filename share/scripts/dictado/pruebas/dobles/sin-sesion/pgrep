@@ -1,0 +1,10 @@
+#!/bin/sh
+# pgrep que no encuentra nada. Solo para la comprobacion del puente en reposo.
+#
+# En una sesion donde n30 esta dictando de verdad hay motor, y el puente dice "vivo" con razon.
+# Eso no es un fallo del codigo, es la medicion de otro estado. La comprobacion pide la premisa
+# contraria, asi que se le esconde la sesion con este doble, y solo para esa orden.
+#
+# No vive en la carpeta de dobles que va en el PATH de toda la suite, a proposito: un pgrep falso
+# suelto ahi taparia el que usan dictado.sh y el propio puente en el resto de las pruebas.
+exit 1

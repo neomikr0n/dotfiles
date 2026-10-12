@@ -24,7 +24,7 @@ local scriptsDir = os.getenv("HOME") .. "/dotfiles/share/scripts/"
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" })
 hl.monitor({
     output   = "DP-2",
-    mode     = "3440x1440@144.05",
+    mode     = "3440x1440@240.09",
     position = "auto",
     scale    = 1,
     bitdepth = 10,
@@ -90,7 +90,7 @@ hl.config({
     misc = {
         disable_hyprland_logo      = true,
         disable_splash_rendering   = true,
-        vrr                        = 2,
+        vrr                        = 2, -- true causa flickering -_-
         allow_session_lock_restore = true,
         session_lock_xray          = true,
     },
@@ -305,6 +305,49 @@ hl.on("hyprland.start", function()
     -- (antes había dos: una aquí y otra text-only en n30.conf -> historial duplicado)
     hl.exec_cmd("wl-paste --watch cliphist store")
 
+    -- Vigilante de la tecla Ctrl para el dictado. Se arranca por aquí, NO por systemd.
+    --
+    -- Medido el 2026-10-10: la unidad está `enabled` con `WantedBy=graphical-session.target`,
+    -- pero Hyprland NO activa ese target. Comprobado tras el arranque de las 08:21:
+    -- `graphical-session.target` estaba `inactive (dead)`, y con él TODOS los servicios que
+    -- cuelgan de ahí (dms, ktimer-alert, openlogi-agent, dictado-tecla). Por eso la tecla no
+    -- hacía nada: el vigilante nunca llegaba a arrancar, aunque estuviera "enabled".
+    -- DMS tiene exactamente el mismo problema y por eso se lanza más abajo con exec_cmd.
+    --
+    -- Se arranca el SERVICIO y no el script a pelo, para no perder el journal ni el
+    -- Restart=on-failure. El `enable` se deja como está: es inofensivo y sirve de respaldo si
+    -- algún día se activa el target.
+    hl.exec_cmd("systemctl --user start dictado-tecla.service")
+
+    -- Los otros tres servicios del mismo target muerto. Medido el 2026-10-10: los tres estaban
+    -- `enabled`, con enlace en graphical-session.target.wants/, y los tres `inactive`. Llevaban
+    -- caídos desde el arranque sin que nada avisara.
+    --   ktimer-alert      el aviso de ronda de KTimer (overlay Quickshell). Sin él no salta.
+    --   openlogi-agent    el agente HID++ de los Logitech.
+    --   libinput-gestures los gestos del touchpad (hay gestos propios en
+    --                     ~/.config/libinput-gestures.conf, y Hyprland no define ninguno).
+    --
+    -- NO se arranca graphical-session.target en bloque a propósito. dms.service está habilitado
+    -- y colgado de ese target, y DMS ya corre como proceso suelto más abajo (`exec dms run`).
+    -- Levantar el target arrancaría un SEGUNDO DMS y chocaría con el que ya está.
+    hl.exec_cmd("systemctl --user start ktimer-alert.service")
+    hl.exec_cmd("systemctl --user start openlogi-agent.service")
+    hl.exec_cmd("systemctl --user start libinput-gestures.service")
+
+    -- dictado-servidor: el modelo de whisper residente. Mismo target muerto que los de arriba.
+    --
+    -- Medido el 2026-10-11: la unidad estaba `enabled` y `inactive`, y el target
+    -- `graphical-session.target` en `inactive (dead)`. Consecuencia silenciosa: sin servidor,
+    -- dictado.sh cae al binario y CADA dictado paga la carga del modelo. El coste fijo medido
+    -- es 0,79 s por el binario frente a 0,16 s por el servidor, así que se perdía casi un
+    -- segundo por frase sin que nada lo dijera. No fallaba: solo iba lento.
+    --
+    -- El servidor se queda con 1,8 GB de VRAM en reposo (medido el 2026-10-10, de 16 GB).
+    -- La unidad lleva un ExecStartPre que verifica el sha256 del modelo antes de arrancar, así
+    -- que si el modelo se corrompe la unidad queda en `failed` y dictado.sh vuelve al binario
+    -- por su cuenta. Nunca te deja sin dictado, solo más lento.
+    hl.exec_cmd("systemctl --user start dictado-servidor.service")
+
     -- Desktop shell, PRECEDIDA del brillo del monitor. El orden es obligatorio.
     --
     -- DMS sondea los buses DDC UNA sola vez al arrancar y no reintenta salvo que
@@ -338,8 +381,13 @@ hl.on("hyprland.start", function()
     gameModeStart()
 
     -- Apps con workspace destino
-    hl.exec_cmd(music, { workspace = "special silent" })
-    hl.exec_cmd(term .. " -e -o font_size=10 btop", { workspace = "special silent" })
+    --
+    -- CIDER y BTop ya NO se lanzan aqui: los lanza special-layout.sh dentro del
+    -- espacio `special`, en un orden concreto, para que la forma del mosaico sea
+    -- determinista (ver la cabecera de ese script). La geometria final la fija
+    -- ese script redimensionando en caliente, no una regla declarativa, porque
+    -- n30 quiere mosaico y no flotantes. `music` sigue declarada arriba como
+    -- documentacion de que CIDER es el reproductor.
     hl.exec_cmd("copyq",  { workspace = "5 silent" })
     -- ksnip no está instalado (Astra, 2026-09-16).
     -- hl.exec_cmd("ksnip", { workspace = "5 silent" })
@@ -355,11 +403,11 @@ hl.on("hyprland.start", function()
     -- timeout limita la espera TOTAL a 60s; si no hay red, se lanzan igualmente.
     -- Sin flag compartido hypr-online ni poll Lua: no quedan flags obsoletos.
     -- (Steam ya NO va en esta cadena: tiene su propio script, steam-open.sh, con
-    --  puerta HTTPS y veredicto en el journal. Aquí se quedan zen y zapzap.)
+    --  puerta HTTPS y veredicto en el journal. ZapZap tampoco: pasó a
+    --  special-layout.sh, que trae su propia espera de red. Aquí queda solo zen.)
     local networkStart =
         "timeout 60s bash -c 'until ping -c1 -W2 1.1.1.1 >/dev/null 2>&1; do sleep 1; done'; "
-        .. dispatchCommand(browser, "2 silent") .. "; sleep 2; "
-        .. dispatchCommand("env QT_QUICK_BACKEND=software " .. whatsapp, "1 silent")
+        .. dispatchCommand(browser, "2 silent")
     hl.exec_cmd("bash -c " .. shellQuote(networkStart))
 
     -- Steam (2026-09-27): lo lanza un script propio, ligado a internet REAL
@@ -390,6 +438,10 @@ hl.on("hyprland.start", function()
     hl.exec_cmd(scriptsDir .. "genymotion-open.sh")
     hl.exec_cmd("env CHATGPT_PET_WIDTH=320 CHATGPT_PET_HEIGHT=320 " .. scriptsDir .. "chatgpt-open")
 
+    -- Diseno del espacio `special` (grupo NvTop+BTop / ZapZap / CIDER). Manda en
+    -- el arranque de esas cuatro apps y fija la geometria del mosaico.
+    hl.exec_cmd(scriptsDir .. "special-layout.sh")
+
     -- KTimer (pedido el 2026-10-02): arranca con su tarea ya preconfigurada —75 s, bucle,
     -- una sola instancia, el script de la ronda— pero PARADA, sin empezar a contar hasta
     -- que se pulse start. KTimer no tiene opciones de linea de ordenes (`ktimer --help`
@@ -410,8 +462,9 @@ hl.on("hyprland.start", function()
     -- POR QUE EL pgrep: una sola instancia de la app. KDBusService usa la opcion Multiple,
     -- asi que dos ktimer conviven sin quejarse. Ojo: el `OneInstance` del fichero NO cubre
     -- esto, es sobre no solapar el comando. El escritorio lo garantiza la regla "ktimer-pos".
-    hl.exec_cmd("sed -i 's/^State=.*/State=0/' ~/.config/ktimerrc 2>/dev/null; "
-        .. "pgrep -x ktimer >/dev/null 2>&1 || ktimer", { workspace = "2 silent" })
+    
+    -- hl.exec_cmd("sed -i 's/^State=.*/State=0/' ~/.config/ktimerrc 2>/dev/null; "
+    --    .. "pgrep -x ktimer >/dev/null 2>&1 || ktimer", { workspace = "2 silent" })
 
     -- DeepSeek Harness (DSH) en el escritorio 1: el script arranca `dsh web` si no
     -- escucha en :3080 y abre Chrome en modo app con el token de /tmp/dsh-web.log.
@@ -502,6 +555,41 @@ hl.bind("SHIFT + XF86AudioLowerVolume", hl.dsp.exec_cmd(scriptsDir .. "rme-volum
 hl.bind("XF86AudioMute", hl.dsp.exec_cmd(scriptsDir .. "rme-volume mute"))
 hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("dms ipc call audio micmute"), { locked = true })
 hl.bind("Caps_Lock", hl.dsp.exec_cmd(scriptsDir .. "swayosd-on-demand --caps-lock"), { release = true })
+
+-- === Dictado (voz a texto) - 2026-10-09 ===
+-- SUPER + D alterna: un toque empieza a grabar, el siguiente transcribe y pega en la
+-- ventana que tenga el foco. La cadena vive en scripts/dictado/dictado.sh:
+-- pw-record -> whisper-cli (backend Vulkan) -> wl-copy + Ctrl+V.
+-- Se elige TOGGLE y no push-to-talk a proposito: en Wayland el evento de soltado de un
+-- modificador se pierde con facilidad (issues #7675, #6946 y #9240 de Hyprland), y quedarse
+-- grabando sin enterarte es peor que pulsar la tecla dos veces.
+-- SUPER+D y SUPER+SHIFT+D estaban libres; comprobado con hyprctl binds -j el 2026-10-09.
+-- Movido el 2026-10-10 de scripts/ a scripts/dictado/, junto con el resto del proyecto.
+hl.bind(mainMod .. " + D", hl.dsp.exec_cmd(scriptsDir .. "dictado/dictado.sh toggle"),
+    { description = "Dictado: grabar / transcribir" })
+
+-- === Dictado: repegar la última transcripción - 2026-10-11 ===
+-- SUPER+SHIFT+D vuelve a pegar la última transcripción del historial, sin grabar nada. Es la red
+-- de seguridad del dictado. Si el texto salió en la ventana equivocada, o si se pegó antes de que
+-- la ventana tuviera el foco, esto lo vuelve a poner donde esté el foco ahora.
+-- El historial lo lleva dictado.sh, que guarda las últimas treinta con su fecha en
+-- ~/.local/share/dictado/historial.txt. Para verlas, `dictado.sh historial`.
+-- SUPER+SHIFT+D estaba libre; comprobado con `hyprctl binds` el 2026-10-11.
+hl.bind(mainMod .. " + SHIFT + D", hl.dsp.exec_cmd(scriptsDir .. "dictado/dictado.sh repegar"),
+    { description = "Dictado: repegar la última transcripción" })
+
+-- === Dictado (hyprwhspr) - 2026-10-11 ===
+-- POR QUÉ ESTÁ AQUÍ Y NO EN bindings.conf: el instalador de hyprwhspr (1.48.0) añade su
+-- bind a ~/.config/hypr/bindings.conf, pero ese fichero NO se carga: no existe
+-- hyprland.conf y este hyprland.lua (parser Lua nativo) no lo sourcea. Resultado: el
+-- bind nunca llegaba a Hyprland y SUPER+ALT+D no hacía nada. Comprobado con
+-- `hyprctl binds`: 149 binds, y con modmask 72 (SUPER+ALT) solo la L del lock.
+-- hyprwhspr usa el compositor en vez de evdev (use_hypr_bindings=true en
+-- ~/.config/hyprwhspr/config.json), así que el bind TIENE que existir aquí.
+-- El tray script hace toggle: un toque empieza a grabar, el siguiente para y pega.
+hl.bind(mainMod .. " + ALT + D",
+    hl.dsp.exec_cmd("/usr/lib/hyprwhspr/config/hyprland/hyprwhspr-tray.sh record"),
+    { description = "Dictado hyprwhspr: grabar / transcribir" })
 
 -- === Brightness ===
 hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("dms ipc call brightness increment 5 \"\""), { repeating = true, locked = true })
@@ -1180,6 +1268,17 @@ hl.window_rule({ name = "whatsapp-nativefier", match = { class = "^whatsapp-nati
 hl.window_rule({ name = "zapzap", match = { class = "^com\\.rtosta\\.zapzap$" }, opacity = "0.85 0.15" })
 hl.window_rule({ name = "discord-dim", match = { class = "^discord$" }, opacity = "0.85 0.85" })
 hl.window_rule({ name = "cider-dim", match = { class = "^(cider)$" }, opacity = "0.79 0.75" })
+
+-- Espacio `special`: las cuatro apps del diseno viven SIEMPRE ahi. El script
+-- special-layout.sh decide el orden y la geometria; estas reglas solo garantizan
+-- el destino cuando la ventana la crea un proceso hijo (cider es Electron y su
+-- ventana no la crea el proceso que el script lanza).
+hl.window_rule({ name = "layout-cider-special",  match = { class = "^(cider)$" },                workspace = "special silent" })
+hl.window_rule({ name = "layout-zapzap-special", match = { class = "^com\\.rtosta\\.zapzap$" }, workspace = "special silent" })
+-- BTop pasa a tener clase propia (`btop`), asi que ya no le alcanza la regla
+-- "kitty"; se le replican sus dos efectos para que se vea igual que antes.
+hl.window_rule({ name = "layout-btop-special",   match = { class = "^(btop)$" },                 workspace = "special silent", border_size = 0, opacity = "0.85 0.85" })
+hl.window_rule({ name = "layout-nvtop-special",  match = { class = "^(nvtop-fluid)$" },          workspace = "special silent" })
 hl.window_rule({ name = "tidal-dim", match = { class = "^tidal-hifi$" }, opacity = "0.50 0.50" })
 hl.window_rule({ name = "spotify-dim", match = { class = "^Spotify$" }, opacity = "0.95 0.85" })
 
@@ -1188,22 +1287,7 @@ hl.window_rule({ name = "easyeffects-dim", match = { class = "^easyeffects$" }, 
 hl.window_rule({ name = "pavucontrol-tile", match = { class = "^(pavucontrol)$" }, tile = true })
 hl.window_rule({ name = "pavucontrol-dim", match = { class = "^pavucontrol$" }, opacity = "0.90 0.90" })
 hl.window_rule({ name = "nm-connection-tile", match = { class = "^(nm-connection-editor)$" }, tile = true })
-hl.window_rule({ name = "ktimer-dim", match = { class = "^ktimer$" }, opacity = "0.45 0.13" })
 hl.window_rule({ name = "ktimer-dim", match = { class = "^org.kde.ktimer$" }, opacity = "0.45 0.13" })
--- KTimer arranca en el escritorio 2, en la posicion donde lo tiene n30. Medida el 2026-10-02:
--- at = [-540, -184], es decir casi todo fuera de pantalla por la izquierda y por arriba.
--- Que se salga del espacio es INTENCIONADO, no un error de calculo.
---   - `float = true` hace falta: en una ventana en mosaico la posicion se ignora.
---   - `move` admite negativos sin problema (la regla del GPS ya usa y = -202).
---   - `silent`: se va al 2 SIN arrastrar la vista. Si prefieres que al abrirlo te lleve al 2,
---     quitale el `silent` (que quede `workspace = "2"`). Leido en el fuente: solo cambia de
---     escritorio si el string no lleva "silent".
---   - Casa por CLASE, asi que vale para CUALQUIER ventana de KTimer: la principal y el dialogo de
---     Preferencias comparten `org.kde.ktimer`. Para una sola habria que anadir `title`.
---   - La `ktimer-dim` de arriba con `^ktimer$` no puede casar nunca: la clase real empieza por
---     `org.kde.`, asi que el ancla `$` no la pilla. Candidata a borrar.
--- Verificado antes de escribirlo, con una regla en caliente igual: la ventana de prueba salio
--- exactamente en [-540, -184] y en el escritorio 2.
 hl.window_rule({ name = "ktimer-pos", match = { class = "^org\\.kde\\.ktimer$" },
     workspace = "2 silent", float = true, move = { -540, -184 } })
 hl.window_rule({ name = "konsole-dim", match = { class = "^konsole$" }, opacity = "0.25 0.11" })
@@ -1504,3 +1588,224 @@ hl.window_rule({ name = "dms-shell-float", match = { class = "^(org\\.quickshell
 -- LAYER RULES
 -- ==================
 hl.layer_rule({ name = "quickshell-noanim", match = { namespace = "^(quickshell)$" }, no_anim = true })
+
+-- hyprpm
+hl.on("hyprland.start", function ()
+    hl.exec_cmd("hyprpm reload");
+end);
+if hl.plugin.hyprliquid then
+    hl.config(
+    {
+        plugin =
+        {
+            hyprliquid =
+            {
+                watch_system_color_scheme = true,
+                background_sharing = true
+            }
+        }
+    });
+
+    hl.window_rule(
+    {
+        name = "kitty",
+        match = { class = "kitty" },
+        border_size = 0,
+        no_blur = true,
+        no_shadow = true,
+        ["hyprliquid:rounding_lua"] = 64,
+        ["hyprliquid:effect"] = "liquid_glass",
+        ["hyprliquid:tint_color"] = "rgba(0x1a, 0x1b, 0x26, 0.5)",
+        ["hyprliquid:highlight_style"] = 2,
+        ["hyprliquid:glass_dispersion"] = true
+    });
+
+    hl.window_rule(
+    {
+        name = "zen-browser",
+        match = { class = "zen" },
+        ["hyprliquid:effect"] = "acrylic_thin",
+        ["hyprliquid:color_scheme"] = "follow_system"
+    });
+
+    hl.window_rule(
+    {
+        name = "vscode",
+        match = { class = "code" },
+        ["hyprliquid:effect"] = "acrylic",
+        ["hyprliquid:color_scheme"] = "dark"
+    });
+
+    hl.window_rule(
+    {
+        name = "dolphin",
+        match = { class = "org.kde.dolphin" },
+        ["hyprliquid:effect"] = "mica_alt",
+        ["hyprliquid:color_scheme"] = "light"
+    });
+
+    hl.layer_rule(
+    {
+        name = "waybar",
+        match = { namespace = "waybar" },
+        ["hyprliquid:effect"] = "liquid_glass",
+        ["hyprliquid:corner_radius"] = 20,
+        ["hyprliquid:highlight_style"] = 4,
+        ["hyprliquid:vdf_map_mode"] = 1,
+        ["hyprliquid:vdf_map_update_policy"] = "onchange"
+    });
+
+    hl.layer_rule(
+    {
+        name = "wlogout",
+        match = { namespace = "logout_dialog" },
+        blur = true,
+        ["hyprliquid:effect"] = "liquid_glass",
+        ["hyprliquid:corner_radius"] = 96,
+        ["hyprliquid:highlight_style"] = 4,
+        ["hyprliquid:vdf_map_mode"] = 2,
+        ["hyprliquid:vdf_map_update_policy"] = "once"
+    });
+end
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- OpenPets — la mascota (instalado el 2026-10-11)
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- La mascota y el Centro de Control son DOS ventanas de la MISMA app Electron
+-- (/opt/OpenPets/openpets, sobre XWayland) y por tanto comparten CLASE:
+--
+--     clase real = "open-pets-desktop"      ← NO es "openpets"
+--
+-- Lo único que las distingue es el TÍTULO, y la app lo construye así (plantilla leída
+-- dentro de su app.asar):
+--
+--     mascota → `OpenPets — ${options.displayName}`   (por defecto: "OpenPets Default Pet")
+--     panel   → `OpenPets — Control Center`           (fijo)
+--
+-- Por eso una regla por CLASE sola le quitaría el foco y la fijaría TAMBIÉN al panel, y por
+-- eso el comportamiento va en una regla con clase + título. Si RENOMBRAS LA MASCOTA, ese
+-- título cambia y esa segunda regla deja de casar: hay que añadir aquí el nombre nuevo.
+--
+-- Los dos síntomas que se veían no eran suyos:
+--   · El borde amarillo es el borde INACTIVO global (`general:col.inactive_border` =
+--     ffff9c, border_size 2), y la mascota nunca tiene el foco → siempre lo enseñaba.
+--   · El "blur": la ventana es transparente POR DISEÑO (`html, body { background:
+--     transparent }` en su HTML y `transparent: true` en la app), así que lo que se veía
+--     borroso era el ESCRITORIO de detrás, emborronado por el `decoration:blur` global.
+--     Con `no_blur` detrás se ve el escritorio nítido.
+--
+-- Fuera de la regla: `xray = false` (es el valor por defecto, no hacía nada) y
+-- `border_color` (con `border_size = 0` no hay borde que colorear).
+--
+-- OJO CON ESTO, que es la trampa de esta regla. Registrar una regla nueva NO aplica todos
+-- sus efectos a las ventanas ya abiertas: el motor los parte en dos grupos (leído en la
+-- fuente de v0.56.2, src/desktop/rule/windowRule/WindowRuleApplicator.cpp).
+--
+--   · DINÁMICOS → se aplican en caliente. `hl.window_rule` pide un refresco
+--     (REFRESH_WINDOW_STATES → ruleEngine()->updateAllRules() → propertiesChanged() en cada
+--     ventana) y con eso basta. Aquí caen TODOS los de la regla 1 y el `no_focus`.
+--   · ESTÁTICOS → solo se leen dentro de CWindow::mapWindow(), así que necesitan que la
+--     ventana se VUELVA A MAPEAR. Son: float, tile, fullscreen, maximize, fullscreen_state,
+--     move, size, center, pseudo, monitor, workspace, no_initial_focus, pin, group,
+--     suppress_event, content, no_close_for y scrolling_width. Aquí caen `float` y `pin`.
+--
+-- Traducido: la decoración ya está puesta, pero `pin` (que la mascota salga en todos los
+-- escritorios) NO estará hasta que OpenPets se cierre y se vuelva a abrir. Un
+-- `hyprctl reload` tampoco lo arregla: recarga las reglas, no re-mapea las ventanas.
+-- Hecho el 2026-10-11: tras relanzar la app, la mascota quedó con `pinned=true`.
+
+-- 1. Decoración. Va por CLASE, así que cubre las dos ventanas; al panel le sienta igual de
+--    bien, porque la app ya pide `hasShadow: false` y `frame: false` para las dos.
+hl.window_rule({
+    name = "openpets-sin-decoracion",
+    match = { class = "^open-pets-desktop$" },
+    border_size = 0,
+    rounding = 0,
+    no_blur = true,
+    no_shadow = true,
+    decorate = false
+})
+
+-- 2. Comportamiento, SOLO la mascota: flotante, fijada (visible en todos los escritorios) y que
+--    NO robe el foco al aparecer. El título de la mascota acaba en su nombre visible; el del
+--    panel acaba en "Control Center", así que no casa. `no_initial_focus` es estático → se
+--    aplica al mapear; `float` y `pin` también (ver arriba).
+--
+--    AQUÍ ESTUVO EL FALLO DEL ARRASTRE (11-oct-2026). Esta regla llevaba `no_focus = true` y
+--    con eso la mascota NO SE PODÍA ARRASTRAR: `no_focus` no significa «no le des el foco»,
+--    significa que Hyprland la EXCLUYE del hit-test, o sea que no le llega ningún evento de
+--    ratón. Está en `CViewHitTester::windowAt()` (src/desktop/state/ViewHitTester.cpp): las dos
+--    ramas que devuelven una ventana flotante exigen `!w->m_ruleApplicator->noFocus()` —
+--    la de fijadas (línea ~57, `w->m_pinned && !noFocus`) y la de flotantes normales
+--    (línea ~96, `!w->m_pinned && !noFocus`). Sin hit-test no hay `mousedown`, y el arrastre de
+--    OpenPets es manual en JS: `mousedown` sobre `.pet-shell` → `mousemove` → IPC
+--    `openpets:pet-drag-move` → mueve la ventana. Sin el primero, no hay nada.
+--
+--    Se comprueba en caliente, sin adivinar:
+--        hyprctl getprop "address:0x..." no_focus     # -> true  (mal)  /  false (bien)
+--
+--    Lo que se quería era NO ROBAR EL FOCO AL APARECER, y para eso el efecto correcto es
+--    `no_initial_focus`, que solo afecta a la condición de foco en `mapWindow()` y NO se
+--    consulta en el hit-test. `pin` y `float` tampoco estorban: la rama de fijadas del hit-test
+--    contempla justo ese caso.
+--
+--    El `opacity` NO es cosmético, arregla un lavado real y medido. La mascota no coge el foco
+--    en la práctica, así que se le aplica SIEMPRE el `decoration:inactive_opacity` global
+--    (0,9 en esta máquina): se dibujaba al 90 %.
+--    Medido el 2026-10-11 comparando el pico de luminancia de la región de la mascota en dos
+--    capturas, antes y después de activar esta línea: 229,7 → 252,3 (el blanco del pelaje
+--    pasó de RGB 231,230,228 a 255,253,249). El `override` tiene que ir DESPUÉS de cada
+--    cifra: `parseOpacityRule` marca como override la última cifra leída, así que
+--    "1 override 1 override" fija activo e inactivo, y "1 override" solo dejaría el activo.
+hl.window_rule({
+    name = "openpets-mascota",
+    match = { class = "^open-pets-desktop$", title = "^OpenPets.*Pet$" },
+    float = true,
+    pin = true,
+    no_initial_focus = true,
+    opacity = "1 override 1 override"
+})
+
+-- 3. El MENÚ del botón derecho (añadido el 2026-10-11). Alrededor del menú se veía una
+--    banda que no le correspondía, y NO era decoración suya. Diagnóstico medido:
+--
+--    El menú lo construye la app así: `Menu.buildFromTemplate(t).popup({ window })`, o sea
+--    menú NATIVO de Electron. Es una ventana X11 APARTE, y sus datos (medidos con xdotool +
+--    xprop mientras estaba abierta, y con `hyprctl -j clients -a`):
+--
+--        _NET_WM_WINDOW_TYPE = _NET_WM_WINDOW_TYPE_MENU
+--        WM_CLASS: not found        <- SIN CLASE
+--        WM_NAME:  no existe        <- SIN TÍTULO
+--        Geometry: 321x436
+--
+--    Ese 321x436 es EXACTAMENTE la banda que se veía, así que la «banda» no era un borde
+--    alrededor del menú: era la ventana entera. Dentro, Chromium pinta el panel del menú
+--    (273x388) y deja un margen de 24 px a los lados, 12 arriba y 36 abajo. Ese margen es
+--    translúcido, y Hyprland lo DIFUMINABA con el blur global.
+--
+--    Las dos pruebas de que era blur y no una sombra ni un borde:
+--      · El margen tenía ruido ALEATORIO píxel a píxel (±2) y el fondo y el panel estaban
+--        PLANOS. El ruido aleatorio por píxel solo lo produce `decoration:blur:noise`.
+--      · El margen era MÁS CLARO que el escritorio. La sombra de Hyprland es negra al 44 %
+--        (`decoration:shadow:color = 0x00000070`) y solo puede oscurecer; en cambio el blur
+--        lleva `contrast = 0,8916`, que sobre un tono oscuro tira hacia el gris medio, o sea
+--        aclara. Medido: fondo RGB (26,29,34), margen (30,33,38), panel (37,39,42).
+--
+--    Ninguna de las dos reglas de arriba la alcanzaba, porque la ventana del menú no tiene
+--    clase: la regla 1 pide `^open-pets-desktop$` y el menú no la tiene. Por eso caía en la
+--    decoración global. `class = "^$"` es el único asidero que existe, y es seguro: se
+--    comprobó que NINGUNA de las 19 ventanas mapeadas tiene la clase vacía.
+--
+--    `no_blur` es un efecto DINÁMICO, así que se aplica también a una ventana ya abierta.
+--    Comprobado en caliente con la regla registrada por `hyprctl eval` y el menú abierto:
+--        hyprctl getprop address:0x... no_blur  -> true
+--    Los otros tres son higiene: un menú emergente no debe llevar sombra, borde ni esquinas
+--    del compositor, porque ya trae las suyas.
+hl.window_rule({
+    name = "openpets-menu-sin-halo",
+    match = { class = "^$" },
+    no_blur = true,
+    no_shadow = true,
+    border_size = 0,
+    rounding = 0
+})

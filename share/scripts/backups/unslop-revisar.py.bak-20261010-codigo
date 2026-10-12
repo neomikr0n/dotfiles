@@ -1,0 +1,570 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""Comprobador de tics de IA en texto español.
+
+Pasa la lista de patrones de la skill unslop_ESPAÑOL sobre ficheros y dice dónde
+aparece cada uno. No reescribe nada: solo señala. La decisión es mía.
+
+Uso:
+    unslop-revisar.py FICHERO [FICHERO...]
+    unslop-revisar.py --solo=rayas,dos-puntos FICHERO
+    unslop-revisar.py --listar-reglas
+
+Los ficheros de código se revisan solo en sus comentarios y cadenas de documentación,
+nunca en el código ejecutable, para no proponer cambios que rompan el programa.
+"""
+
+import argparse
+import re
+import sys
+from pathlib import Path
+
+# ---------------------------------------------------------------------------
+# Patrones. Cada uno lleva el número de regla de la skill para poder citarla.
+# ---------------------------------------------------------------------------
+
+VOCABULARIO_IA = [
+    "además", "asimismo", "crucial", "fundamental", "esencial", "vital",
+    "profundizar", "adentrarse", "sumergirse", "perdurable", "atemporal",
+    "potenciar", "impulsar", "fomentar", "acaparar", "entramado", "intrincado",
+    "panorama", "escenario", "ecosistema", "decisivo", "exhibir",
+    "poner de relieve", "mosaico", "tapiz", "testimonio", "subrayar",
+    "vibrante", "dinámico", "pujante", "robusto", "integral", "holístico",
+    "sinergia", "empoderar", "disruptivo",
+]
+
+SUSTANTIVOS_METAFORICOS = [
+    "sustrato", "cuña", "locus", "atalaya", "nexo", "primitiva", "cimiento",
+    "andamiaje", "modalidad", "paradigma", "palanca", "canalizar",
+    "hoja de ruta", "caja de herramientas", "poner en valor", "aterrizar",
+    "exceso de acabado", "trinquete", "evacuar", "juego final",
+    "superficie de la api",
+]
+
+MULETILLAS = [
+    "con el fin de", "debido al hecho de que", "es importante señalar",
+    "cabe destacar", "en el mundo actual", "en la era digital",
+    "a fin de cuentas", "en definitiva", "por otra parte", "en este sentido",
+]
+
+FORMAS_REBUSCADAS = [
+    "se erige como", "se presenta como", "constituye", "alardea de",
+    "presume de", "cuenta con", "ostentar", "posee", "numerosos",
+    "en el caso de que", "llevar a cabo", "efectuar", "proceder a",
+    "utilizar", "aprovechar", "apalancar", "facilitar",
+]
+
+FRASES_CHATBOT = [
+    "espero que", "avísame si", "por supuesto", "claro que sí",
+    "buena pregunta", "excelente pregunta", "tienes toda la razón",
+    "como asistente", "no dudes en",
+]
+
+MATIZACION = [
+    "podría potencialmente", "posiblemente", "tal vez", "quizá",
+    "en cierta medida", "hasta cierto punto", "de alguna manera",
+]
+
+CONCLUSIONES_VACIAS = [
+    "el futuro se ve prometedor", "prometedor", "sin duda alguna",
+    "en resumen", "en conclusión", "para concluir",
+]
+
+ADVERBIOS_MENTE = re.compile(
+    r"\b\w{5,}mente\b", re.IGNORECASE
+)
+
+# Palabras que acaban en -mente y no son adverbios de modo, así que no las señalo.
+ADVERBIOS_PERMITIDOS = {
+    "simplemente", "solamente", "únicamente", "especialmente", "principalmente",
+    "normalmente", "generalmente", "actualmente", "realmente", "finalmente",
+    "inicialmente", "directamente", "exactamente", "concretamente",
+    "independientemente", "inmediatamente", "probablemente", "posiblemente",
+    "prácticamente", "básicamente", "técnicamente", "económicamente",
+}
+
+# Verbos conjugados que terminan en -mente por casualidad. «Implemente» acaba en
+# -mente y no es un adverbio, y sin esta lista pasa por uno.
+NO_ADVERBIOS_MENTE = {
+    "implemente", "implementen", "aumente", "aumenten", "fomente", "fomenten",
+    "documente", "documenten", "argumente", "argumenten", "experimente",
+    "experimenten", "complemente", "complementen", "alimente", "alimenten",
+    "sedimente", "sedimenten", "comente", "comenten",
+}
+
+REGLAS = {
+    "rayas": (
+        13,
+        "Raya, guion largo o medio haciendo de raya. Solo puntos y comas.",
+    ),
+    "dos-puntos": (
+        14,
+        "Dos puntos a mitad de frase como conector. Valen antes de lista o ejemplo.",
+    ),
+    "vocabulario-ia": (7, "Vocabulario de IA. Cámbialo por una palabra llana."),
+    "sustantivo-metaforico": (26, "Sustantivo metafórico abstracto. Busca la palabra concreta."),
+    "formas-rebuscadas": (8, "Forma rebuscada de decir «es» o «tiene»."),
+    "muletillas": (23, "Muletilla de relleno. Se acorta o se borra."),
+    "adverbios-mente": (30, "Adverbio en -mente. Corta o usa un verbo más fuerte."),
+    "frases-chatbot": (20, "Frase de chatbot. Se borra."),
+    "matizacion": (24, "Matización excesiva."),
+    "conclusiones-vacias": (25, "Conclusión genérica. Di planes o hechos concretos."),
+    "negrita-encabezado": (
+        16,
+        "Negrita seguida de dos puntos que repite la línea. Pásalo a prosa.",
+    ),
+    "negrita-excesiva": (15, "Negrita en cada nombre propio o sigla."),
+    "no-solo-sino": (9, "Falso contraste de dos miembros. Di el punto directamente."),
+    "gerundio-decorativo": (3, "Gerundio decorativo al final de frase."),
+    "atribucion-vaga": (5, "Atribución vaga sin fuente."),
+    "titulo-mayusculas": (17, "Mayúsculas de título. El español capitaliza solo la primera palabra."),
+    "emoji": (18, "Emoji decorativo."),
+    # Sin número: esta no sale de la lista de la skill, es una regla firme de n30.
+    "cjk": (0, "Carácter chino. Se traduce: el texto se lee en español."),
+}
+
+# Símbolos tipográficos que NO son emoji y por tanto no se señalan. Estrella de
+# recuento, viñetas, flechas, marcas de verificación y comillas.
+SIMBOLOS_PERMITIDOS = set("★☆✓✔✖✗·•‣▪▫●○◆◇►◄→←↑↓«»—–")
+RE_EMOJI = re.compile(
+    "[\U0001F300-\U0001FAFF\u2600-\u27BF\uFE0F\u2B00-\u2BFF]"
+)
+# Caracteres chinos, con la puntuación y las formas de ancho completo que los
+# acompañan. No salen de la lista de reglas de la skill, pero n30 lee en español
+# y esto es una regla firme suya, por eso esta regla va sin número.
+RE_CJK = re.compile(r"[\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]")
+# Hacen falta cuatro letras antes del sufijo: si no, «cuando» y «cuanto» pasan
+# por gerundios.
+RE_GERUNDIO = re.compile(
+    r",\s+\w{4,}(?:ando|iendo|yendo)\b[^.]*\.", re.IGNORECASE
+)
+# Fuentes que se citan sin nombrarlas. Van en lista corta y no en una sola
+# cadena larga, porque el comprobador revisa el texto de sus propias cadenas y
+# una alternancia entera acabaría señalándose a sí misma.
+ATRIBUCIONES_VAGAS = [
+    "los expertos",
+    "los informes del sector",
+    "algunos cr[ií]ticos",
+    "muchos analistas",
+    "se dice que",
+    "estudios sugieren",
+]
+RE_ATRIBUCION = re.compile(
+    r"\b(" + "|".join(ATRIBUCIONES_VAGAS) + r")\b", re.IGNORECASE
+)
+RE_NO_SOLO = re.compile(r"no\s+solo\b[^.]{0,80}?\bsino\b", re.IGNORECASE)
+RE_NEGRITA_DOS_PUNTOS_MD = re.compile(r"\*\*[^*\n]{1,60}\*\*\s*:")
+RE_NEGRITA_DOS_PUNTOS_HTML = re.compile(
+    r"<strong>[^<]{1,60}</strong>\s*:", re.IGNORECASE
+)
+
+# Extensiones cuyo código NO se revisa: solo comentarios y documentación.
+# .qml entra aquí porque una declaración de propiedad («readonly property string
+# runtime: {») trae su propio dos puntos, que es sintaxis y no prosa.
+EXT_CODIGO = {".py", ".sh", ".c", ".h", ".zsh", ".bash", ".qml"}
+EXT_TEXTO = {".md", ".html", ".htm", ".json", ".yaml", ".yml", ".rules",
+             ".service", ".timer", ".txt"}
+
+
+RE_TEXTO_VISIBLE = re.compile(
+    r"""(?:echo|notificar|printf|dialog-error|dialog-warning)\s+(?:-\S+\s+)*["'](.+?)["']"""
+)
+RE_HEREDOC = re.compile(r"<<-?\s*['\"]?([A-Za-z_][A-Za-z0-9_]*)['\"]?\s*$")
+
+
+def es_comentario(linea: str, ext: str) -> bool:
+    """Dice si una línea de un fichero de código es comentario o documentación."""
+    s = linea.lstrip()
+    if not s:
+        return False
+    if ext in (".py", ".sh", ".zsh", ".bash"):
+        return s.startswith("#")
+    if ext in (".c", ".h", ".qml"):
+        return s.startswith(("//", "/*", "*", "*/"))
+    return True
+
+
+def trocear_comentario(linea: str, ext: str) -> str:
+    """Devuelve solo la parte de comentario de una línea de código.
+
+    Así no se señalan los tics que aparecen dentro de una cadena de código, que
+    ahí no son prosa.
+    """
+    s = linea
+    if ext in (".py", ".sh", ".zsh", ".bash"):
+        i = s.find("#")
+        return s[i + 1:] if i >= 0 else ""
+    if ext in (".c", ".h", ".qml"):
+        for marca in ("//", "/*", "*"):
+            i = s.find(marca)
+            if i >= 0:
+                return s[i + len(marca):]
+        return ""
+    return s
+
+
+def texto_visible(linea: str, ext: str) -> str:
+    """Devuelve el texto que un script imprime o inyecta en un documento.
+
+    Sin esto, el HTML que un script genera dentro de una cadena de Python queda
+    sin revisar, y son justo los ficheros que se regeneran solos.
+    """
+    if ext not in (".py", ".sh", ".zsh", ".bash"):
+        return ""
+    trozos = []
+    for m in RE_TEXTO_VISIBLE.finditer(linea):
+        trozos.append(m.group(1))
+    # Cadenas largas de plantilla, del tipo f'...' o '...' con muchas palabras dentro.
+    for m in re.finditer(r"""(?:f?["'])([^"'\n]{40,})(?:["'])""", linea):
+        trozos.append(m.group(1))
+    return " ".join(trozos)
+
+
+def buscar(linea: str, patrones: list[str], sensible: bool = True) -> list[str]:
+    """Busca palabras y frases con límites de palabra.
+
+    Sin límites, el comprobador lee el final de «crecimiento» como una palabra
+    suelta y llena la salida de falsos positivos.
+    """
+    hallados = []
+    flags = 0 if sensible else re.IGNORECASE
+    for p in patrones:
+        # Los guiones y las barras se escapan; el resto es literal.
+        patron = r"(?<![\w-])" + re.escape(p) + r"(?![\w-])"
+        if re.search(patron, linea, flags):
+            hallados.append(p)
+    return hallados
+
+
+def cuenta_marca(linea: str, marca: str) -> int:
+    """Cuenta las comillas triples que delimitan, no las que son dato.
+
+    Una comilla triple envuelta en el otro tipo de comilla es un literal, así
+    que no abre ni cierra nada. Sin esta distinción, la línea del propio
+    comprobador que nombra las dos marcas abre un bloque que ya no cierra y
+    todo el fichero acaba revisado como si fuera prosa.
+    """
+    otra = "'" if marca == '"""' else '"'
+    total = 0
+    for m in re.finditer(re.escape(marca), linea):
+        antes = linea[m.start() - 1] if m.start() else ""
+        despues = linea[m.end()] if m.end() < len(linea) else ""
+        if antes == otra or despues == otra:
+            continue
+        total += 1
+    return total
+
+
+def revisar(ruta: Path, solo: set[str] | None) -> list[tuple[int, str, str]]:
+    ext = ruta.suffix.lower()
+    hallazgos = []
+    try:
+        texto = ruta.read_text(encoding="utf-8")
+    except (UnicodeDecodeError, OSError) as e:
+        return [(0, "error", f"no se pudo leer: {e}")]
+
+    # El CSS y el JavaScript de un HTML no son prosa. Revisarlos produce ruido a
+    # montones y ningún hallazgo real.
+    dentro_de_estilo = False
+    dentro_de_script = False
+    # Un bloque de código en Markdown no es prosa, porque los comandos traen sus
+    # propios dos puntos y sus propias rayas, y ahí son sintaxis.
+    dentro_de_cerca = False
+    # Comilla triple de Python y heredoc de shell, porque dentro hay texto que se publica.
+    cierre_triple = None
+    cierre_heredoc = None
+
+    for n, linea in enumerate(texto.splitlines(), 1):
+        bajo = linea.lower()
+
+        # --- bloques de código de Markdown ---
+        if ext in (".md", ".markdown") and linea.lstrip().startswith("```"):
+            dentro_de_cerca = not dentro_de_cerca
+            continue
+        if dentro_de_cerca:
+            continue
+
+        # --- bloques de texto que se publican tal cual ---
+        if cierre_heredoc:
+            if linea.strip() == cierre_heredoc:
+                cierre_heredoc = None
+            else:
+                prosa = linea
+                hallazgos.extend(analizar(prosa, n, ext, solo))
+            continue
+        if cierre_triple:
+            if cuenta_marca(linea, cierre_triple):
+                cierre_triple = None
+            prosa = linea
+            hallazgos.extend(analizar(prosa, n, ext, solo))
+            continue
+
+        if dentro_de_estilo:
+            if "</style>" in bajo:
+                dentro_de_estilo = False
+            continue
+        if dentro_de_script:
+            if "</script>" in bajo:
+                dentro_de_script = False
+            continue
+        if "<style" in bajo and "</style>" not in bajo:
+            dentro_de_estilo = True
+            continue
+        if "<script" in bajo and "</script>" not in bajo:
+            dentro_de_script = True
+            continue
+
+        if ext == ".py":
+            for marca in ('"""', "'''"):
+                if cuenta_marca(linea, marca) == 1:
+                    cierre_triple = marca
+                    break
+        if ext in (".sh", ".zsh", ".bash"):
+            m = RE_HEREDOC.search(linea)
+            if m:
+                cierre_heredoc = m.group(1)
+
+        if ext in EXT_CODIGO:
+            if not es_comentario(linea, ext):
+                visible = texto_visible(linea, ext)
+                if visible:
+                    hallazgos.extend(analizar(visible, n, ext, solo, es_salida=True))
+                continue
+            prosa = trocear_comentario(linea, ext)
+        else:
+            prosa = linea
+
+        hallazgos.extend(analizar(prosa, n, ext, solo))
+
+    # Sin duplicados: una misma cadena puede casar por dos vías.
+    vistos = set()
+    unicos = []
+    for h in hallazgos:
+        if h not in vistos:
+            vistos.add(h)
+            unicos.append(h)
+    return unicos
+
+
+def analizar(prosa: str, n: int, ext: str, solo: set[str] | None,
+             es_salida: bool = False):
+    """Señala los tics de una línea de prosa. Devuelve la lista de hallazgos.
+
+    es_salida marca el texto que un script imprime. Ahí los dos puntos son casi
+    siempre una etiqueta del tipo patrón y valor, no una muleta, así que no se
+    revisan.
+    """
+    hallazgos = []
+    # El marcado HTML no es prosa, así que se quita antes de mirar el texto, pero
+    # las reglas de negrita y de encabezado sí necesitan verlo.
+    crudo = prosa
+    prosa = re.sub(r"<[^>]+>", " ", prosa)
+
+    def anota(regla: str, detalle: str) -> None:
+        if solo and regla not in solo:
+            return
+        hallazgos.append((n, regla, detalle))
+
+    # 13. Rayas. El guion medio entre dígitos es un rango de cifras, que es
+    # tipografía correcta y no una raya.
+    if "—" in prosa:
+        anota("rayas", f"raya: {prosa.strip()[:110]}")
+    for m in re.finditer("–", prosa):
+        izq = prosa[m.start() - 1] if m.start() else ""
+        der = prosa[m.end()] if m.end() < len(prosa) else ""
+        if izq.isdigit() and der.isdigit():
+            continue
+        # Un rango con unidad a un lado también es tipografía («20 Hz–20 kHz»).
+        antes = prosa[max(0, m.start() - 10):m.start()]
+        despues = prosa[m.end():m.end() + 10]
+        if re.search(r"\d", antes) and re.match(r"\s*\d", despues):
+            continue
+        anota("rayas", f"guion medio: {prosa.strip()[:110]}")
+        break
+    if re.search(r"[A-Za-zÁÉÍÓÚÜÑáéíóúüñ] - [A-Za-zÁÉÍÓÚÜÑáéíóúüñ]", prosa):
+        anota("rayas", f"guion corto haciendo de raya: {prosa.strip()[:110]}")
+
+    # 14. Dos puntos de muleta. Se excluyen listas, ejemplos, enumeraciones,
+    # etiquetas cortas y los dos puntos que introducen código o un valor.
+    if ":" in prosa and not es_salida and not prosa.lstrip().startswith("#"):
+        for m in re.finditer(r":(\s+)(\S)", prosa):
+            # resto empieza en el primer carácter con contenido, no antes.
+            resto = prosa[m.start(2):]
+            if re.match(r"^[-*\d]", resto) or resto.startswith("«"):
+                continue
+            # Introduce un ejemplo o un valor literal.
+            if resto.startswith(("`", '"', "'", "(", "[", "$", "/", "→", "…")):
+                continue
+            # Número impar de comillas invertidas antes, señal de que estamos
+            # dentro de un fragmento de código, donde los dos puntos son de la
+            # máquina.
+            if prosa[: m.start()].count("`") % 2 == 1:
+                continue
+            # Etiqueta corta del tipo «Cadena» o «Medido», que es un rótulo y no
+            # una muleta.
+            etiqueta = re.split(r"[.;|]", prosa[: m.start()])[-1]
+            if len(etiqueta.split()) <= 3:
+                continue
+            # Enumeración: conjunción antes del primer punto, o una lista
+            # numerada con punto y coma.
+            primera_frase = re.split(r"[.;]", resto)[0]
+            if re.search(r"\by\b", primera_frase) and len(primera_frase.split()) >= 3:
+                continue
+            if ";" in resto or re.match(r"(primero|en primer lugar|por un lado)\b",
+                                        resto, re.IGNORECASE):
+                continue
+            # Una lista que continúa en la línea siguiente termina en coma.
+            if resto.rstrip().endswith(","):
+                continue
+            anota("dos-puntos", f"posible muleta: ...{prosa[max(0,m.start()-40):m.start()+60].strip()}")
+
+    # Lo que va entre comillas invertidas es material citado y no prosa propia, así
+    # que ahí las palabras van nombradas y no usadas. Sin esto, un informe que
+    # explique un tic acaba señalándose a sí mismo.
+    sin_citas = re.sub(r"`[^`]*`", " ", prosa)
+
+    # 7 y 26. Vocabulario. «y además» es español corriente, no el tic.
+    for p in buscar(sin_citas, VOCABULARIO_IA, sensible=False):
+        if p == "además" and re.search(r"\by\s+además\b", sin_citas, re.IGNORECASE):
+            if not re.search(r"(?<!y\s)además\b", sin_citas, re.IGNORECASE):
+                continue
+        # «mosaico» es el término normal para las ventanas en mosaico (tiled) de un
+        # gestor como Hyprland, no la metáfora decorativa que la regla persigue.
+        if p == "mosaico" and re.search(r"\b(?:en|modo)\s+mosaico\b", sin_citas, re.IGNORECASE):
+            continue
+        anota("vocabulario-ia", p)
+    for p in buscar(sin_citas, SUSTANTIVOS_METAFORICOS, sensible=False):
+        anota("sustantivo-metaforico", p)
+
+    # 8 y 31. Formas rebuscadas
+    for p in buscar(sin_citas, FORMAS_REBUSCADAS, sensible=False):
+        anota("formas-rebuscadas", p)
+
+    # 23. Muletillas
+    for p in buscar(sin_citas, MULETILLAS, sensible=False):
+        anota("muletillas", p)
+
+    # 24. Matización
+    for p in buscar(sin_citas, MATIZACION, sensible=False):
+        anota("matizacion", p)
+
+    # 25. Conclusiones vacías
+    for p in buscar(sin_citas, CONCLUSIONES_VACIAS, sensible=False):
+        anota("conclusiones-vacias", p)
+
+    # 30. Adverbios en -mente
+    for m in ADVERBIOS_MENTE.finditer(sin_citas):
+        bajo = m.group(0).lower()
+        if bajo not in ADVERBIOS_PERMITIDOS and bajo not in NO_ADVERBIOS_MENTE:
+            anota("adverbios-mente", m.group(0))
+
+    # 20. Frases de chatbot
+    for p in buscar(sin_citas, FRASES_CHATBOT, sensible=False):
+        anota("frases-chatbot", p)
+
+    # 3. Gerundio decorativo
+    if RE_GERUNDIO.search(sin_citas):
+        anota("gerundio-decorativo", prosa.strip()[:110])
+
+    # 5. Atribución vaga
+    for m in RE_ATRIBUCION.finditer(sin_citas):
+        anota("atribucion-vaga", m.group(0))
+
+    # Sin número. Caracteres chinos. Va aquí y no en la lista de la skill porque
+    # no es un tic de estilo, es una regla de idioma de este proyecto.
+    if RE_CJK.search(prosa):
+        anota("cjk", prosa.strip()[:110])
+
+    # 9. Falso contraste de dos miembros
+    if RE_NO_SOLO.search(sin_citas):
+        anota("no-solo-sino", prosa.strip()[:110])
+
+    # 16. Negrita con dos puntos
+    if ext in (".md", ".markdown"):
+        for m in RE_NEGRITA_DOS_PUNTOS_MD.finditer(crudo):
+            anota("negrita-encabezado", m.group(0).strip())
+    if ext in (".html", ".htm"):
+        for m in RE_NEGRITA_DOS_PUNTOS_HTML.finditer(crudo):
+            anota("negrita-encabezado", m.group(0).strip())
+
+    # 15. Negrita excesiva: cuenta por línea
+    if ext in (".html", ".htm"):
+        n_strong = len(re.findall(r"<strong>", crudo))
+        if n_strong >= 3:
+            anota("negrita-excesiva", f"{n_strong} negritas en una línea")
+    elif ext == ".md":
+        n_b = len(re.findall(r"\*\*[^*]+\*\*", crudo))
+        if n_b >= 4:
+            anota("negrita-excesiva", f"{n_b} negritas en una línea")
+
+    # 17. Mayúsculas de título en encabezados
+    m_head = re.match(r"\s*#{1,6}\s+(.*)", crudo)
+    if not m_head and ext in (".html", ".htm"):
+        m_head = re.match(r"\s*<h[1-6][^>]*>(.*?)</h[1-6]>", crudo)
+    if m_head:
+        texto_head = re.sub(r"<[^>]+>", "", m_head.group(1)).strip()
+        # El tic es capitalizar las palabras vacías del español, que es lo que
+        # hace el inglés. Un nombre propio o una sigla no cuentan.
+        vacias = r"\b(De|Del|La|Las|Los|El|Para|Con|Y|En|Un|Una|Por|Al|Que)\b"
+        n_vacias = len(re.findall(vacias, texto_head))
+        palabras = [w for w in re.findall(r"\b[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}\b", texto_head)]
+        if n_vacias >= 2 and len(palabras) >= 3:
+            anota("titulo-mayusculas", texto_head[:90])
+
+    # 18. Emoji. La regla los manda quitar «de los encabezados y de las viñetas», y
+    # habla de los decorativos. Un emoji que forma parte de la salida de un programa
+    # (una marca de estado en una barra de terminal) es interfaz, no adorno, así que
+    # no se señala cuando el texto viene de una cadena que imprime un script. En un
+    # documento sí se sigue señalando, que es donde vive el emoji decorativo.
+    if not es_salida:
+        for m in RE_EMOJI.finditer(prosa):
+            if m.group(0) not in SIMBOLOS_PERMITIDOS:
+                anota("emoji", m.group(0))
+
+    return hallazgos
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("ficheros", nargs="*", type=Path)
+    ap.add_argument("--solo", default=None,
+                    help="lista de reglas separadas por comas")
+    ap.add_argument("--listar-reglas", action="store_true")
+    ap.add_argument("--sin-codigo", action="store_true",
+                    help="no revisa la parte de comentario de los ficheros de código")
+    a = ap.parse_args()
+
+    if a.listar_reglas:
+        for k, (num, desc) in REGLAS.items():
+            cual = f"regla {num:>2}" if num else "sin número"
+            print(f"{k:24s} {cual}  {desc}")
+        return 0
+
+    if not a.ficheros:
+        ap.print_help()
+        return 2
+
+    solo = set(a.solo.split(",")) if a.solo else None
+    total = 0
+    for ruta in a.ficheros:
+        if not ruta.is_file():
+            print(f"  no existe: {ruta}")
+            continue
+        hallazgos = revisar(ruta, solo)
+        if not hallazgos:
+            print(f"\n{ruta.name}: limpio")
+            continue
+        print(f"\n{ruta.name}: {len(hallazgos)} hallazgos")
+        for n, regla, detalle in hallazgos:
+            num = REGLAS.get(regla, (0, ""))[0]
+            # Las reglas sin número no vienen de la lista de la skill.
+            etiqueta = f"{regla} r{num}" if num else regla
+            print(f"  {n:>5}  [{etiqueta}] {detalle}")
+            total += 1
+    print(f"\nTotal: {total} hallazgos")
+    return 1 if total else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

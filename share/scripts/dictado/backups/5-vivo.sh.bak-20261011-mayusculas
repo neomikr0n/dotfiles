@@ -1,0 +1,5 @@
+# Respaldo RECONSTRUIDO de la funcion comprobar_contiene antes de hacerla insensible a
+# mayusculas el 2026-10-11. No es una copia previa literal (no se hizo respaldo antes de editar,
+# error mio): es el texto que constaba en el fichero, recuperado del original. Solo cambia esta
+# funcion; el resto de 5-vivo.sh no se toco.
+comprobar_contiene() { case "$2" in *"$3"*) echo "  OK   $1"; ok=$((ok + 1));; *) echo "  MAL  $1"; echo "        esperaba que contuviera [$3]"; echo "        obtenido [$2]"; mal=$((mal + 1));; esac; }
