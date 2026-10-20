@@ -20,7 +20,7 @@ local scriptsDir = os.getenv("HOME") .. "/dotfiles/share/scripts/"
 -- ==================
 -- MONITORS
 -- ==================
--- Regla comodín (de hyprland.conf) + DP-2 específico (de n30.conf)
+-- Regla comodín + DP-2 (3440x1440@240, 10 bits)
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" })
 hl.monitor({
     output   = "DP-2",
@@ -29,7 +29,7 @@ hl.monitor({
     scale    = 1,
     bitdepth = 10,
 })
--- monitor = eDP-2, 2560x1600@239.998993, 2560x0, 1, vrr, 1  (comentado en el .conf original)
+-- eDP-2 (portátil): comentado en el .conf original
 
 -- ==================
 -- ENV
@@ -45,7 +45,7 @@ hl.env("XCURSOR_THEME", "Bibata-Modern-Amber")
 hl.env("HYPRCURSOR_THEME", "Bibata-Modern-Amber")
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
--- AMD RDNA 4 (mesa-git). Se quitó "vulkan-driver" (no es una env real).
+-- AMD RDNA 4 (mesa-git). "vulkan-driver" no es una env real.
 hl.env("MESA_LOADER_DRIVER_NAME", "radv")
 
 -- ==================
@@ -64,8 +64,8 @@ hl.config({
         gaps_in            = 0,
         gaps_out           = { 0, 0, 0, 0 },
         border_size        = 2,
-        ["col.active_border"]  = "rgba(ffbf00ee)",   -- Ámbar vibrante
-        ["col.inactive_border"] = "rgba(ffff9c00)",  -- corregido (antes rgba(255,255,155,0), formato inválido)
+        ["col.active_border"]  = "rgba(ffbf00ee)",   -- ámbar
+        ["col.inactive_border"] = "rgba(ffff9c00)",  -- ámbar claro
         layout             = "dwindle",
     },
 
@@ -80,7 +80,7 @@ hl.config({
             enabled      = true,
             range        = 30,
             render_power = 5,
-            offset       = "0 5",       -- si Hyprland lo rechaza, probar { x = 0, y = 5 }
+            offset       = "0 5",       -- también admite { x = 0, y = 5 }
             color        = 0x00000070,
         },
     },
@@ -90,7 +90,7 @@ hl.config({
     misc = {
         disable_hyprland_logo      = true,
         disable_splash_rendering   = true,
-        vrr                        = 2, -- true causa flickering -_-
+        vrr                        = 0, -- el OLED parpadea con VRR, tambien en modo 2
         allow_session_lock_restore = true,
         session_lock_xray          = true,
     },
@@ -125,11 +125,9 @@ hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 2,  bezier = "
 -- ==================
 -- AUTOSTART 
 -- ==================
--- El motor es skwd-paper-v2 (VAAPI -> Vulkan). mpvpaper ya no se usa.
---
--- Se limpia ANTES de arrancar: si sobrevive un renderizador viejo (mpvpaper o un
--- skwd-wall-vk huérfano) queda por encima y tapa al nuevo, el fondo no cambia y
--- parece que «no funciona». El orden de capas manda: bottom > background.
+-- Motor de fondo: skwd-paper-v2 (VAAPI -> Vulkan).
+-- Se limpia antes de arrancar: un renderizador viejo (mpvpaper, skwd-wall-vk huérfano)
+-- queda por encima y tapa al nuevo. El orden de capas manda: bottom > background.
 
 local wallpaperFile = os.getenv("HOME") .. "/dotfiles/share/wallpapers/yellowmatrix-deepseek.mp4"
 
@@ -151,8 +149,7 @@ local function gameModeStart()
     hl.exec_cmd(os.getenv("HOME") .. "/dotfiles/share/scripts/auto-game-mode.sh")
 end
 
--- Astra — 2026-09-16: las esperas externas sobreviven a un reload de Lua.
--- Los dispatchers se envían al vencer la espera, conservando su workspace.
+-- Las esperas corren en bash, así que sobreviven a un reload de Lua.
 local function shellQuote(value)
     return "'" .. value:gsub("'", "'\"'\"'") .. "'"
 end
@@ -164,91 +161,20 @@ local function delayedCommand(seconds, command)
     hl.exec_cmd("bash -c " .. shellQuote("sleep " .. seconds .. "; " .. command))
 end
 
--- Espera (con tope) a que udev cree el bus DDC del monitor externo, /dev/i2c-8.
--- Devuelve el fragmento de shell que hace la espera, para poder prefijarlo a
--- cualquier comando que necesite hablar con el monitor.
---
--- POR QUÉ HACE FALTA: los nodos /dev/i2c-* NO existen todavía cuando corre el
--- autostart de Hyprland. Cronología medida el 2026-09-24 con ps + stat:
---   14:49:37     arranca Hyprland
---   14:49:38     arrancan DMS y este autostart  -> sólo existía /dev/i2c-0
---   14:49:39,40  aparecen /dev/i2c-1..9 (buses DDC de la GPU; i2c-8 = DP-2)
--- Son 1,4 s de carrera, y la pierden DOS cosas distintas:
---   a) el backend DDC de DMS, que sondea los buses UNA sola vez al arrancar y
---      no reintenta salvo hotplug (por eso el slider de brillo gobernaba los
---      LEDs de la NIC ethernet en vez del monitor), y
---   b) la lectura de ddcutil que hace brightnessScript().
--- Sin esta espera, brightnessScript() leía un bus inexistente y el guard de
--- «máximo no numérico» lo convertía en un no-op SILENCIOSO: el brillo máximo
--- al arrancar nunca se aplicaba, sin ningún error visible. Confirmado en el
--- journal el 2026-09-25: con la espera, dos arranques reales seguidos aplicaron
--- el brillo («escribiendo maximo 100 (estaba en 1)» y «ya en el maximo (100)»).
---
--- El tope de 15 s es lo que impide bloquear la sesión: si el bus nunca aparece,
--- el comando que sigue se ejecuta igual y falla solo. Preferimos un fallo visible
--- a una sesión colgada.
---
--- NOTA de honestidad: aquí el número de bus va fijo, lo que contradice la regla
--- general de no fijarlo a mano. Es inevitable, porque DMS identifica los
--- monitores por bus (ddc:i2c-<N>). Si el monitor cambiara de bus, esto degrada
--- (no rompe) gracias al tope, pero hay que actualizar el número aquí.
+-- Espera (máx. 15 s) a que udev cree /dev/i2c-8, el bus DDC del DP-2.
+-- Sin ella, la lectura de brillo falla y el guard la convierte en no-op silencioso.
+-- El bus va fijo porque DMS nombra los monitores como ddc:i2c-<N>.
 local function waitForDdcBus()
     return "i=0; while [ $i -lt 150 ] && [ ! -e /dev/i2c-8 ]; do sleep 0.1; i=$((i+1)); done; "
 end
 
--- Astra — 2026-09-22: brillo del monitor externo AL MÁXIMO en cada arranque.
---
--- POR QUÉ NO SE USA ddccontrol: la 1.0.3 instalada falla contra su daemon con
--- «Open monitor failed» y AUN ASÍ devuelve código de salida 0, así que el fallo pasaba
--- inadvertido. La línea que había antes («ddccontrol -r 0x10 -w 100 dev:/dev/i2c-8»)
--- nunca hizo nada. Verificado el 2026-09-22. ddcutil 3.0.1 sí funciona: escribe y
--- verifica releyendo el valor.
---
--- PROTECCIÓN DEL MONITOR — esto es lo que hace que no pueda dañarlo:
---  1. Sólo se escribe el código VCP 0x10 (brillo). Nunca 0x12 (contraste), 0x14 (preset
---     de color), 0x16/0x18/0x1A (ganancias), ni 0x04/0x05/0x08, que son «restaurar
---     valores de fábrica» y sí serían destructivos.
---  2. El valor NO se fija a mano: se escribe el MÁXIMO que declara el propio monitor.
---     El LG ULTRAGEAR+ declara max=100 para VCP 0x10 (leído con «ddcutil getvcp 10»),
---     así que se escribe 100. Si algún día declarara otro máximo, se respeta el suyo:
---     nunca se sale del rango soportado.
---  3. Se LEE antes de escribir. Si ya está en el máximo, no se escribe nada. El brillo
---     vive en NVRAM del monitor y cada escritura consume un ciclo, así que evitarla
---     cuando es innecesaria es lo que de verdad protege el hardware.
---  4. Se valida que el máximo leído sea numérico. Si la lectura falla (bus ocupado,
---     monitor apagado, respuesta «VCP 10 ERR»), se aborta sin escribir: un valor basura
---     sería el único camino realista a un ajuste incorrecto.
---  5. UNA sola escritura por arranque. Sin bucle y sin repetición. NO va en
---     config.reloaded, sólo en hyprland.start, para que recargar la config no escriba.
---  6. Bus fijado con «--bus 8» en lugar de autodetección: 0,043 s frente a 3,42 s
---     medidos el 2026-09-25 (80x). La autodetección escanea TODOS los buses, y ese
---     tiempo extra mantiene el bus ocupado justo cuando DMS lo necesita (ver punto 9).
---     Contrapartida asumida: si el monitor cambiara de bus, la lectura falla y el
---     guard del punto 4 aborta sin escribir (degradado, no roto). Ya dependíamos de
---     ese número de todas formas, porque DMS nombra los monitores por bus.
---  7. ddcutil verifica por defecto releyendo tras escribir; no se usa --noverify.
---  8. ESPERA al bus antes de leer (waitForDdcBus). Sin ella el punto 4 convertía
---     la carrera de arranque en un no-op silencioso: ddcutil no encontraba el
---     monitor, $max quedaba vacío y el guard abortaba sin escribir. Es decir, el
---     brillo máximo al arrancar NO se aplicaba y no había ningún error visible.
---     Añadido el 2026-09-24. Cada caso deja una línea en el journal con
---     «logger -t astra-brillo».
---  9. Se ejecuta ANTES de arrancar DMS, encadenado en el mismo shell, y DMS arranca
---     cuando termina. Motivo, medido el 2026-09-25: DDC/CI son varias transacciones
---     i2c y el kernel serializa cada transacción, no la secuencia completa. Si ddcutil
---     está hablando con el monitor mientras DMS sondea los buses al arrancar, el
---     sondeo de DMS lee datos corruptos y DESCARTA el monitor: se queda sólo con los
---     LEDs de la NIC (leds:igc-0800-led*) y el slider deja de funcionar. Reproducido a
---     propósito: con un ddcutil concurrente, «dms ipc call brightness list» NO lista
---     ddc:i2c-8; con el bus libre, sí. Ojo: esto lo provocó el arreglo del punto 8,
---     que al esperar al bus sincronizó los dos accesos. Como el punto 6 hace que el
---     brillo cueste 0,04 s, secuenciar sale gratis y elimina el choque.
---
--- Comprobado el 2026-09-22: con el brillo ya en 100 el comando tarda 3,4 s y no escribe;
--- con el brillo en 99 tarda 6,9 s y lo devuelve a 100 (tiempos con autodetección; con
--- «--bus 8» ambos bajan a ~0,05 s).
+-- Brillo del monitor externo al máximo en cada arranque.
+-- Escribe solo VCP 0x10, con el máximo que declara el monitor y solo si no está ya ahí.
+-- Usa ddcutil: ddccontrol falla con «Open monitor failed» y aun así devuelve 0.
+-- --bus 8 evita la autodetección (0,04 s frente a 3,4 s) y no bloquea el bus.
+-- Va antes de DMS y una sola vez: no se registra en config.reloaded.
 local function brightnessScript()
-    -- Devuelve el script. Quien lo lanza decide CUÁNDO; ver el autostart: va antes de DMS.
+    -- Devuelve el script; quien lo lanza decide cuándo.
     return table.concat({
         "set -- $(ddcutil --bus 8 getvcp 10 --brief 2>/dev/null)",
         "cur=$4; max=$5",
@@ -259,19 +185,8 @@ local function brightnessScript()
     }, "; ")
 end
 
--- Autocomprobación: deja escrito en el journal si DMS acabó viendo el monitor.
---
--- POR QUÉ: el fallo del backend DDC de DMS es invisible. No da error, no avisa; el
--- usuario sólo lo nota cuando mueve el slider y el brillo no cambia. Y no se puede
--- comprobar a mano sin reiniciar sesión, porque el sondeo ocurre una sola vez al
--- arrancar. Con esto, cada arranque deja su propio veredicto y la próxima vez se
--- sabe en 5 segundos con «journalctl -t astra-brillo», sin depender de que nadie
--- se acuerde de mirar.
---
--- Los 12 s son deliberados: DMS necesita un par de segundos para cargar y sondear,
--- y así esta comprobación queda muy por detrás y no compite con su sondeo (que es
--- justo el problema del punto 9 de brightnessScript). Va en segundo plano para no
--- retrasar el arranque de DMS ni un milisegundo.
+-- Deja en el journal si DMS acabó viendo el monitor: su fallo es invisible.
+-- A los 12 s y en segundo plano, para no competir con su sondeo.
 local function dmsDdcSelfCheck()
     return table.concat({
         "( sleep 12",
@@ -282,11 +197,8 @@ local function dmsDdcSelfCheck()
     }, "; ")
 end
 
--- hyprland.start es el evento de inicio; no usar _G como marca persistente:
--- Hyprland 0.56.2 recrea la VM al recargar la configuración.
+-- hyprland.start se reemite al recargar; la marca por instancia evita duplicar apps.
 hl.on("hyprland.start", function()
-    -- Marca por instancia, fuera de la VM, para no duplicar apps si se reemite
-    -- el evento. El siguiente login usa otra HYPRLAND_INSTANCE_SIGNATURE.
     local runtime = assert(os.getenv("XDG_RUNTIME_DIR"), "Falta XDG_RUNTIME_DIR")
     local instance = assert(os.getenv("HYPRLAND_INSTANCE_SIGNATURE"), "Falta la instancia Hyprland")
     local marker = runtime .. "/hypr/" .. instance .. "/n30-autostart-astra.done"
@@ -296,188 +208,96 @@ hl.on("hyprland.start", function()
     started:write("Astra 2026-09-16\n")
     started:close()
 
-    -- Sesión / entorno (se ejecutan UNA vez; antes estaban duplicados en ambos .conf)
+    -- Sesión y entorno (una sola vez)
     hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=Hyprland")
     hl.exec_cmd("systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
     hl.exec_cmd("systemctl --user mask xdg-desktop-portal-gnome")
     hl.exec_cmd("/usr/bin/gnome-keyring-daemon --start --components=pkcs11,secrets,ssh")
-    -- cliphist: una sola instancia, guarda TODOS los tipos de contenido
-    -- (antes había dos: una aquí y otra text-only en n30.conf -> historial duplicado)
+    -- cliphist: una sola instancia y todos los tipos (antes había dos y duplicaba el historial)
     hl.exec_cmd("wl-paste --watch cliphist store")
 
-    -- Vigilante de la tecla Ctrl para el dictado. Se arranca por aquí, NO por systemd.
-    --
-    -- Medido el 2026-10-10: la unidad está `enabled` con `WantedBy=graphical-session.target`,
-    -- pero Hyprland NO activa ese target. Comprobado tras el arranque de las 08:21:
-    -- `graphical-session.target` estaba `inactive (dead)`, y con él TODOS los servicios que
-    -- cuelgan de ahí (dms, ktimer-alert, openlogi-agent, dictado-tecla). Por eso la tecla no
-    -- hacía nada: el vigilante nunca llegaba a arrancar, aunque estuviera "enabled".
-    -- DMS tiene exactamente el mismo problema y por eso se lanza más abajo con exec_cmd.
-    --
-    -- Se arranca el SERVICIO y no el script a pelo, para no perder el journal ni el
-    -- Restart=on-failure. El `enable` se deja como está: es inofensivo y sirve de respaldo si
-    -- algún día se activa el target.
+    -- Vigilante de Ctrl para el dictado. Hyprland no activa graphical-session.target,
+    -- así que los servicios que cuelgan de él nunca arrancan: se lanzan a mano.
     hl.exec_cmd("systemctl --user start dictado-tecla.service")
 
-    -- Los otros tres servicios del mismo target muerto. Medido el 2026-10-10: los tres estaban
-    -- `enabled`, con enlace en graphical-session.target.wants/, y los tres `inactive`. Llevaban
-    -- caídos desde el arranque sin que nada avisara.
-    --   ktimer-alert      el aviso de ronda de KTimer (overlay Quickshell). Sin él no salta.
-    --   openlogi-agent    el agente HID++ de los Logitech.
-    --   libinput-gestures los gestos del touchpad (hay gestos propios en
-    --                     ~/.config/libinput-gestures.conf, y Hyprland no define ninguno).
-    --
-    -- NO se arranca graphical-session.target en bloque a propósito. dms.service está habilitado
-    -- y colgado de ese target, y DMS ya corre como proceso suelto más abajo (`exec dms run`).
-    -- Levantar el target arrancaría un SEGUNDO DMS y chocaría con el que ya está.
+    -- Los otros tres del mismo target muerto: aviso de KTimer, agente HID++ de Logitech
+    -- y gestos del touchpad. No se arranca el target entero porque dms.service cuelga
+    -- de él y habría un segundo DMS.
     hl.exec_cmd("systemctl --user start ktimer-alert.service")
     hl.exec_cmd("systemctl --user start openlogi-agent.service")
     hl.exec_cmd("systemctl --user start libinput-gestures.service")
 
-    -- dictado-servidor: el modelo de whisper residente. Mismo target muerto que los de arriba.
-    --
-    -- Medido el 2026-10-11: la unidad estaba `enabled` y `inactive`, y el target
-    -- `graphical-session.target` en `inactive (dead)`. Consecuencia silenciosa: sin servidor,
-    -- dictado.sh cae al binario y CADA dictado paga la carga del modelo. El coste fijo medido
-    -- es 0,79 s por el binario frente a 0,16 s por el servidor, así que se perdía casi un
-    -- segundo por frase sin que nada lo dijera. No fallaba: solo iba lento.
-    --
-    -- El servidor se queda con 1,8 GB de VRAM en reposo (medido el 2026-10-10, de 16 GB).
-    -- La unidad lleva un ExecStartPre que verifica el sha256 del modelo antes de arrancar, así
-    -- que si el modelo se corrompe la unidad queda en `failed` y dictado.sh vuelve al binario
-    -- por su cuenta. Nunca te deja sin dictado, solo más lento.
+    -- whisper residente: sin él, cada dictado recarga el modelo (0,79 s frente a 0,16 s).
+    -- Si el modelo se corrompe, la unidad falla y dictado.sh cae al binario.
     hl.exec_cmd("systemctl --user start dictado-servidor.service")
 
-    -- Desktop shell, PRECEDIDA del brillo del monitor. El orden es obligatorio.
-    --
-    -- DMS sondea los buses DDC UNA sola vez al arrancar y no reintenta salvo que
-    -- haya un cambio de pantalla (hotplug), que aquí nunca ocurre. Dos cosas lo
-    -- dejan sin monitor, y ambas dan el mismo síntoma (el slider de brillo del
-    -- centro de control y las teclas XF86MonBrightnessUp/Down gobiernan los LEDs
-    -- de la NIC ethernet, leds:igc-0800-led*, en vez del monitor):
-    --
-    --   a) Arrancar antes de que exista /dev/i2c-8. Medido el 2026-09-24: DMS
-    --      perdía esa carrera por 1,4 s. Lo cubre waitForDdcBus().
-    --   b) Que ddcutil esté hablando con el monitor mientras DMS sondea. Medido el
-    --      2026-09-25: reproducido a propósito, con un ddcutil concurrente DMS no
-    --      lista ddc:i2c-8. Lo cubre el encadenado de abajo: primero el brillo,
-    --      después DMS. Detalle en el punto 9 de brightnessScript().
-    --
-    -- (b) lo introdujo el arreglo de (a): al esperar al bus, los dos accesos
-    -- quedaron sincronizados. Por eso ahora van en un solo comando, con DMS al final.
-    --
-    -- Descartado en el diagnóstico: DMS_NO_DDC no estaba definida (es la única
-    -- variable DDC del binario y es un opt-out), /dev/i2c-8 tiene ACL user:n30:rw-,
-    -- y el binario de DMS no cambió (mismo 1.6.2 del 2026-09-17), así que no era ni
-    -- un opt-out, ni permisos, ni una actualización.
+    -- DMS va al final y precedido del brillo. Sondea los buses DDC una sola vez y, si
+    -- el bus no existe o está ocupado, se queda sin monitor (el slider mueve los LEDs
+    -- de la NIC). Orden: esperar el bus, escribir el brillo y solo entonces arrancar DMS.
     hl.exec_cmd(waitForDdcBus()
         .. "timeout 15 sh -c " .. shellQuote(brightnessScript())
         .. "; " .. dmsDdcSelfCheck()
         .. "exec dms run")
 
-    -- Fondo de vídeo (skwd-paper-v2). Se llama también en cada recarga:
-    -- wallpaperStart() limpia antes de arrancar, así que no se duplica.
+    -- El fondo se relanza en cada recarga; wallpaperStart() limpia antes.
     wallpaperStart()
     gameModeStart()
 
-    -- Apps con workspace destino
-    --
-    -- CIDER y BTop ya NO se lanzan aqui: los lanza special-layout.sh dentro del
-    -- espacio `special`, en un orden concreto, para que la forma del mosaico sea
-    -- determinista (ver la cabecera de ese script). La geometria final la fija
-    -- ese script redimensionando en caliente, no una regla declarativa, porque
-    -- n30 quiere mosaico y no flotantes. `music` sigue declarada arriba como
-    -- documentacion de que CIDER es el reproductor.
+    -- Apps con workspace destino. CIDER y BTop los lanza special-layout.sh dentro del
+    -- espacio `special`, que también fija la geometría del mosaico.
     hl.exec_cmd("copyq",  { workspace = "5 silent" })
-    -- ksnip no está instalado (Astra, 2026-09-16).
+    -- ksnip no está instalado.
     -- hl.exec_cmd("ksnip", { workspace = "5 silent" })
     hl.exec_cmd("corectrl", { workspace = "5 silent" })
-    -- megasync no está instalado (Astra, 2026-09-16).
+    -- megasync no está instalado.
     -- hl.exec_cmd("megasync", { workspace = "6 silent" })
 
-    -- Apps locales: sin timers Lua que una recarga pueda cancelar.
+    -- Apps locales, con retardo en bash para que un reload no cancele nada.
     delayedCommand(3, dispatchCommand(editor, "1 silent"))
     delayedCommand(5, dispatchCommand(files, "3 silent"))
 
-    -- ICMP es una señal de conectividad, no garantiza acceso a cada servicio.
-    -- timeout limita la espera TOTAL a 60s; si no hay red, se lanzan igualmente.
-    -- Sin flag compartido hypr-online ni poll Lua: no quedan flags obsoletos.
-    -- (Steam ya NO va en esta cadena: tiene su propio script, steam-open.sh, con
-    --  puerta HTTPS y veredicto en el journal. ZapZap tampoco: pasó a
-    --  special-layout.sh, que trae su propia espera de red. Aquí queda solo zen.)
+    -- Espera de red con tope de 60 s; sin red se lanza igual.
+    -- Steam y ZapZap tienen su propio script con su propia espera.
     local networkStart =
         "timeout 60s bash -c 'until ping -c1 -W2 1.1.1.1 >/dev/null 2>&1; do sleep 1; done'; "
         .. dispatchCommand(browser, "2 silent")
     hl.exec_cmd("bash -c " .. shellQuote(networkStart))
 
-    -- Steam (2026-09-27): lo lanza un script propio, ligado a internet REAL
-    -- (HTTPS, no solo ICMP) y con red de seguridad + veredicto en el journal.
-    -- Antes esto era `steam` + `sleep 5` + un window.move de UNA sola pasada:
-    -- medido el 2026-09-27, ese refuerzo disparaba a las 08:33:25, justo en el
-    -- hueco entre la ventana del actualizador (destruida a las 08:33:22) y la
-    -- principal (aún inicializando a las 08:33:40) -> no-op silencioso; la
-    -- ventana acababa en el escritorio con FOCO (el 2, que es el que deja
-    -- enfocado la última línea de este handler). Y la ventana de promociones
-    -- ("Special Offers") llega MINUTOS después: ningún sleep fijo la cubriría.
-    -- Van dos capas a propósito, como en el caso DSH: el `workspace` de este
-    -- exec es la capa débil (la ventana la crea un proceso hijo, steamwebhelper)
-    -- y la garantía es la regla de ventana "steam-ws1" (más abajo).
-    -- SOLO en hyprland.start: en config.reloaded cada guardado relanzaría Steam.
+    -- Steam: steam-open.sh espera internet real (HTTPS), no solo ICMP.
+    -- El `workspace` del exec no basta (la ventana la crea steamwebhelper); la garantía
+    -- es la regla steam-ws1. Solo en hyprland.start, o cada guardado lo relanzaría.
     hl.exec_cmd(scriptsDir .. "steam-open.sh", { workspace = "1 silent" })
 
     hl.exec_cmd("bash -c \"sleep 10; rclone mount 'koofr:/koofr/Autosync' /home/n30/Autosync/ --vfs-cache-mode full &\"")
-    -- NOTA: el brillo del monitor externo ya NO se lanza aquí. Se movió arriba, para
-    -- ir encadenado justo ANTES de arrancar DMS: si ddcutil toca el bus mientras DMS
-    -- lo sondea, DMS descarta el monitor. Ver el punto 9 de brightnessScript().
-    -- (Antes estaba aquí como brightnessStart(), heredado de la etapa en que el brillo
-    -- y DMS eran independientes. Sustituye a «ddccontrol -r 0x10 -w 100 dev:/dev/i2c-8»,
-    -- que fallaba en silencio devolviendo código de salida 0.)
+    -- El brillo no se lanza aquí: va encadenado antes de DMS (ver arriba).
 
     -- Scripts varios
     hl.exec_cmd(scriptsDir .. "mangohud-song.sh")
     hl.exec_cmd(scriptsDir .. "genymotion-open.sh")
     hl.exec_cmd("env CHATGPT_PET_WIDTH=320 CHATGPT_PET_HEIGHT=320 " .. scriptsDir .. "chatgpt-open")
+    -- OpenPets sin argumentos: --ozone-platform=x11 da «bad option» y con
+    -- ELECTRON_RUN_AS_NODE=1 el binario se comporta como Node. La mascota por defecto
+    -- está fijada en ~/.config/@open-pets/desktop/openpets-state.json.
+    hl.exec_cmd("/opt/OpenPets/openpets")
 
-    -- Diseno del espacio `special` (grupo NvTop+BTop / ZapZap / CIDER). Manda en
-    -- el arranque de esas cuatro apps y fija la geometria del mosaico.
+    -- Diseño del espacio `special` (NvTop+BTop / ZapZap / CIDER): orden y geometría.
     hl.exec_cmd(scriptsDir .. "special-layout.sh")
 
-    -- KTimer (pedido el 2026-10-02): arranca con su tarea ya preconfigurada —75 s, bucle,
-    -- una sola instancia, el script de la ronda— pero PARADA, sin empezar a contar hasta
-    -- que se pulse start. KTimer no tiene opciones de linea de ordenes (`ktimer --help`
-    -- solo trae las genericas de Qt/KDE), asi que la preconfiguracion vive en el fichero
-    -- de estado, ~/.config/ktimerrc: [Job0] con Delay/Command/Loop/OneInstance/Consecutive
-    -- y State.
-    --
-    -- POR QUE EL sed: `State` no es una preferencia, es el estado que tenga la tarea en el
-    -- momento de guardar (`save()` escribe `(int)d->state`). La app reescribe el fichero al
-    -- cerrarse la ventana (`done()` -> `saveAllJobs()`, y el cierre de un QDialog pasa por
-    -- reject() -> done()), asi que si la ultima vez se cerro con la tarea en marcha el
-    -- fichero queda en State=2 (Started) y la proxima sesion ARRANCARIA CONTANDO SOLA, que
-    -- es justo lo que no se quiere. Forzar State=0 (Stopped) antes de lanzarla hace el
-    -- arranque determinista sin depender de como se cerro. State=0 deja el temporizador
-    -- cargado con el retardo completo y sin contar (lo rearma setDelay, que va antes que
-    -- setState en load()).
-    --
-    -- POR QUE EL pgrep: una sola instancia de la app. KDBusService usa la opcion Multiple,
-    -- asi que dos ktimer conviven sin quejarse. Ojo: el `OneInstance` del fichero NO cubre
-    -- esto, es sobre no solapar el comando. El escritorio lo garantiza la regla "ktimer-pos".
+    -- KTimer: tarea ya configurada (75 s, bucle, una instancia, script de ronda) pero
+    -- parada. No tiene CLI, así que se preconfigura ~/.config/ktimerrc.
+    -- `State` refleja cómo se cerró la tarea, así que se fuerza State=0 antes de lanzar;
+    -- si no, arrancaría contando. `pgrep` evita la segunda instancia (KDBusService usa
+    -- Multiple, y el OneInstance del fichero es sobre no solapar el comando).
     
     -- hl.exec_cmd("sed -i 's/^State=.*/State=0/' ~/.config/ktimerrc 2>/dev/null; "
     --    .. "pgrep -x ktimer >/dev/null 2>&1 || ktimer", { workspace = "2 silent" })
 
-    -- DeepSeek Harness (DSH) en el escritorio 1: el script arranca `dsh web` si no
-    -- escucha en :3080 y abre Chrome en modo app con el token de /tmp/dsh-web.log.
-    -- El `workspace` de aquí sólo cubre el caso de Chrome arrancando de cero; la
-    -- garantía del escritorio es la regla de ventana "dsh-web-ws1" (sección de
-    -- window rules). Van las dos a propósito: si una falla en silencio, cubre la otra.
+    -- DSH en el 1: arranca `dsh web` y abre Chrome; la regla dsh-web-ws1 garantiza el
+    -- escritorio cuando la ventana ya existía.
     hl.exec_cmd(scriptsDir .. "dsh-chrome-open.sh", { workspace = "1 silent" })
 
-    -- WorkBuddy AI en el escritorio 2, ambos en cada arranque (pedido el 2026-09-30).
-    -- Mismo doble seguro que DSH: el `workspace` de aquí para el arranque limpio y la
-    -- regla de ventana "workbuddy-ws2" como garantía. Se lanza con el mismo script que
-    -- su .desktop (/opt/workbuddy-international/start.sh), que es quien fija el app_id
-    -- "WorkBuddy AI" exportando CHROME_DESKTOP.
+    -- WorkBuddy AI en el 2, con la regla workbuddy-ws2 como garantía. Se lanza con el
+    -- mismo start.sh que su .desktop, que fija el app_id.
     hl.exec_cmd("/opt/workbuddy-international/start.sh", { workspace = "2 silent" })
 
     hl.dispatch(hl.dsp.focus({ workspace = 2 }))
@@ -491,8 +311,7 @@ end)
 -- ==================
 -- ZOOM DEL CURSOR
 -- ==================
--- Antes: 8 binds que spawneaban hyprctl + jq por pulsación.
--- Ahora: estado nativo en Lua, sin procesos externos.
+-- Estado nativo en Lua, sin hyprctl + jq por pulsación.
 local function zoomBy(factor)
     local v = tonumber(hl.get_config("cursor.zoom_factor")) or 1
     local nv = v * factor
@@ -511,15 +330,13 @@ hl.bind("SUPER + W", hl.dsp.exec_cmd("skwd-wall-v2"))
 
 -- === Application Launchers ===
 hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(term))
--- SUPER+Space abre el SELECTOR DE EMOJIS (pedido el 2026-09-30).
--- No es un programa aparte: es DMS Spotlight abierto con el disparador ":e" ya escrito, que
--- es lo que activa el plugin emojiLauncher. Se usa `toggleQuery` y no `openQuery` para que
--- la segunda pulsación CIERRE en vez de no hacer nada. Escribe `:e` y borra para buscar
--- otra cosa si quieres usar Spotlight normal.
--- Historial de esta tecla, para no liarse: abría Spotlight → luego rofi → ahora emojis.
+-- SUPER+Space: emojis en DMS Spotlight (toggleQuery cierra al repetir; `:e` activa
+-- el plugin emojiLauncher).
 hl.bind(mainMod .. " + space", hl.dsp.exec_cmd("dms ipc call spotlight toggleQuery ':e'"))
 hl.bind(mainMod .. " + Tab", hl.dsp.exec_cmd("dms ipc call hypr toggleOverview"))
 hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("dms ipc call clipboard toggle"))
+-- VRR a demanda: la config lo deja en 0 porque el OLED parpadea con el activo.
+hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd(scriptsDir .. "vrr-toggle.sh"))
 hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("dms ipc call processlist focusOrToggle"))
 hl.bind(mainMod .. " + comma", hl.dsp.exec_cmd("dms ipc call settings focusOrToggle"))
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("dms ipc call notifications toggle"))
@@ -533,17 +350,17 @@ hl.bind(mainMod .. " + SHIFT + Slash", hl.dsp.exec_cmd("dms ipc call keybinds to
 
 -- === Security ===
 hl.bind(mainMod .. " + ALT + L", hl.dsp.exec_cmd("dms ipc call lock lock"))
-hl.bind(mainMod .. " + L", hl.dsp.exec_cmd(scriptsDir .. "screenlock.sh"))  -- n30.conf (pisaba el movefocus de hyprland.conf)
-hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exit())  -- sin confirmación (igual que el .conf)
+hl.bind(mainMod .. " + L", hl.dsp.exec_cmd(scriptsDir .. "screenlock.sh"))  -- n30.conf pisaba el movefocus
+hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exit())  -- sin confirmación
 
--- Ctrl+Alt+Del: decisión explícita -> processlist de DMS (antes reboot en n30.conf)
+-- Ctrl+Alt+Del: decisión explícita -> processlist (antes reboot)
 hl.bind("CTRL + ALT + Delete", hl.dsp.exec_cmd("dms ipc call processlist focusOrToggle"))
 
 -- === Screenshots ===
 hl.bind("Print", hl.dsp.exec_cmd("dms screenshot"))
 hl.bind("CTRL + Print", hl.dsp.exec_cmd("dms screenshot full"))
 hl.bind("ALT + Print", hl.dsp.exec_cmd("dms screenshot window"))
-hl.bind("Shift_R", hl.dsp.exec_cmd("dms screenshot region --filename ss_$(date +%Y-%m-%d_%H-%M_%S)_garuda.png")) -- sin modificador (Shift_R ES la tecla)
+hl.bind("Shift_R", hl.dsp.exec_cmd("dms screenshot region --filename ss_$(date +%Y-%m-%d_%H-%M_%S)_garuda.png")) -- Shift_R ES la tecla, sin modificador
 hl.bind("CTRL + Shift_R", hl.dsp.exec_cmd("dms screenshot full"))
 hl.bind("ALT + SHIFT + Tab", hl.dsp.exec_cmd("pkill -SIGUSR1 scran"))
 
@@ -556,37 +373,21 @@ hl.bind("XF86AudioMute", hl.dsp.exec_cmd(scriptsDir .. "rme-volume mute"))
 hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("dms ipc call audio micmute"), { locked = true })
 hl.bind("Caps_Lock", hl.dsp.exec_cmd(scriptsDir .. "swayosd-on-demand --caps-lock"), { release = true })
 
--- === Dictado (voz a texto) - 2026-10-09 ===
--- SUPER + D alterna: un toque empieza a grabar, el siguiente transcribe y pega en la
--- ventana que tenga el foco. La cadena vive en scripts/dictado/dictado.sh:
--- pw-record -> whisper-cli (backend Vulkan) -> wl-copy + Ctrl+V.
--- Se elige TOGGLE y no push-to-talk a proposito: en Wayland el evento de soltado de un
--- modificador se pierde con facilidad (issues #7675, #6946 y #9240 de Hyprland), y quedarse
--- grabando sin enterarte es peor que pulsar la tecla dos veces.
--- SUPER+D y SUPER+SHIFT+D estaban libres; comprobado con hyprctl binds -j el 2026-10-09.
--- Movido el 2026-10-10 de scripts/ a scripts/dictado/, junto con el resto del proyecto.
+-- === Dictado (voz a texto) ===
+-- SUPER+D alterna: un toque graba, el siguiente transcribe y pega en la ventana activa.
+-- Es toggle y no push-to-talk porque en Wayland se pierde el evento de soltado.
 hl.bind(mainMod .. " + D", hl.dsp.exec_cmd(scriptsDir .. "dictado/dictado.sh toggle"),
     { description = "Dictado: grabar / transcribir" })
 
--- === Dictado: repegar la última transcripción - 2026-10-11 ===
--- SUPER+SHIFT+D vuelve a pegar la última transcripción del historial, sin grabar nada. Es la red
--- de seguridad del dictado. Si el texto salió en la ventana equivocada, o si se pegó antes de que
--- la ventana tuviera el foco, esto lo vuelve a poner donde esté el foco ahora.
--- El historial lo lleva dictado.sh, que guarda las últimas treinta con su fecha en
--- ~/.local/share/dictado/historial.txt. Para verlas, `dictado.sh historial`.
--- SUPER+SHIFT+D estaba libre; comprobado con `hyprctl binds` el 2026-10-11.
+-- === Dictado: repegar la última transcripción ===
+-- SUPER+SHIFT+D vuelve a pegar el último texto, útil si salió en la ventana equivocada.
+-- El historial (30 entradas) lo lleva dictado.sh en ~/.local/share/dictado/historial.txt.
 hl.bind(mainMod .. " + SHIFT + D", hl.dsp.exec_cmd(scriptsDir .. "dictado/dictado.sh repegar"),
     { description = "Dictado: repegar la última transcripción" })
 
--- === Dictado (hyprwhspr) - 2026-10-11 ===
--- POR QUÉ ESTÁ AQUÍ Y NO EN bindings.conf: el instalador de hyprwhspr (1.48.0) añade su
--- bind a ~/.config/hypr/bindings.conf, pero ese fichero NO se carga: no existe
--- hyprland.conf y este hyprland.lua (parser Lua nativo) no lo sourcea. Resultado: el
--- bind nunca llegaba a Hyprland y SUPER+ALT+D no hacía nada. Comprobado con
--- `hyprctl binds`: 149 binds, y con modmask 72 (SUPER+ALT) solo la L del lock.
--- hyprwhspr usa el compositor en vez de evdev (use_hypr_bindings=true en
--- ~/.config/hyprwhspr/config.json), así que el bind TIENE que existir aquí.
--- El tray script hace toggle: un toque empieza a grabar, el siguiente para y pega.
+-- === Dictado (hyprwhspr) ===
+-- hyprwhspr usa el compositor (use_hypr_bindings), y el bind que instala en
+-- bindings.conf nunca se carga: ese fichero no existe en esta config.
 hl.bind(mainMod .. " + ALT + D",
     hl.dsp.exec_cmd("/usr/lib/hyprwhspr/config/hyprland/hyprwhspr-tray.sh record"),
     { description = "Dictado hyprwhspr: grabar / transcribir" })
@@ -595,74 +396,27 @@ hl.bind(mainMod .. " + ALT + D",
 hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("dms ipc call brightness increment 5 \"\""), { repeating = true, locked = true })
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("dms ipc call brightness decrement 5 \"\""), { repeating = true, locked = true })
 
--- === Calculadora (tecla del teclado, pedido el 2026-10-01) ===
--- La tecla de calculadora del Logitech emite KEY_CALC (código evdev 140). En su keymap
--- (layout latam) esa tecla está atada a XF86Calculator; medido, no supuesto:
---   xkbcli compile-keymap --layout latam | grep XF86Calculator
---     -> <I148> = 148;                     (148 - 8 = 140 = KEY_CALC)
---     -> key <I148> { [ XF86Calculator ] };
--- Y el propio kernel lo anuncia: /sys/class/input/event3/device/capabilities/key tiene
--- el bit 140 puesto (event3 = "Logitech USB Receiver", el teclado principal).
--- Kalk es la calculadora de KDE Gear 26.08.1 (paquete kalk 26.08.1-1, clase org.kde.kalk).
--- NO es single-instance: no enlaza KF6DBusAddons, así que cada pulsación abre una ventana
--- nueva en vez de levantar la que ya esté abierta.
+-- === Calculadora ===
+-- La tecla emite KEY_CALC (evdev 140) -> XF86Calculator en latam.
+-- Kalk no es single-instance: cada pulsación abre una ventana nueva.
 hl.bind("XF86Calculator", hl.dsp.exec_cmd("kalk"))
 
--- === Transporte multimedia (MPRIS) — pedido el 2026-10-02 ===
--- Faltaban las teclas de transporte: volumen, mute y brillo ya estaban arriba, pero
--- play/pause, siguiente, anterior y stop no estaban atadas a nada.
---
--- Que teclas existen, medido en /sys/class/input/event*/device/capabilities/key:
---   event3  "Logitech USB Receiver"  -> NEXT(163) PLAYPAUSE(164) STOPCD(166)   [sin 165]
---   event21 "solaar-keyboard"        -> los mismos + PREVIOUSSONG(165)
---   event5  "...Consumer Control"    -> solo PLAYCD(207) PAUSE(208)
--- OJO: el receptor principal NO anuncia PREVIOUSSONG; solo lo anuncia el dispositivo
--- virtual de Solaar. Si la tecla «anterior» existe, llega por esa via. Eso NO lo he
--- comprobado pulsando, porque no tengo forma de sintetizar teclas de un bind del
--- compositor en esta maquina (no hay ydotool, wtype ni dotool).
---
--- Keysym que les toca en su layout (latam), leido de /usr/share/X11/xkb/symbols/inet
--- (la conversion es codigo X = evdev + 8):
---   <I171> = 163+8 -> XF86AudioNext
---   <I172> = 164+8 -> XF86AudioPlay   (nivel 1 del mismo: XF86AudioPause)
---   <I173> = 165+8 -> XF86AudioPrev
---   <I174> = 166+8 -> XF86AudioStop
--- Se ata TAMBIEN XF86AudioPause porque el dispositivo Consumer Control anuncia
--- PAUSECD(208), que da XF86AudioPause; sin ese bind esa pulsacion no haria nada.
---
--- Doble disparo descartado, con dato: Solaar corre (PID 8686) y crea el teclado virtual,
--- pero no hay ~/.config/solaar/rules.yaml y en config.yaml TODOS los `divert-keys` del
--- MX Mechanical estan a 0, asi que no desvia ninguna tecla y el dispositivo virtual no
--- emite. (Ojo con las etiquetas: esos numeros de `divert-keys` son CIDs de HID++, no
--- codigos evdev.) Si algun dia se activa una diversion o se anade una regla de Solaar,
--- el sintoma sera que play/pause «no hace nada»: toggle dos veces, ida y vuelta.
---
--- Sin `repeating` a proposito: cada pulsacion arranca sh + el script + playerctl, y con
--- la repeticion de tecla (~25/s) serian decenas de procesos por segundo.
--- Con `locked` para poder pausar la musica con la pantalla bloqueada.
--- Va por un script y no por `playerctl` directo: sin -p, playerctl usa «el primero
--- disponible», y con Cider + Zen a la vez ese orden es una loteria. Ver media-keys-control.sh.
+-- === Transporte multimedia (MPRIS) ===
+-- El receptor principal no anuncia PREVIOUSSONG; esa tecla llega por el teclado virtual
+-- de Solaar, que no desvía nada (no hay doble disparo).
+-- Sin `repeating`: cada pulsación lanza un script. Con `locked` funciona bloqueado.
+-- Va por media-keys-control.sh porque playerctl sin -p elige «el primero» al azar.
 hl.bind("XF86AudioPlay",  hl.dsp.exec_cmd(scriptsDir .. "media-keys-control.sh play-pause"), { locked = true })
 hl.bind("XF86AudioPause", hl.dsp.exec_cmd(scriptsDir .. "media-keys-control.sh play-pause"), { locked = true })
 hl.bind("XF86AudioNext",  hl.dsp.exec_cmd(scriptsDir .. "media-keys-control.sh next"),       { locked = true })
 hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd(scriptsDir .. "media-keys-control.sh previous"),   { locked = true })
 hl.bind("XF86AudioStop",  hl.dsp.exec_cmd(scriptsDir .. "media-keys-control.sh stop"),       { locked = true })
 
--- Monitor externo (ddccontrol + filtro de luz azul) — eran bindr (release)
---
--- ARREGLADO el 2026-09-30. Tenían dos defectos, los dos silenciosos:
---   1. El `&` no encadenaba: partía la línea en «(ddccontrol && swayosd) &» y
---      «hyprshade …», así que el filtro se aplicaba sin esperar al brillo.
---   2. Las DOS teclas hacían `toggle` del MISMO filtro. No eran simétricas, eran
---      el mismo botón dos veces: F1 encendía y F2 apagaba (o al revés, según el
---      estado en que estuviera). El filtro acababa alternando con cada pulsación.
--- Ahora cada tecla fija un estado, sin depender del anterior:
---   F1 = noche → brillo 10 % + filtro encendido
---   F2 = día   → brillo 100 % + filtro apagado
--- Nota: `hyprshade on blue-light-filter` apunta a ~/.config/hypr/shaders/
--- blue-light-filter.glsl, que es un .glsl plano. El shader del sistema con ese
--- mismo nombre es una plantilla mustache y falla con «No module named 'chevron'»
--- (hyprshade corre en Python 3.14 y python-chevron sólo está en 3.13).
+-- Monitor externo (ddccontrol + filtro de luz azul), en release.
+-- F1 = noche (brillo 10 % + filtro), F2 = día (100 % + sin filtro). Cada tecla fija su
+-- estado; antes las dos hacían toggle del mismo filtro.
+-- El shader es el .glsl plano de ~/.config/hypr/shaders: el del sistema es una plantilla
+-- mustache y falla sin python-chevron.
 hl.bind(mainMod .. " + Control_R + F1",
     hl.dsp.exec_cmd("ddccontrol -r 0x10 -w 10 dev:/dev/i2c-8 && " .. scriptsDir .. "swayosd-on-demand --brightness lower && hyprshade on blue-light-filter"),
     { release = true })
@@ -676,47 +430,11 @@ hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen({ mode = "maximized" }))    
 hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen({ mode = "fullscreen" })) -- antes fullscreen 0
 hl.bind(mainMod .. " + SHIFT + T", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + G", hl.dsp.group.toggle())
--- Moverse DENTRO del grupo SIN robarle la tecla a las aplicaciones (2026-10-01, 3a version).
---
--- El sintoma que reporto n30: "Ctrl+Tab ya no cambia de pestana en el navegador ni en kitty, pero
--- Ctrl+Shift+Tab si funciona para lo agrupado". Causa: un bind normal CONSUME la tecla siempre,
--- aunque la ventana activa no este en ningun grupo. La aplicacion no la ve nunca. El bind no estaba
--- roto; lo que estaba mal era consumir el evento sin condiciones.
---
--- Arreglo: intentar el despacho y MIRAR SI FUNCIONO. `hl.dispatch()` devuelve la tabla de
--- resultado (medido en el REPL de esta maquina, v0.56.2):
---     hl.dispatch(hl.dsp.group.next({ window = "class:^zen$" }))
---       -> { ok = false, error = "=[C]:-1: Window is not in a group",
---            code = "invalid_state", level = "warning" }
--- Si la ventana no esta en un grupo, el despacho no movio nada y entonces `hl.dsp.pass()` le
--- DEVUELVE el evento tal cual a la ventana activa: kitty y Zen vuelven a recibir Ctrl+Tab.
---
--- Por que "intentar primero" es seguro: en el fuente de esta version,
--- src/config/shared/actions/ConfigActions.cpp, `changeGroupActive` sale por sus DOS caminos de
--- error ANTES de tocar el grupo:
---     if (!window->m_group)             return actionError("Window is not in a group", ...);
---     if (window->m_group->size() == 1) return actionError("Only one window in group", ...);
---     window->m_group->moveCurrent(forward);
--- O sea: fallar == no haber movido nada. Y de regalo, Hyprland ya exige el "mas de un miembro"
--- que en la 2a version comprobaba yo a mano con `w.group.members`, asi que no duplico la regla.
---
--- Por que `pass` es fiel y no un invento: `Actions::pass` NO sintetiza un evento nuevo, reenvia el
--- evento REAL capturado (m_lastCode, m_timeLastMs, m_passPressed) con sendKeyboardKey, y antes llama
--- a sendKeyboardMods(getModsFromAllKBs(), ...). Eso importa: Chromium/Electron leen el estado de
--- modificadores de XKB, asi que un Ctrl fabricado a mano no les valdria; aqui llega el de verdad.
--- OJO: `hl.dsp.pass` exige una tabla con `window` y ese campo es un SELECTOR de texto, no un
--- objeto; y sin ventana activa lanza "hl.pass: window not found".
--- OJO 2: `pass` marca releasePending en el bind actual, o sea que SOLTAR la tecla tambien pasa por
--- aqui. Sin eso la aplicacion se quedaria con un Ctrl pulsado para siempre.
--- OJO 3: en la config Lua, `hyprctl binds -j` NO dice a que funcion llama cada tecla (todas salen
--- como `__lua` con un indice interno), asi que la unica fuente de verdad de estos binds es este fichero.
---
--- Alternativa NO usada: `hl.bind("CTRL + Tab", hl.dsp.group.next(), { auto_consuming = true })`.
--- KeybindManager.cpp (v0.56.2) dice `if (!k->nonConsuming && (!k->autoConsuming || res.success)) found = true;`
--- o sea que bastaria con que el despacho falle para que la tecla pase sola, sin guardian. Pero eso
--- depende de que el manejador interno `__lua` traduzca el fallo de dentro a success=false, y eso NO
--- lo he podido verificar sin pulsar la tecla (en esta maquina no hay ydotool, wtype ni dotool). El
--- guardian de abajo si es verificable, y si falla, falla del lado bueno: la tecla pasa igual.
+-- Ctrl+Tab dentro del grupo, sin robarle la tecla a las apps.
+-- Un bind normal consume la tecla siempre; aquí se intenta el despacho y, si falla
+-- (la ventana no está en un grupo), `pass` devuelve el evento real a la ventana activa.
+-- `pass` reenvía el evento capturado, no uno sintético, así que Chromium ve el Ctrl real.
+-- Alternativa descartada: auto_consuming depende de que el handler Lua traduzca el fallo.
 local function pestanaEnGrupo(direccion)
     return function()
         local r
@@ -741,7 +459,7 @@ hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "r" }))
 hl.bind(mainMod .. " + H", hl.dsp.focus({ direction = "l" }))
 hl.bind(mainMod .. " + J", hl.dsp.focus({ direction = "d" }))
 hl.bind(mainMod .. " + K", hl.dsp.focus({ direction = "u" }))
--- (mainMod+L lo ocupa screenlock.sh; ver arriba)
+-- (mainMod+L lo ocupa screenlock.sh)
 
 -- === Window Movement ===
 hl.bind(mainMod .. " + SHIFT + CTRL + left", hl.dsp.window.move({ direction = "l" }))
@@ -758,21 +476,15 @@ hl.bind(mainMod .. " + Home", hl.dsp.focus({ window = "first" }))
 hl.bind(mainMod .. " + End", hl.dsp.focus({ window = "last" }))
 
 -- === Monitor Navigation ===
--- QUÉ HACE: mueve el FOCO (la ventana activa), no la ventana, a otro monitor.
--- Solo tiene sentido con 2+ monitores; con un único monitor no hace nada.
--- SUPER+CTRL+↑/↓ se ELIMINARON (2026-09-18): chocaban con "Move to Workspace",
--- que usa exactamente esas teclas. Ahora ↑/↓ mueven la ventana al workspace.
--- left/right los ocupaba el cambio de workspace con sonido (n30.conf).
+-- Mueve el FOCO a otro monitor; con uno solo no hace nada.
+-- SUPER+CTRL+↑/↓ son de Move to Workspace, y left/right del cambio de escritorio.
 hl.bind(mainMod .. " + CTRL + H", hl.dsp.focus({ monitor = "l" }))
 hl.bind(mainMod .. " + CTRL + J", hl.dsp.focus({ monitor = "d" }))
 hl.bind(mainMod .. " + CTRL + K", hl.dsp.focus({ monitor = "u" }))
 hl.bind(mainMod .. " + CTRL + L", hl.dsp.focus({ monitor = "r" }))
 
 -- === Move to Monitor ===
--- OJO: en el .conf original estas teclas (left/down/up/right/H/J) también estaban
--- en "Window Movement" (movewindow l/d/u/r), así que ambos dispatchers disparaban.
--- Se dejan solo las de dirección (las mon: eran redundantes con una sola fila
--- de monitores); descomentar si se quiere el comportamiento literal del .conf.
+-- Las de dirección chocaban con Window Movement; solo quedan K/L (arriba/derecha).
 -- hl.bind(mainMod .. " + SHIFT + CTRL + left", hl.dsp.window.move({ monitor = "l" }))
 -- hl.bind(mainMod .. " + SHIFT + CTRL + down", hl.dsp.window.move({ monitor = "d" }))
 -- hl.bind(mainMod .. " + SHIFT + CTRL + up", hl.dsp.window.move({ monitor = "u" }))
@@ -785,7 +497,7 @@ hl.bind(mainMod .. " + Page_Down", hl.dsp.focus({ workspace = "e+1" }))
 hl.bind(mainMod .. " + Page_Up", hl.dsp.focus({ workspace = "e-1" }))
 hl.bind(mainMod .. " + U", hl.dsp.focus({ workspace = "e+1" }))
 hl.bind(mainMod .. " + I", hl.dsp.focus({ workspace = "e-1" }))
--- left/right con sonido (n30.conf ganaba en el .conf)
+-- left/right con sonido
 hl.bind(mainMod .. " + CTRL + left", function()
     hl.dispatch(hl.dsp.focus({ workspace = "e-1" }))
     hl.exec_cmd("play -v 0.1 \"" .. soundsDir .. "gravity/change_workspace.wav\"")
@@ -795,13 +507,10 @@ hl.bind(mainMod .. " + CTRL + right", function()
     hl.exec_cmd("play -v 0.1 \"" .. soundsDir .. "gravity/change_workspace.wav\"")
 end)
 hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
--- mouse_up era zoom-out en n30.conf; ver sección zoom
+-- mouse_up es zoom-out; ver sección zoom
 
 -- === Move to Workspace ===
--- QUÉ HACE: mueve la VENTANA ACTIVA al workspace contiguo y te lleva con ella.
--- Equivale a `movetoworkspace` del .conf: si se omite `follow`, Hyprland usa
--- silent = false (verificado en LuaBindingsDispatchers.cpp de v0.56.2).
--- SUPER+CTRL+↑/↓ pertenecen a esta sección desde 2026-09-18 (ver "Monitor Navigation").
+-- Mueve la ventana activa y te lleva con ella (follow por defecto).
 hl.bind(mainMod .. " + CTRL + down", hl.dsp.window.move({ workspace = "e+1" }))
 hl.bind(mainMod .. " + CTRL + up", hl.dsp.window.move({ workspace = "e-1" }))
 hl.bind(mainMod .. " + CTRL + U", hl.dsp.window.move({ workspace = "e+1" }))
@@ -813,7 +522,7 @@ hl.bind(mainMod .. " + SHIFT + I", hl.dsp.window.move({ workspace = "e-1" }))
 hl.bind(mainMod .. " + CTRL + mouse_down", hl.dsp.window.move({ workspace = "e+1" }))
 hl.bind(mainMod .. " + CTRL + mouse_up", hl.dsp.window.move({ workspace = "e-1" }))
 
--- === Numbered Workspaces (loops en vez de 19 binds) ===
+-- === Numbered Workspaces ===
 for i = 1, 9 do
     hl.bind(mainMod .. " + " .. i, hl.dsp.focus({ workspace = i }))
     hl.bind(mainMod .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
@@ -835,8 +544,7 @@ hl.bind(mainMod .. " + CTRL + F", function() -- antes: resizeactive exact 100%
 end)
 
 -- === Sizing ===
--- antes: resizeactive ±10% (resize ya no acepta strings de %); 100px como las flechas
--- repeating=true: en el .conf eran binde (se repetían al mantener pulsado)
+-- 100 px por pulsación, con repetición (binde en el .conf).
 hl.bind(mainMod .. " + SHIFT + minus", hl.dsp.window.resize({ x = -100, y = 0, relative = true }), { repeating = true })
 hl.bind(mainMod .. " + SHIFT + equal", hl.dsp.window.resize({ x = 100, y = 0, relative = true }), { repeating = true })
 hl.bind(mainMod .. " + SHIFT + right", hl.dsp.window.resize({ x = 100, y = 0, relative = true }), { repeating = true })
@@ -852,7 +560,7 @@ hl.bind(mainMod .. " + code:20", hl.dsp.window.resize({ x = -100, y = 0, relativ
 hl.bind(mainMod .. " + code:21", hl.dsp.window.resize({ x = 100, y = 0, relative = true }),
     { drag = true, description = "Shrink window left" })
 
--- === Zoom del cursor (antes hyprctl+jq por pulsación) ===
+-- === Zoom del cursor ===
 hl.bind(mainMod .. " + mouse_up", function() zoomBy(0.9) end)
 hl.bind(mainMod .. " + equal", function() zoomBy(1.1) end)
 hl.bind(mainMod .. " + minus", function() zoomBy(0.9) end)
@@ -879,30 +587,22 @@ hl.bind(mainMod .. " + SHIFT + P", hl.dsp.dpms({ action = "toggle" }))
 hl.bind(mainMod .. " + CTRL + ALT + W", hl.dsp.exec_cmd("skwd-paper-v2 stop"))
 hl.bind(mainMod .. " + CTRL + ALT + A", hl.dsp.exec_cmd("pkill -9 -i -f \"ArkAscended|ShooterGame\""))
 -- === Espacio especial con la tecla Super sola ===
--- En el .conf era `bindr = $mainMod, $mainMod_L` y funcionaba por accidente:
--- hyprlang expandía $mainMod_L -> "SUPER_L" (sustitución por prefijo).
--- Aquí se escribe explícito: Super (como mod) + Super_L (tecla), al soltar.
+-- Se escribe explícito (Super como mod + Super_L como tecla), al soltar.
 hl.bind(mainMod .. " + SUPER_L", hl.dsp.workspace.toggle_special("special"), { release = true })
 
 -- ==================
 -- MACRO: STALKER 2 — guardado rápido (F5) con el botón lateral inferior
 -- ==================
--- Mouse: Logitech Lift Vertical (receptor Bolt, WPID B031).
--- El botón lateral INFERIOR emite BTN_SIDE = evdev 275 (verificado con evtest:
--- press+release limpios, sin otros códigos).
--- Hyprland sintetiza un F5 real hacia la ventana activa: sin ydotool, sin
--- demonios y sin procesos externos.
--- NO toca el Fn-lock del MX Mechanical: la tecla Fn es de nivel firmware/EC y
--- nunca llega al SO, así que un F5 sintético la hace innecesaria y el bloqueo
--- del teclado se queda tal cual está.
+-- El botón emite BTN_SIDE (evdev 275). Hyprland sintetiza un F5 real, sin ydotool.
+-- No toca el Fn-lock: la tecla Fn nunca llega al SO.
+-- Dentro del juego se consume el botón (si no, cambia de munición) y se inyecta F5;
+-- fuera se devuelve con `pass` para que siga siendo «Atrás».
+-- `mods` es obligatorio en send_shortcut: cadena para stringToModMask, "" = ninguno.
 local STALKER_TITLE = "S.T.A.L.K.E.R." -- texto literal, no patrón Lua
 
--- El juego corre bajo gamescope (class=gamescope + título con el nombre del
--- juego). Si algún día se lanzara sin gamescope, la clase sería
--- steam_app_1643320. Se aceptan ambas.
--- Devuelve el selector de ventana del juego, o nil si la ventana activa no es
--- STALKER 2. `send_shortcut` resuelve el selector con la API de ventanas, así
--- que hay que pasarle una CADENA (no un objeto de ventana).
+-- Bajo gamescope la clase es "gamescope" y el nombre va en el title; sin gamescope,
+-- la clase sería steam_app_1643320. Se aceptan ambas.
+-- `send_shortcut` resuelve el selector con la API de ventanas: hay que pasarle una CADENA.
 local function selectorStalker2(w)
     if not w then return nil end
     if w.class == "gamescope" then
@@ -923,73 +623,37 @@ hl.bind("mouse:275", function()
 
     local sel = selectorStalker2(w)
     if sel then
-        -- DENTRO del juego: consumimos el botón físico (el bind ya NO es
-        -- non_consuming), así que STALKER 2 nunca lo recibe y no cambia de
-        -- munición. El F5 lo inyectamos nosotros, así que el juego no necesita
-        -- ver el botón para nada.
-        -- `mods` es OBLIGATORIO en send_shortcut: es una CADENA que se pasa a
-        -- stringToModMask(); "" = sin modificadores. Omitirlo aborta el dispatcher
-        -- con «hl.send_shortcut: 'mods' is required» y NO se envía ninguna tecla
-        -- (verificado en src/config/lua/bindings/LuaBindingsDispatchers.cpp, v0.56.2:
-        -- requireTableFieldStr se evalúa al CONSTRUIR el dispatcher, no al disparar).
         hl.dispatch(hl.dsp.send_shortcut({ mods = "", key = "F5", window = sel }))
     else
-        -- FUERA del juego: devolvemos el evento a la ventana activa para que el
-        -- botón siga funcionando como «Atrás». Sin esto, al haber quitado
-        -- non_consuming, Hyprland se tragaría el botón en todas partes.
-        -- OJO: `pass` exige que el selector resuelva; si no hay ventana activa
-        -- lanza «hl.pass: window not found» y saca notificación, de ahí el
-        -- `if not w then return end` de arriba.
+        -- `pass` exige que el selector resuelva; sin ventana activa lanza
+        -- «hl.pass: window not found», de ahí el `if not w then return end`.
         hl.dispatch(hl.dsp.pass({ window = "activewindow" }))
     end
 end, {
-    -- SIN `non_consuming`: ese flag era la CAUSA del cambio de munición.
-    -- Verificado en KeybindManager.cpp (v0.56.2, línea 835 y 842):
-    --     if (!k->nonConsuming && (!k->autoConsuming || res.success)) found = true;
-    --     ...
-    --     res.passEvent |= !found;
-    -- Con non_consuming = true, `found` se queda en false y el evento se REENVÍA
-    -- a la ventana activa → el juego ve el botón → cambia munición.
-    -- Consumiéndolo, el juego no lo ve.
+    -- SIN `non_consuming`: ese flag reenviaba el botón al juego y cambiaba munición.
     description = "STALKER 2: guardado rápido (F5)",
 })
-
--- (los binds rotos con CTRLx sí se eliminaron: modificador inválido real)
 
 -- ==================
 -- WINDOW RULES
 -- ==================
--- IMPORTANTE: se evalúan de arriba hacia abajo; la última coincidencia gana
--- (las named rules se evalúan antes que las anónimas).
+-- Se evalúan de arriba abajo; gana la última coincidencia.
 
--- Dimming global de ventanas inactivas no flotantes (de hyprland.conf).
--- ESTA es la regla de EXCEPCIÓN de zen: class = "negative:^(zen)$" excluye a zen,
--- por eso zen siempre está sin transparencia. DEBE ir ANTES de todas las reglas
--- de apps con opacity: la última coincidencia gana y las específicas pisan esto.
+-- Dimming global de inactivas no flotantes. Excluye zen, y debe ir antes de las reglas
+-- de apps: la última coincidencia gana y las específicas pisan esto.
 hl.window_rule({
     name = "global-inactive-opacity",
     match = { class = "negative:^(zen)$", float = false, focus = false },
     opacity = "0.9 0.9",
 })
 
--- Va DESPUÉS de la regla global porque la última coincidencia gana (ver nota de arriba).
---
--- ¡OJO CON "override"! (verificado 21-sep-2026, doc oficial de window rules)
---   "Opacity is a PRODUCT of all opacities by default... You can put `override`
---    after an opacity value to override it to an exact value rather than a multiplier."
--- decoration:active_opacity = 1.0 e inactive_opacity = 0.9 (líneas 77-78).
--- Con "0.9 0.8" a secas el valor real sería: activa 0.9*1.0 = 0.90 (bien),
---   inactiva 0.8*0.9 = 0.72 (NO los 0.8 pedidos).
--- Por eso va "0.9 override 0.8 override": valor EXACTO, inmune al producto global.
--- Es la misma convención que ya usa "chatgpt-pet" (0.9 override 0.8 override),
--- "zen-opaque" y "steam-games" (1.0 override).
+-- `override` fija el valor exacto en vez de multiplicarlo por decoration:active/inactive_opacity.
+-- Sin él, 0.8 sobre el 0.9 global daría 0.72.
 hl.window_rule({ name = "workbuddy-opacity", match = { class = "^(WorkBuddy AI)$" }, opacity = "0.8 override 0.7 override" })
 
--- OJO con Codex: la app es Codex (sus procesos llevan --user-data-dir=~/.config/Codex),
--- pero la CLASE de ventana es "Chatgpt". El `float = false` la limita a la ventana
--- principal, porque la mascota comparte clase y título y va flotante.
--- Steam: solo el cliente (class "steam"); los juegos son class "steam_app.*" y tienen
--- su propia regla con "1.0 override", así que no se tocan.
+-- La app es Codex pero su clase es "Chatgpt"; float=false la limita a la ventana principal
+-- (la mascota comparte clase y va flotante).
+-- Steam: solo el cliente; los juegos tienen su propia regla.
 hl.window_rule({ name = "codex-opacity", match = { class = "^(Chatgpt)$", float = false }, opacity = "0.8 override 0.7 override" })
 hl.window_rule({ name = "steam-opacity", match = { class = "^(steam)$" }, opacity = "0.8 override 0.7 override" })
 
@@ -1022,190 +686,32 @@ hl.window_rule({ name = "thunar-rename-dialog", match = { class = "^(Thunar)$", 
     float = true, center = true, size = { 700, 300 } })
 
 -- Navegadores
--- NOTA zen/steam: zen SIEMPRE queda opaco y sin borde gracias a:
---   1) esta regla (opacity "1.0 override" -> opacidad absoluta, no multiplicador), y
---   2) la regla de excepción "global-inactive-opacity" (más arriba, antes de
---      las reglas de apps), cuyo match
---      usa class = "negative:^(zen)$" para EXCLUIR a zen del dimming global 0.9
---      que sufren las demás ventanas no flotantes sin foco.
--- Lo mismo aplica a los juegos de steam (steam_app), excluidos por su propia
--- regla "steam-games" con opacity "1.0 override".
+-- zen y los juegos de steam quedan opacos: `1.0 override` aquí y la exclusión
+-- negative:^(zen)$ de la regla global.
 hl.window_rule({ name = "zen-opaque", match = { class = "^(zen)$" }, border_size = 0, opacity = "1.0 override 1.0 override" })
 hl.window_rule({ name = "chromium-bar", match = { class = "^Chromium-browser$" }, float = true, pin = true,
     move = { 2159, -8 }, border_size = 0, opacity = "0.95 0.95", rounding = 20, size = { 625, 56 } }) -- rounding 40: fuera del máximo (20)
 hl.window_rule({ name = "pip-float", match = { title = "^(Picture-in-Picture)$" },
     float = true, pin = true, move = { 0, 885 }, size = { 982, 553 } })
 
--- DeepSeek Harness (DSH) SIEMPRE en el escritorio 1, y WorkBuddy AI en el 2.
--- (Cambio pedido el 2026-09-30: antes DSH iba al 2 y WorkBuddy no tenía escritorio
---  asignado. Se intercambian, no se añaden dos reglas nuevas.)
--- La clase de DSH NO es la de Chrome normal: en modo app (--app=http://127.0.0.1:3080)
--- Chrome usa su propio app_id. Medida con `hyprctl clients -j` el 2026-09-27 sobre la
--- ventana en uso: class = "chrome-127.0.0.1__-Default".
--- ESTAS reglas son las que garantizan el escritorio, no el `workspace` del exec del
--- autostart: si Chrome YA estaba corriendo al lanzar el script, la ventana la crea el
--- proceso viejo de Chrome y la regla por PID del exec no la alcanza (saldría en el
--- escritorio que tuviera el foco). Con la regla de ventana da igual quién la cree.
--- Si cambia el puerto o el perfil, la clase de DSH puede cambiar y esto dejaría de
--- casar EN SILENCIO: comprobar con `hyprctl clients -j` que sigue empezando por
--- chrome-127.0.0.1. La de WorkBuddy es "WorkBuddy AI", medida el 2026-09-30; la fija
--- el propio start.sh, que exporta CHROME_DESKTOP="WorkBuddy AI.desktop" (de ahí saca
--- Electron el app_id en Wayland). No choca con la regla de opacidad de más arriba
--- aunque compartan clase: son propiedades distintas, y sólo se pisa la misma propiedad.
+-- DSH al 1 y WorkBuddy al 2.
+-- La clase de DSH en modo app es chrome-127.0.0.1__-Default; si cambia el puerto o el
+-- perfil, la regla deja de casar en silencio. El `workspace` del exec no basta cuando la
+-- ventana la crea un proceso ya existente; la regla se aplica al crearla.
 hl.window_rule({ name = "dsh-web-ws1", match = { class = "^(chrome-127\\.0\\.0\\.1.*-Default)$" }, workspace = "1 silent" })
 hl.window_rule({ name = "workbuddy-ws2", match = { class = "^(WorkBuddy AI)$" }, workspace = "2 silent" })
 
--- El EDITOR al escritorio 1 (pedido el 2026-10-01: al iniciar sesión salía en el 2).
--- La capa de arriba (delayedCommand -> dispatchCommand -> exec_cmd con workspace) es la
--- débil por el mismo motivo que en Steam y DSH: `code` es un script bash que hace `exec`
--- de /usr/share/code/bin/code, que es otro script, y el binario de Electron acaba creando
--- la ventana desde otro proceso. Esta regla no depende de quién la cree.
--- OJO CON LA CLASE: el paquete instalado es visual-studio-code-bin y su ventana es
--- "com.microsoft.VSCode" (medido con `hyprctl clients -j` el 2026-10-01), NO "code".
--- Esa misma clase era la que faltaba en las reglas de opacidad del editor, que llevaban desde
--- siempre sin casar con nada; se reapuntaron el 2026-10-01 (ver la sección "Herramientas").
--- Efecto secundario asumido: cualquier ventana del editor va al 1, también si se abre a mano
--- desde otro escritorio. Si alguna vez molesta, quitar sólo esta línea.
+-- El editor al 1. Su clase real es com.microsoft.VSCode (visual-studio-code-bin), no "code".
+-- Efecto secundario: cualquier ventana del editor va al 1, también abierta a mano.
 hl.window_rule({ name = "editor-ws1", match = { class = "^(com\\.microsoft\\.VSCode)$" }, workspace = "1 silent" })
 
--- Timer JWA (cuenta atras de 75 s, cuadrado de 120x120; pedido el 2026-10-02).
---
--- POR QUE HACE FALTA ESTA REGLA: Chromium en modo app IGNORA --window-size.
--- Medido el 2026-10-02 sobre Hyprland 0.56.2 pidiendo 120x120: la ventana salio
--- 1239x1415. La causa NO era el flag, era que la ventana nacia TILEADA
--- (floating=false), y en mosaico el tamano pedido se descarta.
--- Por eso van las dos cosas juntas: `float = true` (condicion necesaria) y
--- `size` (el tamano, que ya en flotante si se respeta).
---
--- ###########################################################################
--- # ALTO = 120. LA BARRA YA NO EXISTE PORQUE SE LANZA CON --kiosk.           #
--- ###########################################################################
--- HISTORIA (para no volver a tropezar, 2026-10-02):
---   Con `--app`, Chromium dibujaba una barra de titulo (CSD) de ~32 px DENTRO
---   de la ventana, con "No..." y una X, y el cuadrado quedaba CORTADO por
---   abajo. Medido con ventana real (inner/outer via window.*):
---       ventana 120x120 -> barra presente, "75" recortado (captura)
---       ventana 120x200 -> inner=120x200 outer=120x200 barra=0
---   Se probaron y NO la quitaban: --ozone-platform=wayland, --gtk-version=3|4,
---   --disable-features=CustomTitlebar, --class=. El StartupWMClass del
---   .desktop coincide exactamente con la clase real (verificado), no era eso.
---   Hyprland no puede ignorar la CSD de un cliente: `decoration:no_csd` no
---   existe (comprobado con `hyprctl getoption`).
---   SALIDA: se cambio el lanzador de `--app` a **`--kiosk`**, que si elimina
---   la barra. Medido despues del cambio: la franja superior uniforme
---   (brillo 34.9) desaparece, y el "75" sale entero.
---   Con --kiosk sobraban los 32 px de margen: aparecia una franja BLANCA opaca
---   de RGB(232,235,239) de y=122 a y=152. Por eso el alto es 120, no 152.
--- SI ALGUN DIA SE VUELVE A `--app`, HAY QUE SUBIR ESTO A 152.
--- El CONTENIDO web y la ventana coinciden en 120x120.
---
---   - `border_size = 0`: sin marco del compositor, porque el cuadrado ES la
---     ventana entera y un borde la agrandaria.
---   - `no_shadow = true`: la sombra de Hyprland dibuja fuera de la ventana y
---     ensuciaria el recorte exacto.
---   - `move`: arriba a la izquierda. La esquina se eligio como sitio
---     razonable para un aviso; ajustar aqui si molesta.
---
--- OJO CON LA CLASE: no es "jwa-timer" ni nada bonito, y el flag --class= NO
--- sirve (probado: Chromium lo ignora en modo app). La clase se deriva de la
--- URL --app y queda siempre en
---   chrome-__home_n30_Proyectos_jwa-timer_jwa-timer.html-Default
--- MEDIDO el 2026-10-02 con DOS --user-data-dir distintos (/tmp/jwatest/prof2 y
--- ~/.cache/jwa-timer-profile) y la clase fue IDENTICA en ambos: depende de la
--- URL, no del perfil. (Una medicion anterior con otro perfil me hizo creer lo
--- contrario; era falso.)
--- EL TITULO SI ES "jwa-timer": se cambio el <title> del HTML a "jwa-timer"
--- el 2026-10-02. Ese es el nombre que se ve en el lanzador de tareas. La regla
--- casa por CLASE, no por titulo, a proposito: el titulo es facil de duplicar
--- (cualquier webview podria llamarse igual) y la clase lleva la ruta, que es
--- unica. No cambiar el match a title salvo que haya motivo medido.
--- SI SE MUEVE EL HTML DE SITIO, LA CLASE CAMBIA (lleva la ruta incrustada en el
--- nombre) Y ESTA REGLA DEJA DE CASAR EN SILENCIO: la ventana volveria a salir
--- en mosaico y a tamano completo sin ningun error. Tras mover el fichero,
--- vuelve a medir con `hyprctl clients -j`.
---
--- `stay_focused = true`: sin esto la ventana nace DEBAJO de los widgets del
--- escritorio (barra de DMS, widget del tiempo). Comprobado por captura el
--- 2026-10-02: el reloj del tiempo se dibujaba ENCIMA del cuadrado y el numero
--- quedaba tapado. Con stay_focused pasa al frente.
--- `no_initial_focus = true`: la ventana NO se queda el foco al abrir. Antes
--- (con stay_focused) el timer se ponia encima y secuestraba el teclado. n30
--- reporto el 2026-10-02: "todo lo que esta debajo queda inaccesible, la idea
--- es que sea de ese tamano para que deje jugar". Con no_initial_focus + sin
--- pin, el timer es un objeto de ESCRITORIO: queda visible encima, pero el foco
--- sigue donde estaba y se puede seguir trabajando/jugando.
---
--- `pin = false` explicito: NO se queda clavado por encima. Si n30 quiere
--- levantarlo, esta en un escritorio y se enfoca normalmente.
---
--- SIN `opaque`: la ventana es transparente por diseno (velo al 84% +
--- backdrop-filter). Poner `opaque` la forzaria opaca y mataria el efecto.
---
--- OPACIDAD DE LA VENTANA (anadido 2026-10-02, peticion de n30).
---
--- ###########################################################################
--- # NO USAR `override` AQUI. MATA EL COLOR DEL NUMERO. MEDIDO, NO SUPUESTO. #
--- ###########################################################################
--- n30 pidio "mitad de transparencia 0.50 override 0.40 override". La sintaxis
--- es correcta (la wiki de 0.56 documenta `override` como sufijo para fijar el
--- valor como absoluto en vez de multiplicador), PERO en esta ventana concreta
--- `override` produce un fallo reproducible: el numero deja de ser amarillo y
--- sale GRIS NEUTRO.
---
--- MEDICION (2026-10-02, `grim` sobre la pantalla real, contando pixeles
--- amarillos con r-b>60 en la zona de la ventana):
---     sin regla de opacidad ......... 2298 px amarillos, sat 196, (235,195,39)
---     opacity = "0.50 0.40" ......... 1475 px amarillos, sat 104, (147, 126, 43)
---     opacity = "0.50 override 0.40 override" ... 0 px amarillos, sat 0,
---                                                  gris (121,121,121)
--- Reproducido 3 veces (con regla / sin regla / con override), siempre igual.
---
--- Causa: `override` fuerza el alfa absoluto del buffer de la superficie. Con
--- --disable-gpu (obligatorio en este equipo, ver jwa-timer.sh) la superficie
--- se rasteriza por software en un formato donde esa manipulacion de alfa sobre
--- un fondo 100% transparente pierde la crominancia. El multiplicador normal no
--- toca el alfa de la misma forma y conserva el color.
---
--- POR QUE 0.50 0.40 Y NO override: `override` solo cambia el resultado cuando
--- hay OTRA regla de opacidad que multiplicaria encima. Aqui no la hay (regla
--- unica, sin `opaque`), asi que 0.50 0.40 da exactamente el mismo resultado
--- visual... salvo que conserva el amarillo. Sin motivo para pagar el gris.
---
--- Efecto buscado: ventana al 50% opaca con foco, 40% sin foco. El fondo ya es
--- 100% transparente por CSS, asi que lo que se atenua es el NUMERO: al 50% se
--- ve a media intensidad. Si queda demasiado tenue, SUBIR estos valores o
--- reforzar el text-shadow del HTML; no volver a `override`.
---
--- ###########################################################################
--- # REGLA RETIRADA EL 2026-10-03. EL TIMER YA NO ES UNA VENTANA.           #
--- # ESTA COMENTADA A PROPOSITO: NO DESCOMENTAR SIN LEER ESTO ENTERO.       #
--- ###########################################################################
---
--- Por que se retiro: el timer se reescribio en Quickshell
--- (jwa-timer.qml, ver jwa-timer.sh). Quickshell crea un PanelWindow, que en
--- Wayland es una CAPA wlr-layer-shell, NO una ventana. Una capa no tiene
--- clase de ventana, asi que `match = { class = ... }` no puede casarla: la
--- regla quedo inerte. Se comprobo:
---     hyprctl layers  -> "namespace: jwa-timer, xywh: 60 60 120 120"  (level 3 overlay)
---     hyprctl clients -> ninguna ventana con clase jwa
---
--- Por que se QUITA en vez de dejarla: dejarla puesta era una trampa. La clase
--- `chrome-__home_n30_Proyectos_jwa-timer_jwa-timer.html-Default` pertenece a
--- la version vieja en Chromium. Si alguien abria el HTML suelto en Chromium
--- (por ejemplo para depurarlo), esta regla lo cazaba y le aplicaba la
--- opacidad y el tamano del timer, sin que nada lo anunciara. Ya paso una vez:
--- el 2026-10-02 una instancia antigua de Chromium --kiosk seguia viva y
--- contaminaba las mediciones de transparencia hechas con `grim`.
---
--- Lo que NO hace falta ya: la transparencia. Antes habia que pelear con
--- `opacity` en la regla porque Chromium pinta una superficie opaca y el velo
--- habia que atenuarlo desde fuera. La capa de Quickshell es transparente de
--- verdad (medido: dentro de la capa (25,25,25), fuera (25,25,25), diferencia
--- 0), asi que no necesita NINGUNA regla del compositor. La transparencia sale
--- del propio QML: `color: "transparent"`.
---
--- Si algun dia se vuelve a Chromium: la regla esta aqui abajo, comentada, con
--- su match original. Descomentar y volver a medir con `hyprctl clients -j`.
+-- Timer JWA: RETIRADO el 2026-10-03. El timer es ahora una capa de Quickshell
+-- (jwa-timer.qml): una capa no tiene clase, así que `class = ...` no puede casarla y la
+-- regla quedó inerte. Se conserva comentada por si se vuelve a Chromium.
+-- OJO: no hay regla de opacidad para capas. hl.layer_rule no tiene `opacity` (solo
+-- no_anim, blur, blur_popups, ignore_alpha, dim_around, xray, animation, order,
+-- above_lock, no_screen_share); la opacidad 0.70 vive en el QML.
+-- Con Chromium, `override` aquí mataba el color del número (salía gris): usar 0.50 0.40.
 --
 -- hl.window_rule({
 --     name = "jwa-timer",
@@ -1219,46 +725,6 @@ hl.window_rule({ name = "editor-ws1", match = { class = "^(com\\.microsoft\\.VSC
 --     no_initial_focus = true,
 --     opacity = "0.50 0.40",
 -- })
---
--- ###########################################################################
--- # NO EXISTE REGLA DE OPACIDAD PARA ESTA CAPA. NO SE PUEDE ESCRIBIR.       #
--- ###########################################################################
--- n30 pidio el 2026-10-03 una regla con "0.70 override 0.70 override". La
--- sintaxis es correcta, pero no hay donde aplicarla:
---
---   - Las reglas de VENTANA (hl.window_rule) si tienen `opacity`, pero no
---     pueden alcanzar una capa: una capa no tiene clase de ventana.
---   - Las reglas de CAPA (hl.layer_rule) si la alcanzan por `namespace`, pero
---     en Hyprland 0.56.2 NO tienen opacidad. El conjunto completo de efectos
---     esta en el enum instalado:
---       /usr/include/hyprland/src/desktop/rule/layerRule/LayerRuleEffectContainer.hpp
---     y son exactamente diez: no_anim, blur, blur_popups, ignore_alpha,
---     dim_around, xray, animation, order, above_lock, no_screen_share.
---     Escribir `opacity` da: hl.layer_rule: unknown field 'opacity'.
---     Se pidio en el issue #4267 (2023) y se cerro como "not planned".
---
--- Sobre `override`, por precision: significa alfa ABSOLUTO en vez de
--- multiplicado por decoration:active_opacity / inactive_opacity. Los valores de
--- esta config son 1.0 / 0.9 / 1.0, asi que sin `override` un 0.70 saldria 0.63
--- sin foco. La intuicion de n30 era correcta; simplemente no hay regla de capa
--- donde escribirla.
---
--- La opacidad 0.70 vive en el QML (jwa-timer.qml), en un Item contenedor.
--- Medido sobre fondo negro opaco: el glifo sale (178,147,21), que es
--- exactamente 0,70*(255,210,30) + 0,30*(0,0,0). Alfa implicita por canal:
--- R 0.698, G 0.700, B 0.700.
---
--- Lo que SI se puede hacer con una regla de capa, si algun dia hace falta
--- (ya hay una equivalente para el quickshell general, mas abajo en este fichero):
---   hl.layer_rule({ name = "jwa-timer", match = { namespace = "^(jwa-timer)$" }, no_anim = true })
-
-
-
--- Alternativa si prefieres tenerlo SIEMPRE encima de todo mientras corre:
--- descomentar `pin = true` arriba. `pin` lo deja fijo por encima de las demas
--- ventanas normales; `stay_focused` solo evita que nazca debajo. Se dejo
--- stay_focused por defecto porque pin puede molestar si el timer se queda
--- abierto y quieres trabajar por encima de el.
 
 -- Mensajería / multimedia
 hl.window_rule({ name = "wasistlos", match = { class = "^(wasistlos)$" }, opacity = "0.75 0.65", workspace = "1 silent" })
@@ -1269,14 +735,11 @@ hl.window_rule({ name = "zapzap", match = { class = "^com\\.rtosta\\.zapzap$" },
 hl.window_rule({ name = "discord-dim", match = { class = "^discord$" }, opacity = "0.85 0.85" })
 hl.window_rule({ name = "cider-dim", match = { class = "^(cider)$" }, opacity = "0.79 0.75" })
 
--- Espacio `special`: las cuatro apps del diseno viven SIEMPRE ahi. El script
--- special-layout.sh decide el orden y la geometria; estas reglas solo garantizan
--- el destino cuando la ventana la crea un proceso hijo (cider es Electron y su
--- ventana no la crea el proceso que el script lanza).
+-- Espacio `special`: special-layout.sh decide orden y geometría; estas reglas solo
+-- garantizan el destino cuando la ventana la crea un proceso hijo (cider es Electron).
 hl.window_rule({ name = "layout-cider-special",  match = { class = "^(cider)$" },                workspace = "special silent" })
 hl.window_rule({ name = "layout-zapzap-special", match = { class = "^com\\.rtosta\\.zapzap$" }, workspace = "special silent" })
--- BTop pasa a tener clase propia (`btop`), asi que ya no le alcanza la regla
--- "kitty"; se le replican sus dos efectos para que se vea igual que antes.
+-- BTop tiene clase propia (btop): se le replican los efectos de kitty.
 hl.window_rule({ name = "layout-btop-special",   match = { class = "^(btop)$" },                 workspace = "special silent", border_size = 0, opacity = "0.85 0.85" })
 hl.window_rule({ name = "layout-nvtop-special",  match = { class = "^(nvtop-fluid)$" },          workspace = "special silent" })
 hl.window_rule({ name = "tidal-dim", match = { class = "^tidal-hifi$" }, opacity = "0.50 0.50" })
@@ -1297,93 +760,42 @@ hl.window_rule({ name = "qbittorrent-dim-2", match = { class = "^org\\.qbittorre
 hl.window_rule({ name = "megasync-dim", match = { class = "^(nz\\.co\\.mega\\.megasync)$" }, opacity = "0.35 0.35" }) -- fusionada (antes x3)
 hl.window_rule({ name = "megasync-x11-dim", match = { class = "^(MEGAsync)$" }, opacity = "0.80 0.70" })
 hl.window_rule({ name = "luna-dim", match = { class = "^luna$" }, opacity = "0.80 0.80" })
--- EDITOR — reapuntado a la clase REAL el 2026-10-01 (antes no casaba con nada).
--- Antes había tres reglas: code-oss-dim (^code-oss$) / code-dim (^code$) / editor-dim (^(code)$).
--- Ninguna alcanzaba la ventana que n30 usa de verdad, que es "com.microsoft.VSCode": el paquete
--- es visual-studio-code-bin y saca el app_id del StartupWMClass de com.microsoft.VSCode.desktop.
--- Además code-dim y editor-dim eran DUPLICADOS (misma clase, distinto valor) y, por el orden,
--- la que ganaba era editor-dim; se conserva SU valor (0.70 0.70) y code-dim queda comentada por
--- superseded, para no perder el dato. Si 0.70 resulta demasiado transparente, poner "0.90 0.75".
--- Nota: sin `override` estas cifras MULTIPLICAN la opacidad, no la fijan (igual que el resto de
--- reglas -dim de esta sección; sólo workbuddy-opacity usa override).
+-- EDITOR: la clase real es com.microsoft.VSCode, no "code". Sin `override` estas cifras
+-- multiplican la opacidad global, no la fijan.
 hl.window_rule({ name = "editor-dim", match = { class = "^(com\\.microsoft\\.VSCode)$" }, opacity = "0.70 0.70" })
--- hl.window_rule({ name = "code-dim", match = { class = "^code$" }, opacity = "0.90 0.75" }) -- superseded por editor-dim (misma clase)
--- code-translucent (instalado, 1.119.0-1): su .desktop es code-oss.desktop con StartupWMClass=Code,
--- así que su clase puede ser "code-oss" o "Code". Se cubren las dos, pero NO está verificado con
--- una ventana abierta: el 2026-10-01 no estaba corriendo.
+-- hl.window_rule({ name = "code-dim", match = { class = "^code$" }, opacity = "0.90 0.75" }) -- superseded por editor-dim
+-- code-translucent: su clase puede ser "code-oss" o "Code"; no verificado con ventana.
 hl.window_rule({ name = "code-oss-dim", match = { class = "^(code-oss|Code)$" }, opacity = "0.80 0.70" })
 -- ===========================================================================
--- Efecto de entrada de la ventana de Safe Eyes: las 5 alternativas (2026-10-02)
+-- Efecto de entrada de la ventana de Safe Eyes
 -- ===========================================================================
--- Solo UNA esta activa (la 2). Las otras cuatro van comentadas enteras para poder
--- cambiar de idea sin reescribirlas.
---   Para cambiar: comenta la activa y descomenta la que quieras. Deja UNA: los nombres
---   de regla repetidos NO dan error (medido), asi que dos activas a la vez se aplican
---   las dos en silencio.
---   `dim_around = true` es ortogonal a la animacion: vale para cualquiera de las cinco.
---   Oscurece el resto TODO el rato que la ventana este abierta (no es un destello), y
---   su intensidad no la fija la regla: sale de `decoration:dim_strength` (medido:
---   0.500000, el valor por defecto, no esta puesto en el fichero).
---
--- Lo que NO se puede hacer por ventana (leido en el fuente de 0.56.2):
---   - La CURVA y la VELOCIDAD son globales, del leaf `windowsIn` (linea ~117). Por eso
---     las opciones 1 y 4, que van de la curva, traen su cambio global aparte: activarlas
---     cambia la animacion de TODAS las ventanas, no solo la de Safe Eyes.
---   - La regla NO valida el estilo: uno inexistente carga sin error y simplemente no
---     anima. (`hl.animation` global SI valida; la regla de ventana no.)
---
--- Tu linea de base, para comparar: `windowsIn` esta declarado SIN estilo, y un estilo
--- vacio significa popin desde una caja de 5x5 px. Es decir, tus ventanas YA salen de un
--- punto. Por eso la opcion 3 (`popin 30%`) es MENOS explosiva que el resto del escritorio.
--- Leido en el fuente de tu version exacta (hyprland 0.56.2 + hyprutils 0.14.2):
--- `applyPopin()` calcula `(GOALSIZE * minPerc).clamp({5,5}, GOALSIZE)` y con estilo vacio
--- `percentageFromStyle()` devuelve 0 -> arranca en 5x5.
-
--- --- Opcion 2 — Cañonazo desde el borde derecho  [ACTIVA] ------------------
--- `slide right` SI esta soportado en ventanas. En WindowAnimationController.cpp:
---   if (STYLE.starts_with("slide")) { CVarList l(STYLE, 0, 's'); applySlide(ctx, window, l[1], close); }
--- y con force="right" arranca en `GOALPOS + Vector2D(GOALSIZE.x, 0)`: una anchura de
--- ventana a la derecha, y entra deslizandose. Coste global: ninguno.
+-- Solo UNA opción activa: dos reglas con el mismo nombre se aplican las dos en silencio.
+-- La curva y la velocidad son globales (leaf windowsIn); el estilo no se valida, uno
+-- inexistente no anima.
+-- Activa: slide right desde el borde derecho.
 hl.window_rule({ name = "safeeyes", match = { class = "^io\\.github\\.slgobinath\\.SafeEyes$" }, float = true, pin = true,
     move = { 1444, -11 }, border_size = 0, opacity = "0.75 override 0.75 override", rounding = 20, size = { 600, 180 },
     animation = "slide right" }) -- rounding 40: fuera del máximo (20)
 
--- --- Opcion 1 — Explosion elastica (popin + resorte) -----------------------
--- El resorte da rebote real: se pasa y vuelve. Es GLOBAL. Dos pasos, los dos
--- comentados: definir el resorte y apuntar `windowsIn` a el en vez de a `default`
--- (esto ultimo SUSTITUYE la linea ~117, no se anade).
--- OJO con el nombre del campo: es `dampening`, NO `damping` (medido: con `damping`
--- falla con "dampening expects a number"). Y los campos de mas NO se rechazan:
--- `zzz = 1` pasa en silencio (medido), asi que una errata aqui no avisa.
--- El porcentaje es un punto de partida: bajarlo = mas dramatico.
+-- Opción 1: popin + resorte (global: cambia windowsIn). El campo es `dampening`, no `damping`.
 -- hl.curve("rebote", { type = "spring", mass = 1, stiffness = 300, dampening = 7 })
 -- hl.animation({ leaf = "windowsIn", enabled = true, speed = 3, spring = "rebote", style = "popin 20%" })
 -- hl.window_rule({ name = "safeeyes", match = { class = "^io\\.github\\.slgobinath\\.SafeEyes$" }, float = true, pin = true,
 --     move = { 1444, -11 }, border_size = 0, opacity = "0.75 override 0.75 override", rounding = 20, size = { 600, 180 },
 --     animation = "popin 20%" })
 
--- --- Opcion 3 — Foco absoluto (popin + oscurecer el resto) -----------------
--- Emerge de la oscuridad creciendo. `dim_around` dura TODO lo que la ventana este
--- abierta, no un destello. Coste global: ninguno. Es la que estuvo activa hasta hoy.
+-- Opción 3: popin 30% + dim_around (oscurece el resto mientras está abierta).
 -- hl.window_rule({ name = "safeeyes", match = { class = "^io\\.github\\.slgobinath\\.SafeEyes$" }, float = true, pin = true,
 --     move = { 1444, -11 }, border_size = 0, opacity = "0.75 override 0.75 override", rounding = 20, size = { 600, 180 },
 --     animation = "popin 30%", dim_around = true })
 
--- --- Opcion 4 — Sobreimpulso violento (gnomed + crazyshot) -----------------
--- `gnomed` aplasta la ventana a altura 0 y la despliega; `crazyshot` (que YA tienes
--- definido, linea ~109) sobrepasa hasta 1.5 y vuelve, asi que el despliegue se pasa de
--- largo. El `crazyshot` es GLOBAL: activarlo cambia el rebote de TODO el escritorio
--- (SUSTITUYE la linea ~117, no se anade).
+-- Opción 4: gnomed + crazyshot (global: cambia el rebote de todo el escritorio).
 -- hl.animation({ leaf = "windowsIn", enabled = true, speed = 3, bezier = "crazyshot", style = "gnomed" })
 -- hl.window_rule({ name = "safeeyes", match = { class = "^io\\.github\\.slgobinath\\.SafeEyes$" }, float = true, pin = true,
 --     move = { 1444, -11 }, border_size = 0, opacity = "0.75 override 0.75 override", rounding = 20, size = { 600, 180 },
 --     animation = "gnomed" })
 
--- --- Opcion 5 — Coreografia por script (socket de eventos + no_anim) -------
--- La regla solo APAGA la animacion; el baile lo hace un script que escucha el socket de
--- eventos de Hyprland (`openwindow`) y mueve/redimensiona la ventana a mano. El script
--- NO esta escrito: sin el, esto equivale a `no_anim` y la ventana aparece de golpe.
--- Coste global: ninguno.
+-- Opción 5: no_anim + script por socket (el script no existe; sin él equivale a no_anim).
 -- hl.window_rule({ name = "safeeyes", match = { class = "^io\\.github\\.slgobinath\\.SafeEyes$" }, float = true, pin = true,
 --     move = { 1444, -11 }, border_size = 0, opacity = "0.75 override 0.75 override", rounding = 20, size = { 600, 180 },
 --     no_anim = true })
@@ -1391,76 +803,24 @@ hl.window_rule({ name = "rofi-dim", match = { class = "^([Rr]ofi)$" }, opacity =
 hl.window_rule({ name = "satty", match = { class = "^com\\.gabm\\.satty$" },
     float = true, center = true, pin = true, size = { "70%", "70%" } })
 hl.window_rule({ name = "dotfiles-floating", match = { class = "^dotfiles-floating$" }, move = { 2, 738 } })
--- Ventana de promociones/anuncios de Steam ("Special Offers: ...").
--- Se fija por TÍTULO y no por clase porque la clase de esta ventana no está
--- medida (confianza baja: por eso la regla "steam-ws1" cubre la clase y esta el
--- título; entre las dos, el escritorio 1 queda garantizado).
--- Decisión del usuario (2026-09-27): va al escritorio 1 igual que la principal.
+-- Ventana de promociones de Steam: va por TÍTULO porque su clase no está medida.
 hl.window_rule({ name = "special-offers", match = { title = "^(.*Special Offers:.*)$" },
     workspace = "1 silent", move = { 937, 60 } })
 hl.window_rule({ name = "float-by-title", match = { title = "(Extensi.*|.*Bitwarden.*|Open File)" }, float = true })
 hl.window_rule({ name = "bitwarden-panel", match = { title = "^(.*Bitwarden.*)$" }, size = { 420, 698 }, move = { 2345, 49 } })
 
--- dynisland (zen y steam_app_2399830 quitados de esta alternación: ya cubiertos arriba)
+-- dynisland (zen y steam_app_2399830 ya están cubiertos arriba)
 hl.window_rule({ name = "dynisland-borderless", match = { class = "^(dynisland|dynisland-daemon)$" }, border_size = 0 })
 hl.window_rule({ name = "dynisland-position", match = { class = "^dynisland$" }, move = { 3345, 49 } })
 
 -- Genymotion
 hl.window_rule({ name = "genymotion-dim", match = { title = "^(Genymotion)$" }, opacity = "0.35 0.35" })
--- Panel GPS a 466x306: cabecera fuera de pantalla y el boton cortado a un CUARTO
--- (pedido el 2026-10-01, segunda vuelta).
--- Requisitos, en este orden:
---   1) que solo se vea el mapa, sin la cabecera;
---   2) que el boton de "mi ubicacion" (circulo blanco con diana rosa) siga siendo pulsable;
---   3) apurar el tamaño todo lo posible, aceptando que del boton solo quede un cuarto.
--- La app lo declara de tamaño FIJO: su WM_NORMAL_HINTS (medido con xprop) trae
--- min = max = 520x948, y con eso ningún `size` se aplica, porque Hyprland recorta al
--- mínimo que declara el cliente (CWindow::minSize() lee los hints de X11). Para imponer
--- un tamaño hay que SUSTITUIR esos límites: min_size y max_size son efectos dinámicos y
--- pisan los hints del cliente.
---
--- LA CLAVE: EL BOTON ESTA CLAVADO EN COORDENADAS DE VENTANA
---   El disco blanco ocupa x 448..483, y 288..323 (36x36 px) y NO se mueve al cambiar el
---   tamaño. Barrido medido a 480/490/500/510/520/540 de ancho y 300/310/320/326/330/340 de
---   alto: el disco siempre en el mismo sitio. La ventana no reflowa el mapa: lo RECORTA.
---   Por eso el tamaño no es cuestion de gusto, es una resta: la ventana tiene que CONTENER
---   el trozo de boton que se quiera conservar.
---
---   Disco COMPLETO (lo que hubo hasta hoy): ancho >= 484 y alto >= 324, o sea 490x330 con
---   6 px de aire por lado. Medido: a 480 el disco sale 32x36 (cortado 4 px); a 490, 36x36.
---   A 390 de ancho el boton NO EXISTE, sea cual sea el alto, porque 390 < 448.
---
---   Un CUARTO del disco (lo que hay ahora): se corta a la mitad por la derecha y a la mitad
---   por abajo, asi que lo que queda es el cuadrante SUPERIOR IZQUIERDO, x 448..465, y
---   288..305. La ventana es justo su caja:
---       ancho = 448 + 18 = 466        alto = 288 + 18 = 306
---   Medido a 466x306: el disco visible sale 18x18 = 324 px = 25,0% exacto de los 1296 del
---   disco entero. Cualquier cosa por debajo de 466x306 corta MAS de la mitad.
---   OJO: el clic sigue cayendo dentro del rectangulo del boton tal como lo ve la app
---   (448..483, 288..323 en SUS coordenadas), asi que deberia responder; NO lo he probado
---   pulsandolo, para no tocar el GPS del emulador sin permiso.
---
--- POR QUÉ EL `move` ES NEGATIVO (esto no es un descuido):
---   Hyprland NO tiene ningún efecto de recorte (ni crop, ni clip, ni mask: verificado
---   contra la lista completa de efectos de la wiki el 2026-10-01, no contra el stub, que
---   declara solo enabled/match/name y no sirve para demostrar ausencias). La única forma
---   de que la cabecera no se vea es que quede FUERA del monitor, y eso obliga a subir la
---   ventana con `y` negativa. Consecuencia asumida: la ventana queda pegada al borde
---   SUPERIOR de la pantalla, no abajo.
---   La cabecera mide 130 px exactos (medido por salto de brillo con la ventana entera a la
---   vista: las filas 0..129 son oscuras, ~20 de brillo, y la 130 salta a 220, que ya es
---   mapa). Con y = -131 quedaba justo fuera; con -130 asomaba una linea por el redondeo.
---   OJO: la cabecera NO mide lo mismo en todos los tamaños (142 a 948 de alto, 130 hasta
---   ~350); no reutilizar el numero si se cambia el `size`.
---   La barra de DMS es vertical y esta en el borde izquierdo (dms:bar, 44x1440 en x=0),
---   asi que arriba no hay nada que tape la ventana.
---
--- POSICION: (887, -202) son las coordenadas que eligio n30 a mano, y se respetan tal cual.
---   Antes fueron (655, -190), puestas el 2026-10-01; el 2026-10-04 las movio a (887, -202).
---   Lo que cuestan, para que conste: con -202 la cabecera queda oculta de sobra (130 < 202),
---   asi que se tiran 72 px de mapa por arriba que no hacian falta; con -131 se recuperarian.
---   No es un error de la regla, es su eleccion.
--- Para volver a la ventana entera abajo a la derecha: move = { 2960, 1110 }.
+-- Panel GPS a 466x306: solo el mapa, sin cabecera, y un cuarto del botón.
+-- La app declara min = max = 520x948 (WM_NORMAL_HINTS), así que min_size/max_size
+-- sustituyen esos límites. El botón está clavado en coordenadas de ventana
+-- (448..483, 288..323) y no reflowa: el tamaño es una resta, 448+18 x 288+18.
+-- y = -202 oculta la cabecera (mide 130 px); lo eligió n30 a mano.
+-- Para la ventana entera abajo a la derecha: move = { 2960, 1110 }.
 hl.window_rule({ name = "genymotion-gps", match = { title = "^(GPS - Genymotion)$" },
     float = true, size = { 466, 306 }, move = { 887, -202 }, opacity = "0.55 0.05",
     min_size = { 466, 306 }, max_size = { 466, 306 } })
@@ -1473,10 +833,7 @@ hl.window_rule({
     size = { 333, 333 },
     min_size = { 320, 320 },
     max_size = { 320, 320 },
-    -- x corregido (2026-09-18): era 3332, que con 333 px de ancho acababa en 3665
-    -- y se salía 225 px por el borde derecho del DP-2 (3440 px).
-    -- Nuevo valor = 3440 - 320 (ancho efectivo, lo fija max_size) - 24 (margen).
-    -- y se deja en 1016: cabe (1016 + 320 = 1336 < 1440).
+    -- x = 3440 - 320 (ancho efectivo por max_size) - 24 de margen
     move = { 3096, 1016 },
     suppress_event = "x11configurerequest",
     no_initial_focus = true,
@@ -1498,21 +855,9 @@ hl.window_rule({
     opacity = "0.55 0.35",
 })
 
--- Steam SIEMPRE en el escritorio 1 (2026-09-27).
--- La clase NO se toca (`^(steam)$` sigue siendo la del cliente); esta regla solo
--- añade el escritorio, así que no compite con steam-client-tiled ni con
--- steam-opacity, que gobiernan tile y opacidad.
--- POR QUÉ HACE FALTA: la ventana la crea un proceso hijo (steamwebhelper), no el
--- PID que lanza el autostart, así que el `workspace` del exec no la alcanza; y
--- aparece decenas de segundos después. Medido el 2026-09-27: el refuerzo
--- `sleep 5` + window.move caía en un no-op silencioso (08:33:25, con el
--- actualizador ya destruido a las 08:33:22 y el cliente inicializando aún a las
--- 08:33:40), y la ventana terminaba en el escritorio con foco.
--- Esta regla se aplica en la CREACIÓN, así que da igual quién cree la ventana y
--- cuándo. Es la misma lección (y el mismo patrón) que "dsh-web-ws2".
--- `title = "negative:^(notificationtoasts)"` EXCLUYE los avisos de Steam: deben
--- seguir apareciendo en el escritorio donde estés, no en el 1.
--- `silent` = no te cambia la vista (decisión del usuario: abrir en silencio).
+-- Steam al 1. La ventana la crea steamwebhelper, así que el `workspace` del exec no la
+-- alcanza; la regla se aplica al crear. `negative:^(notificationtoasts)` deja los avisos
+-- donde estés, y `silent` no cambia la vista.
 hl.window_rule({
     name  = "steam-ws1",
     match = { class = "^(steam)$", title = "negative:^(notificationtoasts)" },
@@ -1520,15 +865,10 @@ hl.window_rule({
 })
 
 -- Steam
--- Steam en sí (cliente): tile (n30.conf ganaba al float de hyprland.conf)
+-- Cliente: tile (n30.conf ganaba al float de hyprland.conf)
 hl.window_rule({ name = "steam-client-tiled", match = { class = "^(steam)$" }, tile = true })
 
--- Juegos de steam: fusión de las reglas que había (opacity 0.99 steam_app_.*3
--- estaba muerta porque la regla de abajo la pisaba; se eliminó).
--- NOTA zen/steam: esta regla da opacity "1.0 override" -> opacidad absoluta,
--- así los juegos quedan SIEMPRE opacos aunque exista el dimming global;
--- la excepción equivalente para zen es el match negative:^(zen)$ de la regla
--- "global-inactive-opacity" (más arriba, antes de las reglas de apps).
+-- Juegos de steam: opacos con `override` y sin blur.
 hl.window_rule({
     name = "steam-games",
     match = { class = "^(steam_app.*)$" },
@@ -1542,7 +882,7 @@ hl.window_rule({
     no_initial_focus = true,
 })
 
--- Ark Survival Ascended (regla específica, se mantiene separada)
+-- Ark Survival Ascended
 hl.window_rule({
     name = "ark-survival-ascended",
     match = { class = "^(steam_app_2399830)$" },
@@ -1552,12 +892,8 @@ hl.window_rule({
     min_size = { 1, 1 },
 })
 
--- Juegos lanzados bajo gamescope (STALKER 2 y cualquier otro).
--- POR QUÉ: la regla "steam-games" de arriba solo cubre class=steam_app.*, pero
--- cuando el juego va envuelto en gamescope la clase es "gamescope" y el nombre
--- del juego queda en el title. Esos juegos se quedaban SIN fullscreen, así que
--- al desagruparlos (Super+G) el puntero alcanzaba las esquinas y disparaba el
--- shell. Verificado 2026-09-20: la ventana medía 3436x1436 pero con fs=0.
+-- Juegos bajo gamescope: la clase es "gamescope" y el nombre va en el title, así que
+-- steam-games no los cubría y quedaban sin fullscreen (el puntero alcanzaba las esquinas).
 hl.window_rule({
     name = "gamescope-games",
     match = { class = "^(gamescope)$" },
@@ -1669,53 +1005,17 @@ if hl.plugin.hyprliquid then
 end
 
 -- ═══════════════════════════════════════════════════════════════════════════════
--- OpenPets — la mascota (instalado el 2026-10-11)
+-- OpenPets — la mascota
 -- ═══════════════════════════════════════════════════════════════════════════════
--- La mascota y el Centro de Control son DOS ventanas de la MISMA app Electron
--- (/opt/OpenPets/openpets, sobre XWayland) y por tanto comparten CLASE:
---
---     clase real = "open-pets-desktop"      ← NO es "openpets"
---
--- Lo único que las distingue es el TÍTULO, y la app lo construye así (plantilla leída
--- dentro de su app.asar):
---
---     mascota → `OpenPets — ${options.displayName}`   (por defecto: "OpenPets Default Pet")
---     panel   → `OpenPets — Control Center`           (fijo)
---
--- Por eso una regla por CLASE sola le quitaría el foco y la fijaría TAMBIÉN al panel, y por
--- eso el comportamiento va en una regla con clase + título. Si RENOMBRAS LA MASCOTA, ese
--- título cambia y esa segunda regla deja de casar: hay que añadir aquí el nombre nuevo.
---
--- Los dos síntomas que se veían no eran suyos:
---   · El borde amarillo es el borde INACTIVO global (`general:col.inactive_border` =
---     ffff9c, border_size 2), y la mascota nunca tiene el foco → siempre lo enseñaba.
---   · El "blur": la ventana es transparente POR DISEÑO (`html, body { background:
---     transparent }` en su HTML y `transparent: true` en la app), así que lo que se veía
---     borroso era el ESCRITORIO de detrás, emborronado por el `decoration:blur` global.
---     Con `no_blur` detrás se ve el escritorio nítido.
---
--- Fuera de la regla: `xray = false` (es el valor por defecto, no hacía nada) y
--- `border_color` (con `border_size = 0` no hay borde que colorear).
---
--- OJO CON ESTO, que es la trampa de esta regla. Registrar una regla nueva NO aplica todos
--- sus efectos a las ventanas ya abiertas: el motor los parte en dos grupos (leído en la
--- fuente de v0.56.2, src/desktop/rule/windowRule/WindowRuleApplicator.cpp).
---
---   · DINÁMICOS → se aplican en caliente. `hl.window_rule` pide un refresco
---     (REFRESH_WINDOW_STATES → ruleEngine()->updateAllRules() → propertiesChanged() en cada
---     ventana) y con eso basta. Aquí caen TODOS los de la regla 1 y el `no_focus`.
---   · ESTÁTICOS → solo se leen dentro de CWindow::mapWindow(), así que necesitan que la
---     ventana se VUELVA A MAPEAR. Son: float, tile, fullscreen, maximize, fullscreen_state,
---     move, size, center, pseudo, monitor, workspace, no_initial_focus, pin, group,
---     suppress_event, content, no_close_for y scrolling_width. Aquí caen `float` y `pin`.
---
--- Traducido: la decoración ya está puesta, pero `pin` (que la mascota salga en todos los
--- escritorios) NO estará hasta que OpenPets se cierre y se vuelva a abrir. Un
--- `hyprctl reload` tampoco lo arregla: recarga las reglas, no re-mapea las ventanas.
--- Hecho el 2026-10-11: tras relanzar la app, la mascota quedó con `pinned=true`.
+-- Mascota y Centro de Control comparten clase ("open-pets-desktop"); solo cambia el
+-- título: `OpenPets — <nombre>` frente a `OpenPets — Control Center`.
+-- El borde amarillo era el borde inactivo global y el "blur", el escritorio de detrás
+-- difuminado: la ventana es transparente por diseño.
+-- Registrar una regla no aplica todo en caliente: los efectos estáticos (float, tile,
+-- move, size, pin, workspace, no_initial_focus...) solo se leen al mapear. Los demás se
+-- aplican en caliente. `hyprctl reload` no re-mapea nada.
 
--- 1. Decoración. Va por CLASE, así que cubre las dos ventanas; al panel le sienta igual de
---    bien, porque la app ya pide `hasShadow: false` y `frame: false` para las dos.
+-- 1. Decoración: por clase, cubre las dos ventanas.
 hl.window_rule({
     name = "openpets-sin-decoracion",
     match = { class = "^open-pets-desktop$" },
@@ -1726,37 +1026,12 @@ hl.window_rule({
     decorate = false
 })
 
--- 2. Comportamiento, SOLO la mascota: flotante, fijada (visible en todos los escritorios) y que
---    NO robe el foco al aparecer. El título de la mascota acaba en su nombre visible; el del
---    panel acaba en "Control Center", así que no casa. `no_initial_focus` es estático → se
---    aplica al mapear; `float` y `pin` también (ver arriba).
---
---    AQUÍ ESTUVO EL FALLO DEL ARRASTRE (11-oct-2026). Esta regla llevaba `no_focus = true` y
---    con eso la mascota NO SE PODÍA ARRASTRAR: `no_focus` no significa «no le des el foco»,
---    significa que Hyprland la EXCLUYE del hit-test, o sea que no le llega ningún evento de
---    ratón. Está en `CViewHitTester::windowAt()` (src/desktop/state/ViewHitTester.cpp): las dos
---    ramas que devuelven una ventana flotante exigen `!w->m_ruleApplicator->noFocus()` —
---    la de fijadas (línea ~57, `w->m_pinned && !noFocus`) y la de flotantes normales
---    (línea ~96, `!w->m_pinned && !noFocus`). Sin hit-test no hay `mousedown`, y el arrastre de
---    OpenPets es manual en JS: `mousedown` sobre `.pet-shell` → `mousemove` → IPC
---    `openpets:pet-drag-move` → mueve la ventana. Sin el primero, no hay nada.
---
---    Se comprueba en caliente, sin adivinar:
---        hyprctl getprop "address:0x..." no_focus     # -> true  (mal)  /  false (bien)
---
---    Lo que se quería era NO ROBAR EL FOCO AL APARECER, y para eso el efecto correcto es
---    `no_initial_focus`, que solo afecta a la condición de foco en `mapWindow()` y NO se
---    consulta en el hit-test. `pin` y `float` tampoco estorban: la rama de fijadas del hit-test
---    contempla justo ese caso.
---
---    El `opacity` NO es cosmético, arregla un lavado real y medido. La mascota no coge el foco
---    en la práctica, así que se le aplica SIEMPRE el `decoration:inactive_opacity` global
---    (0,9 en esta máquina): se dibujaba al 90 %.
---    Medido el 2026-10-11 comparando el pico de luminancia de la región de la mascota en dos
---    capturas, antes y después de activar esta línea: 229,7 → 252,3 (el blanco del pelaje
---    pasó de RGB 231,230,228 a 255,253,249). El `override` tiene que ir DESPUÉS de cada
---    cifra: `parseOpacityRule` marca como override la última cifra leída, así que
---    "1 override 1 override" fija activo e inactivo, y "1 override" solo dejaría el activo.
+-- 2. Solo la mascota: flotante, fijada y sin robar el foco al aparecer.
+-- `no_initial_focus`, NO `no_focus`: este último la saca del hit-test (sin eventos de
+-- ratón, y el arrastre de la mascota es manual en JS). Se comprueba con
+-- `hyprctl getprop <selector> no_focus`.
+-- `opacity` con override porque sin él se le aplica el inactive_opacity global (0,9).
+-- El override va después de cada cifra: solo cuenta la última leída.
 hl.window_rule({
     name = "openpets-mascota",
     match = { class = "^open-pets-desktop$", title = "^OpenPets.*Pet$" },
@@ -1766,41 +1041,10 @@ hl.window_rule({
     opacity = "1 override 1 override"
 })
 
--- 3. El MENÚ del botón derecho (añadido el 2026-10-11). Alrededor del menú se veía una
---    banda que no le correspondía, y NO era decoración suya. Diagnóstico medido:
---
---    El menú lo construye la app así: `Menu.buildFromTemplate(t).popup({ window })`, o sea
---    menú NATIVO de Electron. Es una ventana X11 APARTE, y sus datos (medidos con xdotool +
---    xprop mientras estaba abierta, y con `hyprctl -j clients -a`):
---
---        _NET_WM_WINDOW_TYPE = _NET_WM_WINDOW_TYPE_MENU
---        WM_CLASS: not found        <- SIN CLASE
---        WM_NAME:  no existe        <- SIN TÍTULO
---        Geometry: 321x436
---
---    Ese 321x436 es EXACTAMENTE la banda que se veía, así que la «banda» no era un borde
---    alrededor del menú: era la ventana entera. Dentro, Chromium pinta el panel del menú
---    (273x388) y deja un margen de 24 px a los lados, 12 arriba y 36 abajo. Ese margen es
---    translúcido, y Hyprland lo DIFUMINABA con el blur global.
---
---    Las dos pruebas de que era blur y no una sombra ni un borde:
---      · El margen tenía ruido ALEATORIO píxel a píxel (±2) y el fondo y el panel estaban
---        PLANOS. El ruido aleatorio por píxel solo lo produce `decoration:blur:noise`.
---      · El margen era MÁS CLARO que el escritorio. La sombra de Hyprland es negra al 44 %
---        (`decoration:shadow:color = 0x00000070`) y solo puede oscurecer; en cambio el blur
---        lleva `contrast = 0,8916`, que sobre un tono oscuro tira hacia el gris medio, o sea
---        aclara. Medido: fondo RGB (26,29,34), margen (30,33,38), panel (37,39,42).
---
---    Ninguna de las dos reglas de arriba la alcanzaba, porque la ventana del menú no tiene
---    clase: la regla 1 pide `^open-pets-desktop$` y el menú no la tiene. Por eso caía en la
---    decoración global. `class = "^$"` es el único asidero que existe, y es seguro: se
---    comprobó que NINGUNA de las 19 ventanas mapeadas tiene la clase vacía.
---
---    `no_blur` es un efecto DINÁMICO, así que se aplica también a una ventana ya abierta.
---    Comprobado en caliente con la regla registrada por `hyprctl eval` y el menú abierto:
---        hyprctl getprop address:0x... no_blur  -> true
---    Los otros tres son higiene: un menú emergente no debe llevar sombra, borde ni esquinas
---    del compositor, porque ya trae las suyas.
+-- 3. Menú del botón derecho: es una ventana X11 aparte, SIN clase ni título, de 321x436
+-- (el panel mide 273x388 y el margen es translúcido). La banda que se veía era ese margen
+-- difuminado por el blur global: ruido aleatorio por píxel y más claro que el fondo.
+-- `class = "^$"` es el único asidero. no_blur es dinámico, se aplica en caliente.
 hl.window_rule({
     name = "openpets-menu-sin-halo",
     match = { class = "^$" },

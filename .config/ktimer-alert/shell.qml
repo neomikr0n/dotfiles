@@ -36,7 +36,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 
-Item {
+ShellRoot {
     id: raiz
 
     readonly property int ancho: 340

@@ -39,14 +39,15 @@
 # ayuda aquí (solo las 3 unidades) empeora. Llenar hasta el tope de 600 EMPEORA respecto a esta
 # lista, y además vuelve a romper los nombres propios: con las 24 palabras, m3-propios pasó de 0
 # a 4 errores. La causa es que las palabras genéricas diluyen el sesgo hacia los nombres propios,
-# que es lo único que este prompt aporta de verdad. Esta lista ocupa 444 caracteres, que es el
-# óptimo medido, no el máximo que cabe.
+# que es lo único que este prompt aporta de verdad. La lista medida ocupaba 444 caracteres, que
+# es el óptimo medido, no el máximo que cabe. El 2026-10-17 se le añadió "DeepSeek" a petición
+# de n30, así que el fichero actual ocupa 454 y esa medición ya no lo describe.
 #
 # CÓMO SE EDITA
 # Una línea de prosa, con las palabras separadas por comas. Whisper espera una frase, no una
 # lista de una palabra por línea.
 #
-DICTADO_VOCABULARIO="Radeon, Hifiman HE1000se, Aune S17 Pro, RME ADI-2 DAC, DJI Mic, PipeWire, Hyprland, Hyprland.lua, Quickshell, DMS, Waybar, Garuda Linux, Arch Linux, AUR, Genymotion, Waydroid, Android, ADB, Vulkan, RADV, AMD, gamescope, MangoHud, Steam, Proton, Jurassic World Alive, Omarchy, KDE Plasma, kitty, mpv, mpvpaper, S.T.A.L.K.E.R., receptor, transmisor, Wireless Mic Rx, kilohercios, decibelios, milisegundos, DJI Mic Mini, WirePlumber, RDNA, whisper"
+DICTADO_VOCABULARIO="Radeon, Hifiman HE1000se, Aune S17 Pro, RME ADI-2 DAC, DJI Mic, PipeWire, Hyprland, Hyprland.lua, Quickshell, DMS, Waybar, Garuda Linux, Arch Linux, AUR, Genymotion, Waydroid, Android, ADB, Vulkan, RADV, AMD, gamescope, MangoHud, Steam, Proton, Jurassic World Alive, Omarchy, KDE Plasma, kitty, mpv, mpvpaper, S.T.A.L.K.E.R., receptor, transmisor, Wireless Mic Rx, kilohercios, decibelios, milisegundos, DJI Mic Mini, WirePlumber, RDNA, whisper, DeepSeek"
 
 # LAS 10 QUE SE AÑADIERON, Y POR QUÉ
 # Estaban fuera de la lista de n30 y sí se usan a diario. Medidas: la lista con ellas es mejor
@@ -59,6 +60,27 @@ DICTADO_VOCABULARIO="Radeon, Hifiman HE1000se, Aune S17 Pro, RME ADI-2 DAC, DJI 
 #   WirePlumber                             el otro motor de audio de Linux, junto a PipeWire.
 #   RDNA                                    la arquitectura de su GPU, junto a Radeon y RADV.
 #   whisper                                 el motor de reconocimiento que está usando.
+#
+# AÑADIDA DESPUÉS, MEDIDA EL 2026-10-17
+# DeepSeek, a petición de n30. Medida con dictado-prompt-medir.py, dos pasadas idénticas sobre el
+# corpus de 12 frases. Da 11 errores con ella y 11 sin ella, WER 5,1 % en ambos, y ninguna frase
+# cambia, así que no rompe nada de lo que ya había. El corpus no contiene la palabra, así que esta
+# medición no demuestra que ayude, solo que no estorba. Son 10 caracteres más.
+#
+# La razón de añadirla está en el historial del 2026-10-17. Ese día aparece 8 veces en 7 líneas y
+# ninguna con la grafía correcta: 5 como "DeepSeq", 1 como "DeepSip" y 2 como "Deep Seek" separado.
+# El fallo es real y frecuente. Lo que falta es el audio para medir la mejora, porque una prueba con
+# voz sintética no sirve (espeak no la pronuncia de forma que whisper la reconozca).
+#
+# Lo que se escapa del prompt lo corrige dictado.sh en corregir_terminos(), que mapea las variantes
+# conocidas (DeepSeq, DeepSip, Deep Sync, DeepSync, DeepSick, Deep Sik) a DeepSeek antes de pegar.
+# Medido el 2026-10-18: con la palabra en el prompt, 12 de 15 menciones salieron bien y las 3 malas
+# fueron DeepSeq; la corrección cubre justo esas. «DeepSync» apareció una vez a las 14:24:33 y
+# también se corrige.
+#
+# El total absoluto no coincide con la tabla de arriba (11 frente a 12). La tabla es del 2026-10-10
+# y el arnés ya no es el mismo, así que las cifras absolutas no son comparables; las dos variantes
+# de hoy sí lo son entre sí.
 #
 # LO QUE QUEDÓ FUERA, Y POR QUÉ
 # Con catorce más la línea subía a 583 caracteres y medía peor (16 errores frente a 12). No se

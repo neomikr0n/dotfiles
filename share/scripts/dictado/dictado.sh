@@ -431,17 +431,43 @@ transcribir_servidor() {
         | python3 -c 'import json,sys; print(json.load(sys.stdin).get("text","").strip())' 2>/dev/null
 }
 
+# Corrige erratas de nombres propios que whisper repite una y otra vez. No es un corrector
+# general ni adivina por distancia: toca una lista cerrada y solo con límites de palabra, para no
+# romper prosa. Medido el 2026-10-18 en el historial: «DeepSeek» salía como «DeepSeq» 3 de 15
+# veces, «DeepSync» una a las 14:24:33, «Antropic» por Anthropic 2, «OpenIA» por OpenAI 2, y
+# «WorkBody», «Work Body» o «WordParty» por WorkBuddy 6. La primera versión distinguía mayúsculas
+# en el caso de WorkBuddy y no cubría la forma partida en dos palabras, así que «WorkBody» se coló
+# a las 14:35. La forma partida exige mayúscula inicial a propósito, para no tocar «work body» en
+# minúscula, que es prosa inglesa corriente. «Cloth» por Claude queda fuera por la misma razón,
+# porque «cloth» es una palabra inglesa real.
+corregir_terminos() {
+    python3 -c '
+import re, sys
+t = sys.stdin.read()
+for patron, bueno, caja in (
+        (r"\bDeep[-\s]*(?:Seq|Seek|Sip|Sick|Sik|Sec|Sync)\b", "DeepSeek", re.I),
+        (r"\bAntropic\b", "Anthropic", re.I),
+        (r"\bOpenIA\b", "OpenAI", re.I),
+        (r"\bworkbody\b", "WorkBuddy", re.I),
+        (r"\bWork[-\s]+Body\b", "WorkBuddy", 0),
+        (r"\bWord[-\s]*Party\b", "WorkBuddy", re.I)):
+    t = re.sub(patron, bueno, t, flags=caja)
+sys.stdout.write(t)
+'
+}
+
 # Elige servidor si está disponible, y si falla cae al binario, así que nunca te deja sin dictado.
 transcribir() {
-    local f="${1:-$WAV}"
+    local f="${1:-$WAV}" t rc
     if servidor_vivo; then
-        local t
         if t="$(transcribir_servidor "$f")" && [ -n "$t" ]; then
-            printf '%s' "$t"
+            printf '%s' "$t" | corregir_terminos
             return 0
         fi
     fi
-    transcribir_cli "$f"
+    t="$(transcribir_cli "$f")"; rc=$?
+    printf '%s' "$t" | corregir_terminos
+    return "$rc"
 }
 
 # Transcribe un WAV concreto y saca el texto por stdout. NO pega nada: el pegado lo decide

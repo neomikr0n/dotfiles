@@ -81,7 +81,7 @@
 <header class="cabecera" data-page-node-id="0trUQ5lwrmHcWnUHvvtRbf">
   <h1 data-page-node-id="DecWq0bHfyJOmEZMbUtKws">Guía del sistema de dictado</h1>
   <p class="sub" data-page-node-id="ghYisgHyp8drvrd4GyCeKB">Qué es, cómo está montado, qué se midió y qué se rompió por el camino. Escrita para que la entienda alguien que llega nuevo, y para no repetir los mismos errores.</p>
-  <p class="meta" data-page-node-id="5CiNwyjpD81jc1Hh03Lh0w">Última revisión: 11 de octubre de 2026 · <code data-page-node-id="IrMoUCAEsM0XEVBAu8WQag">~/dotfiles/share/scripts/dictado/</code> · suite en 86/86 · whisper.cpp con backend Vulkan</p>
+  <p class="meta" data-page-node-id="5CiNwyjpD81jc1Hh03Lh0w">Última revisión: 18 de octubre de 2026 · <code data-page-node-id="IrMoUCAEsM0XEVBAu8WQag">~/dotfiles/share/scripts/dictado/</code> · suite en 153/153 · whisper.cpp con backend Vulkan</p>
 </header>
 
 <div class="chips" data-page-node-id="BjOfLVuPINO4hU4DkJAaOt">
@@ -208,7 +208,7 @@ dictado-vivo.sh estado     imprime vivo, sin-capa o parado</pre>
 ├── dictado-nivel-medir.py       las dos mitades del banco, réplica y análisis
 ├── dictado-nivel-medir.qml      el medidor de Quickshell leído sin ventanas
 ├── dictado-nivel-medir-cpu.qml  el mismo medidor callado, para el coste
-├── pruebas/                     la suite, 116 comprobaciones en siete bloques
+├── pruebas/                     la suite, 153 comprobaciones en siete bloques
 │   └── dobles/                  los dobles que sustituyen al hardware y a la sesión
 ├── informes/                    los informes detallados y las mediciones en JSON
 └── backups/                     copias previas a cada cambio delicado
@@ -262,7 +262,7 @@ dictado-vivo.sh estado     imprime vivo, sin-capa o parado</pre>
     <tr data-page-node-id="UvmBTaSPiOVFZMQM0v0THL"><td data-page-node-id="UV01Jst1rUWp8axQvDOy4e">sin lista</td><td class="num" data-page-node-id="SJiiP5WePvBx8BIAKNf18K">0</td><td class="num" data-page-node-id="A8XAddLXjasa3t4yEMCuKh">22</td><td class="num" data-page-node-id="c2Wk0jl6IMc6WFNABzBzxu">10,2 %</td></tr>
     <tr data-page-node-id="ALsBNwMBQC7E4ZOEMDcwoS"><td data-page-node-id="EEH35eysa0XxoFmZEKHoGf">lista anterior</td><td class="num" data-page-node-id="9DYTRlQyXVVCB0EMYNluj3">324</td><td class="num" data-page-node-id="bMyNB4kxWcbs8BUlSa8Iu1">15</td><td class="num" data-page-node-id="8BzSzlo0DOzh3fuSFdFceN">6,9 %</td></tr>
     <tr data-page-node-id="Od7znKtqXPNgxZwD17eRgK"><td data-page-node-id="bDHPvjFThm3aCRH3eOOn3E">anterior + 3 unidades</td><td class="num" data-page-node-id="GE6VGKzP8m5mRdGobBX0sk">363</td><td class="num" data-page-node-id="LH93g4dpiGFFUG3CV8fpqf">16</td><td class="num" data-page-node-id="2Y4gnC8mFYqNgrDPMV70Q5">7,4 %</td></tr>
-    <tr class="mejor" data-page-node-id="jYVIH1ww3HWQLo6w4vl2iy"><td data-page-node-id="SFNmBdDdZcBr7Fyuoy9W1x">la que está puesta</td><td class="num" data-page-node-id="GWY8SbDV9YR3LXuixgMHvq">444</td><td class="num" data-page-node-id="QA9KyeY16ZbsegZIxlrjxu">12</td><td class="num" data-page-node-id="CLc7TVlsM3cBraXf8G4pjU">5,6 %</td></tr>
+    <tr class="mejor" data-page-node-id="jYVIH1ww3HWQLo6w4vl2iy"><td data-page-node-id="SFNmBdDdZcBr7Fyuoy9W1x">la lista de 444</td><td class="num" data-page-node-id="GWY8SbDV9YR3LXuixgMHvq">444</td><td class="num" data-page-node-id="QA9KyeY16ZbsegZIxlrjxu">12</td><td class="num" data-page-node-id="CLc7TVlsM3cBraXf8G4pjU">5,6 %</td></tr>
     <tr class="peor" data-page-node-id="dCqzQHoVUlQ5mhF4LHOh2e"><td data-page-node-id="KWFp4hHbJp98KqBXqZUAxe">anterior + 24 palabras</td><td class="num" data-page-node-id="JaxFKiFobMUqm0CiuuiQDC">583</td><td class="num" data-page-node-id="RapFlaE6jB0BVGqG6EkzqH">17</td><td class="num" data-page-node-id="2dyYFGFDkwuoqaKiy3uxUG">7,9 %</td></tr>
   </tbody>
 </table>
@@ -278,6 +278,12 @@ dictado-vivo.sh estado     imprime vivo, sin-capa o parado</pre>
 <div class="nota" data-page-node-id="XQYLSuoKNiWwItA22mZrRm">
   <p data-page-node-id="XYgUBIqTCU1h4IVmPEz0RJ">Consecuencia práctica: el prompt no se puede razonar palabra a palabra. Una palabra cambia el resultado de las demás, así que cualquier cambio hay que medirlo dentro de la lista donde va a vivir. Para eso está <code data-page-node-id="ICXICJZcULkhaAYD7vzIG7">dictado-prompt-medir.py</code>.</p>
 </div>
+
+<p>La lista actual tiene 454 caracteres. Son los 444 de la tabla más «DeepSeek», añadido el 2026-10-17. Medida el 2026-10-18 con el arnés actual da 11 errores y 5,1 %, pero esa cifra no es comparable con la tabla, que se midió el 2026-10-10, antes del relleno VAD de 500 ms.</p>
+
+<h3>Lo que el prompt no arregla se corrige después</h3>
+
+<p>El prompt sesga, no garantiza. Medido el 2026-10-18 sobre el historial real, «DeepSeek» salió como «DeepSeq» en 3 de 15 menciones, y «Antropic», «OpenIA», «WorkBody» (también partido como «Work Body») y «WordParty» aparecían con la misma clase de error. Para esos casos <code>dictado.sh</code> aplica <code>corregir_terminos()</code> al texto ya transcrito, antes de pegarlo y de guardarlo en el historial. Es una lista cerrada con límites de palabra, no un corrector general. No adivina por distancia ni toca palabras que solo empiezan igual. El nombre del producto vale pegado o partido en dos palabras, y la forma partida exige mayúscula inicial para no tocar «work body» en minúscula. «Cloth» por Claude queda fuera a propósito, porque «cloth» es una palabra inglesa real.</p>
 
 <h2 id="modelos" data-page-node-id="YXlCeeiNrgyOS0VMfvwB5N">Los modelos</h2>
 
@@ -321,7 +327,7 @@ dictado-vivo.sh estado     imprime vivo, sin-capa o parado</pre>
 
 <h2 id="pruebas" data-page-node-id="zgLy2TMe01Inlm3nkHl6ne">Las pruebas</h2>
 
-<p data-page-node-id="4kSy2BS4Zt8b5jBTvfABMP">Una suite de 116 comprobaciones, en siete bloques. Ninguna abre ventanas ni reproduce sonido, y el pegado se prueba contra dobles, así que no toca ni el portapapeles ni el teclado de la sesión. Se puede correr en cualquier momento.</p>
+<p data-page-node-id="4kSy2BS4Zt8b5jBTvfABMP">Una suite de 153 comprobaciones, en siete bloques. Ninguna abre ventanas ni reproduce sonido, y el pegado se prueba contra dobles, así que no toca ni el portapapeles ni el teclado de la sesión. Se puede correr en cualquier momento.</p>
 
 <pre data-page-node-id="eQo1cLh7uLIx8NSCUzNuOO">~/dotfiles/share/scripts/dictado/pruebas/correr-todas.sh</pre>
 
@@ -452,7 +458,7 @@ dictado-modelo-usar.sh ~/.local/share/whisper/candidatos/ggml-large-v3-turbo.bin
   <div class="cab" data-page-node-id="9BkGb67PdeqHQWTNvcQaLR"><span class="n" data-page-node-id="FS6dBSf5KiktrkJ0bfC3E6">10</span><h3 data-page-node-id="0mqbkj0fxj8eb1JhTZ8kNT">Llenar el vocabulario hasta el tope lo empeora</h3><span class="etq mal" data-page-node-id="apnF81jVcfjr9nnix13gi6">desacierto</span></div>
   <div class="campo" data-page-node-id="pxqCECwFjRUFKDsm7OWBcS"><span class="k" data-page-node-id="mrR4h9GusnKxBSUkJkYJCv">Síntoma</span><p data-page-node-id="WTRqKSbwZylGA5njF6KcUm">Se daba por bueno que hasta 600 caracteres la transcripción era correcta, y que rellenarlos ayudaría.</p></div>
   <div class="campo" data-page-node-id="WSdJ9sOdxZJiYZMroL0pdU"><span class="k" data-page-node-id="eOo4DegsJ7KBUXIuRFTXah">Causa</span><p data-page-node-id="Aw5JXhbqQJYAckabvGk74a">La afirmación venía de una medición más gruesa. Sobre el corpus completo, 583 caracteres ya empeora respecto a 324, y además vuelve a romper los nombres propios.</p></div>
-  <div class="campo" data-page-node-id="1oYS92J2IaZaHAs1UFPLnN"><span class="k" data-page-node-id="jU4edbOau8CaySAztVG5cS">Arreglo</span><p data-page-node-id="N2Vl6JmUfsRlLuZUOCjtcz">El óptimo medido es 444 caracteres. El tope es un límite técnico, no un objetivo.</p></div>
+  <div class="campo" data-page-node-id="1oYS92J2IaZaHAs1UFPLnN"><span class="k" data-page-node-id="jU4edbOau8CaySAztVG5cS">Arreglo</span><p data-page-node-id="N2Vl6JmUfsRlLuZUOCjtcz">El óptimo medido fue 444 caracteres; la lista actual tiene 454. El tope es un límite técnico, no un objetivo.</p></div>
 </div>
 
 <div class="leccion" data-page-node-id="NnAUBy5z3T2xpE5HBf2nMG">
@@ -660,8 +666,8 @@ dictado-modelo-usar.sh ~/.local/share/whisper/candidatos/ggml-large-v3-turbo.bin
 </table>
 
 <footer data-page-node-id="Qfdo1RaOJImmTT3GgFtwOG">
-  Guía del sistema de dictado · <code data-page-node-id="UTyH11WhU5Udm1M8WXdEqo">~/dotfiles/share/scripts/dictado/</code> · revisada el 11 de octubre de 2026.
-  Estado: suite 86/86, dictado en vivo cableado al toque de Ctrl, servidor residente arrancando solo, vocabulario en 444 caracteres, modelos muertos y cachés borrados (disco al 78 %).
+  Guía del sistema de dictado · <code data-page-node-id="UTyH11WhU5Udm1M8WXdEqo">~/dotfiles/share/scripts/dictado/</code> · revisada el 18 de octubre de 2026.
+  Estado: suite 153/153, dictado en vivo cableado al toque de Ctrl, servidor residente arrancando solo, vocabulario en 454 caracteres, modelos muertos y cachés borrados (disco al 90 %).
 </footer>
 
 </div>

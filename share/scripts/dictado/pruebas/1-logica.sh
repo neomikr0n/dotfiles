@@ -218,6 +218,38 @@ cancelar >/dev/null 2>&1; rc=$?
 comprobar "devuelve 0" "$rc" "0"
 comprobar "no avisa de nada" "${#AVISOS[@]}" "0"
 
+echo "--- N. corrige los nombres propios que whisper falla ---"
+# Medido el 2026-10-18: «DeepSeek» salía como «DeepSeq» en 3 de 15 menciones aunque estuviera en
+# el vocabulario. La corrección es determinista y solo toca las variantes conocidas, con límites
+# de palabra, para no comerse palabras que solo empiezan igual.
+comprobar "DeepSeq pasa a DeepSeek" "$(printf '%s' 'DeepSeq' | corregir_terminos)" "DeepSeek"
+comprobar "Deep Seek separado pasa a DeepSeek" "$(printf '%s' 'Deep Seek' | corregir_terminos)" "DeepSeek"
+comprobar "DeepSip pasa a DeepSeek" "$(printf '%s' 'DeepSip' | corregir_terminos)" "DeepSeek"
+comprobar "DeepSync pasa a DeepSeek" "$(printf '%s' 'DeepSync' | corregir_terminos)" "DeepSeek"
+comprobar "Deep Sync separado pasa a DeepSeek" "$(printf '%s' 'Deep Sync' | corregir_terminos)" "DeepSeek"
+comprobar "DeepSeek ya correcto no se toca" "$(printf '%s' 'DeepSeek' | corregir_terminos)" "DeepSeek"
+comprobar "dentro de una frase y en minúsculas" "$(printf '%s' 'uso el modelo deepseq a diario' | corregir_terminos)" "uso el modelo DeepSeek a diario"
+comprobar "no toca una palabra que solo empieza igual" "$(printf '%s' 'DeepSeeker no existe' | corregir_terminos)" "DeepSeeker no existe"
+comprobar "Antropic pasa a Anthropic" "$(printf '%s' 'Antropic' | corregir_terminos)" "Anthropic"
+comprobar "OpenIA pasa a OpenAI" "$(printf '%s' 'OpenIA' | corregir_terminos)" "OpenAI"
+comprobar "Workbody pasa a WorkBuddy" "$(printf '%s' 'Workbody' | corregir_terminos)" "WorkBuddy"
+comprobar "WordParty pasa a WorkBuddy" "$(printf '%s' 'WordParty' | corregir_terminos)" "WorkBuddy"
+comprobar "WorkBody con mayúscula pasa a WorkBuddy" "$(printf '%s' 'WorkBody' | corregir_terminos)" "WorkBuddy"
+comprobar "Work Body partido en dos pasa a WorkBuddy" "$(printf '%s' 'Work Body' | corregir_terminos)" "WorkBuddy"
+comprobar "Work-Body con guion pasa a WorkBuddy" "$(printf '%s' 'Work-Body' | corregir_terminos)" "WorkBuddy"
+comprobar "workbody en minúscula pasa a WorkBuddy" "$(printf '%s' 'workbody' | corregir_terminos)" "WorkBuddy"
+comprobar "WorkBuddy ya correcto no se toca" "$(printf '%s' 'WorkBuddy' | corregir_terminos)" "WorkBuddy"
+comprobar "work body en minúscula no se toca" "$(printf '%s' 'the work body of the truck' | corregir_terminos)" "the work body of the truck"
+comprobar "cloth en minúscula no se toca" "$(printf '%s' 'el cloth de la mesa' | corregir_terminos)" "el cloth de la mesa"
+
+# La ruta completa, no solo la función. El stub de whisper escribe «DeepSeq» y transcribir tiene
+# que devolver el texto ya corregido, que es lo que después se pega y se guarda en el historial.
+whisper-cli() { printf 'Uso el modelo DeepSeq a diario\n' >"${SALIDA}.txt"; }
+comprobar "la ruta completa devuelve el texto corregido" "$(transcribir 2>/dev/null)" "Uso el modelo DeepSeek a diario"
+whisper-cli() { printf 'abre WorkBody y dime\n' >"${SALIDA}.txt"; }
+comprobar "la ruta completa arregla WorkBody" "$(transcribir 2>/dev/null)" "abre WorkBuddy y dime"
+whisper-cli() { printf 'texto de prueba con acentos: ñ á é\n' >"${SALIDA}.txt"; }
+
 echo
 echo "RESUMEN: $ok correctos, $mal fallidos"
 [ "$mal" -eq 0 ]

@@ -107,6 +107,7 @@
   "notepadFontSize": 13,
   "notepadTransparencyOverride": 0.92,
   "notepadLastCustomTransparency": 0.92,
+  "notepadUseCompositorGap": true,
   "useSystemSoundTheme": true,
   "acMonitorTimeout": 180,
   "fadeToLockEnabled": false,

@@ -1,10 +1,11 @@
-audio.allow_downgrade=false
-audio.crossfade_v2=true
-audio.play_bitrate_non_metered_migrated=true
-connect.dial_devices="[]"
 connect.mdns_devices="[]"
+connect.dial_devices="[]"
+audio.play_bitrate_non_metered_migrated=true
+audio.crossfade_v2=true
+audio.allow_downgrade=false
 audio.normalize_v2=false
 ui.track_os_notifications_enabled=true
 audio.play_bitrate_non_metered_enumeration=3
 audio.play_bitrate_enumeration=3
 ui.hide_hpto=true
+app.player.volume=17616

@@ -28,6 +28,7 @@ ingles	Voy a hacer un commit en la rama main y luego abro una pull request.
 tecnico	El convertidor está trabajando a 192 kilohercios con 24 bits.
 mezcla	El firmware del receptor DJI Mic Mini se actualiza desde la aplicación.
 natural	Mañana quedamos a las diez y media para revisar el informe de la auditoría.
+marca	Quiero que agregues la palabra DeepSeek al vocabulario.
 EOF
 )
 

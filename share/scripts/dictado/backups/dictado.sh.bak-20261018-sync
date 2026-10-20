@@ -1,0 +1,544 @@
+#!/usr/bin/env bash
+# dictado.sh. Dictado local de voz a texto para Hyprland/Wayland con PipeWire.
+#
+#   dictado.sh toggle    un toque arranca a grabar; el siguiente transcribe y pega
+#   dictado.sh start     arrancar la grabación
+#   dictado.sh stop      parar, transcribir y pegar
+#   dictado.sh cancelar  tirar la grabación sin transcribir y sin pegar
+#   dictado.sh estado    imprimir "grabando" o "parado"
+#
+# Modos de consulta y de servicio, que usa el dictado en vivo (dictado-vivo.sh):
+#   dictado.sh fuente               imprimir el nombre de la fuente de captura resuelta
+#   dictado.sh modelo               imprimir la ruta del modelo en uso
+#   dictado.sh transcribir-fichero F.wav
+#                                   transcribir un WAV y sacar el texto por stdout, sin pegar
+#   dictado.sh pegar                leer un texto por la entrada estándar y pegarlo
+#   dictado.sh historial [N]        imprimir las últimas N transcripciones (por defecto 10)
+#   dictado.sh repegar [N]          volver a pegar la N-ésima, contando desde el final
+#
+# Los tres primeros existen para no duplicar aquí la resolución de fuente, modelo y ruta de
+# transcripción. El dictado en vivo captura con whisper-stream y guarda su propio WAV, así que
+# necesita el mismo camino bueno (vocabulario, VAD, servidor si lo hay) pero sobre otro fichero.
+# Los tres últimos son el pegado y su red de seguridad, y viven aquí por el mismo motivo que los
+# otros. El puente del vivo también pega, así que tiene que pegar por el mismo sitio y dejar el
+# mismo rastro.
+#
+# Cadena:  pw-record (16 kHz mono s16)  ->  whisper-cli (Vulkan)  ->  wl-copy + Ctrl+V
+#
+# Por qué así:
+#  - 16 kHz mono s16 es el formato que whisper.cpp pide, así que se evita el remuestreo interno.
+#  - La fuente se resuelve por PATRÓN de nombre y no por el nombre completo, porque el nombre
+#    de ALSA lleva el número de serie y cambia si el receptor se enchufa en otro puerto.
+#  - Se PEGA (Ctrl+V) en vez de teclear el texto. wtype tiene abiertos fallos de caracteres
+#    sueltos que no llegan a apps Chromium/Electron, y WorkBuddy es Electron.
+#  - El guardia de silencio evita que whisper alucine frases sobre una grabación vacía.
+#
+# EL PORTAPAPELES NO ES NUESTRO
+# =============================
+# Para pegar hay que pisar el portapapeles: se copia el texto y se simula Ctrl+V. El efecto
+# colateral era que lo que tuvieras copiado antes desaparecía. Ahora se guarda antes de pisarlo y
+# se devuelve después de pegar, así que el portapapeles acaba como estaba.
+# La espera de 800 ms antes de devolverlo es un MARGEN y no una medida. Lo que tarda la ventana
+# con el foco en pedir el portapapeles no se puede medir sin mandarle un Ctrl+V de verdad, y eso
+# es perceptible. Lo que sí está medido es el trayecto del dato, wl-paste contra el dueño del
+# portapapeles: 3,3 ms de mediana en 15 lecturas, medido el 2026-10-11. El margen es doscientas
+# veces eso, y está por si la ventana tarda en procesar la tecla.
+# No se devuelve a ciegas. Si en el hueco de la espera el portapapeles ya no tiene el texto que
+# acabamos de pegar, es que se copió otra cosa y esa otra cosa manda. Solo se devuelve lo que se
+# pisó cuando nadie ha construido encima.
+#
+# EL HISTORIAL ES LA VUELTA ATRÁS
+# ==============================
+# Cada transcripción se apunta con su fecha en un fichero de texto, y se guardan las últimas
+# treinta. Se apunta ANTES de pegar, para que el texto esté a salvo aunque el pegado falle. Vive
+# en ~/.local/share/dictado/ y no en el runtime a propósito: el runtime está en /run y se borra
+# al reiniciar, y un historial que desaparece al reiniciar no recupera nada.
+# Con eso, lo que salió en la ventana equivocada se vuelve a pegar con `dictado.sh repegar`.
+#
+# Variables de entorno (todas opcionales):
+#   DICTADO_MODELO        ruta del modelo ggml            (por defecto el modelo enlazado en actual.bin)
+#   DICTADO_VAD           ruta del modelo VAD de silero   (por defecto ggml-silero-v6.2.0.bin)
+#   DICTADO_VAD_PAD       ms de relleno del VAD           (por defecto 500)
+#   DICTADO_IDIOMA        idioma para whisper             (por defecto es)
+#   DICTADO_FUENTE        patrón del nombre de la fuente  (por defecto Wireless_Mic_Rx)
+#   DICTADO_SILENCIO_MIN  umbral de silencio 0..1         (por defecto 0.01)
+#   DICTADO_WHISPER       binario de whisper.cpp         (por defecto whisper-cli)
+#   DICTADO_RUNTIME       dónde dejar el WAV y el PID     (por defecto $XDG_RUNTIME_DIR/dictado)
+#     OJO: para esto no sirve cambiar XDG_RUNTIME_DIR, porque de ahí saca pactl el socket
+#     de PipeWire y sin él `pactl list short sources` no responde.
+#   DICTADO_BIN           dónde están los puentes        (por defecto $HOME/.local/bin)
+#   DICTADO_CONF          fichero de configuración        (por defecto ~/.config/dictado.conf)
+#   DICTADO_SERVIDOR      URL de whisper-server, si se usa (por defecto vacío = binario)
+#     Con servidor el modelo queda cargado y cada dictado se ahorra su carga. Medido 0,22 s
+#     frente a 0,80 s en una frase de 5 s con medium. Si el servidor no responde, el script
+#     cae solo al binario y no te quedas sin dictado.
+#   DICTADO_ESPERA_MAX    segundos máximos de espera al servidor (por defecto 60)
+#   DICTADO_PROMPT        lista de palabras que sesga el vocabulario (por defecto, la de
+#     dictado-vocabulario.txt). Whisper elige entre palabras que suenan parecido; con esta lista
+#     prefiere las que están en ella. Medido en este equipo, el error de palabra bajó de 11,1 %
+#     a 5,1 % con la lista. Si se pone vacía, se transcribe sin sesgo.
+#   DICTADO_PROMPT_FICHERO  de dónde se lee la lista  (por defecto dictado-vocabulario.txt,
+#     junto a este script). El fichero puede definir DICTADO_VOCABULARIO; si no, se usa entero.
+#     OJO CON EL TAMAÑO: medido que por encima de ~600 caracteres la lista deja de ayudar y
+#     vuelve a fallar. El motivo está explicado dentro del propio fichero.
+#   DICTADO_HISTORIAL     fichero del historial de transcripciones (por defecto
+#     ~/.local/share/dictado/historial.txt). Una línea por dictado, con la fecha delante.
+#   DICTADO_HISTORIAL_TOPE  cuántas transcripciones se guardan (por defecto 30; 0 = sin tope)
+#   DICTADO_PORTA_RESTAURAR  1 devuelve al portapapeles lo que hubiera antes de pegar, 0 no
+#     (por defecto 1). Con 0 el texto dictado se queda en el portapapeles, como antes.
+#   DICTADO_PORTA_ESPERA  ms de margen antes de devolver el portapapeles (por defecto 800)
+#
+# El fichero de configuración es opcional y se lee ANTES de aplicar los valores por defecto,
+# así que una línea suya gana. Para cambiar de modelo basta con poner en él:
+#   DICTADO_MODELO="$HOME/.local/share/whisper/ggml-large-v3-turbo.bin"
+set -u
+
+# --- PATH propio: no depender del entorno de quien lanza el script -----------
+# Hyprland NO lee el rc del shell. El PATH con el que lanza los binds no incluye
+# ~/.local/bin, y ahí están los puentes a whisper-cli y wtype. Medido con el PATH real
+# del proceso de Hyprland, de los 18 comandos que usa este script fallan justo tres:
+# whisper-cli, wtype y ydotool. Los quince restantes (pactl, pw-record, wl-copy, sox,
+# notify-send, setsid, pgrep, pkill, awk, sed, tr, mkdir, rm, sleep, basename) viven en
+# /usr/bin y sí se encuentran. ydotool no está instalado y solo era el respaldo del pegado.
+# Por eso el script se antepone su propio directorio de puentes en vez de fiarse del PATH
+# heredado: así funciona igual desde un terminal, desde el bind de Hyprland o desde
+# cualquier otro lanzador.
+BIN_PROPIO="${DICTADO_BIN:-$HOME/.local/bin}"
+case ":$PATH:" in
+*":$BIN_PROPIO:"*) ;;
+*) PATH="$BIN_PROPIO:$PATH" ;;
+esac
+export PATH
+
+# Las bibliotecas de whisper (libwhisper, libggml-vulkan…) viven fuera del cargador por
+# defecto. NO se exporta LD_LIBRARY_PATH para todo el script, a propósito. Si algún día se
+# instala el paquete del sistema, un LD_LIBRARY_PATH global haría que su binario cargase
+# estas bibliotecas locales y mezclase versiones. Se apunta solo en la llamada concreta,
+# y solo cuando el binario elegido es el local. Ver correr_whisper().
+LIB_PROPIA="$HOME/.local/share/dictado/bin"
+
+# Configuración del usuario, si existe. Va ANTES de aplicar los valores por defecto para que
+# una línea del fichero (por ejemplo DICTADO_MODELO=…) gane sobre el valor de fábrica.
+# Para cambiar de modelo no hay que tocar este script: se edita el fichero y ya.
+CONF="${DICTADO_CONF:-$HOME/.config/dictado.conf}"
+if [ -r "$CONF" ]; then
+    # shellcheck source=/dev/null
+    . "$CONF"
+fi
+
+# El valor de fábrica apunta al modelo en uso, no a un fichero suelto. Antes era ggml-medium.bin;
+# se cambió el 2026-10-10 al borrar medium, que turbo dominaba en error (23,6 % frente a 11,1 %) y
+# en velocidad, así que no cubría ningún papel que turbo no cubriera mejor.
+MODELO="${DICTADO_MODELO:-$HOME/.local/share/whisper/actual.bin}"
+VAD="${DICTADO_VAD:-$HOME/.local/share/whisper/ggml-silero-v6.2.0.bin}"
+# Relleno por delante de la voz. El defecto de whisper (30 ms) se come el arranque de la primera
+# palabra, y con 500 ms el error del banco baja de 6,0 % a 5,6 % sin tocar el resto. Medido el
+# 2026-10-11 sobre el corpus, tres pasadas identicas. Tiene que coincidir con el valor de la
+# unidad dictado-servidor.service, o las dos rutas dejarian de transcribir igual.
+VAD_PAD="${DICTADO_VAD_PAD:-500}"
+IDIOMA="${DICTADO_IDIOMA:-es}"
+WHISPER="${DICTADO_WHISPER:-whisper-cli}"
+PATRON_FUENTE="${DICTADO_FUENTE:-Wireless_Mic_Rx}"
+SILENCIO_MIN="${DICTADO_SILENCIO_MIN:-0.01}"
+# Servidor opcional con el modelo ya cargado. Vacío = se usa el binario de siempre.
+# Medido el 2026-10-09 con medium y una frase de 5 s, 0,22 s por el servidor frente a 0,80 s
+# por el binario, porque el binario paga la carga del modelo en CADA dictado.
+SERVIDOR="${DICTADO_SERVIDOR:-}"
+ESPERA_MAX="${DICTADO_ESPERA_MAX:-60}"
+# Historial de transcripciones y devolución del portapapeles. Las dos cosas están explicadas en
+# la cabecera, en "EL HISTORIAL ES LA VUELTA ATRÁS" y en "EL PORTAPAPELES NO ES NUESTRO".
+HISTORIAL="${DICTADO_HISTORIAL:-$HOME/.local/share/dictado/historial.txt}"
+HISTORIAL_TOPE="${DICTADO_HISTORIAL_TOPE:-30}"
+PORTA_RESTAURAR="${DICTADO_PORTA_RESTAURAR:-1}"
+PORTA_ESPERA="${DICTADO_PORTA_ESPERA:-800}"
+
+# --- Vocabulario (prompt inicial de whisper) --------------------------------
+# El fichero vive junto a este script. Puede definir DICTADO_VOCABULARIO (y dejarse el resto
+# como comentarios); si no lo define, se toma el fichero entero quitando comentarios y líneas
+# vacías. Así se puede editar de las dos formas sin que el script se entere.
+#
+# La ruta NO se saca de "$0" a secas. Medido el 2026-10-10: la suite de pruebas hace
+# `source <(head -n -1 dictado.sh)`, y con una sustitución de proceso "$0" apunta a bash, no al
+# script, así que `dirname` daba un directorio equivocado y el vocabulario NO se cargaba en
+# silencio (0 caracteres). Se prueban dos sitios, el directorio del propio fichero si se puede
+# resolver, y el directorio del script en la ruta habitual, que desde el 2026-10-10 es
+# ~/dotfiles/share/scripts/dictado. El segundo es el que salva el caso.
+DIR_SCRIPT="$(dirname "$(readlink -f "${BASH_SOURCE[0]:-$0}" 2>/dev/null)")"
+if [ ! -r "$DIR_SCRIPT/dictado-vocabulario.txt" ]; then
+    for _cand in "$HOME/dotfiles/share/scripts/dictado" "$(dirname "$0")"; do
+        [ -r "$_cand/dictado-vocabulario.txt" ] && { DIR_SCRIPT="$_cand"; break; }
+    done
+fi
+PROMPT_FICHERO="${DICTADO_PROMPT_FICHERO:-$DIR_SCRIPT/dictado-vocabulario.txt}"
+PROMPT="${DICTADO_PROMPT:-}"
+if [ -z "$PROMPT" ] && [ -r "$PROMPT_FICHERO" ]; then
+    # shellcheck source=/dev/null
+    . "$PROMPT_FICHERO"
+    PROMPT="${DICTADO_VOCABULARIO:-}"
+    # Si el fichero no define la variable, se usa su texto útil: fuera comentarios y líneas vacías.
+    if [ -z "$PROMPT" ]; then
+        PROMPT="$(sed -e 's/#.*//' "$PROMPT_FICHERO" | tr '\n' ' ' | sed -e 's/  */ /g' -e 's/^ //' -e 's/ $//')"
+    fi
+fi
+
+RUNTIME="${DICTADO_RUNTIME:-${XDG_RUNTIME_DIR:-/tmp}/dictado}"
+WAV="$RUNTIME/audio.wav"
+LOG="$RUNTIME/ultimo.log"
+TXT="$RUNTIME/ultimo.txt"
+SALIDA="$RUNTIME/salida"
+# Si hay grabación en curso se sabe buscando el proceso por su línea de comandos, no por un
+# fichero de PID: así no queda estado raro si pw-record muere por lo que sea.
+PATRON_PROC="pw-record.*$WAV"
+
+notificar() { notify-send -a dictado -i "$1" -t "${3:-4000}" "Dictado" "$2" >/dev/null 2>&1 || true; }
+
+# --- Historial de transcripciones -------------------------------------------
+# Una línea por dictado, con la fecha delante separada por un tabulador. El texto se aplana a una
+# sola línea: un salto de línea partiría la entrada en dos y el fichero dejaría de tener una
+# transcripción por línea, que es lo que hace que se pueda leer y volver a pegar con cut.
+historial_apuntar() {
+    local texto="$1" linea n
+    [ -n "$texto" ] || return 1
+    mkdir -p "$(dirname "$HISTORIAL")" 2>/dev/null || true
+    linea="$(printf '%s' "$texto" | tr '\n\t' '  ' | tr -d '\r' \
+        | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+    printf '%s\t%s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$linea" >>"$HISTORIAL" 2>/dev/null || return 1
+    # El recorte se hace por el final y se reemplaza en bloque, para que nadie lea el fichero a
+    # medias. Con tope 0 no se recorta y el historial crece sin límite.
+    case "$HISTORIAL_TOPE" in '' | *[!0-9]*) return 0 ;; esac
+    [ "$HISTORIAL_TOPE" -gt 0 ] || return 0
+    n="$(wc -l <"$HISTORIAL" 2>/dev/null | tr -d ' ')"
+    if [ -n "$n" ] && [ "$n" -gt "$HISTORIAL_TOPE" ]; then
+        tail -n "$HISTORIAL_TOPE" "$HISTORIAL" >"$HISTORIAL.tmp" 2>/dev/null \
+            && mv "$HISTORIAL.tmp" "$HISTORIAL"
+    fi
+}
+
+# Imprime las últimas N transcripciones, de la más vieja a la más nueva.
+historial_listar() {
+    local n="${1:-10}"
+    [ -r "$HISTORIAL" ] || return 1
+    tail -n "$n" "$HISTORIAL" | while IFS="$(printf '\t')" read -r fecha texto; do
+        printf '%s  %s\n' "$fecha" "$texto"
+    done
+}
+
+# Texto de la N-ésima transcripción contando desde el final, donde 1 es la última. Si el
+# historial tiene menos de N entradas, no devuelve nada. Pedir la trigésima de una lista de tres
+# no puede acabar pegando la primera, que es lo que hacía tail sin comprobar el total.
+historial_texto() {
+    local n="${1:-1}" linea total
+    [ -r "$HISTORIAL" ] || return 1
+    case "$n" in '' | *[!0-9]*) return 1 ;; esac
+    [ "$n" -ge 1 ] || return 1
+    total="$(wc -l <"$HISTORIAL" 2>/dev/null | tr -d ' ')"
+    [ -n "$total" ] && [ "$n" -le "$total" ] || return 1
+    linea="$(tail -n "$n" "$HISTORIAL" 2>/dev/null | head -n 1)"
+    [ -n "$linea" ] || return 1
+    printf '%s' "$linea" | cut -f2-
+}
+
+# --- El portapapeles no es nuestro ------------------------------------------
+# Se guarda lo que hubiera en el portapapeles para devolverlo después de pegar. Solo texto: si lo
+# que hay es una imagen o un fichero, devolverlo mal sería peor que dejarlo estar, así que en ese
+# caso no se guarda nada y no se toca.
+PORTA_ANTERIOR="$RUNTIME/porta-anterior"
+
+# Sin la cola de espacios. Se usa en los dos lados de la comparación de porta_restaurar, porque
+# un gestor de portapapeles puede añadir o quitar un salto final, y eso no es cambiar el texto.
+sin_cola() { printf '%s' "$1" | sed -e 's/[[:space:]]*$//'; }
+
+porta_guardar() {
+    [ "$PORTA_RESTAURAR" = "1" ] || return 1
+    command -v wl-paste >/dev/null 2>&1 || return 1
+    mkdir -p "$RUNTIME" 2>/dev/null || true
+    rm -f "$PORTA_ANTERIOR" 2>/dev/null || true
+    # El timeout no es adorno. Si el dueño del portapapeles se cerró sin soltarlo, wl-paste se
+    # queda esperando a que alguien le sirva el dato, y sin timeout eso cuelga el dictado entero.
+    local tipos
+    tipos="$(timeout 2 wl-paste --list-types 2>/dev/null)" || return 1
+    case "$tipos" in
+    *text/*) ;;
+    *) return 1 ;;
+    esac
+    if ! timeout 3 wl-paste --no-newline >"$PORTA_ANTERIOR" 2>/dev/null; then
+        rm -f "$PORTA_ANTERIOR"
+        return 1
+    fi
+    if [ ! -s "$PORTA_ANTERIOR" ]; then
+        rm -f "$PORTA_ANTERIOR"
+        return 1
+    fi
+    return 0
+}
+
+# Devuelve al portapapeles lo que había antes de pegar, con dos condiciones. Que quede algo que
+# devolver, y que el portapapeles siga teniendo el texto que acabamos de pegar. Si ya no lo
+# tiene, es que en el hueco de la espera se copió otra cosa, y esa otra cosa manda.
+porta_restaurar() {
+    local pegado="$1" ahora espera
+    if [ "$PORTA_RESTAURAR" != "1" ]; then rm -f "$PORTA_ANTERIOR" 2>/dev/null; return 1; fi
+    [ -s "$PORTA_ANTERIOR" ] || return 1
+    espera="$(awk -v ms="$PORTA_ESPERA" 'BEGIN{printf "%.3f", ms/1000}')"
+    sleep "$espera"
+    ahora="$(timeout 2 wl-paste --no-newline 2>/dev/null)"
+    if [ -n "$ahora" ] && [ "$(sin_cola "$ahora")" != "$(sin_cola "$pegado")" ]; then
+        rm -f "$PORTA_ANTERIOR"
+        return 1
+    fi
+    wl-copy <"$PORTA_ANTERIOR" 2>/dev/null || { rm -f "$PORTA_ANTERIOR"; return 1; }
+    rm -f "$PORTA_ANTERIOR"
+    return 0
+}
+
+# Pega un texto: lo apunta al historial, lo pone en el portapapeles, simula Ctrl+V y devuelve al
+# portapapeles lo que hubiera. Con el segundo argumento en 0 no apunta nada al historial, que es
+# lo que quiere un repegado. Esa transcripción ya está apuntada desde la primera vez.
+pegar_texto() {
+    local texto="$1" apuntar="${2:-1}"
+    [ -n "$texto" ] || return 1
+    [ "$apuntar" = "1" ] && historial_apuntar "$texto"
+    porta_guardar
+    printf '%s' "$texto" | wl-copy
+    sleep 0.12
+    if command -v wtype >/dev/null 2>&1; then
+        wtype -M ctrl -k v -m ctrl
+    elif command -v ydotool >/dev/null 2>&1; then
+        ydotool key 29:1 47:1 47:0 29:0
+    else
+        notificar dialog-error "Falta wtype: el texto quedó en el portapapeles"
+        return 1
+    fi
+    porta_restaurar "$texto"
+    return 0
+}
+
+# Nombre exacto de la fuente de PipeWire. Cae a la fuente por defecto si el patrón no casa.
+fuente() {
+    local n
+    n="$(pactl list short sources 2>/dev/null | awk -v p="$PATRON_FUENTE" 'index($2,p){print $2; exit}')"
+    if [ -z "$n" ]; then n="$(pactl get-default-source 2>/dev/null)"; fi
+    printf '%s' "$n"
+}
+
+grabando() { pgrep -f "$PATRON_PROC" >/dev/null 2>&1; }
+
+# Ruta real del binario de whisper. Imprime la ruta y devuelve 0; si no hay ninguno, 1.
+# El PATH ya lleva ~/.local/bin delante, así que normalmente esto acierta en el primer paso;
+# los dos últimos son red de seguridad por si el puente se borra o se llama al binario crudo.
+# Nota: un nombre sin "/" NO se prueba como ruta relativa, para no confundir un
+# ./whisper-cli suelto del directorio actual con el binario de verdad.
+resolver_whisper() {
+    local p
+    case "$WHISPER" in
+    */*)
+        if [ -x "$WHISPER" ]; then printf '%s' "$WHISPER"; return 0; fi
+        ;;
+    esac
+    if p="$(command -v "$WHISPER" 2>/dev/null)" && [ -n "$p" ]; then
+        printf '%s' "$p"
+        return 0
+    fi
+    for p in "$LIB_PROPIA/whisper-cli" /usr/bin/whisper-cli; do
+        if [ -x "$p" ]; then printf '%s' "$p"; return 0; fi
+    done
+    return 1
+}
+
+# Ejecuta whisper con las bibliotecas correctas según cuál sea el binario.
+# El puente de ~/.local/bin ya se las apunta él mismo; el binario crudo de LIB_PROPIA no,
+# y por eso se le añade LD_LIBRARY_PATH solo a esa llamada.
+correr_whisper() {
+    local w="$1"; shift
+    case "$w" in
+    "$LIB_PROPIA"/*)
+        LD_LIBRARY_PATH="$LIB_PROPIA${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" "$w" "$@"
+        ;;
+    *) "$w" "$@" ;;
+    esac
+}
+
+arrancar() {
+    mkdir -p "$RUNTIME"
+    if grabando; then notificar audio-input-microphone "Ya está grabando"; return 0; fi
+    local f
+    f="$(fuente)"
+    if [ -z "$f" ]; then
+        notificar dialog-error "No encuentro el micrófono (patrón: $PATRON_FUENTE)"
+        return 1
+    fi
+    rm -f "$WAV" "$TXT" "$SALIDA.txt"
+    # setsid desengancha pw-record del grupo de procesos de quien lanza el script. Medido:
+    # sin esto, si el lanzador mata su grupo al terminar, la grabación se corta a los pocos
+    # segundos y se pierde lo hablado.
+    setsid pw-record --target "$f" --rate 16000 --channels 1 --format s16 "$WAV" >"$LOG" 2>&1 &
+    sleep 0.3
+    if ! grabando; then
+        notificar dialog-error "No arrancó la grabación (ver $LOG)"
+        return 1
+    fi
+    notificar audio-input-microphone "Grabando… (otra vez para parar)"
+}
+
+# 1 si la grabación es silencio casi absoluto, 0 si hay señal. Sin sox, no juzga.
+es_silencio() {
+    command -v sox >/dev/null 2>&1 || return 1
+    local pico
+    pico="$(sox "$1" -n stat 2>&1 | awk '/Maximum amplitude/{print $3}')"
+    [ -n "$pico" ] || return 1
+    awk -v p="$pico" -v m="$SILENCIO_MIN" 'BEGIN{exit !(p < m)}'
+}
+
+# Transcribe con el binario de línea de comandos. Paga la carga del modelo en cada llamada.
+# El primer argumento, opcional, es el WAV a transcribir; sin él se usa el del dictado normal.
+transcribir_cli() {
+    local f="${1:-$WAV}"
+    if [ ! -f "$MODELO" ]; then notificar dialog-error "Falta el modelo: $MODELO"; return 1; fi
+    local W
+    if ! W="$(resolver_whisper)"; then
+        notificar dialog-error "Falta el binario $WHISPER (paquete whisper-cpp)"
+        return 1
+    fi
+    local args=(-m "$MODELO" -f "$f" -l "$IDIOMA" -nt -np -otxt -of "$SALIDA")
+    [ -f "$VAD" ] && args+=(--vad -vm "$VAD" --vad-speech-pad-ms "$VAD_PAD")
+    # El prompt va antes de la fuente en la línea de comandos porque es el que más se olvida.
+    [ -n "$PROMPT" ] && args+=(--prompt "$PROMPT")
+    correr_whisper "$W" "${args[@]}" >"$LOG" 2>&1
+    sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' "$SALIDA.txt" 2>/dev/null \
+        | tr '\n' ' ' | sed -e 's/[[:space:]]*$//'
+}
+
+# ¿Hay servidor escuchando? Comprobación barata, si no responde en 1 s no se usa.
+servidor_vivo() {
+    [ -n "$SERVIDOR" ] || return 1
+    curl -s -o /dev/null --max-time 1 "${SERVIDOR}/" 2>/dev/null
+}
+
+# Transcribe contra el servidor, que ya tiene el modelo cargado.
+transcribir_servidor() {
+    local f="${1:-$WAV}"
+    local resp
+    local campos=(-F "file=@$f" -F "language=$IDIOMA" -F "response_format=json")
+    # El mismo sesgo que la ruta del binario, para que el resultado no cambie según cuál responda.
+    [ -n "$PROMPT" ] && campos+=(-F "prompt=$PROMPT")
+    resp="$(curl -s --max-time "$ESPERA_MAX" \
+        "${campos[@]}" \
+        "${SERVIDOR}/inference" 2>"$LOG")" || return 1
+    printf '%s' "$resp" >"$LOG"
+    # Se parsea el JSON con python3, porque hacerlo con sed se rompe en cuanto el texto lleva
+    # comillas, saltos de línea escapados o acentos.
+    printf '%s' "$resp" \
+        | python3 -c 'import json,sys; print(json.load(sys.stdin).get("text","").strip())' 2>/dev/null
+}
+
+# Corrige erratas que whisper repite aunque el término esté en el prompt. No es un corrector
+# general ni adivina por distancia: toca una lista cerrada y solo con límites de palabra, para no
+# romper prosa. Medido el 2026-10-18 en el historial: «DeepSeek» salía como «DeepSeq» 3 de 15
+# veces, «Antropic» por Anthropic 2, «OpenIA» por OpenAI 2, y «Workbody» o «WordParty» por
+# WorkBuddy 5. «Cloth» por Claude queda fuera a propósito, porque «cloth» es una palabra inglesa
+# real y una sustitución ciega rompería prosa.
+corregir_terminos() {
+    python3 -c '
+import re, sys
+t = sys.stdin.read()
+t = re.sub(r"\bDeep[-\s]*(?:Seq|Seek|Sip|Sick|Sik|Sec)\b", "DeepSeek", t, flags=re.IGNORECASE)
+t = re.sub(r"\bAntropic\b", "Anthropic", t)
+t = re.sub(r"\bOpenIA\b", "OpenAI", t)
+t = re.sub(r"\b(?:Workbody|WordParty)\b", "WorkBuddy", t)
+sys.stdout.write(t)
+'
+}
+
+# Elige servidor si está disponible, y si falla cae al binario, así que nunca te deja sin dictado.
+transcribir() {
+    local f="${1:-$WAV}" t rc
+    if servidor_vivo; then
+        if t="$(transcribir_servidor "$f")" && [ -n "$t" ]; then
+            printf '%s' "$t" | corregir_terminos
+            return 0
+        fi
+    fi
+    t="$(transcribir_cli "$f")"; rc=$?
+    printf '%s' "$t" | corregir_terminos
+    return "$rc"
+}
+
+# Transcribe un WAV concreto y saca el texto por stdout. NO pega nada: el pegado lo decide
+# quien llama. Devuelve 2 si el fichero no existe y 3 si es silencio, para que el llamante
+# pueda distinguir "no se oyó nada" de "falló la transcripción".
+transcribir_fichero() {
+    local f="${1:-}"
+    if [ -z "$f" ] || [ ! -f "$f" ]; then
+        echo "dictado: no existe el WAV '$f'" >&2
+        return 2
+    fi
+    if es_silencio "$f"; then return 3; fi
+    transcribir "$f"
+}
+
+parar() {
+    if ! grabando; then notificar dialog-warning "No estaba grabando"; return 0; fi
+    pkill -INT -f "$PATRON_PROC"
+    sleep 0.35
+    if [ ! -s "$WAV" ]; then notificar dialog-error "No se grabó nada"; return 1; fi
+    if es_silencio "$WAV"; then
+        notificar dialog-warning "Silencio: no se oyó nada (¿receptor o emisor apagados?)"
+        return 1
+    fi
+
+    local texto
+    texto="$(transcribir)"
+    if [ -z "$texto" ]; then notificar dialog-warning "No se reconoció nada"; return 1; fi
+    printf '%s\n' "$texto" >"$TXT"
+
+    # El pegado va por pegar_texto(), que es quien apunta la transcripción al historial y deja el
+    # portapapeles como estaba. El texto sigue quedando en ultimo.txt, que es lo que ya había.
+    pegar_texto "$texto" || return 1
+    notificar audio-input-microphone "Pegado: ${texto:0:90}"
+}
+
+# Cancela la grabación en curso. A diferencia de parar(), no transcribe y no pega, así que lo
+# hablado se tira. Lo llama el vigilante de teclado en cada Escape, y por eso cuando no hay nada
+# grabando sale en silencio, sin aviso. Si avisara, cada Escape del sistema daría una notificación.
+cancelar() {
+    if ! grabando; then return 0; fi
+    pkill -INT -f "$PATRON_PROC"
+    sleep 0.2
+    rm -f "$WAV" "$SALIDA.txt" 2>/dev/null || true
+    notificar audio-input-microphone "Dictado cancelado"
+}
+
+alternar() { if grabando; then parar; else arrancar; fi; }
+
+estado() { if grabando; then echo "grabando"; else echo "parado"; fi; }
+
+main() {
+    case "${1:-toggle}" in
+    start) arrancar ;;
+    stop) parar ;;
+    cancelar) cancelar ;;
+    toggle) alternar ;;
+    estado) estado ;;
+    fuente) fuente ;;
+    modelo) printf '%s' "$MODELO" ;;
+    transcribir-fichero) transcribir_fichero "${2:-}" ;;
+    pegar) pegar_texto "$(cat)" ;;
+    historial) historial_listar "${2:-10}" ;;
+    repegar)
+        local t
+        t="$(historial_texto "${2:-1}")"
+        if [ -z "$t" ]; then
+            notificar dialog-warning "No hay esa transcripción que repegar"
+            return 1
+        fi
+        pegar_texto "$t" 0 || return 1
+        notificar audio-input-microphone "Repegado: ${t:0:90}"
+        ;;
+    *)
+        echo "uso: $(basename "$0") {toggle|start|stop|cancelar|estado|fuente|modelo|transcribir-fichero F.wav|pegar|historial [N]|repegar [N]}" >&2
+        return 2
+        ;;
+    esac
+}
+
+main "$@"
